@@ -1,0 +1,131 @@
+{
+  "id": "example_pack",
+  "name": "Example pack — GraphQL Federation",
+  "description": "Reference content pack showing the exact JSON structure. Copy this file as a starting point for your own packs.",
+  "topics": [
+    {
+      "id": "graphql_federation",
+      "name": "GraphQL Federation",
+      "description": "Composing one GraphQL API from multiple subgraph services.",
+      "category": "backend",
+      "relatedTopicIds": ["api_design", "microservices"]
+    }
+  ],
+  "questions": [
+    {
+      "id": "graphql_federation_concept_001",
+      "title": "GraphQL Federation basics",
+      "prompt": "What problem does GraphQL Federation solve, and when would you use it?",
+      "roles": ["backend_developer", "backend_architect", "fullstack_developer"],
+      "modes": ["concept_check"],
+      "topicIds": ["graphql_federation", "api_design"],
+      "expectedDurationSeconds": 150,
+      "thinkingTimeSeconds": 30,
+      "answerStructureHint": "Definition, the single-graph-many-teams problem, subgraphs and the router, and one trade-off.",
+      "expectedPoints": [
+        {
+          "id": "federation_definition",
+          "label": "Defines federation",
+          "description": "Explains that multiple services own parts of one composed GraphQL schema.",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 5, "backend_architect": 5, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "multiple services",
+            "subgraph",
+            "compose the schema",
+            "single graph",
+            "one schema from many services",
+            "supergraph"
+          ],
+          "weakSignals": ["combine apis"]
+        },
+        {
+          "id": "federation_team_ownership",
+          "label": "Mentions team/domain ownership",
+          "description": "Mentions that teams can own and deploy their part of the graph independently.",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 5, "backend_developer": 4 },
+          "acceptedSignals": [
+            "team ownership",
+            "own their schema",
+            "deploy independently",
+            "domain ownership",
+            "separate teams"
+          ]
+        },
+        {
+          "id": "federation_tradeoff",
+          "label": "Names a trade-off",
+          "description": "Mentions router as a critical dependency, added complexity, or query planning cost.",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 5, "backend_developer": 4 },
+          "acceptedSignals": [
+            "single point of failure",
+            "router",
+            "gateway",
+            "added complexity",
+            "query planning",
+            "operational overhead"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "federation_overkill_followup",
+          "trigger": { "type": "always" },
+          "prompt": "When would GraphQL Federation be overkill?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "graphql_federation_tradeoff_001",
+      "title": "Federation vs single GraphQL server",
+      "prompt": "Your company has one GraphQL server maintained by four teams and deploys are painful. Would you move to federation?",
+      "roles": ["backend_architect", "solution_architect"],
+      "modes": ["tradeoff_decision", "scenario_discussion"],
+      "topicIds": ["graphql_federation", "microservices"],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "expectedPoints": [
+        {
+          "id": "federation_it_depends",
+          "label": "Anchors in requirements",
+          "description": "Asks about team pain points, scale, and whether modularization within one server would be enough.",
+          "importance": "critical",
+          "roleWeight": { "backend_architect": 5, "solution_architect": 5 },
+          "acceptedSignals": [
+            "it depends",
+            "what is the actual problem",
+            "root cause",
+            "requirements",
+            "modularize first"
+          ]
+        },
+        {
+          "id": "federation_migration_cost",
+          "label": "Considers migration and operational cost",
+          "description": "Mentions router infrastructure, schema composition checks, and the migration path.",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 5, "solution_architect": 4 },
+          "acceptedSignals": [
+            "migration path",
+            "incremental",
+            "router",
+            "composition",
+            "schema checks",
+            "operational cost"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "federation_first_subgraph_followup",
+          "trigger": { "type": "rubric_covered", "rubricItemId": "federation_it_depends" },
+          "prompt": "Suppose you do migrate — which part of the schema would you extract as the first subgraph, and why?",
+          "expectedPoints": []
+        }
+      ]
+    }
+  ]
+}
