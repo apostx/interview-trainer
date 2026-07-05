@@ -57,14 +57,34 @@ node scripts/e2e/mic.mjs     # mic → Whisper pipeline with a fake audio device
 node scripts/e2e/packs.mjs   # content pack loading + session integration
 ```
 
+## Versioning & releases
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/):
+`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `ci:`, `chore:` (+ optional
+scope, e.g. `feat(content): add kubernetes pack`). Versions follow semver.
+
+**Deploys are release-driven**: pushing to `main` only runs CI
+([ci.yml](.github/workflows/ci.yml) — lint, tests, build). The site is
+published to GitHub Pages when a `v*` tag is pushed
+([deploy.yml](.github/workflows/deploy.yml)). Cutting a release:
+
+```bash
+npm run release:patch   # 0.1.0 → 0.1.1  (fixes, content packs)
+npm run release:minor   # 0.1.0 → 0.2.0  (new features)
+npm run release:major   # breaking changes
+```
+
+Each command bumps `package.json`, creates a `chore(release): x.y.z` commit
+with a `vx.y.z` tag, and pushes with `--follow-tags` — the tag triggers the
+Pages deploy.
+
 ## Deployment (GitHub Pages)
 
 The app is a fully static export (`output: "export"`) — no server needed.
-Pushing to `main` runs [.github/workflows/deploy.yml](.github/workflows/deploy.yml):
-tests + content pack validation, then a static build published to GitHub
-Pages at `https://<user>.github.io/<repo>/`. The workflow enables Pages
-automatically on first run; adding a content pack and pushing redeploys the
-site with the new questions.
+The release workflow runs tests + content pack validation, then publishes
+the static build to `https://<user>.github.io/<repo>/`. The workflow enables
+Pages automatically on first run; adding a content pack and cutting a patch
+release redeploys the site with the new questions.
 
 To preview the exact Pages build locally:
 

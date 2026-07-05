@@ -9,7 +9,10 @@
     "lint": "eslint",
     "test": "vitest run",
     "content:check": "vitest run src/core/content",
-    "postbuild": "node scripts/flatten-rsc-export.mjs"
+    "postbuild": "node scripts/flatten-rsc-export.mjs",
+    "release:patch": "npm version patch -m \"chore(release): %s\" && git push --follow-tags",
+    "release:minor": "npm version minor -m \"chore(release): %s\" && git push --follow-tags",
+    "release:major": "npm version major -m \"chore(release): %s\" && git push --follow-tags"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
