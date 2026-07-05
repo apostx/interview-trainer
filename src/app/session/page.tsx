@@ -148,6 +148,7 @@ function SessionRunner() {
           <AnswerCapture
             expectedDurationSeconds={card.expectedDurationSeconds}
             speechModel={runner.settings?.preferredSpeechModel ?? "tiny"}
+            speechEngine={runner.settings?.speechEngine ?? "whisper"}
             submitLabel="Review answer"
             onSubmit={runner.submitAnswer}
             autoFocusHint="Think first, then answer out loud — aim for a structured answer with a trade-off."
@@ -251,6 +252,7 @@ function SessionRunner() {
                 <AnswerCapture
                   expectedDurationSeconds={90}
                   speechModel={runner.settings?.preferredSpeechModel ?? "tiny"}
+                  speechEngine={runner.settings?.speechEngine ?? "whisper"}
                   submitLabel="Submit follow-up answer"
                   onSubmit={runner.submitFollowUpAnswer}
                 />

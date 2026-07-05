@@ -21,6 +21,8 @@ export type WorkerRequest =
   | { type: "load"; model: WhisperModelSize }
   | { type: "transcribe"; audio: Float32Array };
 
+export type WhisperDevice = "webgpu" | "wasm";
+
 export type WorkerResponse =
   | {
       type: "progress";
@@ -29,12 +31,13 @@ export type WorkerResponse =
       total: number;
       done: boolean;
     }
-  | { type: "ready"; model: WhisperModelSize }
+  | { type: "ready"; model: WhisperModelSize; device: WhisperDevice }
   | { type: "transcript"; text: string }
   | { type: "error"; message: string };
 
 let transcriber: AutomaticSpeechRecognitionPipeline | null = null;
 let loadedModel: WhisperModelSize | null = null;
+let loadedDevice: WhisperDevice = "wasm";
 
 function post(message: WorkerResponse) {
   self.postMessage(message);
@@ -73,7 +76,7 @@ function progressCallback(event: ProgressEvent) {
 
 async function load(model: WhisperModelSize) {
   if (loadedModel === model && transcriber) {
-    post({ type: "ready", model });
+    post({ type: "ready", model, device: loadedDevice });
     return;
   }
   transcriber = null;
@@ -82,21 +85,26 @@ async function load(model: WhisperModelSize) {
   const modelId = MODEL_IDS[model];
   const webgpu = await hasWebGPU();
   try {
+    if (!webgpu) throw new Error("no WebGPU adapter");
     transcriber = await pipeline("automatic-speech-recognition", modelId, {
-      device: webgpu ? "webgpu" : "wasm",
-      dtype: webgpu ? "fp32" : "q8",
+      device: "webgpu",
+      // fp32 encoder for accuracy; quantized decoder — the decoder dominates
+      // generation time, so this is the difference between slow and snappy.
+      dtype: { encoder_model: "fp32", decoder_model_merged: "q4" },
       progress_callback: progressCallback,
     });
+    loadedDevice = "webgpu";
   } catch {
-    // WebGPU init can fail on some drivers — retry on WASM before giving up.
+    // WebGPU missing or driver init failed — fall back to CPU (WASM).
     transcriber = await pipeline("automatic-speech-recognition", modelId, {
       device: "wasm",
       dtype: "q8",
       progress_callback: progressCallback,
     });
+    loadedDevice = "wasm";
   }
   loadedModel = model;
-  post({ type: "ready", model });
+  post({ type: "ready", model, device: loadedDevice });
 }
 
 async function transcribe(audio: Float32Array) {

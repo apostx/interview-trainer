@@ -19,6 +19,8 @@ export type TranscriberStatus =
 type TranscriberState = {
   status: TranscriberStatus;
   model: SpeechModelSize | null;
+  /** Backend Whisper actually runs on; "wasm" (CPU) explains slowness. */
+  device: "webgpu" | "wasm" | null;
   /** 0–1 overall download progress while loading. */
   loadProgress: number;
   error: string | null;
@@ -55,6 +57,7 @@ function overallProgress(): number {
 export const useTranscriberStore = create<TranscriberState>((set, get) => ({
   status: "idle",
   model: null,
+  device: null,
   loadProgress: 0,
   error: null,
 
@@ -84,7 +87,7 @@ export const useTranscriberStore = create<TranscriberState>((set, get) => ({
         } else if (msg.type === "ready") {
           w.removeEventListener("message", onMessage);
           loadPromise = null;
-          set({ status: "ready", loadProgress: 1 });
+          set({ status: "ready", loadProgress: 1, device: msg.device });
           resolve();
         } else if (msg.type === "error") {
           w.removeEventListener("message", onMessage);

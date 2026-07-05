@@ -11,7 +11,9 @@ import { db } from "../db";
 // --- Settings ---------------------------------------------------------------
 
 export async function getSettings(): Promise<UserSettings> {
-  return (await db.settings.get("user")) ?? DEFAULT_SETTINGS;
+  const stored = await db.settings.get("user");
+  // Merge so settings added in newer versions get their defaults.
+  return { ...DEFAULT_SETTINGS, ...(stored ?? {}) };
 }
 
 export async function saveSettings(settings: UserSettings): Promise<void> {

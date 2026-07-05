@@ -10,6 +10,7 @@ import {
 } from "@/components/ui";
 import type {
   InterviewRole,
+  SpeechEngine,
   SpeechModelSize,
   UserSettings,
 } from "@/core/models";
@@ -72,8 +73,34 @@ export default function SettingsPage() {
         </div>
 
         <div>
+          <label className={labelBase} htmlFor="speech-engine">
+            Speech-to-text engine
+          </label>
+          <select
+            id="speech-engine"
+            className={inputBase}
+            value={settings.speechEngine}
+            onChange={(e) =>
+              update({ speechEngine: e.target.value as SpeechEngine })
+            }
+          >
+            <option value="whisper">
+              Local Whisper — private &amp; offline, slower
+            </option>
+            <option value="web_speech">
+              Browser (Google) — fast &amp; live, online
+            </option>
+          </select>
+          <p className="mt-1 text-xs text-muted">
+            {settings.speechEngine === "web_speech"
+              ? "Your voice is sent to the browser's speech service (Google) for recognition. Works in Chrome and Edge; falls back to local Whisper if unavailable."
+              : "Audio never leaves your browser. Slower without WebGPU — if it feels too slow, switch to the browser engine."}
+          </p>
+        </div>
+
+        <div>
           <label className={labelBase} htmlFor="speech-model">
-            Speech-to-text model
+            Local Whisper model
           </label>
           <select
             id="speech-model"

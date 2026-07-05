@@ -123,6 +123,7 @@ export default function PracticePage() {
               <AnswerCapture
                 expectedDurationSeconds={90}
                 speechModel={settings.preferredSpeechModel}
+                speechEngine={settings.speechEngine}
                 submitLabel="Check my answer"
                 onSubmit={submitAnswer}
               />
