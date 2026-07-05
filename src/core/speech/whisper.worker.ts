@@ -4,6 +4,7 @@ import {
   env,
   type AutomaticSpeechRecognitionPipeline,
 } from "@huggingface/transformers";
+import { cleanTranscript } from "./audioUtils";
 
 // Models are fetched from the Hugging Face Hub and cached by the browser.
 env.allowLocalModels = false;
@@ -110,7 +111,9 @@ async function transcribe(audio: Float32Array) {
   const text = Array.isArray(output)
     ? output.map((o) => o.text).join(" ")
     : output.text;
-  post({ type: "transcript", text: text.trim() });
+  // Collapse Whisper's silence hallucinations ("you you you…") to "" so the
+  // UI can tell the user nothing was heard instead of showing garbage.
+  post({ type: "transcript", text: cleanTranscript(text) });
 }
 
 self.addEventListener("message", async (event: MessageEvent<WorkerRequest>) => {

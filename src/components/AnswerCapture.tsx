@@ -2,6 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { SpeechModelSize } from "@/core/models";
+import {
+  SILENCE_PEAK_THRESHOLD,
+  normalizePeak,
+  peakLevel,
+} from "@/core/speech/audioUtils";
 import { AudioRecorder, blobToPCM } from "@/core/speech/recorder";
 import { useTranscriberStore } from "@/stores/transcriberStore";
 import { CountupTimer } from "./Timer";
@@ -31,7 +36,12 @@ export function AnswerCapture({
   const [draft, setDraft] = useState("");
   const [captureError, setCaptureError] = useState<string | null>(null);
   const [recordingStartedAt, setRecordingStartedAt] = useState(0);
+  const [micLevel, setMicLevel] = useState(0);
+  const [deviceLabel, setDeviceLabel] = useState("");
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const recorderRef = useRef<AudioRecorder | null>(null);
+  const maxLevelRef = useRef(0);
+  const audioUrlRef = useRef<string | null>(null);
   // Only rendered client-side (behind data loading), so this is hydration-safe.
   const [micAvailable] = useState(
     () =>
@@ -44,17 +54,40 @@ export function AnswerCapture({
   const loadModel = useTranscriberStore((s) => s.load);
   const transcribe = useTranscriberStore((s) => s.transcribe);
 
-  // Cancel the microphone if the component unmounts mid-recording.
+  // Cancel the microphone and release the playback URL on unmount.
   useEffect(() => {
-    return () => recorderRef.current?.cancel();
+    return () => {
+      recorderRef.current?.cancel();
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    };
   }, []);
+
+  // Live input level while recording.
+  useEffect(() => {
+    if (state !== "recording") return;
+    const id = setInterval(() => {
+      const level = recorderRef.current?.getLevel() ?? 0;
+      setMicLevel(level);
+      if (level > maxLevelRef.current) maxLevelRef.current = level;
+    }, 150);
+    return () => clearInterval(id);
+  }, [state]);
+
+  function keepAudioUrl(blob: Blob) {
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    const url = URL.createObjectURL(blob);
+    audioUrlRef.current = url;
+    setAudioUrl(url);
+  }
 
   async function startRecording() {
     setCaptureError(null);
+    maxLevelRef.current = 0;
     try {
       const recorder = new AudioRecorder();
       await recorder.start();
       recorderRef.current = recorder;
+      setDeviceLabel(recorder.deviceLabel);
       setRecordingStartedAt(Date.now());
       setState("recording");
       // Preload the model in the background while the user is speaking.
@@ -73,9 +106,28 @@ export function AnswerCapture({
     setState("transcribing");
     try {
       const blob = await recorder.stop();
+      keepAudioUrl(blob);
       const audio = await blobToPCM(blob);
+
+      if (peakLevel(audio) < SILENCE_PEAK_THRESHOLD) {
+        setCaptureError(
+          `The recording was silent${deviceLabel ? ` (device: "${deviceLabel}")` : ""}. ` +
+            "Check which microphone the browser uses (click the lock/mic icon in the address bar) and try again — or type your answer.",
+        );
+        setState("editing");
+        return;
+      }
+
+      normalizePeak(audio);
       await loadModel(speechModel);
       const text = await transcribe(audio);
+      if (!text) {
+        setCaptureError(
+          "No clear speech was detected in the recording. Listen to it below to check what was captured, then record again or type your answer. If it keeps happening, try the Base model in Settings.",
+        );
+        setState("editing");
+        return;
+      }
       setDraft((prev) => (prev ? `${prev} ${text}` : text));
       setState("editing");
     } catch (error) {
@@ -138,6 +190,8 @@ export function AnswerCapture({
   }
 
   if (state === "recording") {
+    const elapsedSeconds = (Date.now() - recordingStartedAt) / 1000;
+    const heardNothing = elapsedSeconds > 3 && maxLevelRef.current < 0.02;
     return (
       <div className="flex flex-col items-center gap-4 py-4">
         <div className="flex items-center gap-2 text-critical">
@@ -149,6 +203,29 @@ export function AnswerCapture({
           label="Answer time"
           startedAt={recordingStartedAt}
         />
+        <div className="w-full max-w-xs">
+          <div
+            className="h-2 w-full overflow-hidden rounded-full bg-hairline"
+            role="meter"
+            aria-valuenow={Math.round(micLevel * 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Microphone input level"
+          >
+            <div
+              className={`h-full rounded-full transition-[width] duration-150 ${heardNothing ? "bg-critical" : "bg-good"}`}
+              style={{ width: `${Math.min(100, micLevel * 130)}%` }}
+            />
+          </div>
+          <p className="mt-1 text-center text-xs text-muted">
+            {deviceLabel ? `Mic: ${deviceLabel}` : "Mic level"}
+          </p>
+          {heardNothing && (
+            <p role="alert" className="mt-1 text-center text-xs font-medium text-critical">
+              We can&apos;t hear you — is the right microphone selected?
+            </p>
+          )}
+        </div>
         <div className="flex gap-2">
           <button type="button" onClick={stopRecording} className={buttonPrimary}>
             Stop &amp; transcribe
@@ -196,6 +273,13 @@ export function AnswerCapture({
         <p role="alert" className="rounded-lg border border-hairline bg-background px-3 py-2 text-sm text-critical">
           {captureError}
         </p>
+      )}
+      {audioUrl && (
+        <div>
+          <p className="mb-1 text-xs text-muted">Your recording:</p>
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption -- user's own voice memo */}
+          <audio controls src={audioUrl} className="h-9 w-full max-w-sm" />
+        </div>
       )}
       <label className="text-sm font-medium text-secondary" htmlFor="answer-transcript">
         Your answer transcript

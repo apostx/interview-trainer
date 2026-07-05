@@ -44,9 +44,11 @@ starts empty — no cleanup needed.
 
 `mic.mjs` launches Chrome with `--use-fake-device-for-media-stream`, records
 the fake tone, and waits through the real whisper-tiny.en download (~25 s on
-first run; cached after). Expect a near-empty transcript like "you" — the
-fake device produces a tone, not speech. Reaching the editing textarea with
-no page errors is the pass signal.
+first run; cached after). The fake device produces a tone, not speech, so
+Whisper hallucinates — the worker now collapses that to an empty transcript
+and the UI shows a "No clear speech was detected" alert. Reaching the
+editing textarea (empty transcript + that alert) with no page errors is the
+pass signal.
 
 ## Static export (GitHub Pages)
 

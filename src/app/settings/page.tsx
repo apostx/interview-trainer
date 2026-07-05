@@ -87,6 +87,10 @@ export default function SettingsPage() {
             <option value="base">Base — balanced (~80 MB)</option>
             <option value="small">Small — most accurate (~250 MB)</option>
           </select>
+          <p className="mt-1 text-xs text-muted">
+            If transcriptions look wrong or keep coming back empty, switch to
+            Base or Small — they are noticeably more accurate than Tiny.
+          </p>
         </div>
 
         <div className="flex flex-col gap-3">
