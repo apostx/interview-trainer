@@ -41,6 +41,7 @@ export function AnswerCapture({
   const [captureError, setCaptureError] = useState<string | null>(null);
   const [recordingStartedAt, setRecordingStartedAt] = useState(0);
   const [micLevel, setMicLevel] = useState(0);
+  const [heardNothing, setHeardNothing] = useState(false);
   const [deviceLabel, setDeviceLabel] = useState("");
   const [liveTranscript, setLiveTranscript] = useState("");
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -72,15 +73,22 @@ export function AnswerCapture({
     };
   }, []);
 
-  // Live input level while recording.
+  // Live input level while recording; flags a silent mic after 3 seconds.
   useEffect(() => {
     if (state !== "recording") return;
+    const startedAt = Date.now();
     const id = setInterval(() => {
       const level = recorderRef.current?.getLevel() ?? 0;
       setMicLevel(level);
       if (level > maxLevelRef.current) maxLevelRef.current = level;
+      setHeardNothing(
+        Date.now() - startedAt > 3000 && maxLevelRef.current < 0.02,
+      );
     }, 150);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      setHeardNothing(false);
+    };
   }, [state]);
 
   function keepAudioUrl(blob: Blob) {
@@ -242,8 +250,6 @@ export function AnswerCapture({
   }
 
   if (state === "recording") {
-    const elapsedSeconds = (Date.now() - recordingStartedAt) / 1000;
-    const heardNothing = elapsedSeconds > 3 && maxLevelRef.current < 0.02;
     return (
       <div className="flex flex-col items-center gap-4 py-4">
         <div className="flex items-center gap-2 text-critical">
@@ -347,7 +353,6 @@ export function AnswerCapture({
       {audioUrl && (
         <div>
           <p className="mb-1 text-xs text-muted">Your recording:</p>
-          {/* eslint-disable-next-line jsx-a11y/media-has-caption -- user's own voice memo */}
           <audio controls src={audioUrl} className="h-9 w-full max-w-sm" />
         </div>
       )}
