@@ -33,10 +33,11 @@ export function AnswerCapture({
   speechModel: SpeechModelSize;
   speechEngine?: SpeechEngine;
   submitLabel: string;
-  onSubmit: (transcript: string) => void;
+  onSubmit: (transcript: string) => void | Promise<void>;
   autoFocusHint?: string;
 }) {
   const [state, setState] = useState<CaptureState>("idle");
+  const [submitting, setSubmitting] = useState(false);
   const [draft, setDraft] = useState("");
   const [captureError, setCaptureError] = useState<string | null>(null);
   const [recordingStartedAt, setRecordingStartedAt] = useState(0);
@@ -371,11 +372,18 @@ export function AnswerCapture({
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          disabled={draft.trim().length === 0}
-          onClick={() => onSubmit(draft.trim())}
+          disabled={draft.trim().length === 0 || submitting}
+          onClick={async () => {
+            setSubmitting(true);
+            try {
+              await onSubmit(draft.trim());
+            } finally {
+              setSubmitting(false);
+            }
+          }}
           className={buttonPrimary}
         >
-          {submitLabel}
+          {submitting ? "Scoring your answer…" : submitLabel}
         </button>
         {micAvailable && (
           <button type="button" onClick={startRecording} className={buttonSecondary}>

@@ -29,11 +29,14 @@ export function RubricChecklist({
   items,
   coveredIds,
   weakIds,
+  semanticIds = [],
   onOverride,
 }: {
   items: RubricItem[];
   coveredIds: string[];
   weakIds: string[];
+  /** Items credited via semantic (meaning-based) matching. */
+  semanticIds?: string[];
   onOverride?: (rubricItemId: string, newStatus: RubricStatus) => void;
 }) {
   return (
@@ -51,6 +54,14 @@ export function RubricChecklist({
                   {item.importance === "critical" && (
                     <span className="rounded-full bg-background px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-secondary">
                       critical
+                    </span>
+                  )}
+                  {semanticIds.includes(item.id) && (
+                    <span
+                      className="rounded-full bg-background px-2 py-0.5 text-[10px] font-semibold text-accent"
+                      title="Credited by meaning, not exact keywords"
+                    >
+                      ≈ meaning
                     </span>
                   )}
                 </p>

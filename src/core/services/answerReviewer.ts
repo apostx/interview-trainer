@@ -7,24 +7,28 @@ import type {
   QuestionCard,
   RubricStatus,
 } from "@/core/models";
-import { matchRubric, type RubricMatchResult } from "./rubricMatcher";
+import { matchRubric, matchRubricItem, type RubricMatchResult } from "./rubricMatcher";
 import { buildFeedbackSummary, computeScore } from "./scoringEngine";
+import {
+  combineStatuses,
+  hasNegativeSignal,
+  semanticSimilarities,
+  statusFromSimilarity,
+  type EmbedFn,
+} from "./semanticMatcher";
 import {
   generatePracticeItemsFromReview,
   toGeneratedPracticeItem,
 } from "./spacedRepetition";
 
-/**
- * Runs the full hybrid review pipeline for one answer (spec §11 MVP scope:
- * deterministic matching + manual override; AI review comes later).
- */
-export function reviewAnswer(
+function buildReview(
   card: QuestionCard,
   transcript: string,
   role: InterviewRole,
   nowIso: string,
+  match: RubricMatchResult,
+  semanticUpgradedIds: string[],
 ): { review: AnswerReview; practiceItems: PracticeItem[] } {
-  const match = matchRubric(transcript, card.expectedPoints);
   const totalScore = computeScore(card.expectedPoints, match, role);
 
   const review: AnswerReview = {
@@ -45,12 +49,74 @@ export function reviewAnswer(
     totalScore,
     feedbackSummary: buildFeedbackSummary(card.expectedPoints, match),
     generatedPracticeItems: [],
+    semanticUpgradedIds,
   };
 
   const practiceItems = generatePracticeItemsFromReview(card, review, nowIso);
   review.generatedPracticeItems = practiceItems.map(toGeneratedPracticeItem);
 
   return { review, practiceItems };
+}
+
+/**
+ * Deterministic (keyword-only) review — spec §11.1. Also the fallback when
+ * the embedding model is unavailable.
+ */
+export function reviewAnswer(
+  card: QuestionCard,
+  transcript: string,
+  role: InterviewRole,
+  nowIso: string,
+): { review: AnswerReview; practiceItems: PracticeItem[] } {
+  const match = matchRubric(transcript, card.expectedPoints);
+  return buildReview(card, transcript, role, nowIso, match, []);
+}
+
+/**
+ * Hybrid review (spec §11.1 + §11.2): keyword matching first, then a local
+ * semantic pass that upgrades paraphrased points. Falls back to keyword-only
+ * when embedding fails, so a broken model never blocks the flow.
+ */
+export async function reviewAnswerHybrid(
+  card: QuestionCard,
+  transcript: string,
+  role: InterviewRole,
+  nowIso: string,
+  embed: EmbedFn,
+): Promise<{ review: AnswerReview; practiceItems: PracticeItem[] }> {
+  let similarities: Map<string, number>;
+  try {
+    similarities = await semanticSimilarities(
+      transcript,
+      card.expectedPoints,
+      embed,
+    );
+  } catch {
+    return reviewAnswer(card, transcript, role, nowIso);
+  }
+
+  const match: RubricMatchResult = {
+    coveredRubricItemIds: [],
+    weakRubricItemIds: [],
+    missingRubricItemIds: [],
+  };
+  const semanticUpgradedIds: string[] = [];
+
+  for (const item of card.expectedPoints) {
+    const keywordStatus = matchRubricItem(transcript, item);
+    const semanticStatus = statusFromSimilarity(similarities.get(item.id) ?? 0);
+    const finalStatus = combineStatuses(
+      keywordStatus,
+      semanticStatus,
+      hasNegativeSignal(transcript, item),
+    );
+    if (finalStatus !== keywordStatus) semanticUpgradedIds.push(item.id);
+    if (finalStatus === "covered") match.coveredRubricItemIds.push(item.id);
+    else if (finalStatus === "weak") match.weakRubricItemIds.push(item.id);
+    else match.missingRubricItemIds.push(item.id);
+  }
+
+  return buildReview(card, transcript, role, nowIso, match, semanticUpgradedIds);
 }
 
 /**

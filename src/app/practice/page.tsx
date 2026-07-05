@@ -12,7 +12,14 @@ import {
   buttonSecondary,
 } from "@/components/ui";
 import type { PracticeItem, UserSettings } from "@/core/models";
-import { matchRubric, type RubricMatchResult } from "@/core/services/rubricMatcher";
+import { matchRubric, matchRubricItem, type RubricMatchResult } from "@/core/services/rubricMatcher";
+import {
+  combineStatuses,
+  hasNegativeSignal,
+  semanticSimilarities,
+  statusFromSimilarity,
+} from "@/core/services/semanticMatcher";
+import { useEmbeddingStore } from "@/stores/embeddingStore";
 import { applyPracticeReview } from "@/core/services/spacedRepetition";
 import {
   getSettings,
@@ -67,7 +74,27 @@ export default function PracticePage() {
   async function submitAnswer(text: string) {
     if (!current) return;
     setTranscript(text);
-    if (current.expectedPoints.length > 0) {
+    if (current.expectedPoints.length === 0) return;
+    try {
+      const embed = useEmbeddingStore.getState().embed;
+      const sims = await semanticSimilarities(text, current.expectedPoints, embed);
+      const result: RubricMatchResult = {
+        coveredRubricItemIds: [],
+        weakRubricItemIds: [],
+        missingRubricItemIds: [],
+      };
+      for (const item of current.expectedPoints) {
+        const status = combineStatuses(
+          matchRubricItem(text, item),
+          statusFromSimilarity(sims.get(item.id) ?? 0),
+          hasNegativeSignal(text, item),
+        );
+        if (status === "covered") result.coveredRubricItemIds.push(item.id);
+        else if (status === "weak") result.weakRubricItemIds.push(item.id);
+        else result.missingRubricItemIds.push(item.id);
+      }
+      setMatch(result);
+    } catch {
       setMatch(matchRubric(text, current.expectedPoints));
     }
   }

@@ -15,6 +15,7 @@ import {
   buttonSecondary,
 } from "@/components/ui";
 import { ROLE_LABELS } from "@/core/models";
+import { useEmbeddingStore } from "@/stores/embeddingStore";
 import { useSessionRunner } from "@/stores/sessionRunnerStore";
 import { useTranscriberStore } from "@/stores/transcriberStore";
 
@@ -33,12 +34,16 @@ function SessionRunner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
-  // Preload the speech model in the background so the first answer is smooth.
+  const loadEmbeddings = useEmbeddingStore((s) => s.load);
+
+  // Preload the speech + embedding models in the background so the first
+  // answer and its semantic review are smooth.
   useEffect(() => {
     if (runner.settings) {
       loadModel(runner.settings.preferredSpeechModel).catch(() => {});
+      loadEmbeddings().catch(() => {});
     }
-  }, [runner.settings, loadModel]);
+  }, [runner.settings, loadModel, loadEmbeddings]);
 
   useEffect(() => {
     if (runner.phase === "finished" && runner.session) {
@@ -171,12 +176,13 @@ function SessionRunner() {
                 items={card.expectedPoints}
                 coveredIds={question.review.coveredRubricItemIds}
                 weakIds={question.review.weakRubricItemIds}
+                semanticIds={question.review.semanticUpgradedIds ?? []}
                 onOverride={runner.overrideRubric}
               />
             </div>
             <p className="mt-1 text-xs text-muted">
-              Automatic matching is keyword-based — correct it if you said
-              something in your own words.
+              Matching runs locally: exact keywords plus meaning-based
+              similarity (≈). Correct anything it still got wrong.
             </p>
           </Card>
           {question.review.generatedPracticeItems.length > 0 && (

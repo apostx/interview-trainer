@@ -31,4 +31,6 @@ export type AnswerReview = {
   totalScore: number;
   feedbackSummary: string;
   generatedPracticeItems: GeneratedPracticeItem[];
+  /** Items credited by local semantic matching rather than exact keywords. */
+  semanticUpgradedIds?: string[];
 };

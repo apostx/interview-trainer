@@ -24,7 +24,9 @@ Full product specification: [docs/spec.md](docs/spec.md).
   transcription in a Web Worker (tiny/base/small model choice, download
   progress, cached). Typing is always available as a fallback.
 - **Hybrid review**: deterministic rubric matching (accepted/weak/negative
-  signals) + one-tap manual override; weighted scoring by importance × role.
+  signals) plus local semantic matching — a small embedding model
+  (MiniLM, in-browser) credits paraphrases without accepting nonsense;
+  one-tap manual override; weighted scoring by importance × role.
 - **Dynamic follow-ups** triggered by what you covered, missed or mentioned.
 - **Weak topic tracking + spaced repetition**: missed critical points become
   practice cards; self-scored reviews reschedule them.

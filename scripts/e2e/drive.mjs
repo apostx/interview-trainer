@@ -64,7 +64,7 @@ async function main() {
   let overrideProbed = false;
   let skippedOne = false;
   let hintProbed = false;
-  for (let guard = 0; guard < 40; guard++) {
+  for (let guard = 0; guard < 100; guard++) {
     if (page.url().includes("/summary")) break;
 
     // Question phase?

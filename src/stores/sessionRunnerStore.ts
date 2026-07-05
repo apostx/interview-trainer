@@ -15,7 +15,7 @@ import {
   applyManualOverride,
   collectWeakTopicIds,
   computeOverallScore,
-  reviewAnswer,
+  reviewAnswerHybrid,
 } from "@/core/services/answerReviewer";
 import { selectFollowUps } from "@/core/services/followUpSelector";
 import { buildLearningItems } from "@/core/services/learningItems";
@@ -28,6 +28,7 @@ import {
   saveSession,
   saveTopic,
 } from "@/core/storage/repositories";
+import { useEmbeddingStore } from "./embeddingStore";
 
 export type RunnerPhase =
   | "loading"
@@ -169,11 +170,14 @@ export const useSessionRunner = create<RunnerState>((set, get) => {
       if (!session || !card || !settings) return;
 
       const nowIso = new Date().toISOString();
-      const { review, practiceItems } = reviewAnswer(
+      // Hybrid matching: keywords + local semantic similarity, with a
+      // keyword-only fallback inside if the embedding model fails.
+      const { review, practiceItems } = await reviewAnswerHybrid(
         card,
         transcript,
         session.role,
         nowIso,
+        useEmbeddingStore.getState().embed,
       );
 
       const followUps = settings.autoGenerateFollowUps
