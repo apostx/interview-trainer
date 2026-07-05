@@ -6,10 +6,8 @@ import {
   Card,
   EmptyState,
   PageHeader,
-  ProgressMeter,
-  ScoreBadge,
-  StatTile,
   buttonPrimary,
+  buttonSecondary,
 } from "@/components/ui";
 import type { InterviewSession, Topic, UserSettings } from "@/core/models";
 import { ROLE_LABELS } from "@/core/models";
@@ -37,7 +35,7 @@ export default function DashboardPage() {
       const nowIso = new Date().toISOString();
       const [settings, sessions, dueItems, topicsById] = await Promise.all([
         getSettings(),
-        listRecentSessions(10),
+        listRecentSessions(5),
         listDuePracticeItems(nowIso),
         getTopicsById(),
       ]);
@@ -47,94 +45,63 @@ export default function DashboardPage() {
 
   if (!data) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-16 text-center text-secondary">
+      <div className="mx-auto max-w-2xl px-4 py-16 text-center text-secondary">
         Loading…
       </div>
     );
   }
 
   const { settings, sessions, dueCount, topicsById } = data;
-  const targetRole = settings.targetRole;
-  const roleSessions = sessions.filter(
-    (s) => s.role === targetRole && s.overallScore,
-  );
-  const readiness =
-    roleSessions.length > 0
-      ? Math.round(
-          roleSessions
-            .slice(0, 5)
-            .reduce((acc, s) => acc + (s.overallScore?.totalScore ?? 0), 0) /
-            Math.min(roleSessions.length, 5),
-        )
-      : null;
-  const lastScore = sessions.find((s) => s.overallScore)?.overallScore
-    ?.totalScore;
-
   const weakTopicIds = [
-    ...new Set(sessions.slice(0, 5).flatMap((s) => s.weakTopicIds)),
-  ].slice(0, 8);
+    ...new Set(sessions.flatMap((s) => s.weakTopicIds)),
+  ].slice(0, 3);
+
+  const recommendation =
+    dueCount > 0
+      ? {
+          text: `You have ${dueCount} practice card${dueCount === 1 ? "" : "s"} due — reviewing them is the fastest way to improve.`,
+          cta: "Review now",
+          href: "/practice",
+        }
+      : weakTopicIds.length > 0
+        ? {
+            text: `Run a practice session — your weak topics (${weakTopicIds
+              .map((id) => topicsById.get(id)?.name ?? id)
+              .join(", ")}) will be prioritized.`,
+            cta: "Start Practice",
+            href: "/setup",
+          }
+        : {
+            text: "Start with a quick 10-minute practice to see where you stand.",
+            cta: "Start Practice",
+            href: "/setup",
+          };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 sm:py-8">
+    <div className="mx-auto max-w-2xl px-4 py-6 sm:py-8">
       <PageHeader
         title="Dashboard"
-        subtitle={`Target role: ${ROLE_LABELS[targetRole]}`}
-        action={
-          <Link href="/setup" className={buttonPrimary}>
-            Start session
-          </Link>
-        }
+        subtitle={`Target role: ${ROLE_LABELS[settings.targetRole]}`}
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <StatTile
-          label="Due practice"
-          value={dueCount}
-          hint={dueCount > 0 ? "cards waiting for review" : "all caught up"}
-        />
-        <StatTile
-          label="Last session"
-          value={lastScore !== undefined ? `${lastScore}%` : "–"}
-          hint={lastScore !== undefined ? "overall score" : "no sessions yet"}
-        />
-        <StatTile
-          label="Sessions"
-          value={sessions.length}
-          hint="completed so far"
-        />
-      </div>
-
-      <Card className="mb-6">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-bold">{ROLE_LABELS[targetRole]} readiness</h2>
-          <span className="text-2xl font-bold tabular-nums">
-            {readiness !== null ? `${readiness}%` : "–"}
-          </span>
-        </div>
-        <div className="mt-3">
-          <ProgressMeter
-            value={readiness ?? 0}
-            label={`${ROLE_LABELS[targetRole]} readiness`}
-          />
-        </div>
-        <p className="mt-2 text-xs text-muted">
-          Average of your last {Math.min(roleSessions.length, 5) || "few"}{" "}
-          {ROLE_LABELS[targetRole]} session scores.
-          {readiness === null && " Complete a session to see your readiness."}
+      <Card className="mb-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+          Next recommended practice
         </p>
+        <p className="mt-2 text-base leading-relaxed">{recommendation.text}</p>
+        <Link
+          href={recommendation.href}
+          className={`${buttonPrimary} mt-4 inline-block`}
+        >
+          {recommendation.cta}
+        </Link>
       </Card>
 
-      {weakTopicIds.length > 0 && (
+      {weakTopicIds.length > 0 ? (
         <Card className="mb-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold">Weak topics</h2>
-            <Link
-              href="/practice"
-              className="text-sm font-medium text-accent hover:underline"
-            >
-              Practice now
-            </Link>
-          </div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Your weak topics
+          </p>
           <ul className="mt-3 flex flex-wrap gap-2">
             {weakTopicIds.map((id) => (
               <li
@@ -146,43 +113,23 @@ export default function DashboardPage() {
             ))}
           </ul>
         </Card>
+      ) : (
+        sessions.length === 0 && (
+          <EmptyState
+            title="No practice yet"
+            description="Pick a role, answer a few questions out loud, get feedback — that's the whole loop."
+          />
+        )
       )}
 
-      <h2 className="mb-3 font-bold">Recent sessions</h2>
-      {sessions.length === 0 ? (
-        <EmptyState
-          title="No sessions yet"
-          description="Start your first mock interview — pick a role, answer out loud, and get rubric-based feedback."
-          action={
-            <Link href="/setup" className={buttonPrimary}>
-              Start your first session
-            </Link>
-          }
-        />
-      ) : (
-        <Card>
-          <ul className="divide-y divide-hairline">
-            {sessions.slice(0, 6).map((s) => (
-              <li key={s.id}>
-                <Link
-                  href={`/session/summary?id=${s.id}`}
-                  className="flex items-center justify-between gap-3 py-3 hover:opacity-80"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{ROLE_LABELS[s.role]}</p>
-                    <p className="text-xs text-muted">
-                      {new Date(s.startedAt).toLocaleString()} ·{" "}
-                      {s.questions.length} questions
-                      {!s.endedAt && " · in progress"}
-                    </p>
-                  </div>
-                  {s.overallScore && <ScoreBadge score={s.overallScore.totalScore} />}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+      <div className="flex flex-wrap gap-2">
+        <Link href="/setup" className={`${buttonPrimary} py-3 text-base`}>
+          Start Practice
+        </Link>
+        <Link href="/practice" className={`${buttonSecondary} py-3 text-base`}>
+          Review Weak Topics
+        </Link>
+      </div>
     </div>
   );
 }

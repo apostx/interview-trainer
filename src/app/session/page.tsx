@@ -190,7 +190,20 @@ function SessionRunner() {
               </ul>
             </Card>
           )}
-          <div className="flex justify-end">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {runner.markedUnknown ? (
+              <span className="text-sm font-medium text-good-text">
+                Added learning cards to your practice queue ✓
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={runner.markTopicsUnknown}
+                className={buttonGhost}
+              >
+                I don&apos;t know this topic
+              </button>
+            )}
             <button
               type="button"
               onClick={runner.continueAfterReview}

@@ -9,7 +9,8 @@ import {
   inputBase,
   labelBase,
 } from "@/components/ui";
-import type { PracticeItem, Topic } from "@/core/models";
+import type { Topic } from "@/core/models";
+import { buildLearningItems } from "@/core/services/learningItems";
 import { savePracticeItems, saveTopic } from "@/core/storage/repositories";
 
 const CATEGORIES: Topic["category"][] = [
@@ -24,41 +25,6 @@ const CATEGORIES: Topic["category"][] = [
   "observability",
   "soft_technical",
 ];
-
-/**
- * Unknown topic intake (spec §8): a new topic starts as "unknown" and gets a
- * set of mini learning questions in the practice queue. It only enters
- * regular interview sessions once its status is raised past basic
- * understanding (or when "learning mode" is enabled in session setup).
- */
-function buildLearningItems(topic: Topic, nowIso: string): PracticeItem[] {
-  const prompts: { type: PracticeItem["type"]; prompt: string }[] = [
-    { type: "concept_card", prompt: `Explain ${topic.name} in 60 seconds.` },
-    {
-      type: "concept_card",
-      prompt: `What problem does ${topic.name} solve, and what is a simple example?`,
-    },
-    {
-      type: "tradeoff_card",
-      prompt: `When would ${topic.name} be overkill, and what are the trade-offs?`,
-    },
-    {
-      type: "mini_scenario",
-      prompt: `Describe a scenario where you would introduce ${topic.name}, and how you would justify it to the team.`,
-    },
-  ];
-  return prompts.map((p, i) => ({
-    id: `learn_${topic.id}_${i}_${Date.parse(nowIso)}`,
-    type: p.type,
-    topicIds: [topic.id],
-    prompt: p.prompt,
-    expectedPoints: [],
-    nextReviewAt: nowIso,
-    intervalDays: 1,
-    easeFactor: 2.5,
-    reviewHistory: [],
-  }));
-}
 
 export default function NewTopicPage() {
   const router = useRouter();

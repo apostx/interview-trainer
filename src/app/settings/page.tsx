@@ -72,26 +72,6 @@ export default function SettingsPage() {
         </div>
 
         <div>
-          <label className={labelBase} htmlFor="default-duration">
-            Default duration
-          </label>
-          <select
-            id="default-duration"
-            className={inputBase}
-            value={settings.defaultSessionDurationMinutes}
-            onChange={(e) =>
-              update({ defaultSessionDurationMinutes: Number(e.target.value) })
-            }
-          >
-            {[15, 30, 45, 60].map((d) => (
-              <option key={d} value={d}>
-                {d} minutes
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
           <label className={labelBase} htmlFor="speech-model">
             Speech-to-text model
           </label>

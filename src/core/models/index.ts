@@ -1,4 +1,5 @@
 export * from "./types";
+export * from "./PracticeType";
 export * from "./Topic";
 export * from "./Rubric";
 export * from "./QuestionCard";

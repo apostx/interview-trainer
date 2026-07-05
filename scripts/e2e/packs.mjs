@@ -43,7 +43,7 @@ await page.screenshot({ path: `${SHOTS}/12-topics-with-pack.png` });
 
 // 2. Setup: no difficulty select anymore
 await page.goto(BASE + "/setup/");
-await page.getByRole("heading", { name: "Session setup" }).waitFor();
+await page.getByRole("heading", { name: "Practice setup" }).waitFor();
 const diffVisible = await page
   .getByText("Difficulty", { exact: true })
   .isVisible()
@@ -61,7 +61,7 @@ let foundPackQuestion = false;
 for (let attempt = 0; attempt < 6 && !foundPackQuestion; attempt++) {
   await page.goto(BASE + "/setup/");
   await page.getByLabel("Role").selectOption("backend_architect");
-  await page.getByRole("button", { name: "Start interview session" }).click();
+  await page.getByRole("button", { name: "Start Practice" }).click();
   await page.waitForURL(/\/session\/?\?id=/);
   // walk through questions by title without answering: skip through
   for (let q = 0; q < 10; q++) {

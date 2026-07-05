@@ -13,9 +13,13 @@ Full product specification: [docs/spec.md](docs/spec.md).
 
 - **6 roles** (Frontend/Backend/Fullstack Developer, Frontend/Backend/Solution
   Architect) sharing one interview engine — roles are just configuration.
-- **5 interview modes** seeded: concept check, scenario discussion, trade-off
-  decision, troubleshooting, system design (20 question cards with full
-  rubrics and follow-ups).
+- **Simple flow**: pick role → Quick (10 min) or Standard (30 min) → answer →
+  feedback. Three user-facing practice types (Quick Questions, Real Scenarios,
+  Architecture Practice) map onto the engine's seven interview modes; the
+  knobs live under Advanced settings.
+- **20 seeded question cards** across concept check, scenario discussion,
+  trade-off decision, troubleshooting and system design, with full rubrics
+  and follow-ups.
 - **Voice-first answering**: microphone recording → local Whisper
   transcription in a Web Worker (tiny/base/small model choice, download
   progress, cached). Typing is always available as a fallback.

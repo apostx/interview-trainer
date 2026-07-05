@@ -31,28 +31,31 @@ async function main() {
   // ---- 1. Dashboard empty state
   await page.goto(BASE + "/");
   await page.getByRole("heading", { name: "Dashboard" }).waitFor();
-  await page.getByText("No sessions yet", { exact: true }).waitFor();
+  await page.getByText("No practice yet", { exact: true }).waitFor();
+  await page.getByText("Next recommended practice").waitFor();
   await page.screenshot({ path: `${SHOTS}/01-dashboard-empty.png` });
-  log("✅", "Dashboard loads with empty state (no sessions yet)");
+  log("✅", "Dashboard loads: next recommended practice + empty state");
 
-  // ---- 2. Setup: probe zero modes
-  await page.getByRole("link", { name: "Start your first session" }).click();
-  await page.getByRole("heading", { name: "Session setup" }).waitFor();
-  const modeButtons = page.locator('fieldset button[aria-pressed="true"]');
-  const activeCount = await modeButtons.count();
-  for (let i = 0; i < activeCount; i++) {
-    await page.locator('fieldset button[aria-pressed="true"]').first().click();
+  // ---- 2. Setup: probe zero practice types (in Advanced settings)
+  await page.getByRole("main").getByRole("link", { name: "Start Practice" }).first().click();
+  await page.getByRole("heading", { name: "Practice setup" }).waitFor();
+  await page.getByText("Advanced settings").click();
+  const typeCheckbox = (label) =>
+    page.locator("label", { hasText: label }).locator('input[type="checkbox"]');
+  for (const t of ["Quick Questions", "Real Scenarios", "Architecture Practice"]) {
+    await typeCheckbox(t).uncheck();
   }
-  await page.getByRole("button", { name: "Start interview session" }).click();
-  await page.getByText("Select at least one interview mode.").waitFor();
-  log("🔍", "Setup with zero modes selected → inline error 'Select at least one interview mode.'");
+  await page.getByRole("button", { name: "Start Practice" }).click();
+  await page.getByText("Select at least one practice type.").waitFor();
+  log("🔍", "Setup with zero practice types → inline error 'Select at least one practice type.'");
 
-  // Re-enable all 5 main modes
-  for (const m of ["Concept Check", "Scenario Discussion", "Trade-off Decision", "Troubleshooting", "System Design"]) {
-    await page.locator("fieldset button", { hasText: m }).click();
+  for (const t of ["Quick Questions", "Real Scenarios", "Architecture Practice"]) {
+    await typeCheckbox(t).check();
   }
+  // Quick length option shows both durations
+  await page.getByRole("button", { name: /Quick/ }).waitFor();
   await page.screenshot({ path: `${SHOTS}/02-setup.png` });
-  await page.getByRole("button", { name: "Start interview session" }).click();
+  await page.getByRole("button", { name: "Start Practice" }).click();
   await page.waitForURL(/\/session\/?\?id=/);
   log("✅", "Session generated and runner opened: " + page.url());
 
@@ -129,6 +132,10 @@ async function main() {
         await (wasCovered ? coveredBtn : missingBtn).click();
         await page.waitForTimeout(300);
         await page.screenshot({ path: `${SHOTS}/04-review.png` });
+        // Probe: mark topic unknown → learning cards land in practice queue
+        await page.getByRole("button", { name: "I don't know this topic" }).click();
+        await page.getByText("Added learning cards to your practice queue").waitFor();
+        log("🔍", "'I don't know this topic' on review → learning cards confirmation shown");
         overrideProbed = true;
       }
       await nextQBtn.click({ timeout: 5000 }).catch(() => {});
@@ -160,13 +167,12 @@ async function main() {
   log(weak ? "✅" : "⚠️", weak ? "Weak topics section present on summary" : "No weak topics section (all covered?)");
   await page.screenshot({ path: `${SHOTS}/05-summary.png`, fullPage: true });
 
-  // ---- 5. Persistence: reload → dashboard shows session
+  // ---- 5. Persistence: reload → weak topics from the session survive
   await page.goto(BASE + "/");
-  await page.getByText("Recent sessions").waitFor();
+  await page.getByText("Your weak topics").waitFor();
   await page.reload();
-  await page.getByText(/Backend Developer/).first().waitFor();
-  const lastScore = await page.getByText("Last session").locator("..").locator("p").nth(1).textContent();
-  log("✅", `Persistence: after full reload dashboard still shows the session (last score ${lastScore})`);
+  await page.getByText("Your weak topics").waitFor();
+  log("✅", "Persistence: after full reload dashboard still shows weak topics from the session");
   await page.screenshot({ path: `${SHOTS}/06-dashboard-filled.png` });
 
   // ---- 6. Practice queue (generated from missed criticals)

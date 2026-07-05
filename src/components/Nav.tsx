@@ -66,7 +66,7 @@ export function SidebarNav() {
         href="/setup"
         className="mb-4 rounded-lg bg-accent px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-accent-strong"
       >
-        New session
+        Start Practice
       </Link>
       {items.map((item) => {
         const active =

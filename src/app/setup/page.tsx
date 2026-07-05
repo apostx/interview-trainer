@@ -9,16 +9,14 @@ import {
   inputBase,
   labelBase,
 } from "@/components/ui";
-import type {
-  InterviewMode,
-  InterviewRole,
-  SpeechModelSize,
-} from "@/core/models";
+import type { InterviewRole, PracticeType } from "@/core/models";
 import {
-  INTERVIEW_MODES,
   INTERVIEW_ROLES,
-  MODE_LABELS,
+  PRACTICE_TYPES,
+  PRACTICE_TYPE_DESCRIPTIONS,
+  PRACTICE_TYPE_LABELS,
   ROLE_LABELS,
+  modesForPracticeTypes,
 } from "@/core/models";
 import { allQuestions } from "@/core/content/bank";
 import { generateSession } from "@/core/services/sessionGenerator";
@@ -31,42 +29,34 @@ import {
   saveSettings,
 } from "@/core/storage/repositories";
 
-const DEFAULT_MODES: InterviewMode[] = [
-  "concept_check",
-  "scenario_discussion",
-  "tradeoff_decision",
-  "troubleshooting",
-  "system_design",
-];
-
 export default function SessionSetupPage() {
   const router = useRouter();
   const [role, setRole] = useState<InterviewRole>("backend_developer");
-  const [duration, setDuration] = useState(30);
-  const [modes, setModes] = useState<InterviewMode[]>(DEFAULT_MODES);
+  const [duration, setDuration] = useState<10 | 30>(30);
+  const [practiceTypes, setPracticeTypes] = useState<PracticeType[]>([
+    ...PRACTICE_TYPES,
+  ]);
   const [includeWeakTopics, setIncludeWeakTopics] = useState(true);
   const [includeUnknownTopics, setIncludeUnknownTopics] = useState(false);
-  const [speechModel, setSpeechModel] = useState<SpeechModelSize>("tiny");
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
   useEffect(() => {
     getSettings().then((s) => {
       setRole(s.targetRole);
-      setDuration(s.defaultSessionDurationMinutes);
-      setSpeechModel(s.preferredSpeechModel);
+      setDuration(s.defaultSessionDurationMinutes === 10 ? 10 : 30);
     });
   }, []);
 
-  function toggleMode(mode: InterviewMode) {
-    setModes((prev) =>
-      prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode],
+  function togglePracticeType(type: PracticeType) {
+    setPracticeTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
     );
   }
 
-  async function startSession() {
-    if (modes.length === 0) {
-      setError("Select at least one interview mode.");
+  async function startPractice() {
+    if (practiceTypes.length === 0) {
+      setError("Select at least one practice type.");
       return;
     }
     setStarting(true);
@@ -85,7 +75,7 @@ export default function SessionSetupPage() {
         {
           role,
           durationMinutes: duration,
-          modes,
+          modes: modesForPracticeTypes(practiceTypes),
           includeWeakTopics,
           includeUnknownTopics,
         },
@@ -105,19 +95,17 @@ export default function SessionSetupPage() {
 
       if (session.questions.length === 0) {
         setError(
-          "No questions match this setup yet. Try another role or more modes.",
+          "No questions match this setup yet. Try another role or more practice types.",
         );
         setStarting(false);
         return;
       }
 
       await saveSession(session);
-      // Remember the chosen model + role as new defaults.
       await saveSettings({
         ...settings,
         targetRole: role,
         defaultSessionDurationMinutes: duration,
-        preferredSpeechModel: speechModel,
       });
       router.push(`/session?id=${session.id}`);
     } catch (e) {
@@ -129,14 +117,14 @@ export default function SessionSetupPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 sm:py-8">
       <PageHeader
-        title="Session setup"
-        subtitle="Configure your mock interview. Questions are picked from due practice, weak topics and role-critical areas."
+        title="Practice setup"
+        subtitle="Pick your role, pick a length, start talking."
       />
 
-      <Card className="flex flex-col gap-5">
+      <Card className="flex flex-col gap-6">
         <div>
           <label className={labelBase} htmlFor="role">
-            Role
+            Target role
           </label>
           <select
             id="role"
@@ -152,87 +140,32 @@ export default function SessionSetupPage() {
           </select>
         </div>
 
-        <div>
-          <label className={labelBase} htmlFor="duration">
-            Duration
-          </label>
-          <select
-            id="duration"
-            className={inputBase}
-            value={duration}
-            onChange={(e) => setDuration(Number(e.target.value))}
-          >
-            {[15, 30, 45, 60].map((d) => (
-              <option key={d} value={d}>
-                {d} minutes
-              </option>
-            ))}
-          </select>
-        </div>
-
         <fieldset>
-          <legend className={labelBase}>Interview modes</legend>
-          <div className="flex flex-wrap gap-2">
-            {INTERVIEW_MODES.map((mode) => {
-              const active = modes.includes(mode);
-              return (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => toggleMode(mode)}
-                  aria-pressed={active}
-                  className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                    active
-                      ? "bg-accent text-white"
-                      : "border border-hairline text-secondary hover:text-foreground"
-                  }`}
-                >
-                  {MODE_LABELS[mode]}
-                </button>
-              );
-            })}
+          <legend className={labelBase}>Practice length</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                { value: 10, title: "Quick", detail: "10 minutes · ~3 questions" },
+                { value: 30, title: "Standard", detail: "30 minutes · ~5 questions" },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setDuration(opt.value)}
+                aria-pressed={duration === opt.value}
+                className={`rounded-xl border px-4 py-3 text-left ${
+                  duration === opt.value
+                    ? "border-accent bg-accent-soft/40 outline-2 outline-accent"
+                    : "border-hairline hover:bg-background"
+                }`}
+              >
+                <span className="block text-sm font-bold">{opt.title}</span>
+                <span className="block text-xs text-secondary">{opt.detail}</span>
+              </button>
+            ))}
           </div>
         </fieldset>
-
-        <div className="flex flex-col gap-3">
-          <label className="flex items-center gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={includeWeakTopics}
-              onChange={(e) => setIncludeWeakTopics(e.target.checked)}
-              className="h-4 w-4 accent-[var(--accent)]"
-            />
-            Prioritize my weak topics
-          </label>
-          <label className="flex items-center gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={includeUnknownTopics}
-              onChange={(e) => setIncludeUnknownTopics(e.target.checked)}
-              className="h-4 w-4 accent-[var(--accent)]"
-            />
-            Include topics I marked as unknown (learning mode)
-          </label>
-        </div>
-
-        <div>
-          <label className={labelBase} htmlFor="speech-model">
-            Speech-to-text model
-          </label>
-          <select
-            id="speech-model"
-            className={inputBase}
-            value={speechModel}
-            onChange={(e) => setSpeechModel(e.target.value as SpeechModelSize)}
-          >
-            <option value="tiny">Tiny — fastest, downloads ~40 MB</option>
-            <option value="base">Base — balanced, ~80 MB</option>
-            <option value="small">Small — most accurate, ~250 MB</option>
-          </select>
-          <p className="mt-1 text-xs text-muted">
-            Runs locally in your browser; downloaded once and cached.
-          </p>
-        </div>
 
         {error && (
           <p role="alert" className="text-sm font-medium text-critical">
@@ -242,12 +175,69 @@ export default function SessionSetupPage() {
 
         <button
           type="button"
-          onClick={startSession}
+          onClick={startPractice}
           disabled={starting}
-          className={buttonPrimary}
+          className={`${buttonPrimary} py-3 text-base`}
         >
-          {starting ? "Generating session…" : "Start interview session"}
+          {starting ? "Preparing questions…" : "Start Practice"}
         </button>
+
+        <details className="group">
+          <summary className="cursor-pointer select-none text-sm font-medium text-secondary hover:text-foreground">
+            Advanced settings
+          </summary>
+          <div className="mt-4 flex flex-col gap-5 border-t border-hairline pt-4">
+            <fieldset>
+              <legend className={labelBase}>Practice types</legend>
+              <div className="flex flex-col gap-2">
+                {PRACTICE_TYPES.map((type) => (
+                  <label key={type} className="flex items-start gap-3 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={practiceTypes.includes(type)}
+                      onChange={() => togglePracticeType(type)}
+                      className="mt-0.5 h-4 w-4 accent-[var(--accent)]"
+                    />
+                    <span>
+                      <span className="font-medium">
+                        {PRACTICE_TYPE_LABELS[type]}
+                      </span>
+                      <span className="block text-xs text-muted">
+                        {PRACTICE_TYPE_DESCRIPTIONS[type]}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <div className="flex flex-col gap-3">
+              <label className="flex items-center gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={includeWeakTopics}
+                  onChange={(e) => setIncludeWeakTopics(e.target.checked)}
+                  className="h-4 w-4 accent-[var(--accent)]"
+                />
+                Prioritize my weak topics
+              </label>
+              <label className="flex items-center gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={includeUnknownTopics}
+                  onChange={(e) => setIncludeUnknownTopics(e.target.checked)}
+                  className="h-4 w-4 accent-[var(--accent)]"
+                />
+                Include topics I marked as unknown (learning mode)
+              </label>
+            </div>
+
+            <p className="text-xs text-muted">
+              Speech-to-text model can be changed in Settings — the fast local
+              model is used by default.
+            </p>
+          </div>
+        </details>
       </Card>
     </div>
   );

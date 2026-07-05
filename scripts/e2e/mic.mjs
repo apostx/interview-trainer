@@ -28,7 +28,7 @@ async function main() {
 
   // Start a session (backend developer defaults)
   await page.goto(BASE + "/setup/");
-  await page.getByRole("button", { name: "Start interview session" }).click();
+  await page.getByRole("button", { name: "Start Practice" }).click();
   await page.waitForURL(/\/session\/?\?id=/);
   console.log("session started:", page.url());
 

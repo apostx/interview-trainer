@@ -80,9 +80,9 @@ console.log("✅ Dashboard loads at /interview-trainer/ (static export + basePat
 await page.screenshot({ path: `${SHOTS}/15-pages-dashboard.png` });
 
 // 2. Client-side nav to setup, start a session (query-param route)
-await page.getByRole("link", { name: "Start session" }).click();
-await page.getByRole("heading", { name: "Session setup" }).waitFor();
-await page.getByRole("button", { name: "Start interview session" }).click();
+await page.getByRole("main").getByRole("link", { name: "Start Practice" }).first().click();
+await page.getByRole("heading", { name: "Practice setup" }).waitFor();
+await page.getByRole("button", { name: "Start Practice" }).click();
 await page.waitForURL(/\/session\/?\?id=/);
 console.log("✅ Session started, query-param URL:", page.url());
 

@@ -18,6 +18,7 @@ import {
   reviewAnswer,
 } from "@/core/services/answerReviewer";
 import { selectFollowUps } from "@/core/services/followUpSelector";
+import { buildLearningItems } from "@/core/services/learningItems";
 import { matchRubric } from "@/core/services/rubricMatcher";
 import {
   getSession,
@@ -25,6 +26,7 @@ import {
   getTopicsById,
   savePracticeItems,
   saveSession,
+  saveTopic,
 } from "@/core/storage/repositories";
 
 export type RunnerPhase =
@@ -44,12 +46,15 @@ type RunnerState = {
   thinkingStartedAt: number;
   currentFollowUp: FollowUpQuestion | null;
   followUpResult: FollowUpAnswer | null;
+  /** True once "I don't know this topic" was used on the current question. */
+  markedUnknown: boolean;
   error: string | null;
 
   load: (sessionId: string) => Promise<void>;
   currentCard: () => QuestionCard | null;
   submitAnswer: (transcript: string) => Promise<void>;
   overrideRubric: (rubricItemId: string, status: RubricStatus) => Promise<void>;
+  markTopicsUnknown: () => Promise<void>;
   continueAfterReview: () => Promise<void>;
   submitFollowUpAnswer: (transcript: string) => Promise<void>;
   finishFollowUp: () => Promise<void>;
@@ -87,6 +92,7 @@ export const useSessionRunner = create<RunnerState>((set, get) => {
       thinkingStartedAt: Date.now(),
       currentFollowUp: null,
       followUpResult: null,
+      markedUnknown: false,
     });
   }
 
@@ -99,10 +105,17 @@ export const useSessionRunner = create<RunnerState>((set, get) => {
     thinkingStartedAt: 0,
     currentFollowUp: null,
     followUpResult: null,
+    markedUnknown: false,
     error: null,
 
     load: async (sessionId) => {
-      set({ phase: "loading", error: null, currentFollowUp: null, followUpResult: null });
+      set({
+        phase: "loading",
+        error: null,
+        currentFollowUp: null,
+        followUpResult: null,
+        markedUnknown: false,
+      });
       try {
         const [session, settings, topicsById] = await Promise.all([
           getSession(sessionId),
@@ -196,6 +209,30 @@ export const useSessionRunner = create<RunnerState>((set, get) => {
         session.role,
       );
       await persist(session);
+    },
+
+    markTopicsUnknown: async () => {
+      const { topicsById, markedUnknown } = get();
+      const card = get().currentCard();
+      if (!card || markedUnknown) return;
+
+      const nowIso = new Date().toISOString();
+      // Only the card's primary topic — the button says "this topic", and
+      // secondary topics are often broad areas the user does know.
+      const topics = card.topicIds
+        .slice(0, 1)
+        .map((id) => topicsById.get(id))
+        .filter((t): t is NonNullable<typeof t> => Boolean(t));
+
+      // Spec §8 unknown-topic pipeline: the topic drops out of regular
+      // sessions until re-learned, and learning cards land in the queue.
+      for (const topic of topics) {
+        const updated = { ...topic, status: "unknown" as const, userConfidence: 1 as const };
+        await saveTopic(updated);
+        topicsById.set(topic.id, updated);
+        await savePracticeItems(buildLearningItems(updated, nowIso));
+      }
+      set({ markedUnknown: true, topicsById: new Map(topicsById) });
     },
 
     continueAfterReview: async () => {
