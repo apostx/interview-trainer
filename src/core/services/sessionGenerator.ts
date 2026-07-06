@@ -5,6 +5,7 @@ import type {
   QuestionCard,
   Topic,
 } from "@/core/models";
+import { TRACK_MEMBER_ROLES } from "@/core/models";
 
 export type SessionConfig = {
   role: InterviewRole;
@@ -54,8 +55,11 @@ export function scoreCard(
     score += 30;
   }
   if (config.focusTopicIds?.some((t) => card.topicIds.includes(t))) score += 25;
+  const memberRoles = TRACK_MEMBER_ROLES[config.role] ?? [config.role];
   const roleCritical = card.expectedPoints.some(
-    (p) => p.importance === "critical" && (p.roleWeight[config.role] ?? 0) >= 5,
+    (p) =>
+      p.importance === "critical" &&
+      memberRoles.some((r) => (p.roleWeight[r] ?? 0) >= 5),
   );
   if (roleCritical) score += 15;
   if (ctx.recentQuestionCardIds.has(card.id)) score -= 30;
@@ -68,7 +72,8 @@ function isCandidate(
   config: SessionConfig,
   ctx: SessionGenerationContext,
 ): boolean {
-  if (!card.roles.includes(config.role)) return false;
+  const memberRoles = TRACK_MEMBER_ROLES[config.role] ?? [config.role];
+  if (!card.roles.some((r) => memberRoles.includes(r))) return false;
   if (!card.modes.some((m) => config.modes.includes(m))) return false;
   if (!config.includeUnknownTopics) {
     const statuses = card.topicIds

@@ -3,6 +3,7 @@ import type {
   RubricItem,
   RubricStatus,
 } from "@/core/models";
+import { TRACK_MEMBER_ROLES } from "@/core/models";
 import type { RubricMatchResult } from "./rubricMatcher";
 import { statusOf } from "./rubricMatcher";
 
@@ -22,7 +23,13 @@ export const importanceWeight = {
 const DEFAULT_ROLE_WEIGHT = 3;
 
 export function itemWeight(item: RubricItem, role: InterviewRole): number {
-  const roleWeight = item.roleWeight[role] ?? DEFAULT_ROLE_WEIGHT;
+  // A role track (e.g. Backend) covers its developer + architect members;
+  // the strongest member weight applies.
+  const members = TRACK_MEMBER_ROLES[role] ?? [role];
+  const defined = members
+    .map((m) => item.roleWeight[m])
+    .filter((w): w is number => w !== undefined);
+  const roleWeight = defined.length > 0 ? Math.max(...defined) : DEFAULT_ROLE_WEIGHT;
   return importanceWeight[item.importance] * roleWeight;
 }
 

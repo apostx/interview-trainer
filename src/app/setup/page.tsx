@@ -11,11 +11,11 @@ import {
 } from "@/components/ui";
 import type { InterviewRole, PracticeType } from "@/core/models";
 import {
-  INTERVIEW_ROLES,
   PRACTICE_TYPES,
   PRACTICE_TYPE_DESCRIPTIONS,
   PRACTICE_TYPE_LABELS,
   ROLE_LABELS,
+  ROLE_TRACKS,
   modesForPracticeTypes,
 } from "@/core/models";
 import { allQuestions } from "@/core/content/bank";
@@ -132,7 +132,7 @@ export default function SessionSetupPage() {
             value={role}
             onChange={(e) => setRole(e.target.value as InterviewRole)}
           >
-            {INTERVIEW_ROLES.map((r) => (
+            {ROLE_TRACKS.map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABELS[r]}
               </option>

@@ -33,7 +33,9 @@ describe("generateSession", () => {
     expect(session.questions.length).toBeGreaterThanOrEqual(3);
     for (const q of session.questions) {
       const card = seedQuestions.find((c) => c.id === q.questionCardId)!;
-      expect(card.roles).toContain("backend_developer");
+      expect(
+        card.roles.some((r) => ["backend_developer", "backend_architect"].includes(r)),
+      ).toBe(true);
       expect(card.modes.some((m) => baseConfig.modes.includes(m))).toBe(true);
     }
   });

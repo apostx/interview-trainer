@@ -79,3 +79,10 @@ body {
 .recording-dot {
   animation: pulse-recording 1.2s ease-in-out infinite;
 }
+
+@media print {
+  body {
+    background: #ffffff;
+    color: #111111;
+  }
+}

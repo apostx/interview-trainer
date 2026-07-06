@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Card, ModeBadge, PageHeader, inputBase } from "@/components/ui";
+import { Card, ModeBadge, PageHeader, buttonGhost, inputBase } from "@/components/ui";
 import type { QuestionCard, Topic } from "@/core/models";
 import { allQuestions, allTopics } from "@/core/content/bank";
 import { normalizedIncludes } from "@/core/services/transcriptNormalizer";
@@ -42,7 +42,7 @@ function topicMatches(topic: Topic, query: string): boolean {
 
 function StudyCard({ card }: { card: QuestionCard }) {
   return (
-    <div className="border-t border-hairline py-4">
+    <Card className="mb-3">
       <div className="mb-1 flex flex-wrap items-center gap-2">
         {card.modes.slice(0, 2).map((m) => (
           <ModeBadge key={m} mode={m} />
@@ -86,12 +86,39 @@ function StudyCard({ card }: { card: QuestionCard }) {
           </ul>
         </>
       )}
-    </div>
+    </Card>
   );
 }
 
 export default function StudyPage() {
   const [query, setQuery] = useState("");
+  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+
+  const selectedTopic = selectedTopicId
+    ? studyTopics.find((t) => t.id === selectedTopicId)
+    : null;
+
+  if (selectedTopic) {
+    const cards = cardsByTopicId.get(selectedTopic.id) ?? [];
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
+        <button
+          type="button"
+          onClick={() => setSelectedTopicId(null)}
+          className={`${buttonGhost} -ml-3 mb-2`}
+        >
+          ← All topics
+        </button>
+        <PageHeader
+          title={selectedTopic.name}
+          subtitle={selectedTopic.description || undefined}
+        />
+        {cards.map((card) => (
+          <StudyCard key={card.id} card={card} />
+        ))}
+      </div>
+    );
+  }
 
   const visibleTopics = studyTopics.filter((t) => topicMatches(t, query));
   const byCategory = new Map<Topic["category"], Topic[]>();
@@ -103,13 +130,13 @@ export default function StudyPage() {
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
       <PageHeader
         title="Study"
-        subtitle="Read the material without being quizzed: every question with what a strong answer covers and the likely follow-ups."
+        subtitle="Pick a topic and read the material without being quizzed: each question with what a strong answer covers."
         action={
           <Link
-            href="/setup"
-            className="text-sm font-medium text-accent hover:underline"
+            href="/study/print"
+            className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm font-semibold hover:bg-background"
           >
-            Practice instead →
+            Export PDF
           </Link>
         }
       />
@@ -138,32 +165,26 @@ export default function StudyPage() {
               {topics
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .map((topic) => {
-                  const cards = cardsByTopicId.get(topic.id) ?? [];
+                  const count = cardsByTopicId.get(topic.id)?.length ?? 0;
                   return (
-                    <Card key={topic.id} className="!p-0">
-                      <details className="group">
-                        <summary className="flex cursor-pointer select-none items-center justify-between gap-3 px-4 py-3 sm:px-5">
-                          <span>
-                            <span className="text-sm font-semibold">
-                              {topic.name}
-                            </span>
-                            {topic.description && (
-                              <span className="block text-xs text-secondary">
-                                {topic.description}
-                              </span>
-                            )}
+                    <button
+                      key={topic.id}
+                      type="button"
+                      onClick={() => setSelectedTopicId(topic.id)}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface px-4 py-3 text-left hover:bg-background sm:px-5"
+                    >
+                      <span>
+                        <span className="text-sm font-semibold">{topic.name}</span>
+                        {topic.description && (
+                          <span className="block text-xs text-secondary">
+                            {topic.description}
                           </span>
-                          <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-secondary">
-                            {cards.length} card{cards.length === 1 ? "" : "s"}
-                          </span>
-                        </summary>
-                        <div className="px-4 pb-4 sm:px-5">
-                          {cards.map((card) => (
-                            <StudyCard key={card.id} card={card} />
-                          ))}
-                        </div>
-                      </details>
-                    </Card>
+                        )}
+                      </span>
+                      <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-secondary">
+                        {count} card{count === 1 ? "" : "s"}
+                      </span>
+                    </button>
                   );
                 })}
             </div>

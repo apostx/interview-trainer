@@ -58,12 +58,34 @@ export const INTERVIEW_MODES: InterviewMode[] = [
 ];
 
 export const ROLE_LABELS: Record<InterviewRole, string> = {
-  frontend_developer: "Frontend Developer",
-  backend_developer: "Backend Developer",
-  fullstack_developer: "Fullstack Developer",
+  frontend_developer: "Frontend",
+  backend_developer: "Backend",
+  fullstack_developer: "Fullstack",
   frontend_architect: "Frontend Architect",
   backend_architect: "Backend Architect",
   solution_architect: "Solution Architect",
+};
+
+/**
+ * User-facing role tracks: architect knowledge is a baseline expectation for
+ * seniors, so the UI merges developer + architect pairs. Content keeps the
+ * six granular InterviewRole values; a track pulls in its member roles for
+ * question selection and scoring.
+ */
+export const ROLE_TRACKS: InterviewRole[] = [
+  "frontend_developer",
+  "backend_developer",
+  "fullstack_developer",
+  "solution_architect",
+];
+
+export const TRACK_MEMBER_ROLES: Record<InterviewRole, InterviewRole[]> = {
+  frontend_developer: ["frontend_developer", "frontend_architect"],
+  backend_developer: ["backend_developer", "backend_architect"],
+  fullstack_developer: ["fullstack_developer"],
+  frontend_architect: ["frontend_architect", "frontend_developer"],
+  backend_architect: ["backend_architect", "backend_developer"],
+  solution_architect: ["solution_architect"],
 };
 
 export const MODE_LABELS: Record<InterviewMode, string> = {

@@ -14,7 +14,7 @@ import type {
   SpeechModelSize,
   UserSettings,
 } from "@/core/models";
-import { INTERVIEW_ROLES, ROLE_LABELS } from "@/core/models";
+import { ROLE_LABELS, ROLE_TRACKS } from "@/core/models";
 import { getSettings, saveSettings } from "@/core/storage/repositories";
 
 export default function SettingsPage() {
@@ -64,7 +64,7 @@ export default function SettingsPage() {
               update({ targetRole: e.target.value as InterviewRole })
             }
           >
-            {INTERVIEW_ROLES.map((r) => (
+            {ROLE_TRACKS.map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABELS[r]}
               </option>

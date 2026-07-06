@@ -60,7 +60,7 @@ await page.screenshot({ path: `${SHOTS}/13-setup-no-difficulty.png` });
 let foundPackQuestion = false;
 for (let attempt = 0; attempt < 6 && !foundPackQuestion; attempt++) {
   await page.goto(BASE + "/setup/");
-  await page.getByLabel("Role").selectOption("backend_architect");
+  await page.getByLabel("Role").selectOption("backend_developer");
   await page.getByRole("button", { name: "Start Practice" }).click();
   await page.waitForURL(/\/session\/?\?id=/);
   // walk through questions by title without answering: skip through

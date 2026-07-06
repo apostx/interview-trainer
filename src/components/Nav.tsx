@@ -66,7 +66,7 @@ function linkClasses(active: boolean): string {
 export function SidebarNav() {
   const pathname = usePathname();
   return (
-    <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col gap-1 border-r border-hairline bg-surface px-4 py-6 md:flex">
+    <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col gap-1 border-r border-hairline bg-surface px-4 py-6 md:flex print:!hidden">
       <div className="mb-6 px-2">
         <Link href="/" className="text-lg font-bold tracking-tight">
           Interview Trainer
@@ -102,7 +102,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Main navigation"
-      className="fixed inset-x-0 bottom-0 z-40 flex border-t border-hairline bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 flex border-t border-hairline bg-surface pb-[env(safe-area-inset-bottom)] md:hidden print:!hidden"
     >
       {items.map((item) => {
         const active =

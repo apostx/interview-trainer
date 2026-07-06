@@ -37,7 +37,7 @@ export default function RootLayout({
       <body className="min-h-dvh">
         <div className="flex min-h-dvh">
           <SidebarNav />
-          <main className="min-w-0 flex-1 pb-24 md:pb-10">{children}</main>
+          <main className="min-w-0 flex-1 pb-24 md:pb-10 print:pb-0">{children}</main>
         </div>
         <BottomNav />
       </body>

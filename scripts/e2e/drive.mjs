@@ -211,11 +211,20 @@ async function main() {
   await page.getByRole("heading", { name: "Study", exact: true }).waitFor();
   await page.getByText("Circuit breaker", { exact: true }).first().click();
   await page.getByText("A strong answer covers").first().waitFor();
-  log("✅", "Study view: topic expands to question + expected answer points");
+  log("✅", "Study view: selected topic shows only its cards with answer points");
+  await page.getByRole("button", { name: "← All topics" }).click();
   await page.getByLabel("Search topics and questions").fill("idempotency");
   await page.getByText("Idempotency", { exact: true }).first().waitFor();
-  log("🔍", "Study search filters topics");
+  log("🔍", "Study search filters the topic list");
   await page.screenshot({ path: `${SHOTS}/17-study.png` });
+
+  // ---- Study PDF export view
+  await page.goto(BASE + "/study/print/");
+  await page.getByRole("heading", { name: "Interview Trainer — Study material" }).waitFor();
+  await page.getByRole("button", { name: "Save as PDF" }).waitFor();
+  const printBg = await page.evaluate(() => getComputedStyle(document.querySelector("main > div")).backgroundColor);
+  log(printBg === "rgb(255, 255, 255)" ? "✅" : "❌", `Print view white background (${printBg}) with Save as PDF button`);
+  await page.screenshot({ path: `${SHOTS}/18-study-print.png` });
   await page.screenshot({ path: `${SHOTS}/08-topics.png` });
 
   // ---- 8. Settings persistence
