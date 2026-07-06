@@ -1,0 +1,242 @@
+{
+  "id": "ways_of_working",
+  "name": "Agile & delivery methodologies",
+  "description": "Scrum, Kanban, XP and the SDLC models (Waterfall, V-model, iterative, DevOps, SAFe) — process reasoning for senior interviews. From the 'agile' and 'módszertanok' prep docs.",
+  "topics": [
+    {
+      "id": "scrum",
+      "name": "Scrum",
+      "description": "Roles, events and artifacts of the Scrum framework; empirical process control.",
+      "category": "soft_technical",
+      "relatedTopicIds": ["kanban"]
+    },
+    {
+      "id": "kanban",
+      "name": "Kanban",
+      "description": "Flow-based method: visualize work, limit WIP, manage flow.",
+      "category": "soft_technical",
+      "relatedTopicIds": ["scrum"]
+    },
+    {
+      "id": "sdlc_models",
+      "name": "SDLC models",
+      "description": "Waterfall, V-model, iterative/incremental, spiral and when each applies.",
+      "category": "soft_technical",
+      "relatedTopicIds": ["scrum", "devops_culture"]
+    },
+    {
+      "id": "devops_culture",
+      "name": "DevOps",
+      "description": "Culture and practices uniting dev and ops: CI/CD, automation, shared ownership.",
+      "category": "devops",
+      "relatedTopicIds": ["deployment", "sdlc_models"]
+    }
+  ],
+  "questions": [
+    {
+      "id": "wow_scrum_kanban_001",
+      "title": "Scrum vs Kanban",
+      "prompt": "What is the difference between Scrum and Kanban, and how would you choose between them for a team?",
+      "roles": ["fullstack_developer", "backend_architect", "frontend_architect", "solution_architect"],
+      "modes": ["tradeoff_decision", "concept_check"],
+      "topicIds": ["scrum", "kanban"],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cadence/sprints and roles vs continuous flow and WIP limits; which fits planned work vs interrupt-driven work.",
+      "expectedPoints": [
+        {
+          "id": "sk_scrum_cadence",
+          "label": "Scrum = timeboxed sprints, roles, ceremonies",
+          "description": "Fixed-length sprints, defined roles and events, commitment per sprint.",
+          "importance": "critical",
+          "roleWeight": { "fullstack_developer": 4, "backend_architect": 5, "solution_architect": 5, "frontend_architect": 5 },
+          "acceptedSignals": [
+            "sprints",
+            "timeboxed",
+            "sprint planning",
+            "roles",
+            "ceremonies",
+            "scrum master",
+            "product owner",
+            "cadence"
+          ]
+        },
+        {
+          "id": "sk_kanban_flow",
+          "label": "Kanban = continuous flow with WIP limits",
+          "description": "Continuous pull, visualize the board, limit work in progress, optimize flow.",
+          "importance": "critical",
+          "roleWeight": { "fullstack_developer": 4, "backend_architect": 5, "solution_architect": 4 },
+          "acceptedSignals": [
+            "continuous flow",
+            "wip limit",
+            "work in progress",
+            "pull",
+            "no sprints",
+            "visualize the board",
+            "flow"
+          ]
+        },
+        {
+          "id": "sk_choose",
+          "label": "Matches method to the work",
+          "description": "Scrum for planned feature work in a stable team; Kanban for interrupt-driven/support/ops work.",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 4, "solution_architect": 4 },
+          "acceptedSignals": [
+            "interrupt driven",
+            "support work",
+            "unpredictable",
+            "planned work",
+            "stable priorities",
+            "ops team",
+            "maintenance"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "wow_wip_followup",
+          "trigger": { "type": "rubric_covered", "rubricItemId": "sk_kanban_flow" },
+          "prompt": "Why do WIP limits actually improve throughput?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "wow_agile_vs_waterfall_001",
+      "title": "Agile vs Waterfall",
+      "prompt": "When would a waterfall or V-model approach be a better fit than agile?",
+      "roles": ["backend_architect", "solution_architect", "fullstack_developer"],
+      "modes": ["tradeoff_decision"],
+      "topicIds": ["sdlc_models"],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Fixed vs evolving requirements, regulatory/contractual constraints, cost of late change.",
+      "expectedPoints": [
+        {
+          "id": "aw_requirements_stability",
+          "label": "Depends on requirement stability",
+          "description": "Waterfall fits fixed, well-understood requirements; agile fits evolving ones.",
+          "importance": "critical",
+          "roleWeight": { "backend_architect": 5, "solution_architect": 5, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "fixed requirements",
+            "stable requirements",
+            "requirements change",
+            "evolving requirements",
+            "well understood upfront",
+            "clear scope"
+          ]
+        },
+        {
+          "id": "aw_regulatory",
+          "label": "Regulatory / contractual / safety context",
+          "description": "Heavy documentation, audits, safety-critical or fixed-bid contracts favor plan-driven models.",
+          "importance": "important",
+          "roleWeight": { "solution_architect": 5, "backend_architect": 4 },
+          "acceptedSignals": [
+            "regulatory",
+            "compliance",
+            "safety critical",
+            "documentation",
+            "audit",
+            "fixed price contract",
+            "medical",
+            "aviation"
+          ]
+        },
+        {
+          "id": "aw_cost_of_change",
+          "label": "Cost of late change",
+          "description": "Waterfall makes late changes expensive; agile keeps feedback loops short to reduce that risk.",
+          "importance": "nice_to_have",
+          "roleWeight": { "backend_architect": 4, "solution_architect": 4 },
+          "acceptedSignals": [
+            "cost of change",
+            "late changes are expensive",
+            "feedback loop",
+            "early feedback",
+            "risk of changing late"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "wow_hybrid_followup",
+          "trigger": { "type": "always" },
+          "prompt": "In practice teams often mix these. What does a pragmatic hybrid look like?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "wow_devops_001",
+      "title": "What DevOps actually means",
+      "prompt": "What does DevOps mean beyond tooling, and what practices make it work?",
+      "roles": ["backend_developer", "backend_architect", "solution_architect", "fullstack_developer"],
+      "modes": ["concept_check", "experience_deep_dive"],
+      "topicIds": ["devops_culture", "deployment"],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Shared ownership culture, CI/CD automation, fast feedback, observability — not just a job title.",
+      "expectedPoints": [
+        {
+          "id": "do_culture",
+          "label": "Culture of shared ownership",
+          "description": "Breaks the dev/ops wall; teams own their software in production ('you build it, you run it').",
+          "importance": "critical",
+          "roleWeight": { "backend_architect": 5, "solution_architect": 5, "backend_developer": 4, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "shared ownership",
+            "you build it you run it",
+            "break down silos",
+            "culture",
+            "collaboration between dev and ops",
+            "own it in production"
+          ],
+          "weakSignals": ["work together"]
+        },
+        {
+          "id": "do_cicd",
+          "label": "CI/CD and automation",
+          "description": "Automated pipelines: build, test, deploy; infrastructure as code.",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 5, "backend_architect": 4, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "ci/cd",
+            "continuous integration",
+            "continuous delivery",
+            "pipeline",
+            "automation",
+            "infrastructure as code",
+            "automated deploy"
+          ]
+        },
+        {
+          "id": "do_feedback",
+          "label": "Fast feedback and observability",
+          "description": "Monitoring, quick rollbacks and short feedback loops to production.",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 4, "solution_architect": 4 },
+          "acceptedSignals": [
+            "monitoring",
+            "observability",
+            "fast feedback",
+            "rollback",
+            "metrics",
+            "feedback loop"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "wow_dora_followup",
+          "trigger": { "type": "always" },
+          "prompt": "How would you measure whether a team's DevOps is actually improving?",
+          "expectedPoints": []
+        }
+      ]
+    }
+  ]
+}

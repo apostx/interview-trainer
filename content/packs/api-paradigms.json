@@ -1,0 +1,233 @@
+{
+  "id": "api_paradigms",
+  "name": "API paradigms & realtime",
+  "description": "REST, GraphQL, gRPC, SOAP/RPC and realtime transports — choosing and defending an API style. From the 'API paradigmák' prep doc.",
+  "topics": [
+    {
+      "id": "graphql",
+      "name": "GraphQL",
+      "description": "Query language with a single endpoint, client-specified fields, one round trip.",
+      "category": "backend",
+      "relatedTopicIds": ["api_design", "rest"]
+    },
+    {
+      "id": "grpc",
+      "name": "gRPC",
+      "description": "Contract-first RPC over HTTP/2 with protobuf, streaming, strong typing.",
+      "category": "backend",
+      "relatedTopicIds": ["api_design"]
+    },
+    {
+      "id": "realtime_transports",
+      "name": "Realtime transports",
+      "description": "Polling, SSE, WebSocket and webhooks for pushing data to clients.",
+      "category": "backend",
+      "relatedTopicIds": ["websocket", "api_integration"]
+    }
+  ],
+  "questions": [
+    {
+      "id": "api_rest_vs_graphql_001",
+      "title": "REST vs GraphQL",
+      "prompt": "How would you decide between REST and GraphQL for a new API?",
+      "roles": ["backend_developer", "fullstack_developer", "backend_architect", "solution_architect"],
+      "modes": ["tradeoff_decision"],
+      "topicIds": ["rest", "graphql", "api_design"],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Anchor in client needs; over/under-fetching and one round trip vs caching, complexity and versioning.",
+      "expectedPoints": [
+        {
+          "id": "rg_it_depends",
+          "label": "Frames around client needs",
+          "description": "Decides based on how varied and demanding the clients' data needs are.",
+          "importance": "critical",
+          "roleWeight": { "backend_architect": 5, "solution_architect": 5, "backend_developer": 4, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "it depends",
+            "depends on the clients",
+            "how the clients consume",
+            "requirements",
+            "many different clients"
+          ]
+        },
+        {
+          "id": "rg_overfetching",
+          "label": "GraphQL solves over/under-fetching",
+          "description": "Client picks exactly the fields it needs in one request; avoids many round trips.",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 5, "fullstack_developer": 5, "backend_architect": 4 },
+          "acceptedSignals": [
+            "over fetching",
+            "under fetching",
+            "only the fields it needs",
+            "one round trip",
+            "single request",
+            "client specifies the shape"
+          ]
+        },
+        {
+          "id": "rg_rest_strengths",
+          "label": "REST strengths and GraphQL costs",
+          "description": "REST is simple, cache-friendly (HTTP caching); GraphQL adds server complexity, caching and rate-limiting challenges.",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 5, "backend_developer": 4, "solution_architect": 4 },
+          "acceptedSignals": [
+            "http caching",
+            "cache friendly",
+            "rest is simpler",
+            "harder to cache",
+            "server complexity",
+            "n plus one",
+            "rate limiting is harder"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "api_graphql_n1_followup",
+          "trigger": { "type": "rubric_covered", "rubricItemId": "rg_overfetching" },
+          "prompt": "GraphQL can trigger an N+1 problem on the server. What is it and how would you address it?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "api_grpc_when_001",
+      "title": "When to use gRPC",
+      "prompt": "When would you choose gRPC over a REST or GraphQL API?",
+      "roles": ["backend_developer", "backend_architect", "solution_architect"],
+      "modes": ["tradeoff_decision", "concept_check"],
+      "topicIds": ["grpc", "api_design"],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Internal service-to-service, performance, streaming and contracts vs browser support and tooling.",
+      "expectedPoints": [
+        {
+          "id": "grpc_internal_perf",
+          "label": "Service-to-service performance",
+          "description": "gRPC suits internal microservice calls: binary protobuf over HTTP/2, low latency, streaming.",
+          "importance": "critical",
+          "roleWeight": { "backend_architect": 5, "backend_developer": 4, "solution_architect": 4 },
+          "acceptedSignals": [
+            "service to service",
+            "internal services",
+            "microservices",
+            "http/2",
+            "protobuf",
+            "binary",
+            "streaming",
+            "low latency",
+            "high performance"
+          ]
+        },
+        {
+          "id": "grpc_contract",
+          "label": "Contract-first with generated code",
+          "description": "Proto files define a strict contract and generate typed client/server stubs.",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 4, "backend_developer": 4 },
+          "acceptedSignals": [
+            "contract first",
+            "proto file",
+            "generated code",
+            "strong typing",
+            "stubs",
+            "schema defined"
+          ]
+        },
+        {
+          "id": "grpc_browser_limit",
+          "label": "Knows the browser/tooling limitation",
+          "description": "Not natively callable from browsers (needs grpc-web/proxy); harder to debug than JSON.",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 4, "solution_architect": 4 },
+          "acceptedSignals": [
+            "not from the browser",
+            "grpc-web",
+            "proxy",
+            "harder to debug",
+            "not human readable",
+            "no native browser support"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "api_grpc_stream_followup",
+          "trigger": { "type": "always" },
+          "prompt": "gRPC supports streaming. Give an example where server or bidirectional streaming is the right fit.",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "api_realtime_001",
+      "title": "Realtime: polling vs SSE vs WebSocket vs webhook",
+      "prompt": "Compare polling, server-sent events, WebSocket and webhooks. When does each fit?",
+      "roles": ["backend_developer", "fullstack_developer", "backend_architect"],
+      "modes": ["concept_check", "tradeoff_decision"],
+      "topicIds": ["realtime_transports", "websocket"],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Direction, who initiates, connection cost, and the classic use cases for each.",
+      "expectedPoints": [
+        {
+          "id": "rt_direction",
+          "label": "Distinguishes by direction and initiator",
+          "description": "Polling/SSE are client-pull/server-push one-way; WebSocket is bidirectional; webhooks are server-to-server callbacks.",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 5, "fullstack_developer": 5, "backend_architect": 4 },
+          "acceptedSignals": [
+            "one way",
+            "two way",
+            "bidirectional",
+            "server to server",
+            "callback",
+            "server pushes",
+            "client polls"
+          ]
+        },
+        {
+          "id": "rt_use_cases",
+          "label": "Right use case for each",
+          "description": "Polling for simple/low-frequency, SSE for notifications/feeds, WebSocket for chat/live collaboration, webhook for third-party events.",
+          "importance": "important",
+          "roleWeight": { "backend_developer": 4, "fullstack_developer": 4, "backend_architect": 4 },
+          "acceptedSignals": [
+            "chat",
+            "notifications",
+            "live feed",
+            "third party events",
+            "payment webhook",
+            "low frequency",
+            "collaboration"
+          ]
+        },
+        {
+          "id": "rt_connection_cost",
+          "label": "Mentions connection cost / scaling",
+          "description": "Persistent connections (WebSocket) cost server resources and complicate load balancing.",
+          "importance": "nice_to_have",
+          "roleWeight": { "backend_architect": 5, "backend_developer": 3 },
+          "acceptedSignals": [
+            "persistent connection",
+            "connection cost",
+            "load balancing",
+            "sticky sessions",
+            "resource usage",
+            "many open connections"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "api_webhook_reliability_followup",
+          "trigger": { "type": "always" },
+          "prompt": "A webhook delivery can fail. How do you make webhook consumption reliable?",
+          "expectedPoints": []
+        }
+      ]
+    }
+  ]
+}
