@@ -1,0 +1,491 @@
+{
+  "id": "frontend_nagarro",
+  "name": "Frontend interview prep (Nagarro)",
+  "description": "Frontend developer topics from the Nagarro/Tesco Hungary interview prep doc: JS internals, React, browser APIs, CSS, a11y, security and performance.",
+  "topics": [
+    {
+      "id": "object_vs_map",
+      "name": "Object vs Map",
+      "description": "Choosing between plain objects and Map for keyed collections; key coercion, iteration, size.",
+      "category": "frontend",
+      "relatedTopicIds": ["state_management"]
+    },
+    {
+      "id": "event_delegation",
+      "name": "Event delegation",
+      "description": "Capturing vs bubbling, delegating handlers to a common ancestor.",
+      "category": "frontend",
+      "relatedTopicIds": ["react"]
+    },
+    {
+      "id": "websocket_vs_sse",
+      "name": "WebSocket vs SSE",
+      "description": "Bidirectional WebSocket vs one-way server-sent events vs polling for realtime UI.",
+      "category": "frontend",
+      "relatedTopicIds": ["api_integration"]
+    },
+    {
+      "id": "css_box_sizing",
+      "name": "CSS box-sizing",
+      "description": "content-box vs border-box and how padding/border affect the box model.",
+      "category": "frontend",
+      "relatedTopicIds": []
+    },
+    {
+      "id": "web_accessibility",
+      "name": "Web accessibility (a11y)",
+      "description": "Semantic HTML, ARIA, keyboard navigation, focus management, contrast.",
+      "category": "frontend",
+      "relatedTopicIds": []
+    },
+    {
+      "id": "core_web_vitals",
+      "name": "Core Web Vitals",
+      "description": "LCP, CLS, INP and how to measure and improve perceived performance.",
+      "category": "frontend",
+      "relatedTopicIds": ["frontend_performance"]
+    },
+    {
+      "id": "js_event_loop",
+      "name": "JavaScript event loop",
+      "description": "Call stack, task queue, microtasks, and async execution order.",
+      "category": "frontend",
+      "relatedTopicIds": []
+    }
+  ],
+  "questions": [
+    {
+      "id": "fe_nag_object_vs_map_001",
+      "title": "Object vs Map",
+      "prompt": "When would you use a Map instead of a plain object in JavaScript, and what are the differences?",
+      "roles": ["frontend_developer", "fullstack_developer"],
+      "modes": ["concept_check"],
+      "topicIds": ["object_vs_map", "state_management"],
+      "expectedDurationSeconds": 150,
+      "thinkingTimeSeconds": 30,
+      "answerStructureHint": "Key types, key coercion, iteration order and size, and when each fits.",
+      "expectedPoints": [
+        {
+          "id": "map_any_key",
+          "label": "Map keys can be any type",
+          "description": "Object keys are coerced to strings/symbols; Map keys can be objects, functions or any value.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "any type as key",
+            "object as a key",
+            "keys coerced to strings",
+            "string keys only",
+            "keys can be objects"
+          ]
+        },
+        {
+          "id": "map_iteration_size",
+          "label": "Map preserves insertion order and exposes size",
+          "description": "Map iterates in insertion order and has a size property; objects need Object.keys and have no direct size.",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 4 },
+          "acceptedSignals": [
+            "insertion order",
+            "size property",
+            "iterable",
+            "easy to iterate",
+            ".size"
+          ]
+        },
+        {
+          "id": "map_use_case",
+          "label": "Knows when to prefer each",
+          "description": "Map for frequent add/remove and non-string keys; object for fixed-shape records and JSON.",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 4, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "frequent additions and deletions",
+            "dynamic keys",
+            "lookup table",
+            "known shape",
+            "record",
+            "serialize to json"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fe_nag_weakmap_followup",
+          "trigger": { "type": "always" },
+          "prompt": "What problem do WeakMap and WeakSet solve that Map and Set do not?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fe_nag_event_delegation_001",
+      "title": "Event delegation",
+      "prompt": "What is event delegation and why is it useful? Explain capturing vs bubbling.",
+      "roles": ["frontend_developer", "fullstack_developer"],
+      "modes": ["concept_check"],
+      "topicIds": ["event_delegation"],
+      "expectedDurationSeconds": 150,
+      "thinkingTimeSeconds": 30,
+      "answerStructureHint": "Bubbling vs capturing phases, attaching one listener on an ancestor, and the benefits.",
+      "expectedPoints": [
+        {
+          "id": "ed_bubbling",
+          "label": "Explains bubbling and capturing",
+          "description": "Events propagate down (capture) then up (bubble) through ancestors.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "bubbling",
+            "bubbles up",
+            "capturing",
+            "capture phase",
+            "propagate up",
+            "event propagation"
+          ]
+        },
+        {
+          "id": "ed_single_listener",
+          "label": "One listener on a common ancestor",
+          "description": "Attach a single handler on a parent instead of one per child.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5 },
+          "acceptedSignals": [
+            "single listener",
+            "one handler on the parent",
+            "listener on the container",
+            "handle events on the parent",
+            "event.target"
+          ]
+        },
+        {
+          "id": "ed_benefits",
+          "label": "Names the benefits",
+          "description": "Works for dynamically added elements and reduces memory/listener count.",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 4 },
+          "acceptedSignals": [
+            "dynamically added elements",
+            "fewer listeners",
+            "less memory",
+            "works for new elements",
+            "performance"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fe_nag_stop_propagation_followup",
+          "trigger": { "type": "always" },
+          "prompt": "How do stopPropagation and preventDefault differ?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fe_nag_websocket_sse_001",
+      "title": "WebSocket vs SSE for live UI",
+      "prompt": "You need live updates in a web app. How would you choose between WebSocket, server-sent events and polling?",
+      "roles": ["frontend_developer", "fullstack_developer"],
+      "modes": ["tradeoff_decision", "concept_check"],
+      "topicIds": ["websocket_vs_sse", "api_integration"],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Direction (one-way vs two-way), frequency, reconnection, and infrastructure fit.",
+      "expectedPoints": [
+        {
+          "id": "wss_it_depends",
+          "label": "Frames around the requirement",
+          "description": "Anchors the choice in direction and update frequency rather than naming a winner.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 4, "fullstack_developer": 5 },
+          "acceptedSignals": [
+            "it depends",
+            "depends on the requirements",
+            "how often",
+            "one way or two way",
+            "direction of communication"
+          ]
+        },
+        {
+          "id": "wss_ws_bidirectional",
+          "label": "WebSocket = bidirectional",
+          "description": "WebSocket suits two-way, high-frequency communication like chat.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 5 },
+          "acceptedSignals": [
+            "bidirectional",
+            "two way",
+            "both directions",
+            "persistent connection",
+            "chat",
+            "full duplex"
+          ]
+        },
+        {
+          "id": "wss_sse_oneway",
+          "label": "SSE = one-way server push with auto-reconnect",
+          "description": "SSE streams server-to-client over HTTP and reconnects automatically; polling is simplest for low frequency.",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 4, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "server sent events",
+            "sse",
+            "one way",
+            "server to client",
+            "auto reconnect",
+            "eventsource",
+            "polling is simpler"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fe_nag_ws_scale_followup",
+          "trigger": { "type": "always" },
+          "prompt": "What breaks first when you scale WebSocket connections, and how would you handle reconnection on the client?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fe_nag_box_sizing_001",
+      "title": "CSS box-sizing",
+      "prompt": "What does box-sizing do, and what is the difference between content-box and border-box?",
+      "roles": ["frontend_developer"],
+      "modes": ["concept_check"],
+      "topicIds": ["css_box_sizing"],
+      "expectedDurationSeconds": 120,
+      "thinkingTimeSeconds": 20,
+      "answerStructureHint": "How width is computed with padding and border under each value, and why border-box is common.",
+      "expectedPoints": [
+        {
+          "id": "bs_border_box",
+          "label": "border-box includes padding and border in width",
+          "description": "With border-box the declared width contains content, padding and border.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5 },
+          "acceptedSignals": [
+            "border box includes padding",
+            "padding and border inside the width",
+            "width includes border",
+            "content padding and border",
+            "border-box"
+          ]
+        },
+        {
+          "id": "bs_content_box",
+          "label": "content-box is the default and adds padding/border on top",
+          "description": "content-box (default) sizes only the content, so padding and border expand the element.",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 4 },
+          "acceptedSignals": [
+            "content box is the default",
+            "padding adds to the width",
+            "border adds to the size",
+            "only the content",
+            "content-box"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fe_nag_box_reset_followup",
+          "trigger": { "type": "always" },
+          "prompt": "Why do many CSS resets set box-sizing: border-box on everything?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fe_nag_a11y_001",
+      "title": "Web accessibility basics",
+      "prompt": "How do you make a web application accessible? Walk me through the key things you check.",
+      "roles": ["frontend_developer", "fullstack_developer", "frontend_architect"],
+      "modes": ["concept_check", "scenario_discussion"],
+      "topicIds": ["web_accessibility"],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Semantic HTML first, keyboard and focus, ARIA where needed, contrast and screen-reader testing.",
+      "expectedPoints": [
+        {
+          "id": "a11y_semantic",
+          "label": "Semantic HTML first",
+          "description": "Use native elements (button, nav, label) before reaching for ARIA.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "frontend_architect": 5, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "semantic html",
+            "native elements",
+            "use a real button",
+            "proper heading structure",
+            "landmarks",
+            "labels"
+          ],
+          "weakSignals": ["accessible html"]
+        },
+        {
+          "id": "a11y_keyboard",
+          "label": "Keyboard and focus management",
+          "description": "Everything usable by keyboard, visible focus, sensible tab order.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "frontend_architect": 4 },
+          "acceptedSignals": [
+            "keyboard navigation",
+            "tab order",
+            "focus management",
+            "focus visible",
+            "focus trap",
+            "operable by keyboard"
+          ]
+        },
+        {
+          "id": "a11y_aria_contrast",
+          "label": "ARIA where needed and sufficient contrast",
+          "description": "ARIA roles/attributes for custom widgets, plus color contrast and screen-reader checks.",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 4, "frontend_architect": 4 },
+          "acceptedSignals": [
+            "aria",
+            "aria-label",
+            "roles",
+            "color contrast",
+            "screen reader",
+            "alt text"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fe_nag_a11y_test_followup",
+          "trigger": { "type": "rubric_missing", "rubricItemId": "a11y_aria_contrast" },
+          "prompt": "How would you actually test that a component is accessible?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fe_nag_web_vitals_001",
+      "title": "Core Web Vitals",
+      "prompt": "What are the Core Web Vitals, and how would you improve a page that scores poorly on them?",
+      "roles": ["frontend_developer", "frontend_architect", "fullstack_developer"],
+      "modes": ["scenario_discussion", "troubleshooting"],
+      "topicIds": ["core_web_vitals", "frontend_performance"],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Name LCP/CLS/INP, measure with real data, then targeted fixes per metric.",
+      "expectedPoints": [
+        {
+          "id": "cwv_metrics",
+          "label": "Names the metrics",
+          "description": "LCP (loading), CLS (layout stability), INP/FID (interactivity).",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "frontend_architect": 5, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "lcp",
+            "largest contentful paint",
+            "cls",
+            "cumulative layout shift",
+            "inp",
+            "interaction to next paint",
+            "fid"
+          ]
+        },
+        {
+          "id": "cwv_measure_first",
+          "label": "Measures with real data first",
+          "description": "Uses field data / Lighthouse / RUM before optimizing.",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 4, "frontend_architect": 5 },
+          "acceptedSignals": [
+            "measure first",
+            "lighthouse",
+            "field data",
+            "real user monitoring",
+            "rum",
+            "web vitals library",
+            "profile"
+          ]
+        },
+        {
+          "id": "cwv_fixes",
+          "label": "Targeted fixes per metric",
+          "description": "Optimize images/critical path for LCP, reserve space for CLS, break up long tasks for INP.",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 5, "frontend_architect": 4 },
+          "acceptedSignals": [
+            "optimize images",
+            "preload",
+            "reserve space",
+            "size attributes",
+            "avoid layout shift",
+            "code splitting",
+            "break up long tasks",
+            "lazy load"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fe_nag_cwv_cls_followup",
+          "trigger": { "type": "always" },
+          "prompt": "A page jumps around as it loads. Which metric is that, and what are the usual causes?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fe_nag_event_loop_001",
+      "title": "JavaScript event loop",
+      "prompt": "Explain the JavaScript event loop. What is the difference between a microtask and a macrotask?",
+      "roles": ["frontend_developer", "fullstack_developer"],
+      "modes": ["concept_check"],
+      "topicIds": ["js_event_loop"],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Single thread + call stack, the task and microtask queues, and their ordering.",
+      "expectedPoints": [
+        {
+          "id": "el_single_thread",
+          "label": "Single-threaded with a call stack and queue",
+          "description": "JS runs on one thread; the event loop pulls queued callbacks when the stack is empty.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "single threaded",
+            "call stack",
+            "task queue",
+            "event loop",
+            "stack is empty",
+            "non blocking"
+          ]
+        },
+        {
+          "id": "el_microtasks",
+          "label": "Microtasks drain before the next macrotask",
+          "description": "Promise callbacks (microtasks) run fully before the next timer/task (macrotask).",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "microtask",
+            "macrotask",
+            "promises run before",
+            "microtask queue",
+            "settimeout runs later",
+            "queuemicrotask",
+            "drained before"
+          ],
+          "weakSignals": ["promises are faster"]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fe_nag_el_order_followup",
+          "trigger": { "type": "always" },
+          "prompt": "Given a console.log, a setTimeout(…, 0) and a Promise.then in the same function, in what order do they run and why?",
+          "expectedPoints": []
+        }
+      ]
+    }
+  ]
+}
