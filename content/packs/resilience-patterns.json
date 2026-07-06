@@ -1,0 +1,371 @@
+{
+  "id": "resilience_patterns",
+  "name": "Resilience & production readiness",
+  "description": "Circuit breaker, timeout/retry budgets, bulkhead, backpressure, SLO/error budget and production readiness — from the Dennemeyer system design 100-topic doc.",
+  "topics": [
+    {
+      "id": "circuit_breaker",
+      "name": "Circuit breaker",
+      "description": "Stops calling a failing dependency to prevent cascading failure; closed/open/half-open states.",
+      "category": "architecture",
+      "relatedTopicIds": ["reliability", "retries"]
+    },
+    {
+      "id": "backpressure",
+      "name": "Backpressure & bulkhead",
+      "description": "Limiting and isolating load so one slow dependency cannot exhaust shared resources.",
+      "category": "architecture",
+      "relatedTopicIds": ["reliability", "message_queue"]
+    },
+    {
+      "id": "slo_sla",
+      "name": "SLO / SLA / SLI & error budget",
+      "description": "Service level indicators, objectives, agreements, and error budgets driving release pace.",
+      "category": "observability",
+      "relatedTopicIds": ["observability", "reliability"]
+    },
+    {
+      "id": "production_readiness",
+      "name": "Production readiness",
+      "description": "Health checks, graceful shutdown, correlation IDs, alerting — what a service needs before go-live.",
+      "category": "devops",
+      "relatedTopicIds": ["observability", "deployment"]
+    }
+  ],
+  "questions": [
+    {
+      "id": "res_circuit_breaker_001",
+      "title": "Circuit breaker",
+      "prompt": "What problem does a circuit breaker solve, and how does it work?",
+      "roles": ["backend_developer", "backend_architect", "solution_architect"],
+      "modes": ["concept_check"],
+      "topicIds": ["circuit_breaker", "reliability"],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "The cascading-failure problem, the three states, and what happens to callers while it is open.",
+      "expectedPoints": [
+        {
+          "id": "cb_cascading",
+          "label": "Prevents cascading failure",
+          "description": "Stops hammering a failing dependency so threads/connections don't pile up and take the caller down too.",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 5, "backend_architect": 5, "solution_architect": 4 },
+          "acceptedSignals": [
+            "cascading failure",
+            "stop calling the failing service",
+            "fail fast",
+            "protect the caller",
+            "threads pile up",
+            "exhaust resources"
+          ]
+        },
+        {
+          "id": "cb_states",
+          "label": "Knows the states",
+          "description": "Closed (normal), open (reject immediately after error threshold), half-open (probe recovery).",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 5, "backend_architect": 4 },
+          "acceptedSignals": [
+            "open",
+            "closed",
+            "half open",
+            "half-open",
+            "error threshold",
+            "probe",
+            "trial request"
+          ]
+        },
+        {
+          "id": "cb_fallback",
+          "label": "Callers need a fallback",
+          "description": "While open, callers degrade gracefully: cached data, default value, or a clear error.",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 5, "solution_architect": 4, "backend_developer": 4 },
+          "acceptedSignals": [
+            "fallback",
+            "degrade gracefully",
+            "cached response",
+            "default value",
+            "graceful degradation"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "res_cb_retry_followup",
+          "trigger": { "type": "always" },
+          "prompt": "How do circuit breakers and retries interact? When does retrying make an outage worse?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "res_timeout_retry_001",
+      "title": "Timeouts, retries and backoff",
+      "prompt": "How do you configure timeouts and retries between services so they help instead of causing a retry storm?",
+      "roles": ["backend_developer", "backend_architect"],
+      "modes": ["scenario_discussion", "concept_check"],
+      "topicIds": ["retries", "circuit_breaker", "reliability"],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Every call needs a timeout; retry only transient errors with exponential backoff + jitter; mind the overall budget and idempotency.",
+      "expectedPoints": [
+        {
+          "id": "tr_backoff_jitter",
+          "label": "Exponential backoff with jitter",
+          "description": "Growing delays between retries, randomized so clients don't retry in sync.",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 5, "backend_architect": 5 },
+          "acceptedSignals": [
+            "exponential backoff",
+            "backoff",
+            "jitter",
+            "increasing delay",
+            "randomized delay",
+            "retry storm",
+            "thundering herd"
+          ]
+        },
+        {
+          "id": "tr_transient_only",
+          "label": "Retries only transient failures, safely",
+          "description": "Retry 5xx/timeouts a limited number of times, not validation errors; writes must be idempotent to retry.",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 5, "backend_architect": 4 },
+          "acceptedSignals": [
+            "transient error",
+            "don't retry 4xx",
+            "limited retries",
+            "max attempts",
+            "idempotent",
+            "safe to retry"
+          ]
+        },
+        {
+          "id": "tr_timeout_budget",
+          "label": "Timeout budgets across hops",
+          "description": "Downstream timeouts must fit inside upstream ones or callers give up while work continues.",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 5, "backend_developer": 4 },
+          "acceptedSignals": [
+            "timeout budget",
+            "shorter than the caller",
+            "deadline propagation",
+            "every call needs a timeout",
+            "nested timeouts"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "res_tr_dlq_followup",
+          "trigger": { "type": "topic_mentioned", "topicId": "message_queue" },
+          "prompt": "And when retries are exhausted on a queue consumer — what happens to the message?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "res_bulkhead_backpressure_001",
+      "title": "Bulkhead and backpressure",
+      "prompt": "One slow downstream dependency keeps taking down your whole API. What patterns limit the blast radius?",
+      "roles": ["backend_architect", "backend_developer", "solution_architect"],
+      "modes": ["scenario_discussion", "troubleshooting"],
+      "topicIds": ["backpressure", "reliability"],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Isolate resources per dependency (bulkhead), push back on producers (backpressure), plus circuit breaking and load shedding.",
+      "expectedPoints": [
+        {
+          "id": "bb_bulkhead",
+          "label": "Bulkhead: isolate resource pools",
+          "description": "Separate connection/thread pools per dependency so one slow call can't exhaust everything.",
+          "importance": "critical",
+          "roleWeight": { "backend_architect": 5, "backend_developer": 4, "solution_architect": 4 },
+          "acceptedSignals": [
+            "bulkhead",
+            "separate pool",
+            "isolate resources",
+            "dedicated connection pool",
+            "one dependency can't exhaust",
+            "blast radius"
+          ]
+        },
+        {
+          "id": "bb_backpressure",
+          "label": "Backpressure: push back on load",
+          "description": "Bounded queues and rejecting/slowing producers instead of buffering unboundedly.",
+          "importance": "critical",
+          "roleWeight": { "backend_architect": 5, "backend_developer": 4 },
+          "acceptedSignals": [
+            "backpressure",
+            "bounded queue",
+            "reject requests",
+            "slow down the producer",
+            "load shedding",
+            "shed load",
+            "queue limit"
+          ]
+        },
+        {
+          "id": "bb_observe",
+          "label": "Detects it with saturation signals",
+          "description": "Watches pool saturation, queue depth and latency percentiles to see it coming.",
+          "importance": "nice_to_have",
+          "roleWeight": { "backend_architect": 4 },
+          "acceptedSignals": [
+            "saturation",
+            "queue depth",
+            "pool usage",
+            "p99",
+            "latency percentiles",
+            "monitor the pools"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "res_bb_priority_followup",
+          "trigger": { "type": "always" },
+          "prompt": "If you must shed load, how do you decide which requests to drop first?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "res_slo_001",
+      "title": "SLI, SLO, SLA and error budgets",
+      "prompt": "Explain SLI, SLO and SLA — and what an error budget is actually for.",
+      "roles": ["backend_architect", "solution_architect"],
+      "modes": ["concept_check"],
+      "topicIds": ["slo_sla", "observability"],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Indicator = measurement, objective = internal target, agreement = contract with consequences; error budget balances reliability vs release speed.",
+      "expectedPoints": [
+        {
+          "id": "slo_definitions",
+          "label": "Distinguishes SLI / SLO / SLA",
+          "description": "SLI is the measured signal (e.g. success rate), SLO the internal target (99.9%), SLA the external contract with penalties.",
+          "importance": "critical",
+          "roleWeight": { "backend_architect": 5, "solution_architect": 5 },
+          "acceptedSignals": [
+            "indicator",
+            "objective",
+            "agreement",
+            "measured",
+            "internal target",
+            "contract",
+            "penalties",
+            "99.9"
+          ]
+        },
+        {
+          "id": "slo_error_budget",
+          "label": "Error budget drives decisions",
+          "description": "The allowed unreliability; when it burns down, you slow releases and invest in stability.",
+          "importance": "critical",
+          "roleWeight": { "backend_architect": 5, "solution_architect": 5 },
+          "acceptedSignals": [
+            "error budget",
+            "allowed downtime",
+            "budget is spent",
+            "slow down releases",
+            "stop shipping features",
+            "invest in reliability",
+            "burn rate"
+          ]
+        },
+        {
+          "id": "slo_user_centric",
+          "label": "SLIs should reflect user experience",
+          "description": "Measure what users feel (latency, success rate at the edge), not server CPU.",
+          "importance": "nice_to_have",
+          "roleWeight": { "backend_architect": 4, "solution_architect": 4 },
+          "acceptedSignals": [
+            "user experience",
+            "what the user sees",
+            "success rate",
+            "latency percentile",
+            "not cpu",
+            "customer facing"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "res_slo_100_followup",
+          "trigger": { "type": "always" },
+          "prompt": "Why is targeting 100% availability usually the wrong goal?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "res_prod_ready_001",
+      "title": "Production readiness checklist",
+      "prompt": "A new service is about to go live. What must be in place before you'd call it production-ready?",
+      "roles": ["backend_architect", "backend_developer", "solution_architect"],
+      "modes": ["scenario_discussion", "design_review"],
+      "topicIds": ["production_readiness", "observability", "deployment"],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Observability (metrics/logs/alerts with correlation IDs), health checks + graceful shutdown, rollback path, and failure-mode thinking.",
+      "expectedPoints": [
+        {
+          "id": "pr_observability",
+          "label": "Observability with alerting",
+          "description": "Metrics, structured logs with correlation IDs, and alerts tied to user-facing symptoms.",
+          "importance": "critical",
+          "roleWeight": { "backend_architect": 5, "backend_developer": 4, "solution_architect": 4 },
+          "acceptedSignals": [
+            "metrics",
+            "alerting",
+            "structured logging",
+            "correlation id",
+            "tracing",
+            "dashboards"
+          ]
+        },
+        {
+          "id": "pr_health_shutdown",
+          "label": "Health checks and graceful shutdown",
+          "description": "Liveness/readiness probes and draining in-flight requests on shutdown so deploys don't drop traffic.",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 5, "backend_architect": 4 },
+          "acceptedSignals": [
+            "health check",
+            "readiness",
+            "liveness",
+            "graceful shutdown",
+            "drain requests",
+            "finish in flight"
+          ]
+        },
+        {
+          "id": "pr_rollback",
+          "label": "Safe deploy and rollback path",
+          "description": "A tested way to roll back fast, ideally gradual rollout (canary/blue-green).",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 5, "solution_architect": 4 },
+          "acceptedSignals": [
+            "rollback",
+            "canary",
+            "blue green",
+            "gradual rollout",
+            "feature flag",
+            "revert quickly"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "res_pr_oncall_followup",
+          "trigger": { "type": "rubric_missing", "rubricItemId": "pr_rollback" },
+          "prompt": "It's 3 AM and the service is down. What did you prepare in advance to make that call short?",
+          "expectedPoints": []
+        }
+      ]
+    }
+  ]
+}

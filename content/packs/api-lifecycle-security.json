@@ -1,0 +1,231 @@
+{
+  "id": "api_lifecycle_security",
+  "name": "API lifecycle & security",
+  "description": "API versioning and backward compatibility, OAuth2/OIDC/JWT, RBAC vs ABAC — from the Dennemeyer system design 100-topic doc.",
+  "topics": [
+    {
+      "id": "api_versioning",
+      "name": "API versioning & compatibility",
+      "description": "Evolving APIs without breaking consumers: additive changes, versioning strategies, deprecation.",
+      "category": "backend",
+      "relatedTopicIds": ["api_design"]
+    },
+    {
+      "id": "oauth_oidc",
+      "name": "OAuth2 / OIDC / JWT",
+      "description": "Delegated authorization, identity on top of it, and the token format tying them together.",
+      "category": "security",
+      "relatedTopicIds": ["authentication", "authorization"]
+    },
+    {
+      "id": "rbac_abac",
+      "name": "RBAC vs ABAC",
+      "description": "Role-based vs attribute-based access control models and when each fits.",
+      "category": "security",
+      "relatedTopicIds": ["authorization"]
+    }
+  ],
+  "questions": [
+    {
+      "id": "als_versioning_001",
+      "title": "Evolving an API without breaking clients",
+      "prompt": "Your public API needs a breaking change, but hundreds of clients depend on it. How do you handle API evolution?",
+      "roles": ["backend_developer", "backend_architect", "solution_architect"],
+      "modes": ["scenario_discussion", "tradeoff_decision"],
+      "topicIds": ["api_versioning", "api_design"],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Prefer additive/backward-compatible changes; when truly breaking: version, run both, deprecation policy with communication and migration window.",
+      "expectedPoints": [
+        {
+          "id": "av_additive_first",
+          "label": "Prefers backward-compatible changes",
+          "description": "Add fields/endpoints instead of changing or removing; tolerant readers ignore unknown fields.",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 5, "backend_architect": 5, "solution_architect": 4 },
+          "acceptedSignals": [
+            "backward compatible",
+            "additive change",
+            "add a new field",
+            "don't remove fields",
+            "tolerant reader",
+            "avoid breaking changes"
+          ]
+        },
+        {
+          "id": "av_version_strategy",
+          "label": "Versions and runs both",
+          "description": "Introduces v2 (URL/header), keeps v1 running in parallel during migration.",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 4, "backend_architect": 5 },
+          "acceptedSignals": [
+            "v2",
+            "version in the url",
+            "version header",
+            "run both versions",
+            "parallel",
+            "new version"
+          ]
+        },
+        {
+          "id": "av_deprecation",
+          "label": "Deprecation policy with communication",
+          "description": "Announce, document, set a sunset date, monitor v1 usage before turning it off.",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 5, "solution_architect": 5 },
+          "acceptedSignals": [
+            "deprecation",
+            "sunset date",
+            "communicate",
+            "migration period",
+            "monitor usage",
+            "who still calls it",
+            "deprecation header"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "als_av_schema_followup",
+          "trigger": { "type": "always" },
+          "prompt": "How does the same problem look for event schemas on a message queue?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "als_oauth_001",
+      "title": "OAuth2, OIDC and JWT",
+      "prompt": "Explain the relationship between OAuth2, OpenID Connect and JWT. What does each one actually do?",
+      "roles": ["backend_developer", "backend_architect", "solution_architect", "fullstack_developer"],
+      "modes": ["concept_check"],
+      "topicIds": ["oauth_oidc", "authentication", "authorization"],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "OAuth2 = delegated authorization (access tokens), OIDC = identity layer on top (ID token), JWT = self-contained signed token format.",
+      "expectedPoints": [
+        {
+          "id": "oa_oauth_delegation",
+          "label": "OAuth2 = delegated authorization",
+          "description": "Lets an app access resources on a user's behalf via access tokens — authorization, not login.",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 5, "backend_architect": 5, "fullstack_developer": 4, "solution_architect": 4 },
+          "acceptedSignals": [
+            "delegated authorization",
+            "on behalf of the user",
+            "access token",
+            "not authentication",
+            "grant access to resources",
+            "authorization framework"
+          ]
+        },
+        {
+          "id": "oa_oidc_identity",
+          "label": "OIDC adds identity",
+          "description": "OpenID Connect layers login/identity on OAuth2 via the ID token and userinfo.",
+          "importance": "critical",
+          "roleWeight": { "backend_developer": 4, "backend_architect": 5, "solution_architect": 4 },
+          "acceptedSignals": [
+            "openid connect",
+            "identity layer",
+            "id token",
+            "who the user is",
+            "login on top of oauth",
+            "single sign on"
+          ]
+        },
+        {
+          "id": "oa_jwt_format",
+          "label": "JWT = signed, self-contained token",
+          "description": "Signed claims readable without a DB lookup; validate signature and expiry; revocation is the hard part.",
+          "importance": "important",
+          "roleWeight": { "backend_developer": 5, "backend_architect": 4, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "signed",
+            "claims",
+            "self contained",
+            "stateless",
+            "verify the signature",
+            "expiry",
+            "hard to revoke"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "als_oauth_storage_followup",
+          "trigger": { "type": "always" },
+          "prompt": "Where would you store tokens in a browser app, and what are the risks of each option?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "als_rbac_abac_001",
+      "title": "RBAC vs ABAC",
+      "prompt": "Compare role-based and attribute-based access control. When does RBAC stop being enough?",
+      "roles": ["backend_architect", "solution_architect", "backend_developer"],
+      "modes": ["tradeoff_decision", "concept_check"],
+      "topicIds": ["rbac_abac", "authorization"],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "RBAC: permissions via roles — simple, auditable. ABAC: policies over attributes (user, resource, context) — fine-grained. Role explosion is the tipping point.",
+      "expectedPoints": [
+        {
+          "id": "ra_rbac",
+          "label": "RBAC basics and strengths",
+          "description": "Users get roles, roles carry permissions; simple to reason about and audit.",
+          "importance": "critical",
+          "roleWeight": { "backend_architect": 5, "solution_architect": 5, "backend_developer": 4 },
+          "acceptedSignals": [
+            "roles",
+            "role based",
+            "permissions attached to roles",
+            "simple to audit",
+            "easy to understand",
+            "admin editor viewer"
+          ]
+        },
+        {
+          "id": "ra_abac",
+          "label": "ABAC: policies over attributes",
+          "description": "Decisions from attributes of user, resource and context (owner, department, time, tenant).",
+          "importance": "critical",
+          "roleWeight": { "backend_architect": 5, "solution_architect": 4 },
+          "acceptedSignals": [
+            "attributes",
+            "attribute based",
+            "policy",
+            "owner of the resource",
+            "context",
+            "fine grained",
+            "condition"
+          ]
+        },
+        {
+          "id": "ra_role_explosion",
+          "label": "Knows the tipping point",
+          "description": "Role explosion — combinatorial roles per department/region/tenant — signals the need for ABAC; ABAC costs complexity and testability.",
+          "importance": "important",
+          "roleWeight": { "backend_architect": 4, "solution_architect": 4 },
+          "acceptedSignals": [
+            "role explosion",
+            "too many roles",
+            "combinatorial",
+            "per tenant roles",
+            "harder to test",
+            "policy complexity"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "als_ra_least_priv_followup",
+          "trigger": { "type": "always" },
+          "prompt": "How does the principle of least privilege apply to whichever model you pick?",
+          "expectedPoints": []
+        }
+      ]
+    }
+  ]
+}
