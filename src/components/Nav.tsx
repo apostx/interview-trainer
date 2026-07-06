@@ -25,6 +25,17 @@ const items = [
     ),
   },
   {
+    href: "/study",
+    label: "Study",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
+        <path d="M12 3 2 8.5l10 5.5 10-5.5L12 3Z" strokeLinejoin="round" />
+        <path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M22 8.5V15" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     href: "/topics",
     label: "Topics",
     icon: (

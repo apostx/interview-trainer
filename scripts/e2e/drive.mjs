@@ -205,6 +205,17 @@ async function main() {
   await page.goto(BASE + "/topics/");
   await page.getByText("Event Sourcing Test", { exact: true }).first().waitFor();
   log("✅", "Topic library lists the new topic (status Unknown)");
+
+  // ---- Study view: browse material without being quizzed
+  await page.goto(BASE + "/study/");
+  await page.getByRole("heading", { name: "Study", exact: true }).waitFor();
+  await page.getByText("Circuit breaker", { exact: true }).first().click();
+  await page.getByText("A strong answer covers").first().waitFor();
+  log("✅", "Study view: topic expands to question + expected answer points");
+  await page.getByLabel("Search topics and questions").fill("idempotency");
+  await page.getByText("Idempotency", { exact: true }).first().waitFor();
+  log("🔍", "Study search filters topics");
+  await page.screenshot({ path: `${SHOTS}/17-study.png` });
   await page.screenshot({ path: `${SHOTS}/08-topics.png` });
 
   // ---- 8. Settings persistence

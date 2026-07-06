@@ -35,6 +35,8 @@ Full product specification: [docs/spec.md](docs/spec.md).
 - **JSON content packs**: drop AI-generated question packs into
   `content/packs/` and they are auto-loaded and validated — see
   [docs/content-authoring.md](docs/content-authoring.md).
+- **Study view**: browse every question with what a strong answer covers
+  and the likely follow-ups — learning mode without being quizzed.
 - **Local-first**: everything persists in IndexedDB. No account, no backend,
   audio never leaves the browser.
 - Responsive UI: sidebar on desktop, bottom tab bar on mobile; light and dark.
