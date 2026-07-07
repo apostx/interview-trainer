@@ -215,7 +215,7 @@ async function main() {
   await page.getByRole("button", { name: "← All topics" }).click();
   // Category chips: only the selected category's topics are shown
   await page.getByRole("button", { name: "Backend", exact: true }).click();
-  await page.getByText("Idempotency", { exact: true }).first().waitFor();
+  await page.getByText("Outbox pattern", { exact: true }).first().waitFor();
   const crossCategoryLeak = await page
     .getByText("CSS box-sizing", { exact: true })
     .isVisible()
