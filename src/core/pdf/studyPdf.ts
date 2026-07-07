@@ -4,12 +4,20 @@ import { allQuestions, allTopics } from "@/core/content/bank";
 
 /**
  * Programmatic PDF export of the study material (pdfmake, fully client-side).
- * Unlike browser printing, page geometry and breaks are controlled here:
- * headings never orphan at the bottom of a page, and the "phone" format uses
- * a narrow page so the PDF reads comfortably fitted to a phone screen.
+ * Design goals, in order: a question card never splits across pages (unless
+ * it physically cannot fit one page), every category starts a new chapter
+ * page, and the "phone" format uses a narrow page that reads comfortably
+ * fitted to a phone screen. A table of contents links topics to pages.
  */
 
 export type StudyPdfFormat = "a4" | "phone";
+
+const ACCENT = "#2a78d6";
+const INK = "#1c2230";
+const MUTED = "#6b7280";
+const BODY = "#374151";
+const CARD_BG = "#f7f8fa";
+const CARD_BORDER = "#e2e5ea";
 
 const CATEGORY_LABELS: Record<Topic["category"], string> = {
   frontend: "Frontend",
@@ -27,97 +35,150 @@ const CATEGORY_LABELS: Record<Topic["category"], string> = {
 // pdfmake's TS types are loose; the definition is plain data.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-function glue(...nodes: any[]): any {
-  return { stack: nodes.filter(Boolean), unbreakable: true };
+type Geometry = {
+  base: number;
+  pageSize: any;
+  pageMargins: [number, number, number, number];
+  usableHeight: number;
+  charsPerLine: number;
+};
+
+function geometry(format: StudyPdfFormat): Geometry {
+  if (format === "phone") {
+    const pageMargins: [number, number, number, number] = [20, 24, 20, 30];
+    return {
+      base: 11,
+      pageSize: { width: 400, height: 710 },
+      pageMargins,
+      usableHeight: 710 - 24 - 30,
+      // ~360pt text width / ~5.1pt avg glyph at 10pt body
+      charsPerLine: 68,
+    };
+  }
+  const pageMargins: [number, number, number, number] = [46, 48, 46, 52];
+  return {
+    base: 10,
+    pageSize: "A4",
+    pageMargins,
+    usableHeight: 842 - 48 - 52,
+    charsPerLine: 105,
+  };
 }
 
-function bullet(text: any, base: number, color?: string): any {
-  return {
-    ul: [{ text, fontSize: base - 1, ...(color ? { color } : {}), margin: [0, 0, 0, 2] }],
-    margin: [4, 0, 0, 0],
-  };
+/** Rough rendered-height estimate to decide if a card fits one page. */
+function estimateCardHeight(card: QuestionCard, g: Geometry): number {
+  const lineHeight = g.base * 1.3;
+  const lines = (text: string, scale = 1) =>
+    Math.max(1, Math.ceil(text.length / (g.charsPerLine * scale)));
+  let n = 2; // mode label + spacing
+  n += lines(card.title, 0.9);
+  n += lines(card.prompt);
+  if (card.answerStructureHint) n += lines(`Structure: ${card.answerStructureHint}`);
+  n += 1.5; // section marker
+  for (const p of card.expectedPoints) {
+    n += lines(`${p.label} — ${p.description ?? ""}`) + 0.3;
+  }
+  if (card.followUps.length > 0) {
+    n += 1.5;
+    for (const f of card.followUps) n += lines(f.prompt) + 0.3;
+  }
+  return n * lineHeight + 30; // box padding
 }
 
 function sectionMarker(label: string, base: number): any {
   return {
     text: label,
-    fontSize: base - 3,
+    fontSize: base - 3.5,
     bold: true,
-    color: "#777777",
-    margin: [0, 3, 0, 2],
+    characterSpacing: 0.6,
+    color: ACCENT,
+    margin: [0, 6, 0, 2],
   };
 }
 
-function pointText(p: QuestionCard["expectedPoints"][number]): any {
-  return [
-    { text: `${p.label}${p.importance === "critical" ? " *" : ""}`, bold: true },
-    ...(p.description ? [{ text: ` — ${p.description}`, color: "#444444" }] : []),
-  ];
+function pointItem(p: QuestionCard["expectedPoints"][number], base: number): any {
+  return {
+    text: [
+      ...(p.importance === "critical"
+        ? [{ text: "★ ", color: ACCENT, fontSize: base - 2 }]
+        : []),
+      { text: p.label, bold: true, color: INK },
+      ...(p.description ? [{ text: ` — ${p.description}`, color: BODY }] : []),
+    ],
+    fontSize: base - 1,
+    margin: [0, 0, 0, 2.5],
+  };
 }
 
-/**
- * Headings are glued to their first content line in small unbreakable
- * stacks, so a page can never end with an orphaned heading — and the stacks
- * stay well under the phone page height.
- */
-function cardBlocks(card: QuestionCard, base: number): any[] {
-  const blocks: any[] = [
-    glue(
-      {
-        text: card.modes.slice(0, 2).map((m) => MODE_LABELS[m]).join(" · ").toUpperCase(),
-        fontSize: base - 3,
-        color: "#777777",
-        margin: [0, 10, 0, 0],
-      },
-      { text: card.title, fontSize: base + 1, bold: true, margin: [0, 1, 0, 2] },
-      { text: card.prompt, fontSize: base, color: "#333333", margin: [0, 0, 0, 3] },
-    ),
+function cardBox(card: QuestionCard, g: Geometry): any {
+  const base = g.base;
+  const inner: any[] = [
+    {
+      text: card.modes.slice(0, 2).map((m) => MODE_LABELS[m]).join("  ·  ").toUpperCase(),
+      fontSize: base - 3.5,
+      bold: true,
+      characterSpacing: 0.6,
+      color: MUTED,
+    },
+    { text: card.title, fontSize: base + 2, bold: true, color: INK, margin: [0, 2, 0, 3] },
+    { text: card.prompt, fontSize: base, color: BODY, italics: true },
   ];
   if (card.answerStructureHint) {
-    blocks.push({
+    inner.push({
       text: [
-        { text: "Structure: ", bold: true },
-        { text: card.answerStructureHint },
+        { text: "Structure: ", bold: true, color: INK },
+        { text: card.answerStructureHint, color: BODY },
       ],
       fontSize: base - 1,
-      color: "#444444",
-      margin: [0, 0, 0, 3],
+      margin: [0, 4, 0, 0],
     });
   }
-  const [firstPoint, ...restPoints] = card.expectedPoints;
-  blocks.push(
-    glue(
-      sectionMarker("A STRONG ANSWER COVERS", base),
-      firstPoint ? bullet(pointText(firstPoint), base) : undefined,
-    ),
-  );
-  blocks.push(...restPoints.map((p) => bullet(pointText(p), base)));
-
+  inner.push(sectionMarker("A STRONG ANSWER COVERS", base));
+  inner.push({
+    ul: card.expectedPoints.map((p) => pointItem(p, base)),
+    markerColor: MUTED,
+    margin: [2, 0, 0, 0],
+  });
   if (card.followUps.length > 0) {
-    const [firstFollowUp, ...restFollowUps] = card.followUps;
-    blocks.push(
-      glue(
-        sectionMarker("LIKELY FOLLOW-UPS", base),
-        bullet(firstFollowUp.prompt, base, "#444444"),
-      ),
-    );
-    blocks.push(...restFollowUps.map((f) => bullet(f.prompt, base, "#444444")));
+    inner.push(sectionMarker("LIKELY FOLLOW-UPS", base));
+    inner.push({
+      ul: card.followUps.map((f) => ({
+        text: f.prompt,
+        fontSize: base - 1,
+        color: BODY,
+        margin: [0, 0, 0, 2.5],
+      })),
+      markerColor: MUTED,
+      margin: [2, 0, 0, 0],
+    });
   }
-  return blocks;
+
+  const fitsOnePage = estimateCardHeight(card, g) < g.usableHeight * 0.92;
+  return {
+    table: {
+      widths: ["*"],
+      body: [[{ stack: inner, margin: [10, 8, 10, 9], fillColor: CARD_BG }]],
+    },
+    layout: {
+      hLineWidth: () => 0.75,
+      vLineWidth: () => 0.75,
+      hLineColor: () => CARD_BORDER,
+      vLineColor: () => CARD_BORDER,
+    },
+    margin: [0, 4, 0, 4],
+    // Whole card stays on one page whenever it can physically fit.
+    unbreakable: fitsOnePage,
+  };
 }
 
 export function buildStudyPdfDefinition(format: StudyPdfFormat): any {
-  // Phone format: narrow page + relatively large type, so "fit to width" on
-  // a phone screen is comfortably legible.
-  const base = format === "phone" ? 11 : 10;
+  const g = geometry(format);
+  const base = g.base;
 
   const cardsByTopicId = new Map<string, QuestionCard[]>();
   for (const card of allQuestions) {
     for (const topicId of card.topicIds) {
-      cardsByTopicId.set(topicId, [
-        ...(cardsByTopicId.get(topicId) ?? []),
-        card,
-      ]);
+      cardsByTopicId.set(topicId, [...(cardsByTopicId.get(topicId) ?? []), card]);
     }
   }
   const studyTopics = allTopics.filter((t) => cardsByTopicId.has(t.id));
@@ -127,64 +188,121 @@ export function buildStudyPdfDefinition(format: StudyPdfFormat): any {
   }
 
   const content: any[] = [
-    { text: "Interview Trainer — Study material", fontSize: base + 8, bold: true },
+    // Cover block + table of contents
     {
-      text: `${studyTopics.length} topics · ${allQuestions.length} question cards · exported ${new Date().toLocaleDateString("en-GB")} · * = critical point`,
-      fontSize: base - 2,
-      color: "#666666",
-      margin: [0, 3, 0, 12],
+      table: {
+        widths: ["*"],
+        body: [
+          [
+            {
+              stack: [
+                {
+                  text: "INTERVIEW TRAINER",
+                  color: "#ffffff",
+                  opacity: 0.85,
+                  fontSize: base - 2,
+                  bold: true,
+                  characterSpacing: 1.2,
+                },
+                {
+                  text: "Study material",
+                  color: "#ffffff",
+                  fontSize: base + 12,
+                  bold: true,
+                  margin: [0, 2, 0, 4],
+                },
+                {
+                  text: `${studyTopics.length} topics · ${allQuestions.length} question cards · ${new Date().toLocaleDateString("en-GB")}`,
+                  color: "#ffffff",
+                  opacity: 0.9,
+                  fontSize: base - 1,
+                },
+              ],
+              fillColor: ACCENT,
+              margin: [14, 14, 14, 14],
+            },
+          ],
+        ],
+      },
+      layout: "noBorders",
+      margin: [0, 0, 0, 10],
+    },
+    {
+      text: [
+        { text: "★ ", color: ACCENT },
+        { text: "marks the critical points an interviewer expects to hear.", color: MUTED },
+      ],
+      fontSize: base - 1,
+      margin: [0, 0, 0, 12],
+    },
+    {
+      toc: {
+        title: { text: "Contents", fontSize: base + 4, bold: true, color: INK, margin: [0, 0, 0, 6] },
+        textStyle: { fontSize: base - 1, color: BODY },
+      },
     },
   ];
 
   for (const [category, topics] of [...byCategory.entries()].sort((a, b) =>
     a[0].localeCompare(b[0]),
   )) {
+    // Chapter page per category
+    content.push({
+      pageBreak: "before",
+      tocItem: true,
+      tocStyle: { bold: true, color: INK },
+      tocMargin: [0, 6, 0, 2],
+      text: CATEGORY_LABELS[category],
+      fontSize: base + 7,
+      bold: true,
+      color: INK,
+      margin: [0, 0, 0, 1],
+    });
+    content.push({
+      canvas: [
+        { type: "rect", x: 0, y: 0, w: 64, h: 3, color: ACCENT },
+      ],
+      margin: [0, 2, 0, 10],
+    });
+
     const sorted = topics.sort((a, b) => a.name.localeCompare(b.name));
     sorted.forEach((topic, index) => {
-      const categoryHeading =
-        index === 0
-          ? {
-              text: CATEGORY_LABELS[category],
-              fontSize: base + 5,
-              bold: true,
-              margin: [0, 12, 0, 2] as number[],
-            }
-          : undefined;
-      content.push(
-        glue(
-          categoryHeading,
+      content.push({
+        stack: [
           {
             text: topic.name,
+            tocItem: true,
+            tocMargin: [12, 0, 0, 0],
             fontSize: base + 3,
             bold: true,
-            margin: [0, 8, 0, 1],
+            color: INK,
+            margin: [0, index === 0 ? 0 : 12, 0, 1],
           },
-          topic.description
-            ? {
-                text: topic.description,
-                fontSize: base - 1,
-                color: "#555555",
-                margin: [0, 0, 0, 2],
-              }
-            : undefined,
-        ),
-      );
+          ...(topic.description
+            ? [{ text: topic.description, fontSize: base - 1, color: MUTED, margin: [0, 0, 0, 4] }]
+            : []),
+        ],
+        unbreakable: true,
+      });
       for (const card of cardsByTopicId.get(topic.id) ?? []) {
-        content.push(...cardBlocks(card, base));
+        content.push(cardBox(card, g));
       }
     });
   }
 
   return {
-    pageSize: format === "phone" ? { width: 400, height: 710 } : "A4",
-    pageMargins: format === "phone" ? [22, 26, 22, 30] : [48, 52, 48, 52],
-    defaultStyle: { fontSize: base, lineHeight: 1.25 },
-    footer: (currentPage: number, pageCount: number) => ({
-      text: `${currentPage} / ${pageCount}`,
-      alignment: "center",
-      fontSize: base - 3,
-      color: "#999999",
-    }),
+    pageSize: g.pageSize,
+    pageMargins: g.pageMargins,
+    defaultStyle: { fontSize: base, lineHeight: 1.3 },
+    footer: (currentPage: number, pageCount: number) =>
+      currentPage === 1
+        ? undefined
+        : {
+            columns: [
+              { text: "Interview Trainer — Study material", fontSize: base - 3.5, color: MUTED, margin: [g.pageMargins[0], 0, 0, 0] },
+              { text: `${currentPage} / ${pageCount}`, alignment: "right", fontSize: base - 3.5, color: MUTED, margin: [0, 0, g.pageMargins[2], 0] },
+            ],
+          },
     info: { title: "Interview Trainer — Study material" },
     content,
   };

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Card, ModeBadge, PageHeader, buttonGhost, inputBase } from "@/components/ui";
 import type { QuestionCard, Topic } from "@/core/models";
 import { allQuestions, allTopics } from "@/core/content/bank";
+import { downloadStudyPdf, type StudyPdfFormat } from "@/core/pdf/studyPdf";
 import { normalizedIncludes } from "@/core/services/transcriptNormalizer";
 
 const CATEGORY_LABELS: Record<Topic["category"], string> = {
@@ -93,6 +93,22 @@ function StudyCard({ card }: { card: QuestionCard }) {
 export default function StudyPage() {
   const [query, setQuery] = useState("");
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+  const [generating, setGenerating] = useState<StudyPdfFormat | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+
+  async function generatePdf(format: StudyPdfFormat) {
+    setGenerating(format);
+    setPdfError(null);
+    try {
+      await downloadStudyPdf(format);
+    } catch (e) {
+      setPdfError(
+        `PDF generation failed: ${e instanceof Error ? e.message : String(e)}`,
+      );
+    } finally {
+      setGenerating(null);
+    }
+  }
 
   const selectedTopic = selectedTopicId
     ? studyTopics.find((t) => t.id === selectedTopicId)
@@ -132,14 +148,32 @@ export default function StudyPage() {
         title="Study"
         subtitle="Pick a topic and read the material without being quizzed: each question with what a strong answer covers."
         action={
-          <Link
-            href="/study/print"
-            className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm font-semibold hover:bg-background"
-          >
-            Export PDF
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={generating !== null}
+              onClick={() => generatePdf("phone")}
+              className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50"
+            >
+              {generating === "phone" ? "Generating…" : "PDF · phone"}
+            </button>
+            <button
+              type="button"
+              disabled={generating !== null}
+              onClick={() => generatePdf("a4")}
+              className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm font-semibold hover:bg-background disabled:opacity-50"
+            >
+              {generating === "a4" ? "Generating…" : "PDF · A4"}
+            </button>
+          </div>
         }
       />
+
+      {pdfError && (
+        <p role="alert" className="mb-4 text-sm font-medium text-critical">
+          {pdfError}
+        </p>
+      )}
 
       <input
         type="search"

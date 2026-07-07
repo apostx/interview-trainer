@@ -32,7 +32,7 @@ node scripts/e2e/packs.mjs        # content packs load + appear in sessions
 
 Content packs (`content/packs/*.json`) are validated by `npm run
 content:check`; an intentionally broken pack should surface its zod errors on
-the /topics page, not crash the app.
+the /topics page, not crash the app. The study PDF export buttons live on /study/ (pdfmake-generated, no print view).
 
 `drive.mjs` covers: dashboard empty state → session setup (incl. zero-mode
 error probe) → 5-question runner (typed answers, hint, skip, manual rubric

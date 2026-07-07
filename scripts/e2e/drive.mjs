@@ -218,13 +218,10 @@ async function main() {
   log("🔍", "Study search filters the topic list");
   await page.screenshot({ path: `${SHOTS}/17-study.png` });
 
-  // ---- Study PDF export view
-  await page.goto(BASE + "/study/print/");
-  await page.getByRole("heading", { name: "Interview Trainer — Study material" }).waitFor();
-  const printBg = await page.evaluate(() => getComputedStyle(document.querySelector("main > div")).backgroundColor);
-  log(printBg === "rgb(255, 255, 255)" ? "✅" : "❌", `Print view white background (${printBg})`);
+  // ---- Study PDF export (buttons live on the study page now)
+  await page.goto(BASE + "/study/");
   const downloadPromise = page.waitForEvent("download", { timeout: 60000 });
-  await page.getByRole("button", { name: "Download PDF (phone)" }).click();
+  await page.getByRole("button", { name: "PDF · phone" }).click();
   const download = await downloadPromise;
   const pdfPath = await download.path();
   const { statSync: pdfStat } = await import("node:fs");
