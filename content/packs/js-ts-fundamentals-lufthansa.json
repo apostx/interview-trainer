@@ -1,0 +1,271 @@
+{
+  "id": "js_ts_fundamentals_lufthansa",
+  "name": "JS & TS fundamentals (Lufthansa)",
+  "description": "Spoken-interview versions of the Lufthansa quiz topics: equality and coercion, const semantics, promise chains, and TypeScript's type system.",
+  "sources": ["tibi/lufthansa"],
+  "topics": [
+    {
+      "id": "js_language_basics",
+      "name": "JavaScript language basics",
+      "description": "Equality, coercion, const semantics, template literals and other core language behavior.",
+      "category": "frontend",
+      "relatedTopicIds": ["js_event_loop"]
+    },
+    {
+      "id": "promise_error_handling",
+      "name": "Promise chains & error handling",
+      "description": "How .then/.catch/.finally compose and where errors travel in a chain.",
+      "category": "frontend",
+      "relatedTopicIds": ["js_event_loop", "error_handling"]
+    },
+    {
+      "id": "typescript_type_system",
+      "name": "TypeScript type system",
+      "description": "Structural typing, unions, generics, and what the compiler actually guarantees.",
+      "category": "frontend",
+      "relatedTopicIds": ["js_language_basics"]
+    }
+  ],
+  "questions": [
+    {
+      "id": "luf_equality_001",
+      "title": "== vs === and type coercion",
+      "prompt": "What is the difference between == and === in JavaScript, and what surprises does type coercion cause?",
+      "roles": ["frontend_developer", "fullstack_developer"],
+      "modes": ["concept_check"],
+      "topicIds": ["js_language_basics"],
+      "expectedDurationSeconds": 150,
+      "thinkingTimeSeconds": 30,
+      "answerStructureHint": "Strict vs loose equality, how coercion rules bite (empty string, null/undefined), and the practical rule.",
+      "expectedPoints": [
+        {
+          "id": "eq_strict",
+          "label": "=== compares without coercion",
+          "description": "Strict equality checks type and value; loose equality converts operands first.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "no coercion",
+            "type and value",
+            "strict equality",
+            "converts the types",
+            "loose equality coerces"
+          ]
+        },
+        {
+          "id": "eq_surprises",
+          "label": "Names a coercion surprise",
+          "description": "Examples like '' == 0, null == undefined, '0' == false being true.",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 4, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "empty string equals zero",
+            "null == undefined",
+            "string zero equals false",
+            "unexpected true",
+            "weird results"
+          ]
+        },
+        {
+          "id": "eq_practice",
+          "label": "Practical rule",
+          "description": "Default to ===; the only common legit == use is x == null to match both null and undefined.",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 4 },
+          "acceptedSignals": [
+            "always use strict",
+            "prefer ===",
+            "x == null",
+            "lint rule",
+            "eqeqeq"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luf_eq_followup",
+          "trigger": { "type": "always" },
+          "prompt": "What does 1 + '2' evaluate to, and why is + special among the operators?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "luf_const_001",
+      "title": "What const actually protects",
+      "prompt": "You declare an array with const and then push into it. Does it work — and what does const actually guarantee?",
+      "roles": ["frontend_developer", "fullstack_developer"],
+      "modes": ["concept_check"],
+      "topicIds": ["js_language_basics"],
+      "expectedDurationSeconds": 120,
+      "thinkingTimeSeconds": 30,
+      "answerStructureHint": "Binding vs value immutability, why mutation still works, and how to get real immutability.",
+      "expectedPoints": [
+        {
+          "id": "const_binding",
+          "label": "const freezes the binding, not the value",
+          "description": "Reassignment is forbidden; the referenced object/array stays mutable.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "binding",
+            "cannot reassign",
+            "reference",
+            "object is still mutable",
+            "push works"
+          ]
+        },
+        {
+          "id": "const_immutability",
+          "label": "Real immutability options",
+          "description": "Object.freeze (shallow), immutable updates (spread), readonly types in TS.",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 4 },
+          "acceptedSignals": [
+            "object.freeze",
+            "shallow",
+            "spread",
+            "copy instead of mutate",
+            "readonly"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luf_const_followup",
+          "trigger": { "type": "always" },
+          "prompt": "Why does React state benefit from immutable updates rather than mutation?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "luf_promises_001",
+      "title": "Promise chains and where .catch belongs",
+      "prompt": "In a promise chain, where should .catch go and what happens to errors thrown mid-chain?",
+      "roles": ["frontend_developer", "fullstack_developer", "backend_developer"],
+      "modes": ["concept_check"],
+      "topicIds": ["promise_error_handling"],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Errors skip to the nearest rejection handler; catch placement decides what it covers; finally and async/await equivalents.",
+      "expectedPoints": [
+        {
+          "id": "pr_propagation",
+          "label": "Errors propagate to the nearest catch",
+          "description": "A rejection skips the following .then handlers until a catch (or second then-argument) handles it.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 5, "backend_developer": 4 },
+          "acceptedSignals": [
+            "skips the then",
+            "nearest catch",
+            "propagates down the chain",
+            "rejection travels",
+            "unhandled rejection"
+          ]
+        },
+        {
+          "id": "pr_placement",
+          "label": "Catch placement defines coverage",
+          "description": "A catch at the end covers the whole chain; a mid-chain catch recovers and the chain continues fulfilled.",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "at the end of the chain",
+            "covers everything before it",
+            "chain continues after catch",
+            "recovers",
+            "returns a resolved promise"
+          ]
+        },
+        {
+          "id": "pr_async_await",
+          "label": "async/await mapping",
+          "description": "try/catch/finally is the await-equivalent; forgetting await loses the error.",
+          "importance": "nice_to_have",
+          "roleWeight": { "frontend_developer": 4 },
+          "acceptedSignals": [
+            "try catch",
+            "await",
+            "finally",
+            "forgot to await",
+            "floating promise"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luf_pr_followup",
+          "trigger": { "type": "always" },
+          "prompt": "What is the difference between Promise.all and Promise.allSettled when one request fails?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "luf_ts_structural_001",
+      "title": "TypeScript's structural type system",
+      "prompt": "TypeScript is structurally typed. What does that mean in practice, and how do unions and generics fit in?",
+      "roles": ["frontend_developer", "fullstack_developer", "backend_developer"],
+      "modes": ["concept_check"],
+      "topicIds": ["typescript_type_system"],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compatibility by shape not name, union narrowing, generics for reusable typing, and compile-time-only guarantees.",
+      "expectedPoints": [
+        {
+          "id": "ts_structural",
+          "label": "Compatibility by shape",
+          "description": "Two types are compatible if their members line up — names don't matter (duck typing).",
+          "importance": "critical",
+          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 5, "backend_developer": 4 },
+          "acceptedSignals": [
+            "shape",
+            "duck typing",
+            "structural",
+            "same members",
+            "name doesn't matter",
+            "nominal"
+          ]
+        },
+        {
+          "id": "ts_unions_generics",
+          "label": "Unions and generics",
+          "description": "Union types with narrowing (typeof/in/discriminated unions); generics parameterize reusable code.",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 4, "fullstack_developer": 4 },
+          "acceptedSignals": [
+            "union",
+            "narrowing",
+            "discriminated union",
+            "type guard",
+            "generic",
+            "type parameter"
+          ]
+        },
+        {
+          "id": "ts_erasure",
+          "label": "Types vanish at runtime",
+          "description": "No runtime enforcement — external data still needs validation (zod, guards).",
+          "importance": "important",
+          "roleWeight": { "frontend_developer": 4, "backend_developer": 4 },
+          "acceptedSignals": [
+            "compile time only",
+            "erased",
+            "no runtime check",
+            "validate external data",
+            "zod"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luf_ts_followup",
+          "trigger": { "type": "rubric_covered", "rubricItemId": "ts_erasure" },
+          "prompt": "An untyped npm package makes everything 'any'. How do you contain that?",
+          "expectedPoints": []
+        }
+      ]
+    }
+  ]
+}

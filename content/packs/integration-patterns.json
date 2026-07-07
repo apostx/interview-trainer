@@ -2,27 +2,40 @@
   "id": "integration_patterns",
   "name": "Integration patterns (Luxair)",
   "description": "SOA vs microservices, ESB trade-offs, sync vs async fan-out and legacy integration migration — from the Luxair interview prep docs.",
+  "sources": [
+    "Luxair_Top_10_Interview_Questions_HU",
+    "Luxair_interju_QA_gyujtemeny"
+  ],
   "topics": [
     {
       "id": "soa_esb",
       "name": "SOA & ESB",
       "description": "Service-oriented architecture and enterprise service buses; central integration layers and their risks.",
       "category": "architecture",
-      "relatedTopicIds": ["microservices", "event_driven"]
+      "relatedTopicIds": [
+        "microservices",
+        "event_driven"
+      ]
     },
     {
       "id": "integration_migration",
       "name": "Integration migration",
       "description": "Safely migrating flows off a legacy integration platform (e.g. Mule/ESB) with behavior compatibility.",
       "category": "architecture",
-      "relatedTopicIds": ["migration_strategy", "soa_esb"]
+      "relatedTopicIds": [
+        "migration_strategy",
+        "soa_esb"
+      ]
     },
     {
       "id": "async_fanout",
       "name": "Async fan-out",
       "description": "Notifying many systems after a business event: critical path vs asynchronous distribution.",
       "category": "backend",
-      "relatedTopicIds": ["message_queue", "event_driven"]
+      "relatedTopicIds": [
+        "message_queue",
+        "event_driven"
+      ]
     }
   ],
   "questions": [
@@ -30,9 +43,19 @@
       "id": "int_soa_micro_001",
       "title": "SOA vs microservices, and the ESB bottleneck",
       "prompt": "What is the difference between SOA and microservices — and why can an ESB become a bottleneck?",
-      "roles": ["backend_architect", "solution_architect", "backend_developer"],
-      "modes": ["concept_check", "tradeoff_decision"],
-      "topicIds": ["soa_esb", "microservices"],
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "backend_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "soa_esb",
+        "microservices"
+      ],
       "expectedDurationSeconds": 240,
       "thinkingTimeSeconds": 60,
       "answerStructureHint": "Shared bus and smart pipes vs smart endpoints and dumb pipes; central logic accumulation, coupling and single point of failure.",
@@ -42,7 +65,11 @@
           "label": "Core architectural difference",
           "description": "SOA centralizes integration logic (ESB, shared contracts); microservices favor decentralized ownership — smart endpoints, dumb pipes.",
           "importance": "critical",
-          "roleWeight": { "backend_architect": 5, "solution_architect": 5, "backend_developer": 4 },
+          "roleWeight": {
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "backend_developer": 4
+          },
           "acceptedSignals": [
             "smart endpoints dumb pipes",
             "central bus",
@@ -57,7 +84,10 @@
           "label": "Why the ESB becomes a bottleneck",
           "description": "Business logic accumulates in the bus; every change funnels through one team/platform; scaling and deploys couple everything.",
           "importance": "critical",
-          "roleWeight": { "backend_architect": 5, "solution_architect": 5 },
+          "roleWeight": {
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
           "acceptedSignals": [
             "logic accumulates in the bus",
             "single point of failure",
@@ -72,7 +102,10 @@
           "label": "Balanced, not dogmatic",
           "description": "Notes SOA ideas live on (contracts, reuse) and central integration still fits some enterprises.",
           "importance": "nice_to_have",
-          "roleWeight": { "solution_architect": 4, "backend_architect": 4 },
+          "roleWeight": {
+            "solution_architect": 4,
+            "backend_architect": 4
+          },
           "acceptedSignals": [
             "not inherently bad",
             "depends on the organization",
@@ -85,7 +118,9 @@
       "followUps": [
         {
           "id": "int_sm_conway_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "How does Conway's Law show up in this choice?",
           "expectedPoints": []
         }
@@ -95,9 +130,20 @@
       "id": "int_fanout_001",
       "title": "Notify five systems after a booking",
       "prompt": "After a booking is created, five other systems must be notified. Sync or async — how would you design it?",
-      "roles": ["backend_developer", "backend_architect", "solution_architect"],
-      "modes": ["scenario_discussion", "tradeoff_decision"],
-      "topicIds": ["async_fanout", "message_queue", "event_driven"],
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "async_fanout",
+        "message_queue",
+        "event_driven"
+      ],
       "expectedDurationSeconds": 240,
       "thinkingTimeSeconds": 60,
       "answerStructureHint": "Keep the critical path minimal, publish one event and fan out async; handle per-consumer failure, ordering and duplicates.",
@@ -107,7 +153,11 @@
           "label": "Minimal critical path",
           "description": "Only what the user must wait for stays synchronous (persist booking); notifications are not on the critical path.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "backend_architect": 5, "solution_architect": 5 },
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
           "acceptedSignals": [
             "critical path",
             "user shouldn't wait",
@@ -121,7 +171,10 @@
           "label": "Publish once, fan out via broker",
           "description": "Emit one booking-created event; consumers subscribe independently instead of the producer calling five APIs.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "backend_architect": 5 },
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
           "acceptedSignals": [
             "publish an event",
             "pub sub",
@@ -136,7 +189,10 @@
           "label": "Per-consumer failure isolation",
           "description": "Each consumer has its own retries/DLQ; one failing system doesn't block the others; duplicates handled idempotently.",
           "importance": "important",
-          "roleWeight": { "backend_architect": 5, "backend_developer": 4 },
+          "roleWeight": {
+            "backend_architect": 5,
+            "backend_developer": 4
+          },
           "acceptedSignals": [
             "retry per consumer",
             "dead letter",
@@ -150,7 +206,9 @@
       "followUps": [
         {
           "id": "int_fo_sync_needed_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "Which of the five would you still call synchronously if, say, fraud check must pass before confirming?",
           "expectedPoints": []
         }
@@ -160,9 +218,18 @@
       "id": "int_migration_001",
       "title": "Migrating off a legacy integration platform",
       "prompt": "You must migrate integration flows from a legacy platform (like Mule/ESB) to plain services. How do you do it without breaking consumers?",
-      "roles": ["backend_architect", "solution_architect", "backend_developer"],
-      "modes": ["scenario_discussion"],
-      "topicIds": ["integration_migration", "migration_strategy"],
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "backend_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "integration_migration",
+        "migration_strategy"
+      ],
       "expectedDurationSeconds": 270,
       "thinkingTimeSeconds": 60,
       "answerStructureHint": "Inventory and characterize flows, migrate incrementally behind stable contracts, verify behavior parity (shadow traffic), keep rollback.",
@@ -172,7 +239,11 @@
           "label": "Incremental, flow by flow",
           "description": "Strangler-style: route one flow at a time to the new implementation behind the same contract, not a big-bang rewrite.",
           "importance": "critical",
-          "roleWeight": { "backend_architect": 5, "solution_architect": 5, "backend_developer": 4 },
+          "roleWeight": {
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "backend_developer": 4
+          },
           "acceptedSignals": [
             "strangler",
             "one flow at a time",
@@ -187,7 +258,10 @@
           "label": "Verifies behavior compatibility",
           "description": "Compares old vs new outputs — shadow/parallel runs, contract tests, replaying real traffic — before cutover.",
           "importance": "critical",
-          "roleWeight": { "backend_architect": 5, "backend_developer": 4 },
+          "roleWeight": {
+            "backend_architect": 5,
+            "backend_developer": 4
+          },
           "acceptedSignals": [
             "shadow traffic",
             "parallel run",
@@ -203,7 +277,10 @@
           "label": "Risk ordering and rollback",
           "description": "Start with low-risk flows, keep a fast way back, monitor error rates per migrated flow.",
           "importance": "important",
-          "roleWeight": { "backend_architect": 4, "solution_architect": 5 },
+          "roleWeight": {
+            "backend_architect": 4,
+            "solution_architect": 5
+          },
           "acceptedSignals": [
             "low risk first",
             "rollback",
@@ -217,7 +294,9 @@
       "followUps": [
         {
           "id": "int_mi_hidden_logic_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "Legacy ESB flows often contain undocumented transformations. How do you discover what the flow really does?",
           "expectedPoints": []
         }
@@ -227,9 +306,19 @@
       "id": "int_node_fit_001",
       "title": "Node.js for integration services",
       "prompt": "Why is Node.js a good fit for integration/API services, and where is it a poor choice?",
-      "roles": ["backend_developer", "fullstack_developer", "backend_architect"],
-      "modes": ["concept_check", "tradeoff_decision"],
-      "topicIds": ["async_fanout", "api_design"],
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "async_fanout",
+        "api_design"
+      ],
       "expectedDurationSeconds": 210,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "Event loop excels at I/O-bound concurrent calls; single thread suffers on CPU-bound work; mitigation via workers.",
@@ -239,7 +328,11 @@
           "label": "Strong for I/O-bound work",
           "description": "Non-blocking event loop handles many concurrent network calls cheaply — exactly what integration services do.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 4, "backend_architect": 4 },
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "backend_architect": 4
+          },
           "acceptedSignals": [
             "i/o bound",
             "non blocking",
@@ -254,7 +347,10 @@
           "label": "Weak for CPU-bound work",
           "description": "A single-threaded loop blocks on heavy computation, stalling every request.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "backend_architect": 4 },
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
           "acceptedSignals": [
             "cpu bound",
             "blocks the event loop",
@@ -269,7 +365,9 @@
           "label": "Knows the mitigations",
           "description": "Worker threads, offloading to services/queues, or picking another runtime for compute-heavy paths.",
           "importance": "nice_to_have",
-          "roleWeight": { "backend_developer": 4 },
+          "roleWeight": {
+            "backend_developer": 4
+          },
           "acceptedSignals": [
             "worker threads",
             "offload",
@@ -282,7 +380,10 @@
       "followUps": [
         {
           "id": "int_nf_detect_followup",
-          "trigger": { "type": "rubric_covered", "rubricItemId": "nf_cpu_weakness" },
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "nf_cpu_weakness"
+          },
           "prompt": "How would you detect event-loop blocking in a production Node.js service?",
           "expectedPoints": []
         }

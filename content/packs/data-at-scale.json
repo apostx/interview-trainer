@@ -2,34 +2,49 @@
   "id": "data_at_scale",
   "name": "Data patterns at scale",
   "description": "Outbox pattern and delivery guarantees, sharding and hot partitions, replication, optimistic locking and the N+1 problem — from the Dennemeyer system design 100-topic doc.",
+  "sources": [
+    "dennemeyer_system_design_100_tema_peldakkal_mobile_hu"
+  ],
   "topics": [
     {
       "id": "outbox_pattern",
       "name": "Outbox pattern",
       "description": "Solving the dual-write problem: persist state and publish events atomically via an outbox table.",
       "category": "architecture",
-      "relatedTopicIds": ["message_queue", "event_driven", "idempotency"]
+      "relatedTopicIds": [
+        "message_queue",
+        "event_driven",
+        "idempotency"
+      ]
     },
     {
       "id": "sharding",
       "name": "Sharding & partitioning",
       "description": "Splitting data across nodes by key; choosing partition keys and handling hot shards.",
       "category": "database",
-      "relatedTopicIds": ["scalability", "nosql"]
+      "relatedTopicIds": [
+        "scalability",
+        "nosql"
+      ]
     },
     {
       "id": "replication",
       "name": "Replication & read replicas",
       "description": "Copies of data for read scaling and availability; replication lag trade-offs.",
       "category": "database",
-      "relatedTopicIds": ["scalability", "sql"]
+      "relatedTopicIds": [
+        "scalability",
+        "sql"
+      ]
     },
     {
       "id": "optimistic_locking",
       "name": "Optimistic locking",
       "description": "Detecting concurrent updates with versions instead of holding locks.",
       "category": "database",
-      "relatedTopicIds": ["transactions"]
+      "relatedTopicIds": [
+        "transactions"
+      ]
     }
   ],
   "questions": [
@@ -37,9 +52,19 @@
       "id": "das_outbox_001",
       "title": "Outbox pattern and the dual write",
       "prompt": "A service saves an order to its database and publishes an event to a queue. What can go wrong, and how does the outbox pattern fix it?",
-      "roles": ["backend_developer", "backend_architect"],
-      "modes": ["concept_check", "scenario_discussion"],
-      "topicIds": ["outbox_pattern", "message_queue", "distributed_transactions"],
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "outbox_pattern",
+        "message_queue",
+        "distributed_transactions"
+      ],
       "expectedDurationSeconds": 240,
       "thinkingTimeSeconds": 60,
       "answerStructureHint": "Name the dual-write problem, write the event into an outbox table in the same transaction, relay it, and handle at-least-once on consumers.",
@@ -49,7 +74,10 @@
           "label": "Names the dual-write problem",
           "description": "DB commit and publish are two systems — one can succeed while the other fails, losing or ghosting events.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "backend_architect": 5 },
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
           "acceptedSignals": [
             "dual write",
             "two systems",
@@ -64,7 +92,10 @@
           "label": "Outbox row in the same transaction",
           "description": "The event is inserted into an outbox table atomically with the business change; a relay publishes it later.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "backend_architect": 5 },
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
           "acceptedSignals": [
             "outbox table",
             "same transaction",
@@ -80,7 +111,10 @@
           "label": "Consumers handle at-least-once",
           "description": "The relay may publish twice, so consumers deduplicate / are idempotent.",
           "importance": "important",
-          "roleWeight": { "backend_developer": 4, "backend_architect": 5 },
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
           "acceptedSignals": [
             "at least once",
             "duplicate delivery",
@@ -93,7 +127,9 @@
       "followUps": [
         {
           "id": "das_ob_order_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "Does the outbox guarantee event ordering? What would you do if order matters?",
           "expectedPoints": []
         }
@@ -103,9 +139,19 @@
       "id": "das_sharding_001",
       "title": "Sharding and hot partitions",
       "prompt": "Your database no longer fits on one node, so you shard it. How do you pick the partition key, and what is a hot shard?",
-      "roles": ["backend_architect", "backend_developer", "solution_architect"],
-      "modes": ["concept_check", "scenario_discussion"],
-      "topicIds": ["sharding", "scalability"],
+      "roles": [
+        "backend_architect",
+        "backend_developer",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "sharding",
+        "scalability"
+      ],
       "expectedDurationSeconds": 240,
       "thinkingTimeSeconds": 60,
       "answerStructureHint": "Key must spread load evenly and match query patterns; hot shards come from skewed keys; mitigation via key salting or splitting.",
@@ -115,7 +161,11 @@
           "label": "Partition key drives distribution and queries",
           "description": "Pick a high-cardinality key that spreads writes and keeps common queries on one shard.",
           "importance": "critical",
-          "roleWeight": { "backend_architect": 5, "backend_developer": 4, "solution_architect": 4 },
+          "roleWeight": {
+            "backend_architect": 5,
+            "backend_developer": 4,
+            "solution_architect": 4
+          },
           "acceptedSignals": [
             "partition key",
             "shard key",
@@ -130,7 +180,10 @@
           "label": "Explains hot shards",
           "description": "Skewed access (one big tenant, celebrity user, time-ordered keys) overloads one shard while others idle.",
           "importance": "critical",
-          "roleWeight": { "backend_architect": 5, "backend_developer": 4 },
+          "roleWeight": {
+            "backend_architect": 5,
+            "backend_developer": 4
+          },
           "acceptedSignals": [
             "hot shard",
             "hot partition",
@@ -146,7 +199,10 @@
           "label": "Knows mitigations and costs",
           "description": "Salting/composite keys, splitting shards, caching hot data; cross-shard transactions and rebalancing get hard.",
           "importance": "important",
-          "roleWeight": { "backend_architect": 5, "solution_architect": 4 },
+          "roleWeight": {
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
           "acceptedSignals": [
             "salting",
             "composite key",
@@ -161,7 +217,9 @@
       "followUps": [
         {
           "id": "das_sh_rebalance_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "You need to double the shard count on a live system. How do you migrate without downtime?",
           "expectedPoints": []
         }
@@ -171,9 +229,18 @@
       "id": "das_replication_001",
       "title": "Read replicas and replication lag",
       "prompt": "You add read replicas to take load off the primary database. What new problems did you just introduce?",
-      "roles": ["backend_developer", "backend_architect"],
-      "modes": ["scenario_discussion", "tradeoff_decision"],
-      "topicIds": ["replication", "scalability"],
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "replication",
+        "scalability"
+      ],
       "expectedDurationSeconds": 210,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "Replication lag → stale reads and read-your-own-writes; routing decisions; failover consistency.",
@@ -183,7 +250,10 @@
           "label": "Replication lag causes stale reads",
           "description": "Replicas apply changes asynchronously, so reads can return old data.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "backend_architect": 5 },
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
           "acceptedSignals": [
             "replication lag",
             "stale read",
@@ -197,7 +267,10 @@
           "label": "Read-your-own-writes problem",
           "description": "A user updates then reads a replica and sees the old value; route their reads to the primary or use session stickiness.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "backend_architect": 4 },
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
           "acceptedSignals": [
             "read your own writes",
             "sees the old value after saving",
@@ -212,7 +285,9 @@
           "label": "Failover and lost writes",
           "description": "Promoting a lagging replica on failover can lose recent writes; sync vs async is a durability/latency trade-off.",
           "importance": "nice_to_have",
-          "roleWeight": { "backend_architect": 5 },
+          "roleWeight": {
+            "backend_architect": 5
+          },
           "acceptedSignals": [
             "failover",
             "promote a replica",
@@ -226,7 +301,10 @@
       "followUps": [
         {
           "id": "das_rl_route_followup",
-          "trigger": { "type": "rubric_missing", "rubricItemId": "rl_read_own_writes" },
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rl_read_own_writes"
+          },
           "prompt": "A user saves their profile and immediately sees the old name. What happened and how do you fix it?",
           "expectedPoints": []
         }
@@ -236,9 +314,17 @@
       "id": "das_optimistic_lock_001",
       "title": "Optimistic locking and N+1",
       "prompt": "Two users edit the same record at once. How does optimistic locking handle it — and separately, what is the N+1 query problem?",
-      "roles": ["backend_developer", "fullstack_developer"],
-      "modes": ["concept_check"],
-      "topicIds": ["optimistic_locking", "sql"],
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "optimistic_locking",
+        "sql"
+      ],
       "expectedDurationSeconds": 210,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "Version column checked on update, conflict → retry/merge; N+1: one query per row from lazy loading, fixed with joins/batching.",
@@ -248,7 +334,10 @@
           "label": "Version check on update",
           "description": "Update carries the version it read; if the row changed meanwhile, the update fails instead of silently overwriting.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 4 },
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "version column",
             "version number",
@@ -264,7 +353,10 @@
           "label": "Handles the conflict",
           "description": "On conflict: reload and retry, merge, or surface to the user — better than blocking for rare conflicts.",
           "importance": "important",
-          "roleWeight": { "backend_developer": 4, "fullstack_developer": 4 },
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "retry",
             "reload and reapply",
@@ -279,7 +371,10 @@
           "label": "Explains N+1 and the fix",
           "description": "One query for the list plus one per item (lazy loading); fix with joins, eager loading or batching.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 4 },
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "n plus one",
             "one query per row",
@@ -294,7 +389,9 @@
       "followUps": [
         {
           "id": "das_ol_detect_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "How would you notice an N+1 problem in production rather than in code review?",
           "expectedPoints": []
         }

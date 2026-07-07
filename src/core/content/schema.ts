@@ -75,6 +75,8 @@ export const followUpSchema = z.object({
 
 export const packQuestionSchema = z.object({
   id: idSchema,
+  /** Overrides the pack-level source files for this one question. */
+  sources: z.array(z.string().min(1)).optional(),
   title: z.string().min(1),
   prompt: z.string().min(1),
   roles: z.array(roleEnum).min(1),
@@ -101,6 +103,8 @@ export const contentPackSchema = z.object({
   id: idSchema,
   name: z.string().min(1),
   description: z.string().optional(),
+  /** Origin files in dataresource/, e.g. "tibi/lufthansa" (no extension). */
+  sources: z.array(z.string().min(1)).default([]),
   topics: z.array(packTopicSchema).default([]),
   questions: z.array(packQuestionSchema).default([]),
 });
@@ -119,7 +123,10 @@ export function toTopic(t: PackTopic): Topic {
 }
 
 export function toQuestionCard(q: PackQuestion): QuestionCard {
-  return q as QuestionCard;
+  // The sources field is loader metadata, not part of the engine card.
+  const card = { ...q };
+  delete card.sources;
+  return card as QuestionCard;
 }
 
 export function formatZodError(error: z.ZodError): string {

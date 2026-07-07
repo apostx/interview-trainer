@@ -8,7 +8,7 @@ import {
   allQuestions,
   allTopics,
   contentSources,
-  sourceByCardId,
+  sourcesByCardId,
 } from "@/core/content/bank";
 import {
   downloadStudyPdf,
@@ -40,6 +40,18 @@ for (const card of allQuestions) {
 }
 const studyTopics = allTopics.filter((t) => cardsByTopicId.has(t.id));
 
+// Source dropdown grouped by origin ("app", "dataresource", folders).
+const sourceGroups: [string, { id: string; name: string }[]][] = (() => {
+  const groups = new Map<string, { id: string; name: string }[]>();
+  for (const src of contentSources) {
+    groups.set(src.group, [
+      ...(groups.get(src.group) ?? []),
+      { id: src.id, name: src.name },
+    ]);
+  }
+  return [...groups.entries()].sort();
+})();
+
 type RoleFilter = InterviewRole | "all";
 type SourceFilter = string; // "all" or a source id
 
@@ -53,7 +65,9 @@ function cardMatchesFilters(
     const members = TRACK_MEMBER_ROLES[role] ?? [role];
     if (!card.roles.some((r) => members.includes(r))) return false;
   }
-  if (source !== "all" && sourceByCardId.get(card.id) !== source) return false;
+  if (source !== "all" && !sourcesByCardId.get(card.id)?.includes(source)) {
+    return false;
+  }
   return true;
 }
 
@@ -351,10 +365,14 @@ export default function StudyPage() {
           onChange={(e) => setSelectedSource(e.target.value)}
         >
           <option value="all">All sources</option>
-          {contentSources.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
+          {sourceGroups.map(([group, entries]) => (
+            <optgroup key={group} label={group}>
+              {entries.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </div>

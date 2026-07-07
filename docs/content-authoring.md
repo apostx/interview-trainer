@@ -26,6 +26,9 @@ errors are shown on the **Topics** page (and in `npm run content:check`).
   "id": "my_pack",                  // snake_case, unique across packs
   "name": "Human readable name",
   "description": "optional",
+  "sources": ["tibi/lufthansa"],    // origin files in dataresource/ (no extension);
+                                    // drives the Study source filter. A question can
+                                    // override with its own "sources" array.
   "topics": [ /* new topics this pack introduces (optional) */ ],
   "questions": [ /* question cards (optional) */ ]
 }

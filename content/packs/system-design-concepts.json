@@ -2,20 +2,31 @@
   "id": "system_design_concepts",
   "name": "System design foundations",
   "description": "CAP theorem and classic design exercises (URL shortener, media streaming). From the 'system design' prep doc.",
+  "sources": [
+    "tibi/system_design"
+  ],
   "topics": [
     {
       "id": "cap_theorem",
       "name": "CAP theorem",
       "description": "Consistency, availability, partition tolerance — pick two under a network partition.",
       "category": "architecture",
-      "relatedTopicIds": ["reliability", "scalability", "distributed_transactions"]
+      "relatedTopicIds": [
+        "reliability",
+        "scalability",
+        "distributed_transactions"
+      ]
     },
     {
       "id": "design_url_shortener",
       "name": "URL shortener design",
       "description": "Designing a bit.ly-style service: key generation, storage, redirects, scale.",
       "category": "architecture",
-      "relatedTopicIds": ["caching", "scalability", "nosql"]
+      "relatedTopicIds": [
+        "caching",
+        "scalability",
+        "nosql"
+      ]
     }
   ],
   "questions": [
@@ -23,9 +34,18 @@
       "id": "sd_cap_001",
       "title": "CAP theorem",
       "prompt": "Explain the CAP theorem. What does it actually force you to choose in a distributed system?",
-      "roles": ["backend_architect", "solution_architect", "backend_developer"],
-      "modes": ["concept_check"],
-      "topicIds": ["cap_theorem", "reliability"],
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "backend_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "cap_theorem",
+        "reliability"
+      ],
       "expectedDurationSeconds": 210,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "Define C/A/P, the partition is a given, so the real choice is consistency vs availability during a partition.",
@@ -35,7 +55,11 @@
           "label": "Defines consistency, availability, partition tolerance",
           "description": "C = every read sees the latest write, A = every request gets a response, P = system keeps working despite dropped messages.",
           "importance": "critical",
-          "roleWeight": { "backend_architect": 5, "solution_architect": 5, "backend_developer": 4 },
+          "roleWeight": {
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "backend_developer": 4
+          },
           "acceptedSignals": [
             "consistency",
             "availability",
@@ -50,7 +74,10 @@
           "label": "Partition is unavoidable, so it's C vs A",
           "description": "Since partitions happen, the real decision under a partition is consistency vs availability.",
           "importance": "critical",
-          "roleWeight": { "backend_architect": 5, "solution_architect": 5 },
+          "roleWeight": {
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
           "acceptedSignals": [
             "partitions are unavoidable",
             "choose between consistency and availability",
@@ -66,7 +93,10 @@
           "label": "Grounds it in real systems",
           "description": "Gives a CP vs AP example (e.g. a bank ledger vs a shopping cart / eventually consistent store).",
           "importance": "nice_to_have",
-          "roleWeight": { "backend_architect": 4, "solution_architect": 4 },
+          "roleWeight": {
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
           "acceptedSignals": [
             "bank",
             "payment needs consistency",
@@ -82,7 +112,9 @@
       "followUps": [
         {
           "id": "sd_cap_pacelc_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "Even without a partition there is a trade-off. What is it (the 'else' in PACELC)?",
           "expectedPoints": []
         }
@@ -92,9 +124,19 @@
       "id": "sd_url_shortener_001",
       "title": "Design a URL shortener",
       "prompt": "Design a URL shortening service like bit.ly. Walk me through the key decisions.",
-      "roles": ["backend_developer", "backend_architect", "fullstack_developer"],
-      "modes": ["system_design"],
-      "topicIds": ["design_url_shortener", "caching", "scalability"],
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "design_url_shortener",
+        "caching",
+        "scalability"
+      ],
       "expectedDurationSeconds": 420,
       "thinkingTimeSeconds": 90,
       "answerStructureHint": "Clarify scale and read/write ratio, key generation, storage, fast redirects with caching, then analytics/expiry.",
@@ -104,7 +146,11 @@
           "label": "Clarifies scale and read/write ratio",
           "description": "Asks about traffic, that reads vastly outnumber writes, custom aliases, expiry.",
           "importance": "critical",
-          "roleWeight": { "backend_architect": 5, "backend_developer": 4, "fullstack_developer": 4 },
+          "roleWeight": {
+            "backend_architect": 5,
+            "backend_developer": 4,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "how much traffic",
             "read heavy",
@@ -120,7 +166,10 @@
           "label": "Key generation strategy",
           "description": "Base62 of an ID / counter, hashing with collision handling, or a key-generation service.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "backend_architect": 5 },
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
           "acceptedSignals": [
             "base62",
             "base 62",
@@ -137,7 +186,10 @@
           "label": "Caching for fast redirects",
           "description": "Cache hot short-codes (and use a CDN) so the redirect lookup is fast under read-heavy load.",
           "importance": "critical",
-          "roleWeight": { "backend_architect": 5, "backend_developer": 4 },
+          "roleWeight": {
+            "backend_architect": 5,
+            "backend_developer": 4
+          },
           "acceptedSignals": [
             "cache",
             "redis",
@@ -153,7 +205,10 @@
           "label": "Appropriate storage choice",
           "description": "A simple key-value / NoSQL store fits the lookup pattern and scales horizontally.",
           "importance": "important",
-          "roleWeight": { "backend_architect": 4, "backend_developer": 4 },
+          "roleWeight": {
+            "backend_architect": 4,
+            "backend_developer": 4
+          },
           "acceptedSignals": [
             "key value store",
             "nosql",
@@ -167,7 +222,9 @@
       "followUps": [
         {
           "id": "sd_url_analytics_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "The product wants click analytics per link without slowing down redirects. How would you do it?",
           "expectedPoints": []
         }

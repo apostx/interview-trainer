@@ -28,6 +28,8 @@ export const packTopics: Topic[] = [];
 export const packQuestions: QuestionCard[] = [];
 /** Which pack (source) each pack question came from. */
 export const packIdByQuestionId = new Map<string, string>();
+/** Origin dataresource files per question (question override > pack). */
+export const sourcesByQuestionId = new Map<string, string[]>();
 
 function tryLoadContext(): RequireContext | null {
   try {
@@ -65,6 +67,10 @@ if (context) {
     for (const q of pack.questions) {
       packQuestions.push(toQuestionCard(q));
       packIdByQuestionId.set(q.id, pack.id);
+      const sources =
+        q.sources && q.sources.length > 0 ? q.sources : pack.sources;
+      // Packs without declared files fall back to the pack itself as source.
+      sourcesByQuestionId.set(q.id, sources.length > 0 ? sources : [pack.id]);
     }
     loadedPacks.push({
       id: pack.id,

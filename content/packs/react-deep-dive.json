@@ -2,20 +2,30 @@
   "id": "react_deep_dive",
   "name": "React deep dive (Artec)",
   "description": "React rendering model, re-render optimization, state management without Redux, and SSR vs CSR (React vs Next.js) — from the Artec frontend prep doc.",
+  "sources": [
+    "artec_frontend_interju_felkeszules"
+  ],
   "topics": [
     {
       "id": "react_rendering_model",
       "name": "React rendering model",
       "description": "Render vs commit, reconciliation, keys, and what actually triggers a re-render.",
       "category": "frontend",
-      "relatedTopicIds": ["react", "frontend_performance"]
+      "relatedTopicIds": [
+        "react",
+        "frontend_performance"
+      ]
     },
     {
       "id": "ssr_csr",
       "name": "SSR vs CSR",
       "description": "Server-side vs client-side rendering, hydration, and when a framework like Next.js earns its complexity.",
       "category": "frontend",
-      "relatedTopicIds": ["react", "frontend_performance", "core_web_vitals"]
+      "relatedTopicIds": [
+        "react",
+        "frontend_performance",
+        "core_web_vitals"
+      ]
     }
   ],
   "questions": [
@@ -23,9 +33,18 @@
       "id": "rdd_rendering_001",
       "title": "What triggers a React re-render",
       "prompt": "Walk me through React's rendering model: what triggers a re-render, and what happens between a state change and the DOM update?",
-      "roles": ["frontend_developer", "fullstack_developer", "frontend_architect"],
-      "modes": ["concept_check"],
-      "topicIds": ["react_rendering_model", "react"],
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "react_rendering_model",
+        "react"
+      ],
       "expectedDurationSeconds": 240,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "State/prop/context change → render phase (reconciliation, diffing) → commit phase (DOM mutations); children re-render with parents by default.",
@@ -35,7 +54,11 @@
           "label": "Knows what triggers renders",
           "description": "setState, parent re-render, and context value change — not prop mutation by itself.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4, "frontend_architect": 5 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
           "acceptedSignals": [
             "state change",
             "setstate",
@@ -49,7 +72,10 @@
           "label": "Render vs commit, reconciliation",
           "description": "Render phase builds the new virtual tree and diffs it; commit applies minimal DOM changes; keys drive list diffing.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "frontend_architect": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "frontend_architect": 4
+          },
           "acceptedSignals": [
             "reconciliation",
             "virtual dom",
@@ -65,7 +91,9 @@
           "label": "Render must be pure",
           "description": "Render can run many times without side effects; effects run after commit.",
           "importance": "nice_to_have",
-          "roleWeight": { "frontend_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 4
+          },
           "acceptedSignals": [
             "pure",
             "no side effects in render",
@@ -78,7 +106,9 @@
       "followUps": [
         {
           "id": "rdd_rr_keys_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "Why is using an array index as a key a problem in a reorderable list?",
           "expectedPoints": []
         }
@@ -88,9 +118,19 @@
       "id": "rdd_state_mgmt_001",
       "title": "State management without Redux",
       "prompt": "When do you actually need a state management library in React? How far do you get without one?",
-      "roles": ["frontend_developer", "fullstack_developer", "frontend_architect"],
-      "modes": ["tradeoff_decision", "scenario_discussion"],
-      "topicIds": ["state_management", "react"],
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "state_management",
+        "react"
+      ],
       "expectedDurationSeconds": 240,
       "thinkingTimeSeconds": 60,
       "answerStructureHint": "Local state first, lift when shared, context for stable app-wide values, server-cache libraries for API data; a store only for complex shared client state.",
@@ -100,7 +140,11 @@
           "label": "Local state first, lift when needed",
           "description": "Keep state in the component that uses it; lift to the nearest common ancestor only when shared.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4, "frontend_architect": 5 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
           "acceptedSignals": [
             "local state",
             "usestate",
@@ -115,7 +159,11 @@
           "label": "Server data is not client state",
           "description": "API data belongs in a server-cache tool (React Query/SWR) with caching and invalidation, not in a global store.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 5, "frontend_architect": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 4
+          },
           "acceptedSignals": [
             "react query",
             "swr",
@@ -130,7 +178,10 @@
           "label": "Knows when a store earns its place",
           "description": "Complex, widely shared, frequently changing client state (or context re-render limits) justifies Redux/Zustand.",
           "importance": "important",
-          "roleWeight": { "frontend_developer": 4, "frontend_architect": 5 },
+          "roleWeight": {
+            "frontend_developer": 4,
+            "frontend_architect": 5
+          },
           "acceptedSignals": [
             "context re-renders everything",
             "complex shared state",
@@ -145,7 +196,9 @@
       "followUps": [
         {
           "id": "rdd_sm_context_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "What is the performance pitfall of putting a frequently-changing value into React context?",
           "expectedPoints": []
         }
@@ -155,9 +208,19 @@
       "id": "rdd_ssr_csr_001",
       "title": "SSR vs CSR — do you need Next.js?",
       "prompt": "When would you choose server-side rendering over a plain client-side React app? What does hydration mean in this picture?",
-      "roles": ["frontend_developer", "frontend_architect", "fullstack_developer"],
-      "modes": ["tradeoff_decision", "concept_check"],
-      "topicIds": ["ssr_csr", "frontend_performance"],
+      "roles": [
+        "frontend_developer",
+        "frontend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "concept_check"
+      ],
+      "topicIds": [
+        "ssr_csr",
+        "frontend_performance"
+      ],
       "expectedDurationSeconds": 240,
       "thinkingTimeSeconds": 60,
       "answerStructureHint": "SEO and first-paint needs vs infra complexity; hydration attaches interactivity to server HTML; CSR is fine behind login.",
@@ -167,7 +230,11 @@
           "label": "SSR for SEO and first paint",
           "description": "Public, content-heavy pages need indexable HTML and fast first contentful paint; SSR/SSG delivers that.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "frontend_architect": 5, "fullstack_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "frontend_architect": 5,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "seo",
             "first paint",
@@ -183,7 +250,10 @@
           "label": "Explains hydration",
           "description": "Server HTML becomes interactive when React attaches listeners client-side; mismatch and cost are the catch.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "frontend_architect": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "frontend_architect": 4
+          },
           "acceptedSignals": [
             "hydration",
             "attach event listeners",
@@ -197,7 +267,10 @@
           "label": "CSR is fine for app-like UIs",
           "description": "Dashboards behind login don't need SSR; SSR adds server infra, complexity and cost.",
           "importance": "important",
-          "roleWeight": { "frontend_architect": 5, "frontend_developer": 4 },
+          "roleWeight": {
+            "frontend_architect": 5,
+            "frontend_developer": 4
+          },
           "acceptedSignals": [
             "behind login",
             "dashboard",
@@ -211,7 +284,9 @@
       "followUps": [
         {
           "id": "rdd_sc_rsc_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "How do React Server Components change this trade-off?",
           "expectedPoints": []
         }
