@@ -221,9 +221,18 @@ async function main() {
   // ---- Study PDF export view
   await page.goto(BASE + "/study/print/");
   await page.getByRole("heading", { name: "Interview Trainer — Study material" }).waitFor();
-  await page.getByRole("button", { name: "Save as PDF" }).waitFor();
   const printBg = await page.evaluate(() => getComputedStyle(document.querySelector("main > div")).backgroundColor);
-  log(printBg === "rgb(255, 255, 255)" ? "✅" : "❌", `Print view white background (${printBg}) with Save as PDF button`);
+  log(printBg === "rgb(255, 255, 255)" ? "✅" : "❌", `Print view white background (${printBg})`);
+  const downloadPromise = page.waitForEvent("download", { timeout: 60000 });
+  await page.getByRole("button", { name: "Download PDF (phone)" }).click();
+  const download = await downloadPromise;
+  const pdfPath = await download.path();
+  const { statSync: pdfStat } = await import("node:fs");
+  const pdfBytes = pdfStat(pdfPath).size;
+  log(
+    download.suggestedFilename().endsWith(".pdf") && pdfBytes > 50000 ? "✅" : "❌",
+    `Generated phone PDF downloaded: ${download.suggestedFilename()} (${Math.round(pdfBytes / 1024)} KB)`,
+  );
   await page.screenshot({ path: `${SHOTS}/18-study-print.png` });
   await page.screenshot({ path: `${SHOTS}/08-topics.png` });
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { downloadStudyPdf } from "@/core/pdf/studyPdf";
 import type { QuestionCard, Topic } from "@/core/models";
 import { MODE_LABELS } from "@/core/models";
 import { allQuestions, allTopics } from "@/core/content/bank";
@@ -88,6 +89,22 @@ export default function StudyPrintPage() {
   // Filled after mount: the export date differs from the static build date,
   // so rendering it during hydration would mismatch the prerendered HTML.
   const [exportDate, setExportDate] = useState("");
+  const [generating, setGenerating] = useState<"a4" | "phone" | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+
+  async function generate(format: "a4" | "phone") {
+    setGenerating(format);
+    setPdfError(null);
+    try {
+      await downloadStudyPdf(format);
+    } catch (e) {
+      setPdfError(
+        `PDF generation failed (${e instanceof Error ? e.message : String(e)}) — you can still use Print… as a fallback.`,
+      );
+    } finally {
+      setGenerating(null);
+    }
+  }
   useEffect(() => {
     const id = setTimeout(
       () => setExportDate(new Date().toLocaleDateString("en-GB")),
@@ -103,18 +120,42 @@ export default function StudyPrintPage() {
           <Link href="/study" className="text-sm font-medium text-neutral-600 hover:text-neutral-900">
             ← Back to Study
           </Link>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-neutral-700"
-          >
-            Save as PDF
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={generating !== null}
+              onClick={() => generate("phone")}
+              className="rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-neutral-700 disabled:opacity-50"
+            >
+              {generating === "phone" ? "Generating…" : "Download PDF (phone)"}
+            </button>
+            <button
+              type="button"
+              disabled={generating !== null}
+              onClick={() => generate("a4")}
+              className="rounded-lg border border-neutral-300 px-4 py-2.5 text-sm font-semibold text-neutral-900 hover:bg-neutral-100 disabled:opacity-50"
+            >
+              {generating === "a4" ? "Generating…" : "Download PDF (A4)"}
+            </button>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="rounded-lg border border-neutral-300 px-4 py-2.5 text-sm font-semibold text-neutral-600 hover:bg-neutral-100"
+            >
+              Print…
+            </button>
+          </div>
         </div>
+        {pdfError && (
+          <p role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 print:hidden">
+            {pdfError}
+          </p>
+        )}
         <p className="mb-6 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-600 print:hidden">
-          Use your browser&apos;s print dialog and choose &quot;Save as PDF&quot;.
-          The document is single-column and phone-readable; * marks critical
-          points.
+          The downloads are generated PDFs with controlled page breaks —
+          &quot;phone&quot; uses a narrow page that reads comfortably on a
+          mobile screen, &quot;A4&quot; is for desktop and paper. * marks
+          critical points.
         </p>
 
         <header className="mb-8 border-b-2 border-neutral-900 pb-4">
@@ -127,14 +168,14 @@ export default function StudyPrintPage() {
 
         {categories.map(([category, topics]) => (
           <section key={category} className="mb-8">
-            <h2 className="mb-3 border-b border-neutral-300 pb-1 text-lg font-bold">
+            <h2 className="mb-3 border-b border-neutral-300 pb-1 text-lg font-bold break-after-avoid-page">
               {CATEGORY_LABELS[category]}
             </h2>
             {topics
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((topic) => (
                 <div key={topic.id} className="mb-5">
-                  <h3 className="text-base font-bold">{topic.name}</h3>
+                  <h3 className="text-base font-bold break-after-avoid-page">{topic.name}</h3>
                   {topic.description && (
                     <p className="mb-2 text-[13px] text-neutral-600">
                       {topic.description}
