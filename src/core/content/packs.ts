@@ -26,6 +26,8 @@ export const loadedPacks: LoadedPack[] = [];
 export const packErrors: string[] = [];
 export const packTopics: Topic[] = [];
 export const packQuestions: QuestionCard[] = [];
+/** Which pack (source) each pack question came from. */
+export const packIdByQuestionId = new Map<string, string>();
 
 function tryLoadContext(): RequireContext | null {
   try {
@@ -60,7 +62,10 @@ if (context) {
     }
     seenPackIds.add(pack.id);
     packTopics.push(...pack.topics.map(toTopic));
-    packQuestions.push(...pack.questions.map(toQuestionCard));
+    for (const q of pack.questions) {
+      packQuestions.push(toQuestionCard(q));
+      packIdByQuestionId.set(q.id, pack.id);
+    }
     loadedPacks.push({
       id: pack.id,
       name: pack.name,

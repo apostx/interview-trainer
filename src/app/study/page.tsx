@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, ModeBadge, PageHeader, buttonGhost, inputBase } from "@/components/ui";
-import type { QuestionCard, Topic } from "@/core/models";
-import { allQuestions, allTopics } from "@/core/content/bank";
+import type { InterviewRole, QuestionCard, Topic } from "@/core/models";
+import { ROLE_LABELS, ROLE_TRACKS, TRACK_MEMBER_ROLES } from "@/core/models";
+import {
+  allQuestions,
+  allTopics,
+  contentSources,
+  sourceByCardId,
+} from "@/core/content/bank";
 import {
   downloadStudyPdf,
   type StudyPdfFormat,
   type StudyPdfScope,
 } from "@/core/pdf/studyPdf";
 import { normalizedIncludes } from "@/core/services/transcriptNormalizer";
+import { getSettings } from "@/core/storage/repositories";
 
 const CATEGORY_LABELS: Record<Topic["category"], string> = {
   frontend: "Frontend",
@@ -32,16 +39,27 @@ for (const card of allQuestions) {
   }
 }
 const studyTopics = allTopics.filter((t) => cardsByTopicId.has(t.id));
-const studyCategories = [...new Set(studyTopics.map((t) => t.category))].sort();
 
-function topicMatches(topic: Topic, query: string): boolean {
-  if (!query.trim()) return true;
-  if (normalizedIncludes(topic.name, query) || normalizedIncludes(query, topic.name)) {
-    return true;
+type RoleFilter = InterviewRole | "all";
+type SourceFilter = string; // "all" or a source id
+
+/** Role and source filters apply per card; a topic shows if any card survives. */
+function cardMatchesFilters(
+  card: QuestionCard,
+  role: RoleFilter,
+  source: SourceFilter,
+): boolean {
+  if (role !== "all") {
+    const members = TRACK_MEMBER_ROLES[role] ?? [role];
+    if (!card.roles.some((r) => members.includes(r))) return false;
   }
-  return (cardsByTopicId.get(topic.id) ?? []).some(
-    (c) =>
-      normalizedIncludes(c.title, query) || normalizedIncludes(c.prompt, query),
+  if (source !== "all" && sourceByCardId.get(card.id) !== source) return false;
+  return true;
+}
+
+function cardMatchesQuery(card: QuestionCard, query: string): boolean {
+  return (
+    normalizedIncludes(card.title, query) || normalizedIncludes(card.prompt, query)
   );
 }
 
@@ -95,14 +113,64 @@ function StudyCard({ card }: { card: QuestionCard }) {
   );
 }
 
+function PdfButtons({
+  generating,
+  onGenerate,
+}: {
+  generating: StudyPdfFormat | null;
+  onGenerate: (format: StudyPdfFormat) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button
+        type="button"
+        disabled={generating !== null}
+        onClick={() => onGenerate("phone")}
+        className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50"
+      >
+        {generating === "phone" ? "Generating…" : "PDF · phone"}
+      </button>
+      <button
+        type="button"
+        disabled={generating !== null}
+        onClick={() => onGenerate("a4")}
+        className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm font-semibold hover:bg-background disabled:opacity-50"
+      >
+        {generating === "a4" ? "Generating…" : "PDF · A4"}
+      </button>
+    </div>
+  );
+}
+
 export default function StudyPage() {
   const [query, setQuery] = useState("");
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<
-    Topic["category"] | "all"
-  >(studyCategories[0] ?? "all");
+  const [selectedRole, setSelectedRoleState] = useState<RoleFilter>("all");
+  const [selectedSource, setSelectedSource] = useState<SourceFilter>("all");
   const [generating, setGenerating] = useState<StudyPdfFormat | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const roleTouchedRef = useRef(false);
+
+  function setSelectedRole(role: RoleFilter) {
+    roleTouchedRef.current = true;
+    setSelectedRoleState(role);
+  }
+
+  // Default the role filter to the user's target role — unless the user
+  // already picked one while settings were loading.
+  useEffect(() => {
+    let cancelled = false;
+    getSettings().then((s) => {
+      setTimeout(() => {
+        if (!cancelled && !roleTouchedRef.current) {
+          setSelectedRoleState(s.targetRole);
+        }
+      }, 0);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function generatePdf(format: StudyPdfFormat, scope: StudyPdfScope) {
     setGenerating(format);
@@ -118,12 +186,31 @@ export default function StudyPage() {
     }
   }
 
+  const matchingCardsOfTopic = (topicId: string) =>
+    (cardsByTopicId.get(topicId) ?? []).filter((c) =>
+      cardMatchesFilters(c, selectedRole, selectedSource),
+    );
+
+  const roleLabel = selectedRole === "all" ? null : ROLE_LABELS[selectedRole];
+  const sourceLabel =
+    selectedSource === "all"
+      ? null
+      : contentSources.find((s) => s.id === selectedSource)?.name;
+  const scopeName = [roleLabel, sourceLabel].filter(Boolean).join(" · ") || null;
+  const scopeSlug =
+    [
+      selectedRole === "all" ? null : selectedRole,
+      selectedSource === "all" ? null : selectedSource,
+    ]
+      .filter(Boolean)
+      .join("-") || "all";
+
   const selectedTopic = selectedTopicId
     ? studyTopics.find((t) => t.id === selectedTopicId)
     : null;
 
   if (selectedTopic) {
-    const cards = cardsByTopicId.get(selectedTopic.id) ?? [];
+    const cards = matchingCardsOfTopic(selectedTopic.id);
     return (
       <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
         <button
@@ -137,24 +224,16 @@ export default function StudyPage() {
           title={selectedTopic.name}
           subtitle={selectedTopic.description || undefined}
           action={
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={generating !== null}
-                onClick={() => generatePdf("phone", { topicId: selectedTopic.id })}
-                className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50"
-              >
-                {generating === "phone" ? "Generating…" : "PDF · phone"}
-              </button>
-              <button
-                type="button"
-                disabled={generating !== null}
-                onClick={() => generatePdf("a4", { topicId: selectedTopic.id })}
-                className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm font-semibold hover:bg-background disabled:opacity-50"
-              >
-                {generating === "a4" ? "Generating…" : "PDF · A4"}
-              </button>
-            </div>
+            <PdfButtons
+              generating={generating}
+              onGenerate={(format) =>
+                generatePdf(format, {
+                  cardIds: cards.map((c) => c.id),
+                  name: selectedTopic.name,
+                  slug: selectedTopic.id,
+                })
+              }
+            />
           }
         />
         {pdfError && (
@@ -169,22 +248,43 @@ export default function StudyPage() {
     );
   }
 
-  // Search looks across everything; otherwise only the selected category
-  // is shown (and exported).
+  // Search looks across everything; otherwise the role/source filters decide
+  // what is shown — and exactly that set is exported.
   const searching = query.trim().length > 0;
-  const visibleTopics = studyTopics.filter(
-    (t) =>
-      topicMatches(t, query) &&
-      (searching || selectedCategory === "all" || t.category === selectedCategory),
-  );
-  const byCategory = new Map<Topic["category"], Topic[]>();
-  for (const t of visibleTopics) {
-    byCategory.set(t.category, [...(byCategory.get(t.category) ?? []), t]);
+  const visibleEntries = studyTopics
+    .map((topic) => {
+      const cards = searching
+        ? (cardsByTopicId.get(topic.id) ?? []).filter(
+            (c) =>
+              normalizedIncludes(topic.name, query) ||
+              normalizedIncludes(query, topic.name) ||
+              cardMatchesQuery(c, query),
+          )
+        : matchingCardsOfTopic(topic.id);
+      return { topic, cards };
+    })
+    .filter((e) => e.cards.length > 0);
+
+  const byCategory = new Map<
+    Topic["category"],
+    { topic: Topic; cards: QuestionCard[] }[]
+  >();
+  for (const e of visibleEntries) {
+    byCategory.set(e.topic.category, [
+      ...(byCategory.get(e.topic.category) ?? []),
+      e,
+    ]);
   }
+
+  const exportCardIds = [
+    ...new Set(
+      studyTopics.flatMap((t) => matchingCardsOfTopic(t.id).map((c) => c.id)),
+    ),
+  ];
   const exportScope: StudyPdfScope =
-    selectedCategory === "all" ? {} : { category: selectedCategory };
-  const exportLabel =
-    selectedCategory === "all" ? "everything" : CATEGORY_LABELS[selectedCategory];
+    scopeName === null
+      ? {}
+      : { cardIds: exportCardIds, name: scopeName, slug: scopeSlug };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
@@ -193,58 +293,16 @@ export default function StudyPage() {
         subtitle="Pick a topic and read the material without being quizzed: each question with what a strong answer covers."
         action={
           <div className="flex flex-col items-end gap-1">
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={generating !== null}
-                onClick={() => generatePdf("phone", exportScope)}
-                className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50"
-              >
-                {generating === "phone" ? "Generating…" : "PDF · phone"}
-              </button>
-              <button
-                type="button"
-                disabled={generating !== null}
-                onClick={() => generatePdf("a4", exportScope)}
-                className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm font-semibold hover:bg-background disabled:opacity-50"
-              >
-                {generating === "a4" ? "Generating…" : "PDF · A4"}
-              </button>
-            </div>
-            <span className="text-xs text-muted">exports {exportLabel}</span>
+            <PdfButtons
+              generating={generating}
+              onGenerate={(format) => generatePdf(format, exportScope)}
+            />
+            <span className="text-xs text-muted">
+              exports {scopeName ?? "everything"}
+            </span>
           </div>
         }
       />
-
-      <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Category filter">
-        {studyCategories.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => setSelectedCategory(c)}
-            aria-pressed={selectedCategory === c}
-            className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-              selectedCategory === c && !searching
-                ? "bg-accent text-white"
-                : "border border-hairline text-secondary hover:text-foreground"
-            }`}
-          >
-            {CATEGORY_LABELS[c]}
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => setSelectedCategory("all")}
-          aria-pressed={selectedCategory === "all"}
-          className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-            selectedCategory === "all" && !searching
-              ? "bg-accent text-white"
-              : "border border-hairline text-secondary hover:text-foreground"
-          }`}
-        >
-          All topics
-        </button>
-      </div>
 
       {pdfError && (
         <p role="alert" className="mb-4 text-sm font-medium text-critical">
@@ -252,52 +310,100 @@ export default function StudyPage() {
         </p>
       )}
 
+      <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Role filter">
+        <button
+          type="button"
+          onClick={() => setSelectedRole("all")}
+          aria-pressed={selectedRole === "all"}
+          className={`rounded-full px-3 py-1.5 text-sm font-medium ${
+            selectedRole === "all" && !searching
+              ? "bg-accent text-white"
+              : "border border-hairline text-secondary hover:text-foreground"
+          }`}
+        >
+          All roles
+        </button>
+        {ROLE_TRACKS.map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => setSelectedRole(r)}
+            aria-pressed={selectedRole === r}
+            className={`rounded-full px-3 py-1.5 text-sm font-medium ${
+              selectedRole === r && !searching
+                ? "bg-accent text-white"
+                : "border border-hairline text-secondary hover:text-foreground"
+            }`}
+          >
+            {ROLE_LABELS[r]}
+          </button>
+        ))}
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <label className="text-sm font-medium text-secondary" htmlFor="source-filter">
+          Source
+        </label>
+        <select
+          id="source-filter"
+          className={`${inputBase} w-auto py-1.5 text-sm`}
+          value={selectedSource}
+          onChange={(e) => setSelectedSource(e.target.value)}
+        >
+          <option value="all">All sources</option>
+          {contentSources.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <input
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search topics and questions…"
+        placeholder="Search all topics and questions…"
         aria-label="Search topics and questions"
         className={`${inputBase} mb-6`}
       />
 
-      {visibleTopics.length === 0 && (
+      {visibleEntries.length === 0 && (
         <p className="py-10 text-center text-sm text-secondary">
-          Nothing matches &quot;{query}&quot;.
+          {searching
+            ? `Nothing matches "${query}".`
+            : "No topics match these filters."}
         </p>
       )}
 
       {[...byCategory.entries()]
         .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([category, topics]) => (
+        .map(([category, entries]) => (
           <section key={category} className="mb-6">
             <h2 className="mb-2 font-bold">{CATEGORY_LABELS[category]}</h2>
             <div className="flex flex-col gap-2">
-              {topics
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((topic) => {
-                  const count = cardsByTopicId.get(topic.id)?.length ?? 0;
-                  return (
-                    <button
-                      key={topic.id}
-                      type="button"
-                      onClick={() => setSelectedTopicId(topic.id)}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface px-4 py-3 text-left hover:bg-background sm:px-5"
-                    >
-                      <span>
-                        <span className="text-sm font-semibold">{topic.name}</span>
-                        {topic.description && (
-                          <span className="block text-xs text-secondary">
-                            {topic.description}
-                          </span>
-                        )}
-                      </span>
-                      <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-secondary">
-                        {count} card{count === 1 ? "" : "s"}
-                      </span>
-                    </button>
-                  );
-                })}
+              {entries
+                .sort((a, b) => a.topic.name.localeCompare(b.topic.name))
+                .map(({ topic, cards }) => (
+                  <button
+                    key={topic.id}
+                    type="button"
+                    onClick={() => setSelectedTopicId(topic.id)}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface px-4 py-3 text-left hover:bg-background sm:px-5"
+                  >
+                    <span>
+                      <span className="text-sm font-semibold">{topic.name}</span>
+                      {topic.description && (
+                        <span className="block text-xs text-secondary">
+                          {topic.description}
+                        </span>
+                      )}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-secondary">
+                      {cards.length} card{cards.length === 1 ? "" : "s"}
+                    </span>
+                  </button>
+                ))}
             </div>
           </section>
         ))}

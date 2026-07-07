@@ -12,10 +12,16 @@ import { allQuestions, allTopics } from "@/core/content/bank";
 
 export type StudyPdfFormat = "a4" | "phone";
 
-/** Optional export scope: one category, one topic, or (default) everything. */
+/** Optional export scope: a filtered card set, one topic, or everything. */
 export type StudyPdfScope = {
   category?: Topic["category"];
   topicId?: string;
+  /** Explicit card filter (role/source filtering in the study view). */
+  cardIds?: string[];
+  /** Human-readable scope name for the cover/filename. */
+  name?: string;
+  /** Filename slug when cardIds are used. */
+  slug?: string;
 };
 
 const ACCENT = "#2a78d6";
@@ -105,8 +111,9 @@ function sectionMarker(label: string, base: number): any {
 function pointItem(p: QuestionCard["expectedPoints"][number], base: number): any {
   return {
     text: [
+      // Plain asterisk: the bundled Roboto has no BLACK STAR glyph.
       ...(p.importance === "critical"
-        ? [{ text: "★ ", color: ACCENT, fontSize: base - 2 }]
+        ? [{ text: "* ", color: ACCENT, bold: true }]
         : []),
       { text: p.label, bold: true, color: INK },
       ...(p.description ? [{ text: ` — ${p.description}`, color: BODY }] : []),
@@ -184,8 +191,12 @@ export function buildStudyPdfDefinition(
   const g = geometry(format);
   const base = g.base;
 
+  const cardIdSet = scope.cardIds ? new Set(scope.cardIds) : null;
+  const scopedQuestions = cardIdSet
+    ? allQuestions.filter((q) => cardIdSet.has(q.id))
+    : allQuestions;
   const cardsByTopicId = new Map<string, QuestionCard[]>();
-  for (const card of allQuestions) {
+  for (const card of scopedQuestions) {
     for (const topicId of card.topicIds) {
       cardsByTopicId.set(topicId, [...(cardsByTopicId.get(topicId) ?? []), card]);
     }
@@ -199,17 +210,19 @@ export function buildStudyPdfDefinition(
   const scopedTopic = scope.topicId
     ? studyTopics.find((t) => t.id === scope.topicId)
     : undefined;
-  const scopeName = scopedTopic
-    ? scopedTopic.name
-    : scope.category
-      ? CATEGORY_LABELS[scope.category]
-      : null;
+  const scopeName =
+    scope.name ??
+    (scopedTopic
+      ? scopedTopic.name
+      : scope.category
+        ? CATEGORY_LABELS[scope.category]
+        : null);
   const cardCount = new Set(
     studyTopics.flatMap((t) => (cardsByTopicId.get(t.id) ?? []).map((c) => c.id)),
   ).size;
   // Scoped exports list their topics in the contents; the full export lists
   // only the main categories so the contents never spills across pages.
-  const topicsInToc = !!scopeName;
+  const topicsInToc = !!scopeName || !!cardIdSet;
   const byCategory = new Map<Topic["category"], Topic[]>();
   for (const t of studyTopics) {
     byCategory.set(t.category, [...(byCategory.get(t.category) ?? []), t]);
@@ -257,7 +270,7 @@ export function buildStudyPdfDefinition(
     },
     {
       text: [
-        { text: "★ ", color: ACCENT },
+        { text: "* ", color: ACCENT, bold: true },
         { text: "marks the critical points an interviewer expects to hear.", color: MUTED },
       ],
       fontSize: base - 1,
@@ -351,7 +364,7 @@ export async function downloadStudyPdf(
   ]);
   const fonts = (fontsModule as any).default ?? fontsModule;
   (pdfMake as any).addVirtualFileSystem(fonts);
-  const slug = scope.topicId ?? scope.category ?? "all";
+  const slug = scope.slug ?? scope.topicId ?? scope.category ?? "all";
   const name = `interview-trainer-study-${slug}-${format}.pdf`;
   await (pdfMake as any)
     .createPdf(buildStudyPdfDefinition(format, scope))

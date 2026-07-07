@@ -122,7 +122,7 @@ export default function DashboardPage() {
         )
       )}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap gap-2">
         <Link href="/setup" className={`${buttonPrimary} py-3 text-base`}>
           Start Practice
         </Link>
