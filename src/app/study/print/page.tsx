@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { QuestionCard, Topic } from "@/core/models";
 import { MODE_LABELS } from "@/core/models";
@@ -84,6 +85,17 @@ function PrintCard({ card }: { card: QuestionCard }) {
 }
 
 export default function StudyPrintPage() {
+  // Filled after mount: the export date differs from the static build date,
+  // so rendering it during hydration would mismatch the prerendered HTML.
+  const [exportDate, setExportDate] = useState("");
+  useEffect(() => {
+    const id = setTimeout(
+      () => setExportDate(new Date().toLocaleDateString("en-GB")),
+      0,
+    );
+    return () => clearTimeout(id);
+  }, []);
+
   return (
     <div className="min-h-dvh bg-white text-neutral-900">
       <div className="mx-auto max-w-3xl px-6 py-8">
@@ -108,8 +120,8 @@ export default function StudyPrintPage() {
         <header className="mb-8 border-b-2 border-neutral-900 pb-4">
           <h1 className="text-2xl font-bold">Interview Trainer — Study material</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            {studyTopics.length} topics · {allQuestions.length} question cards ·
-            exported {new Date().toLocaleDateString("en-GB")}
+            {studyTopics.length} topics · {allQuestions.length} question cards
+            {exportDate && ` · exported ${exportDate}`}
           </p>
         </header>
 

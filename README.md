@@ -90,14 +90,15 @@ Pages deploy.
 
 The app is a fully static export (`output: "export"`) — no server needed.
 The release workflow runs tests + content pack validation, then publishes
-the static build to `https://<user>.github.io/<repo>/`. The workflow enables
-Pages automatically on first run; adding a content pack and cutting a patch
-release redeploys the site with the new questions.
+the static build to GitHub Pages, served on the custom domain
+**https://interviewtrainer.sallai.cc/** (root, no basePath). Adding a
+content pack and cutting a patch release redeploys the site with the new
+questions.
 
 To preview the exact Pages build locally:
 
 ```bash
-NEXT_PUBLIC_BASE_PATH=/interview-trainer npm run build   # PowerShell: $env:NEXT_PUBLIC_BASE_PATH="/interview-trainer"; npm run build
+npm run build
 node scripts/e2e/pages.mjs   # serves and drives the static out/ build
 ```
 

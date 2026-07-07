@@ -50,15 +50,15 @@ and the UI shows a "No clear speech was detected" alert. Reaching the
 editing textarea (empty transcript + that alert) with no page errors is the
 pass signal.
 
-## Static export (GitHub Pages)
+## Static export (GitHub Pages + custom domain)
 
-The app deploys as a static export with a basePath. To verify that surface:
-build with `NEXT_PUBLIC_BASE_PATH=/interview-trainer` (set the env var in
-PowerShell — Git Bash mangles the leading slash), stage `out/` under a
-`pages-root/interview-trainer/` folder, serve it with `python -m http.server`,
-and run `scripts/e2e/pages.mjs`. `scripts/flatten-rsc-export.mjs` (postbuild)
-must keep the RSC payload 404s away — if `__next.*.__PAGE__.txt` 404s
-reappear, that flattening broke.
+Production is https://interviewtrainer.sallai.cc/ — served at the ROOT (no
+basePath) since the custom domain was added. To verify that surface: plain
+`npm run build`, then `node scripts/e2e/pages.mjs` (it serves out/ itself).
+`scripts/flatten-rsc-export.mjs` (postbuild) must keep the RSC payload 404s
+away — if `__next.*.__PAGE__.txt` 404s reappear, that flattening broke.
+If the custom domain is ever dropped, the deploy workflow needs
+NEXT_PUBLIC_BASE_PATH=/<repo> back (see deploy.yml comment).
 
 ## Gotchas
 

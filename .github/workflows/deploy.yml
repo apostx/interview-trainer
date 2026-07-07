@@ -37,10 +37,10 @@ jobs:
           enablement: true
 
       - name: Build static export
+        # Served at the root of the custom domain (interviewtrainer.sallai.cc),
+        # so no basePath. If the custom domain is ever removed, restore
+        # NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
         run: npm run build
-        env:
-          # Project sites are served from https://<user>.github.io/<repo>/
-          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
 
       - uses: actions/upload-pages-artifact@v3
         with:

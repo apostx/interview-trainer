@@ -3,11 +3,10 @@ import { createReadStream, existsSync, mkdirSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import path from "node:path";
 
-// Serves the static export (out/) under the /interview-trainer basePath the
-// way GitHub Pages would, then drives it. Build first with
-// NEXT_PUBLIC_BASE_PATH=/interview-trainer npm run build
+// Serves the static export (out/) at the root, the way the custom domain
+// (interviewtrainer.sallai.cc) does. Build first with: npm run build
 const PORT = 3459;
-const PREFIX = "/interview-trainer";
+const PREFIX = "";
 const OUT = path.join(process.cwd(), "out");
 const BASE = `http://localhost:${PORT}${PREFIX}`;
 const SHOTS = process.env.SHOTS_DIR ?? "e2e-shots";
@@ -76,7 +75,7 @@ page.on("requestfailed", (r) => {
 // 1. Dashboard under basePath
 await page.goto(BASE + "/");
 await page.getByRole("heading", { name: "Dashboard" }).waitFor();
-console.log("✅ Dashboard loads at /interview-trainer/ (static export + basePath)");
+console.log("✅ Dashboard loads from static export at root");
 await page.screenshot({ path: `${SHOTS}/15-pages-dashboard.png` });
 
 // 2. Client-side nav to setup, start a session (query-param route)
