@@ -2,7 +2,6 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { contentPackSchema, formatZodError, type ContentPack } from "./schema";
-import { seedQuestions } from "@/core/seed/questions";
 import { seedTopics } from "@/core/seed/topics";
 
 /**
@@ -49,9 +48,9 @@ describe("content packs", () => {
     },
   );
 
-  it("ids are unique across seed content and all packs", () => {
+  it("ids are unique across the topic taxonomy and all packs", () => {
     const topicIds = new Set(seedTopics.map((t) => t.id));
-    const questionIds = new Set(seedQuestions.map((q) => q.id));
+    const questionIds = new Set<string>();
     const packIds = new Set<string>();
 
     for (const { file, pack } of parsedPacks) {

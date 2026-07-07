@@ -20,23 +20,23 @@ page.on("console", (m) => {
 await page.goto(BASE + "/topics/");
 await page.getByRole("heading", { name: "Topic library" }).waitFor();
 const packLine = await page
-  .getByText("Example pack — GraphQL Federation")
+  .getByText("Frontend interview prep (Nagarro)")
   .first()
   .isVisible()
   .catch(() => false);
 console.log(
   packLine
-    ? "✅ Content packs card lists 'Example pack — GraphQL Federation' (require.context works at runtime)"
+    ? "✅ Content packs card lists 'Frontend interview prep (Nagarro)' (require.context works at runtime)"
     : "❌ pack NOT listed on topics page",
 );
 const packTopic = await page
-  .getByText("GraphQL Federation", { exact: true })
+  .getByText("Core Web Vitals", { exact: true })
   .first()
   .isVisible()
   .catch(() => false);
 console.log(
   packTopic
-    ? "✅ Pack topic 'GraphQL Federation' merged into the topic library (via syncSeedTopics)"
+    ? "✅ Pack topic 'Core Web Vitals' merged into the topic library (via syncSeedTopics)"
     : "❌ pack topic missing from library",
 );
 await page.screenshot({ path: `${SHOTS}/12-topics-with-pack.png` });
@@ -71,7 +71,7 @@ for (let attempt = 0; attempt < 6 && !foundPackQuestion; attempt++) {
       .first()
       .textContent()
       .catch(() => null);
-    if (title && /GraphQL Federation|Federation vs single/.test(title)) {
+    if (title && /Core Web Vitals|Idempotent API endpoint|Circuit breaker/.test(title)) {
       foundPackQuestion = true;
       console.log(`✅ Pack question appeared in a generated session: "${title}" (attempt ${attempt + 1})`);
       await page.screenshot({ path: `${SHOTS}/14-pack-question-in-session.png` });

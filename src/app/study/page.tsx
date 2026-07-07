@@ -40,7 +40,7 @@ for (const card of allQuestions) {
 }
 const studyTopics = allTopics.filter((t) => cardsByTopicId.has(t.id));
 
-// Source dropdown grouped by origin ("app", "dataresource", folders).
+// Source dropdown: root files flat first, then subfolders as groups.
 const sourceGroups: [string, { id: string; name: string }[]][] = (() => {
   const groups = new Map<string, { id: string; name: string }[]>();
   for (const src of contentSources) {
@@ -365,15 +365,23 @@ export default function StudyPage() {
           onChange={(e) => setSelectedSource(e.target.value)}
         >
           <option value="all">All sources</option>
-          {sourceGroups.map(([group, entries]) => (
-            <optgroup key={group} label={group}>
-              {entries.map((s) => (
+          {sourceGroups.map(([group, entries]) =>
+            group === "" ? (
+              entries.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
                 </option>
-              ))}
-            </optgroup>
-          ))}
+              ))
+            ) : (
+              <optgroup key={group} label={group}>
+                {entries.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </optgroup>
+            ),
+          )}
         </select>
       </div>
 

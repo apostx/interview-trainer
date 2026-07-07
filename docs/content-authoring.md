@@ -120,7 +120,7 @@ Guidelines for good signals:
 
 `rubricItemId` must reference an item in the same question's `expectedPoints`.
 
-A complete working example: [`content/packs/example-pack.json`](../content/packs/example-pack.json).
+A complete working example: [`content/packs/js-ts-fundamentals-lufthansa.json`](../content/packs/js-ts-fundamentals-lufthansa.json).
 
 ## AI prompt template
 

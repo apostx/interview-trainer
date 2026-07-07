@@ -108,7 +108,7 @@ await page.screenshot({ path: `${SHOTS}/16-pages-review.png` });
 await page.goto(BASE + "/topics/");
 await page.getByRole("heading", { name: "Topic library" }).waitFor();
 const packOk = await page
-  .getByText("Example pack — GraphQL Federation")
+  .getByText("Frontend interview prep (Nagarro)")
   .first()
   .isVisible()
   .catch(() => false);

@@ -17,9 +17,10 @@ Full product specification: [docs/spec.md](docs/spec.md).
   feedback. Three user-facing practice types (Quick Questions, Real Scenarios,
   Architecture Practice) map onto the engine's seven interview modes; the
   knobs live under Advanced settings.
-- **20 seeded question cards** across concept check, scenario discussion,
-  trade-off decision, troubleshooting and system design, with full rubrics
-  and follow-ups.
+- **All content comes from your own material**: question packs authored from
+  the files in `dataresource/`, spanning concept checks, scenarios,
+  trade-offs, troubleshooting and system design — with full rubrics and
+  follow-ups. Filter and export by role or by source file.
 - **Voice-first answering**: microphone recording → local Whisper
   transcription in a Web Worker (tiny/base/small model choice, download
   progress, cached). Typing is always available as a fallback.
