@@ -12,6 +12,12 @@ import { allQuestions, allTopics } from "@/core/content/bank";
 
 export type StudyPdfFormat = "a4" | "phone";
 
+/** Optional export scope: one category, one topic, or (default) everything. */
+export type StudyPdfScope = {
+  category?: Topic["category"];
+  topicId?: string;
+};
+
 const ACCENT = "#2a78d6";
 const INK = "#1c2230";
 const MUTED = "#6b7280";
@@ -171,7 +177,10 @@ function cardBox(card: QuestionCard, g: Geometry): any {
   };
 }
 
-export function buildStudyPdfDefinition(format: StudyPdfFormat): any {
+export function buildStudyPdfDefinition(
+  format: StudyPdfFormat,
+  scope: StudyPdfScope = {},
+): any {
   const g = geometry(format);
   const base = g.base;
 
@@ -181,7 +190,26 @@ export function buildStudyPdfDefinition(format: StudyPdfFormat): any {
       cardsByTopicId.set(topicId, [...(cardsByTopicId.get(topicId) ?? []), card]);
     }
   }
-  const studyTopics = allTopics.filter((t) => cardsByTopicId.has(t.id));
+  const studyTopics = allTopics.filter((t) => {
+    if (!cardsByTopicId.has(t.id)) return false;
+    if (scope.topicId) return t.id === scope.topicId;
+    if (scope.category) return t.category === scope.category;
+    return true;
+  });
+  const scopedTopic = scope.topicId
+    ? studyTopics.find((t) => t.id === scope.topicId)
+    : undefined;
+  const scopeName = scopedTopic
+    ? scopedTopic.name
+    : scope.category
+      ? CATEGORY_LABELS[scope.category]
+      : null;
+  const cardCount = new Set(
+    studyTopics.flatMap((t) => (cardsByTopicId.get(t.id) ?? []).map((c) => c.id)),
+  ).size;
+  // Scoped exports list their topics in the contents; the full export lists
+  // only the main categories so the contents never spills across pages.
+  const topicsInToc = !!scopeName;
   const byCategory = new Map<Topic["category"], Topic[]>();
   for (const t of studyTopics) {
     byCategory.set(t.category, [...(byCategory.get(t.category) ?? []), t]);
@@ -205,14 +233,14 @@ export function buildStudyPdfDefinition(format: StudyPdfFormat): any {
                   characterSpacing: 1.2,
                 },
                 {
-                  text: "Study material",
+                  text: scopeName ? `Study material — ${scopeName}` : "Study material",
                   color: "#ffffff",
                   fontSize: base + 12,
                   bold: true,
                   margin: [0, 2, 0, 4],
                 },
                 {
-                  text: `${studyTopics.length} topics · ${allQuestions.length} question cards · ${new Date().toLocaleDateString("en-GB")}`,
+                  text: `${studyTopics.length} topic${studyTopics.length === 1 ? "" : "s"} · ${cardCount} question card${cardCount === 1 ? "" : "s"} · ${new Date().toLocaleDateString("en-GB")}`,
                   color: "#ffffff",
                   opacity: 0.9,
                   fontSize: base - 1,
@@ -249,7 +277,7 @@ export function buildStudyPdfDefinition(format: StudyPdfFormat): any {
     // Chapter page per category
     content.push({
       pageBreak: "before",
-      tocItem: true,
+      tocItem: !topicsInToc,
       tocStyle: { bold: true, color: INK },
       tocMargin: [0, 6, 0, 2],
       text: CATEGORY_LABELS[category],
@@ -271,7 +299,7 @@ export function buildStudyPdfDefinition(format: StudyPdfFormat): any {
         stack: [
           {
             text: topic.name,
-            tocItem: true,
+            tocItem: topicsInToc,
             tocMargin: [12, 0, 0, 0],
             fontSize: base + 3,
             bold: true,
@@ -303,19 +331,29 @@ export function buildStudyPdfDefinition(format: StudyPdfFormat): any {
               { text: `${currentPage} / ${pageCount}`, alignment: "right", fontSize: base - 3.5, color: MUTED, margin: [0, 0, g.pageMargins[2], 0] },
             ],
           },
-    info: { title: "Interview Trainer — Study material" },
+    info: {
+      title: scopeName
+        ? `Interview Trainer — Study material — ${scopeName}`
+        : "Interview Trainer — Study material",
+    },
     content,
   };
 }
 
 /** Generates and downloads the PDF in the browser (pdfmake loaded lazily). */
-export async function downloadStudyPdf(format: StudyPdfFormat): Promise<void> {
+export async function downloadStudyPdf(
+  format: StudyPdfFormat,
+  scope: StudyPdfScope = {},
+): Promise<void> {
   const [{ default: pdfMake }, fontsModule] = await Promise.all([
     import("pdfmake/build/pdfmake"),
     import("pdfmake/build/vfs_fonts"),
   ]);
   const fonts = (fontsModule as any).default ?? fontsModule;
   (pdfMake as any).addVirtualFileSystem(fonts);
-  const name = `interview-trainer-study-${format}.pdf`;
-  await (pdfMake as any).createPdf(buildStudyPdfDefinition(format)).download(name);
+  const slug = scope.topicId ?? scope.category ?? "all";
+  const name = `interview-trainer-study-${slug}-${format}.pdf`;
+  await (pdfMake as any)
+    .createPdf(buildStudyPdfDefinition(format, scope))
+    .download(name);
 }

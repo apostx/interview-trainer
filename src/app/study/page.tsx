@@ -4,7 +4,11 @@ import { useState } from "react";
 import { Card, ModeBadge, PageHeader, buttonGhost, inputBase } from "@/components/ui";
 import type { QuestionCard, Topic } from "@/core/models";
 import { allQuestions, allTopics } from "@/core/content/bank";
-import { downloadStudyPdf, type StudyPdfFormat } from "@/core/pdf/studyPdf";
+import {
+  downloadStudyPdf,
+  type StudyPdfFormat,
+  type StudyPdfScope,
+} from "@/core/pdf/studyPdf";
 import { normalizedIncludes } from "@/core/services/transcriptNormalizer";
 
 const CATEGORY_LABELS: Record<Topic["category"], string> = {
@@ -28,6 +32,7 @@ for (const card of allQuestions) {
   }
 }
 const studyTopics = allTopics.filter((t) => cardsByTopicId.has(t.id));
+const studyCategories = [...new Set(studyTopics.map((t) => t.category))].sort();
 
 function topicMatches(topic: Topic, query: string): boolean {
   if (!query.trim()) return true;
@@ -93,14 +98,17 @@ function StudyCard({ card }: { card: QuestionCard }) {
 export default function StudyPage() {
   const [query, setQuery] = useState("");
   const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<
+    Topic["category"] | "all"
+  >(studyCategories[0] ?? "all");
   const [generating, setGenerating] = useState<StudyPdfFormat | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
 
-  async function generatePdf(format: StudyPdfFormat) {
+  async function generatePdf(format: StudyPdfFormat, scope: StudyPdfScope) {
     setGenerating(format);
     setPdfError(null);
     try {
-      await downloadStudyPdf(format);
+      await downloadStudyPdf(format, scope);
     } catch (e) {
       setPdfError(
         `PDF generation failed: ${e instanceof Error ? e.message : String(e)}`,
@@ -128,7 +136,32 @@ export default function StudyPage() {
         <PageHeader
           title={selectedTopic.name}
           subtitle={selectedTopic.description || undefined}
+          action={
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={generating !== null}
+                onClick={() => generatePdf("phone", { topicId: selectedTopic.id })}
+                className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50"
+              >
+                {generating === "phone" ? "Generating…" : "PDF · phone"}
+              </button>
+              <button
+                type="button"
+                disabled={generating !== null}
+                onClick={() => generatePdf("a4", { topicId: selectedTopic.id })}
+                className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm font-semibold hover:bg-background disabled:opacity-50"
+              >
+                {generating === "a4" ? "Generating…" : "PDF · A4"}
+              </button>
+            </div>
+          }
         />
+        {pdfError && (
+          <p role="alert" className="mb-4 text-sm font-medium text-critical">
+            {pdfError}
+          </p>
+        )}
         {cards.map((card) => (
           <StudyCard key={card.id} card={card} />
         ))}
@@ -136,11 +169,22 @@ export default function StudyPage() {
     );
   }
 
-  const visibleTopics = studyTopics.filter((t) => topicMatches(t, query));
+  // Search looks across everything; otherwise only the selected category
+  // is shown (and exported).
+  const searching = query.trim().length > 0;
+  const visibleTopics = studyTopics.filter(
+    (t) =>
+      topicMatches(t, query) &&
+      (searching || selectedCategory === "all" || t.category === selectedCategory),
+  );
   const byCategory = new Map<Topic["category"], Topic[]>();
   for (const t of visibleTopics) {
     byCategory.set(t.category, [...(byCategory.get(t.category) ?? []), t]);
   }
+  const exportScope: StudyPdfScope =
+    selectedCategory === "all" ? {} : { category: selectedCategory };
+  const exportLabel =
+    selectedCategory === "all" ? "everything" : CATEGORY_LABELS[selectedCategory];
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
@@ -148,26 +192,59 @@ export default function StudyPage() {
         title="Study"
         subtitle="Pick a topic and read the material without being quizzed: each question with what a strong answer covers."
         action={
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={generating !== null}
-              onClick={() => generatePdf("phone")}
-              className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50"
-            >
-              {generating === "phone" ? "Generating…" : "PDF · phone"}
-            </button>
-            <button
-              type="button"
-              disabled={generating !== null}
-              onClick={() => generatePdf("a4")}
-              className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm font-semibold hover:bg-background disabled:opacity-50"
-            >
-              {generating === "a4" ? "Generating…" : "PDF · A4"}
-            </button>
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={generating !== null}
+                onClick={() => generatePdf("phone", exportScope)}
+                className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50"
+              >
+                {generating === "phone" ? "Generating…" : "PDF · phone"}
+              </button>
+              <button
+                type="button"
+                disabled={generating !== null}
+                onClick={() => generatePdf("a4", exportScope)}
+                className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm font-semibold hover:bg-background disabled:opacity-50"
+              >
+                {generating === "a4" ? "Generating…" : "PDF · A4"}
+              </button>
+            </div>
+            <span className="text-xs text-muted">exports {exportLabel}</span>
           </div>
         }
       />
+
+      <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label="Category filter">
+        {studyCategories.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => setSelectedCategory(c)}
+            aria-pressed={selectedCategory === c}
+            className={`rounded-full px-3 py-1.5 text-sm font-medium ${
+              selectedCategory === c && !searching
+                ? "bg-accent text-white"
+                : "border border-hairline text-secondary hover:text-foreground"
+            }`}
+          >
+            {CATEGORY_LABELS[c]}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => setSelectedCategory("all")}
+          aria-pressed={selectedCategory === "all"}
+          className={`rounded-full px-3 py-1.5 text-sm font-medium ${
+            selectedCategory === "all" && !searching
+              ? "bg-accent text-white"
+              : "border border-hairline text-secondary hover:text-foreground"
+          }`}
+        >
+          All topics
+        </button>
+      </div>
 
       {pdfError && (
         <p role="alert" className="mb-4 text-sm font-medium text-critical">

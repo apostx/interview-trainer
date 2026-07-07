@@ -213,9 +213,23 @@ async function main() {
   await page.getByText("A strong answer covers").first().waitFor();
   log("✅", "Study view: selected topic shows only its cards with answer points");
   await page.getByRole("button", { name: "← All topics" }).click();
-  await page.getByLabel("Search topics and questions").fill("idempotency");
+  // Category chips: only the selected category's topics are shown
+  await page.getByRole("button", { name: "Backend", exact: true }).click();
   await page.getByText("Idempotency", { exact: true }).first().waitFor();
-  log("🔍", "Study search filters the topic list");
+  const crossCategoryLeak = await page
+    .getByText("CSS box-sizing", { exact: true })
+    .isVisible()
+    .catch(() => false);
+  log(
+    crossCategoryLeak ? "❌" : "✅",
+    "Study category switcher shows only the selected category",
+  );
+  await page.getByText("exports Backend").waitFor();
+  log("🔍", "Export scope follows the selected category");
+  await page.getByLabel("Search topics and questions").fill("box-sizing");
+  await page.getByText("CSS box-sizing", { exact: true }).first().waitFor();
+  log("🔍", "Search looks across all categories");
+  await page.getByLabel("Search topics and questions").fill("");
   await page.screenshot({ path: `${SHOTS}/17-study.png` });
 
   // ---- Study PDF export (buttons live on the study page now)
