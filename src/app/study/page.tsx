@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Card, ModeBadge, PageHeader, buttonGhost, inputBase } from "@/components/ui";
+import { Card, ModeBadge, PageHeader, buttonGhost, inputBase, selectCompact } from "@/components/ui";
 import type { InterviewRole, QuestionCard, Topic } from "@/core/models";
 import { ROLE_LABELS, ROLE_TRACKS, TRACK_MEMBER_ROLES } from "@/core/models";
 import {
@@ -360,7 +360,7 @@ export default function StudyPage() {
         </label>
         <select
           id="source-filter"
-          className={`${inputBase} w-auto py-1.5 text-sm`}
+          className={selectCompact}
           value={selectedSource}
           onChange={(e) => setSelectedSource(e.target.value)}
         >

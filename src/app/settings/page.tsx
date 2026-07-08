@@ -93,8 +93,8 @@ export default function SettingsPage() {
           </select>
           <p className="mt-1 text-xs text-muted">
             {settings.speechEngine === "web_speech"
-              ? "Your voice is sent to the browser's speech service (Google) for recognition. Works in Chrome and Edge; falls back to local Whisper if unavailable."
-              : "Audio never leaves your browser. Slower without WebGPU — if it feels too slow, switch to the browser engine."}
+              ? "Your voice is sent to the browser's speech service (Google). Fast and live, but weaker on technical vocabulary (webhook, idempotency…); falls back to local Whisper if unavailable."
+              : "Audio never leaves your browser, and it recognizes technical terms noticeably better than the browser engine."}
           </p>
         </div>
 

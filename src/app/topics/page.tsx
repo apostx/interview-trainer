@@ -6,7 +6,7 @@ import {
   Card,
   PageHeader,
   buttonPrimary,
-  inputBase,
+  selectCompact,
 } from "@/components/ui";
 import type { Topic, TopicStatus } from "@/core/models";
 import { TOPIC_STATUS_LABELS } from "@/core/models";
@@ -135,7 +135,7 @@ export default function TopicsPage() {
                         </label>
                         <select
                           id={`status-${topic.id}`}
-                          className={`${inputBase} w-auto py-1.5 text-xs`}
+                          className={`${selectCompact} !text-xs`}
                           value={topic.status}
                           onChange={(e) =>
                             updateTopic(topic, {
@@ -157,7 +157,7 @@ export default function TopicsPage() {
                         </label>
                         <select
                           id={`confidence-${topic.id}`}
-                          className={`${inputBase} w-auto py-1.5 text-xs`}
+                          className={`${selectCompact} !text-xs`}
                           value={topic.userConfidence}
                           onChange={(e) =>
                             updateTopic(topic, {

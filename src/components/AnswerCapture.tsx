@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { SpeechEngine, SpeechModelSize } from "@/core/models";
 import {
   SILENCE_PEAK_THRESHOLD,
+  fixDomainTerms,
   normalizePeak,
   peakLevel,
 } from "@/core/speech/audioUtils";
@@ -114,7 +115,7 @@ export function AnswerCapture({
         const recognizer = new WebSpeechRecognizer();
         webSpeechRef.current = recognizer;
         try {
-          recognizer.start(setLiveTranscript);
+          recognizer.start((t) => setLiveTranscript(fixDomainTerms(t)));
         } catch {
           webSpeechRef.current = null;
         }
@@ -170,7 +171,8 @@ export function AnswerCapture({
       keepAudioUrl(blob);
 
       if (recognizer && webSpeechText && !recognizer.error) {
-        setDraft((prev) => (prev ? `${prev} ${webSpeechText}` : webSpeechText));
+        const fixed = fixDomainTerms(webSpeechText);
+        setDraft((prev) => (prev ? `${prev} ${fixed}` : fixed));
         setState("editing");
         return;
       }

@@ -83,3 +83,42 @@ export function cleanTranscript(text: string): string {
   if (!trimmed || isDegenerateTranscript(trimmed)) return "";
   return collapseRepeatedWords(trimmed);
 }
+
+/**
+ * Domain-term post-correction for speech engines that miss technical
+ * vocabulary (Web Speech has no custom dictionary). Conservative,
+ * word-boundary, case-insensitive replacements.
+ */
+const DOMAIN_TERM_FIXES: [RegExp, string][] = [
+  [/\bweb hooks\b/gi, "webhooks"],
+  [/\bweb hook\b/gi, "webhook"],
+  [/\bthat book\b/gi, "webhook"],
+  [/\bweb sockets\b/gi, "websockets"],
+  [/\bweb socket\b/gi, "websocket"],
+  [/\bmicro services\b/gi, "microservices"],
+  [/\bmicro service\b/gi, "microservice"],
+  [/\bmicro frontends\b/gi, "microfrontends"],
+  [/\bmicro frontend\b/gi, "microfrontend"],
+  [/\bjava script\b/gi, "JavaScript"],
+  [/\btype script\b/gi, "TypeScript"],
+  [/\bno sequel\b/gi, "NoSQL"],
+  [/\bsequel\b/gi, "SQL"],
+  [/\bgraph ql\b/gi, "GraphQL"],
+  [/\bidem potency\b/gi, "idempotency"],
+  [/\bidem potent\b/gi, "idempotent"],
+  [/\bdead letter q\b/gi, "dead letter queue"],
+  [/\bmessage q\b/gi, "message queue"],
+  [/\bcashing\b/gi, "caching"],
+  [/\bcash\b/gi, "cache"],
+  [/\bkuber netes\b/gi, "Kubernetes"],
+  [/\bcuba are nets\b/gi, "Kubernetes"],
+  [/\bcuba or nets\b/gi, "Kubernetes"],
+];
+
+export function fixDomainTerms(text: string): string {
+  let result = text;
+  for (const [pattern, replacement] of DOMAIN_TERM_FIXES) {
+    result = result.replace(pattern, replacement);
+  }
+  return result;
+}

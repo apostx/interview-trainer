@@ -34,6 +34,17 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Injects COOP/COEP via a service worker so crossOriginIsolated
+            holds on static hosting — unlocking multithreaded WASM, which
+            makes local Whisper several times faster. Production only: the
+            COEP headers break the dev server's HMR socket and cause a
+            reload loop. */}
+        {process.env.NODE_ENV === "production" && (
+          // eslint-disable-next-line @next/next/no-sync-scripts
+          <script src="/coi-serviceworker.min.js" />
+        )}
+      </head>
       <body className="min-h-dvh">
         <div className="flex min-h-dvh">
           <SidebarNav />

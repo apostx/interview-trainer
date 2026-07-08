@@ -126,6 +126,8 @@ export const buttonSecondary =
   "rounded-lg border border-hairline bg-surface px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-background disabled:opacity-50 disabled:cursor-not-allowed";
 export const buttonGhost =
   "rounded-lg px-4 py-2.5 text-sm font-medium text-secondary hover:text-foreground hover:bg-background";
+export const selectCompact =
+  "rounded-lg border border-hairline bg-surface px-3 py-1.5 text-sm text-foreground focus:outline-2 focus:outline-accent";
 export const inputBase =
   "w-full rounded-lg border border-hairline bg-surface px-3 py-2.5 text-sm text-foreground focus:outline-2 focus:outline-accent";
 export const labelBase = "mb-1.5 block text-sm font-medium text-secondary";

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   cleanTranscript,
   collapseRepeatedWords,
+  fixDomainTerms,
   isDegenerateTranscript,
   normalizePeak,
   peakLevel,
@@ -52,5 +53,27 @@ describe("transcript cleanup", () => {
     expect(cleanTranscript("caching caching caching helps with latency")).toBe(
       "caching caching helps with latency",
     );
+  });
+});
+
+describe("fixDomainTerms", () => {
+  it("repairs split and misheard technical terms", () => {
+    expect(fixDomainTerms("we use a web hook for callbacks")).toBe(
+      "we use a webhook for callbacks",
+    );
+    expect(fixDomainTerms("I would use that book to notify them")).toBe(
+      "I would use webhook to notify them",
+    );
+    expect(fixDomainTerms("store it in the cash and use no sequel")).toBe(
+      "store it in the cache and use NoSQL",
+    );
+    expect(fixDomainTerms("cashing the results with micro services")).toBe(
+      "caching the results with microservices",
+    );
+  });
+
+  it("respects word boundaries", () => {
+    expect(fixDomainTerms("the consequel remains")).toBe("the consequel remains");
+    expect(fixDomainTerms("sequels are fine")).toBe("sequels are fine");
   });
 });
