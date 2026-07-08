@@ -7,6 +7,7 @@ import {
   normalizePeak,
   peakLevel,
 } from "../audioUtils";
+import { buildVocabularyPrompt } from "../cloudTranscriber";
 
 describe("peakLevel / normalizePeak", () => {
   it("finds the loudest absolute sample", () => {
@@ -75,5 +76,19 @@ describe("fixDomainTerms", () => {
   it("respects word boundaries", () => {
     expect(fixDomainTerms("the consequel remains")).toBe("the consequel remains");
     expect(fixDomainTerms("sequels are fine")).toBe("sequels are fine");
+  });
+});
+
+describe("buildVocabularyPrompt", () => {
+  it("puts question terms first and dedupes against the glossary", () => {
+    const prompt = buildVocabularyPrompt(["outbox table", "webhook", "Webhook"]);
+    expect(prompt).toContain("outbox table");
+    expect(prompt.indexOf("outbox table")).toBeLessThan(prompt.indexOf("WebSocket"));
+    expect(prompt.match(/webhook/gi)?.length).toBe(1);
+  });
+
+  it("stays within the whisper prompt budget", () => {
+    const many = Array.from({ length: 300 }, (_, i) => `term number ${i}`);
+    expect(buildVocabularyPrompt(many).length).toBeLessThanOrEqual(710);
   });
 });

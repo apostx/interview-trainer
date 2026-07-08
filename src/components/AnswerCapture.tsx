@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import type { SpeechEngine, SpeechModelSize } from "@/core/models";
 import {
   SILENCE_PEAK_THRESHOLD,
+  effectiveLocalModel,
   fixDomainTerms,
   normalizePeak,
   peakLevel,
 } from "@/core/speech/audioUtils";
+import { cloudTranscribe, type CloudProvider } from "@/core/speech/cloudTranscriber";
 import { AudioRecorder, blobToPCM } from "@/core/speech/recorder";
 import { WebSpeechRecognizer } from "@/core/speech/webSpeechRecognizer";
 import { useTranscriberStore } from "@/stores/transcriberStore";
@@ -26,6 +28,9 @@ export function AnswerCapture({
   expectedDurationSeconds,
   speechModel,
   speechEngine = "whisper",
+  cloudProvider = "groq",
+  cloudApiKey = "",
+  vocabularyHint,
   submitLabel,
   onSubmit,
   autoFocusHint,
@@ -33,6 +38,10 @@ export function AnswerCapture({
   expectedDurationSeconds: number;
   speechModel: SpeechModelSize;
   speechEngine?: SpeechEngine;
+  cloudProvider?: CloudProvider;
+  cloudApiKey?: string;
+  /** Expected terms of the current question, fed to the cloud STT prompt. */
+  vocabularyHint?: string[];
   submitLabel: string;
   onSubmit: (transcript: string) => void | Promise<void>;
   autoFocusHint?: string;
@@ -59,6 +68,8 @@ export function AnswerCapture({
   );
   const useWebSpeech =
     speechEngine === "web_speech" && WebSpeechRecognizer.isSupported();
+  const useCloud = speechEngine === "cloud" && cloudApiKey.trim().length > 0;
+  const localModel = effectiveLocalModel(speechModel);
 
   const transcriberStatus = useTranscriberStore((s) => s.status);
   const transcriberDevice = useTranscriberStore((s) => s.device);
@@ -120,9 +131,11 @@ export function AnswerCapture({
           webSpeechRef.current = null;
         }
       }
-      // Preload Whisper in the background — it is the transcriber for the
-      // local engine and the fallback for the browser engine.
-      loadModel(speechModel).catch(() => {});
+      // Preload Whisper only when it is the active engine; on phones an
+      // extra model in memory alongside another engine crashed the tab.
+      if (speechEngine === "whisper") {
+        loadModel(localModel).catch(() => {});
+      }
     } catch {
       setCaptureError(
         "Microphone access failed. You can type your answer instead.",
@@ -131,9 +144,7 @@ export function AnswerCapture({
     }
   }
 
-  async function transcribeWithWhisper(blob: Blob): Promise<void> {
-    const audio = await blobToPCM(blob);
-
+  async function transcribeWithWhisper(audio: Float32Array): Promise<void> {
     if (peakLevel(audio) < SILENCE_PEAK_THRESHOLD) {
       setCaptureError(
         `The recording was silent${deviceLabel ? ` (device: "${deviceLabel}")` : ""}. ` +
@@ -144,7 +155,7 @@ export function AnswerCapture({
     }
 
     normalizePeak(audio);
-    await loadModel(speechModel);
+    await loadModel(localModel);
     const text = await transcribe(audio);
     if (!text) {
       setCaptureError(
@@ -185,7 +196,34 @@ export function AnswerCapture({
             : null,
         );
       }
-      await transcribeWithWhisper(blob);
+
+      const audio = await blobToPCM(blob);
+      if (useCloud) {
+        if (peakLevel(audio) < SILENCE_PEAK_THRESHOLD) {
+          setCaptureError(
+            `The recording was silent${deviceLabel ? ` (device: "${deviceLabel}")` : ""}. Check the browser's microphone selection and try again — or type your answer.`,
+          );
+          setState("editing");
+          return;
+        }
+        try {
+          const text = await cloudTranscribe(blob, {
+            provider: cloudProvider,
+            apiKey: cloudApiKey,
+            vocabulary: vocabularyHint,
+          });
+          if (text) {
+            setDraft((prev) => (prev ? `${prev} ${text}` : text));
+            setState("editing");
+            return;
+          }
+        } catch (e) {
+          setCaptureError(
+            `Cloud transcription failed (${e instanceof Error ? e.message : String(e)}) — transcribed locally with Whisper instead.`,
+          );
+        }
+      }
+      await transcribeWithWhisper(audio);
     } catch (error) {
       setCaptureError(
         `Transcription failed (${error instanceof Error ? error.message : "unknown error"}). You can type your answer instead.`,
@@ -226,9 +264,11 @@ export function AnswerCapture({
               Type answer instead
             </button>
             <p className="text-xs text-muted">
-              {useWebSpeech
-                ? "Engine: browser speech recognition (online, live) — change in Settings"
-                : "Engine: local Whisper (private, offline) — change in Settings"}
+              {useCloud
+                ? `Engine: cloud Whisper large (${cloudProvider}) — change in Settings`
+                : useWebSpeech
+                  ? "Engine: browser speech recognition (online, live) — change in Settings"
+                  : "Engine: local Whisper (private, offline) — change in Settings"}
             </p>
           </>
         ) : (
@@ -314,6 +354,7 @@ export function AnswerCapture({
 
   if (state === "transcribing") {
     const loading = transcriberStatus === "loading";
+    const capped = localModel !== speechModel;
     return (
       <div className="flex flex-col items-center gap-3 py-6">
         <p className="text-sm font-medium">
@@ -337,6 +378,12 @@ export function AnswerCapture({
               <p className="max-w-sm text-center text-xs text-muted">
                 Running on CPU (WebGPU not available) — this can take a while.
                 The browser speech engine in Settings is much faster.
+              </p>
+            )}
+            {capped && (
+              <p className="max-w-sm text-center text-xs text-muted">
+                Using the Tiny model on this device to avoid running out of
+                memory.
               </p>
             )}
           </>

@@ -151,6 +151,11 @@ export default function PracticePage() {
                 expectedDurationSeconds={90}
                 speechModel={settings.preferredSpeechModel}
                 speechEngine={settings.speechEngine}
+                cloudProvider={settings.cloudProvider}
+                cloudApiKey={settings.cloudApiKey}
+                vocabularyHint={current.expectedPoints.flatMap(
+                  (p) => p.acceptedSignals,
+                )}
                 submitLabel="Check my answer"
                 onSubmit={submitAnswer}
               />

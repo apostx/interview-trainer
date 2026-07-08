@@ -85,18 +85,69 @@ export default function SettingsPage() {
             }
           >
             <option value="whisper">
-              Local Whisper — private &amp; offline, slower
+              Local Whisper — private &amp; offline
             </option>
             <option value="web_speech">
               Browser (Google) — fast &amp; live, online
+            </option>
+            <option value="cloud">
+              Cloud Whisper large — most accurate, needs API key
             </option>
           </select>
           <p className="mt-1 text-xs text-muted">
             {settings.speechEngine === "web_speech"
               ? "Your voice is sent to the browser's speech service (Google). Fast and live, but weaker on technical vocabulary (webhook, idempotency…); falls back to local Whisper if unavailable."
-              : "Audio never leaves your browser, and it recognizes technical terms noticeably better than the browser engine."}
+              : settings.speechEngine === "cloud"
+                ? "Whisper large-v3 accuracy with a per-question vocabulary hint — it is told the current question's expected terms. Audio goes to the provider you choose; falls back to local Whisper on errors."
+                : "Audio never leaves your browser, and it recognizes technical terms noticeably better than the browser engine."}
           </p>
         </div>
+
+        {settings.speechEngine === "cloud" && (
+          <div className="flex flex-col gap-4 rounded-lg border border-hairline bg-background p-4">
+            <div>
+              <label className={labelBase} htmlFor="cloud-provider">
+                Provider
+              </label>
+              <select
+                id="cloud-provider"
+                className={inputBase}
+                value={settings.cloudProvider}
+                onChange={(e) =>
+                  update({
+                    cloudProvider: e.target.value as UserSettings["cloudProvider"],
+                  })
+                }
+              >
+                <option value="groq">
+                  Groq — whisper-large-v3-turbo (free tier, very fast)
+                </option>
+                <option value="openai">OpenAI — whisper-1</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelBase} htmlFor="cloud-key">
+                API key
+              </label>
+              <input
+                id="cloud-key"
+                type="password"
+                autoComplete="off"
+                className={inputBase}
+                value={settings.cloudApiKey}
+                onChange={(e) => update({ cloudApiKey: e.target.value })}
+                placeholder={
+                  settings.cloudProvider === "groq" ? "gsk_…" : "sk-…"
+                }
+              />
+              <p className="mt-1 text-xs text-muted">
+                Stored only in this browser and sent only to the provider.
+                {settings.cloudProvider === "groq" &&
+                  " Free key: console.groq.com → API Keys."}
+              </p>
+            </div>
+          </div>
+        )}
 
         <div>
           <label className={labelBase} htmlFor="speech-model">

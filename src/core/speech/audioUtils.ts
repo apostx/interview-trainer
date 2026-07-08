@@ -122,3 +122,20 @@ export function fixDomainTerms(text: string): string {
   }
   return result;
 }
+
+/**
+ * Phones and low-memory devices crash loading the base/small Whisper models
+ * (the tab is OOM-killed during or right after transcription), so the local
+ * model is capped to tiny there.
+ */
+export function isConstrainedDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  const mobile = /Android|iPhone|iPad|Mobile/i.test(ua);
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  return mobile || (memory !== undefined && memory <= 4);
+}
+
+export function effectiveLocalModel<T extends string>(model: T): T | "tiny" {
+  return isConstrainedDevice() ? "tiny" : model;
+}

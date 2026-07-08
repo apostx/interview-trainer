@@ -7,7 +7,7 @@ export type SpeechModelSize = "tiny" | "base" | "small";
  * without WebGPU. web_speech: the browser's SpeechRecognition (Google's
  * servers in Chrome) — fast and live, but audio leaves the machine.
  */
-export type SpeechEngine = "whisper" | "web_speech";
+export type SpeechEngine = "whisper" | "web_speech" | "cloud";
 
 export type UserSettings = {
   id: string;
@@ -15,6 +15,9 @@ export type UserSettings = {
   defaultSessionDurationMinutes: number;
   speechEngine: SpeechEngine;
   preferredSpeechModel: SpeechModelSize;
+  cloudProvider: "groq" | "openai";
+  /** Stored locally only; sent solely to the chosen provider. */
+  cloudApiKey: string;
   localOnlyMode: boolean;
   enableAiReview: boolean;
   showHintsDuringInterview: boolean;
@@ -27,6 +30,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   defaultSessionDurationMinutes: 30,
   speechEngine: "whisper",
   preferredSpeechModel: "tiny",
+  cloudProvider: "groq",
+  cloudApiKey: "",
   localOnlyMode: true,
   enableAiReview: false,
   showHintsDuringInterview: true,

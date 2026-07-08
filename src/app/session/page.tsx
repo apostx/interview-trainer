@@ -15,6 +15,7 @@ import {
   buttonSecondary,
 } from "@/components/ui";
 import { ROLE_LABELS } from "@/core/models";
+import { effectiveLocalModel } from "@/core/speech/audioUtils";
 import { useEmbeddingStore } from "@/stores/embeddingStore";
 import { useSessionRunner } from "@/stores/sessionRunnerStore";
 import { useTranscriberStore } from "@/stores/transcriberStore";
@@ -36,11 +37,14 @@ function SessionRunner() {
 
   const loadEmbeddings = useEmbeddingStore((s) => s.load);
 
-  // Preload the speech + embedding models in the background so the first
-  // answer and its semantic review are smooth.
+  // Preload models in the background so the first answer and its semantic
+  // review are smooth. Whisper is only eagerly loaded when it is the active
+  // engine — on phones the extra model in memory was crashing the tab.
   useEffect(() => {
     if (runner.settings) {
-      loadModel(runner.settings.preferredSpeechModel).catch(() => {});
+      if (runner.settings.speechEngine === "whisper") {
+        loadModel(effectiveLocalModel(runner.settings.preferredSpeechModel)).catch(() => {});
+      }
       loadEmbeddings().catch(() => {});
     }
   }, [runner.settings, loadModel, loadEmbeddings]);
@@ -154,6 +158,12 @@ function SessionRunner() {
             expectedDurationSeconds={card.expectedDurationSeconds}
             speechModel={runner.settings?.preferredSpeechModel ?? "tiny"}
             speechEngine={runner.settings?.speechEngine ?? "whisper"}
+            cloudProvider={runner.settings?.cloudProvider ?? "groq"}
+            cloudApiKey={runner.settings?.cloudApiKey ?? ""}
+            vocabularyHint={[
+              card.title,
+              ...card.expectedPoints.flatMap((p) => p.acceptedSignals),
+            ]}
             submitLabel="Review answer"
             onSubmit={runner.submitAnswer}
             autoFocusHint="Think first, then answer out loud — aim for a structured answer with a trade-off."
@@ -259,6 +269,11 @@ function SessionRunner() {
                   expectedDurationSeconds={90}
                   speechModel={runner.settings?.preferredSpeechModel ?? "tiny"}
                   speechEngine={runner.settings?.speechEngine ?? "whisper"}
+                  cloudProvider={runner.settings?.cloudProvider ?? "groq"}
+                  cloudApiKey={runner.settings?.cloudApiKey ?? ""}
+                  vocabularyHint={runner.currentFollowUp.expectedPoints.flatMap(
+                    (p) => p.acceptedSignals,
+                  )}
                   submitLabel="Submit follow-up answer"
                   onSubmit={runner.submitFollowUpAnswer}
                 />
