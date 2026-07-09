@@ -1,7 +1,7 @@
 {
   "id": "react_deep_dive",
   "name": "React deep dive (Artec)",
-  "description": "React rendering model, re-render optimization, state management without Redux, and SSR vs CSR (React vs Next.js) — from the Artec frontend prep doc.",
+  "description": "The Artec frontend prep doc in depth: rendering model, re-render optimization, state strategy, SSR vs CSR, app structure, legacy migration, quality gates, API contracts, and AI-assisted development.",
   "sources": [
     "artec_frontend_interju_felkeszules"
   ],
@@ -28,6 +28,85 @@
         "core_web_vitals"
       ],
       "studyNotes": "Client-side rendering (CSR) ships an empty HTML shell plus a JavaScript bundle; the browser builds the page. Server-side rendering (SSR) generates the HTML on the server per request; static generation (SSG) does it once at build time. The choice is about who your first visitor is and what they need.\n\nSSR/SSG earns its complexity when:\n- Pages are public and content-heavy — crawlers get real, indexable HTML (SEO).\n- First contentful paint matters — the user sees content before the bundle loads and executes.\n- Content changes per request or per user but must still arrive as HTML (personalised landing pages).\n\nCSR is the right default when the app lives behind a login: dashboards, admin tools, editors. There is nothing to index, the user already committed to waiting for the app, and SSR would add server infrastructure, deployment complexity, and cost for no visible benefit.\n\nHydration is the bridge and the catch: the server sends finished HTML, then React runs on the client, builds the same tree, and attaches event listeners to the existing markup. Until hydration completes, the page looks interactive but is not. Two costs follow: the work is done twice (server render + client hydrate), and any mismatch between server and client output (dates, random values, user-only data) causes hydration errors.\n\nA framework like Next.js packages SSR, SSG, routing, and code-splitting so you do not build them yourself — but it brings a server runtime and its operational burden. The honest answer to \"do we need Next.js?\" starts with \"is anything here public and SEO- or first-paint-critical?\" — if not, plain React with CSR is the simpler system."
+    },
+    {
+      "id": "react_memoization",
+      "name": "Re-render Optimization & Memoization",
+      "description": "Measure first; React.memo/useMemo/useCallback, stable references, and rendering huge lists.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react_rendering_model",
+        "react",
+        "frontend_performance"
+      ],
+      "studyNotes": "The senior framing comes first: MEASURE before optimizing — do not memoize by reflex. The usual real culprits are state living too high in the tree, props whose references change every render, oversized lists, and over-broad context updates.\n\nThe base strategy, in order: keep state as local as possible, avoid passing unnecessary props, split large components — and only then memoize.\n\nThe three memoization tools:\n- React.memo — component level: if props did not change, skip re-running the child.\n- useMemo — caches a computed VALUE between renders: expensive calculations, or a stable object/array prop.\n- useCallback — caches a FUNCTION reference: needed for memoized children and effect dependencies.\n\nThe trap that ties them together: memoization compares by reference. If a parent creates a fresh object, array, or inline function on every render, the React.memo child re-renders anyway — the memo is defeated. So optimisation usually starts with cleaning the props API: pass less, keep references stable. Overusing memoization complicates the code and may not speed anything up.\n\n## The one-million-items question\n\nNever render them all. The first question is product-level: does the user actually need a million rows at once? Technically: backend pagination or cursor-based loading, and on the client virtualization/windowing (react-window, react-virtualized) so only the visible rows are mounted. Add stable keys and memoized row components where measurably useful. Pagination / infinite scroll / virtualization is the expected trio.\n\nRelated JS-level patterns worth naming: debounce (act after the input goes quiet — search fields) and throttle (act at most every N ms — scroll handlers) keep event-driven work off the hot path."
+    },
+    {
+      "id": "react_state_strategies",
+      "name": "Choosing a State Strategy",
+      "description": "Local vs shared vs server vs navigation state; prop drilling, Context+useReducer, and when Redux earns its place.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "state_management",
+        "react",
+        "redux_toolkit"
+      ],
+      "studyNotes": "The senior answer starts with: there is no single state solution — different state TYPES want different tools.\n\n- Local UI state (modal open, selected tab) → useState / useReducer.\n- Simple shared state (theme, language, current user) → Context API.\n- Complex app state (cross-module events, predictable updates) → Redux.\n- Server state (API data, cache, refetch) → React Query / SWR — not a client store.\n- Navigation state (filters, pagination, selected page) → the URL / router.\n\nProp drilling: passing state and setters down 1–2 levels is perfectly fine. It becomes a problem when the same state threads through many unrelated intermediaries — then reach for Context, Context+useReducer, or Redux by complexity. Senior touch: expose domain actions (login(), changeLanguage(), updateFilter()) rather than raw setters — updates stay controlled.\n\nContext + useReducer is the lightweight Redux: Context provides access to a subtree without prop-threading; useReducer provides predictable updates. Split contexts by domain (AuthContext, LanguageContext) — one fat context value re-renders every consumer. What Context does NOT give you: DevTools time-travel, middleware, a selector layer, async orchestration.\n\nRedux earns its place with complex shared state, multiple independent modules reacting to the same application-level events, and a need for predictable, debuggable updates. Reducers are pure state transitions; selectors hide the store shape from components and compute derived data (memoizable) — with a good selector layer the UI does not depend on the store's internal structure. Redux-Saga (or thunks/RTK listeners) is side-effect orchestration: sequencing, cancellation, retries, cross-module coordination — not just \"API call library\"."
+    },
+    {
+      "id": "frontend_app_structure",
+      "name": "App Structure & Reusable Components",
+      "description": "Feature-based boundaries, when a component deserves to be reusable, and working from Figma designs.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react",
+        "web_accessibility"
+      ],
+      "studyNotes": "Route-based folders are fine for small apps, but in a large React app the route is just an entry point — real ownership follows FEATURE boundaries. The layout to describe: app/ (providers, store, routing setup), pages/ (route entry points that compose features), features/ (user, payments, dashboard — each holding its own components, hooks, API calls, selectors, state), shared/ (generic UI, utils, hooks, types). Components, logic and data access live close to their feature; only genuinely generic pieces graduate to shared.\n\nReusable component design — the senior stance is restraint: generalise when a UI/behaviour pattern actually repeats, not preemptively. A good reusable component has a clear API, predictable behaviour, sensible defaults, and no product-specific logic baked in. Warning sign: if it needs a dozen configuration props, it should probably be split into smaller pieces.\n\n## Working from Figma\n\nThe happy path is the easy part; the interview points are in what is MISSING from the design:\n- States: loading, error, empty, disabled, permission-denied.\n- Responsive behaviour: mobile/tablet/desktop, long text, localization-stretched labels.\n- Interactions: hover, focus, keyboard navigation.\n- Reuse: does an existing component cover this, or is it a genuinely new pattern?\n- Clarify edge cases with the designer EARLY — not when the sprint ends."
+    },
+    {
+      "id": "react_legacy_migration",
+      "name": "Legacy Frontend Migration",
+      "description": "jQuery/Rails templates to React without a big bang, and modernizing an outdated React codebase.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "migration_strategy",
+        "react",
+        "frontend_quality_gates"
+      ],
+      "studyNotes": "The core principle: NO big-bang rewrite. Understand the existing behaviour first, find isolated areas where React can be introduced safely, and migrate in small reviewable steps — keeping current behaviour stable, adding tests around critical flows before touching them, and letting new functionality land in React while the legacy surface shrinks (the strangler pattern in practice).\n\nWhat to refactor and what to leave alone: prioritise code that is actively changing, risky, hard to maintain, or blocking product work. Do NOT refactor stable legacy code for style points — a migration must reduce risk and serve product goals, not become a year-long rewrite with unclear value.\n\n## Modernizing an old React codebase\n\n- Dependency audit first: React itself, router, state library, build tooling, test libraries.\n- Hunt deprecated APIs: legacy lifecycle methods, legacy context, ReactDOM.render → createRoot (React 18+).\n- Class components do NOT get rewritten to hooks automatically — only the ones actively changing or causing problems.\n- Test critical flows before AND after each step.\n- Small steps in order: dependency update → build fix → tests green → pattern cleanup."
+    },
+    {
+      "id": "frontend_quality_gates",
+      "name": "Code Quality, Testing & Release Safety",
+      "description": "The quality tool layers, regression and visual regression testing, and feature flags.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react_legacy_migration"
+      ],
+      "studyNotes": "Answer in LAYERS, from cheapest to most expensive feedback:\n\n- TypeScript type checking — type errors before build/runtime.\n- ESLint — static analysis: bad patterns, hooks rules, unused vars.\n- Prettier — uniform formatting, fewer style debates in review.\n- Unit/component tests — Jest/Vitest + React Testing Library.\n- E2E tests — Playwright/Cypress on the critical user flows only.\n- Visual regression — screenshot comparison (Loki/Chromatic) catching unintended UI changes.\n- CI gates — typecheck + lint + tests + build + audit must pass before merge.\n- Human layers — code review (design, maintainability, edge cases) and dependency audit (npm audit, Snyk, Dependabot).\n\nRegression testing = verifying that a new change did not break previously working functionality; visual regression is the same idea aimed at how the UI looks.\n\n## Release safety: feature flags\n\nDeploying code is decoupled from enabling it: ship dark, then turn the feature on for internal users → QA → a small audience → everyone (gradual rollout). A kill switch turns a misbehaving feature off without a rollback deploy; flags also carry product-specific configurations and A/B tests. The cost to manage: FLAG DEBT — stale flags accumulating in the code; cleanup must be part of the process."
+    },
+    {
+      "id": "api_contract_collaboration",
+      "name": "API Contracts & Backend Collaboration",
+      "description": "REST semantics, when GraphQL helps, and the contract questions to settle with the backend early.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "rest",
+        "graphql",
+        "api_design"
+      ],
+      "studyNotes": "REST (Representational State Transfer) is a resource-oriented architectural style: resources identified by URLs, operations expressed by HTTP methods — GET reads, POST creates, PUT/PATCH updates (full vs partial), DELETE removes. Do not just expand the acronym in an interview — describe the style.\n\nGraphQL's honest pitch: it helps when the frontend needs control over the SHAPE of the data — when REST endpoints return too much (over-fetching) or too little (under-fetching, N+1 requests). It reduced payload sizes in targeted flows and makes data needs explicit. Equally honest counterpoint: REST is simpler and perfectly fine for most resource-based operations — do not claim GraphQL is always better.\n\n## The contract conversation\n\nClarify the API contract EARLY with the backend team, before the frontend builds on assumptions:\n- Request/response shapes — and what validation errors look like (error codes, error body format).\n- The UI states the data implies: loading, empty, error.\n- Pagination model: offset vs cursor.\n- Permissions and auth: what returns 401 vs 403, and what the UI should do.\n- Backward compatibility during migrations.\n\nSettling these up front is what makes UI behaviour predictable — most \"frontend bugs\" around data are really contract ambiguities discovered too late."
+    },
+    {
+      "id": "ai_assisted_development",
+      "name": "AI-Assisted Development",
+      "description": "Using AI as an accelerator while keeping engineering responsibility.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "frontend_quality_gates"
+      ],
+      "studyNotes": "The position that lands well: AI is a development ACCELERATOR, and the engineer stays responsible for quality and correctness.\n\nWhere it genuinely speeds things up: boilerplate, refactoring suggestions, test generation, documentation, and exploring implementation options quickly. What does not change: generated code is not automatically correct — architecture, edge cases, types, accessibility, performance, security, and maintainability still get engineering review.\n\nIf the interviewer says \"we barely write code by hand anymore\", the productive response is curiosity plus principle: interesting — how do you organize the workflow around generated code? The essential ingredients remain strong review, tests, type checking, and architectural ownership, because AI accelerates implementation but does not remove the need for engineering judgment.\n\nThe failure mode to name: treating generation as a substitute for understanding. Code you cannot explain, you cannot debug, secure, or evolve — whoever (or whatever) wrote it."
     }
   ],
   "questions": [
@@ -130,6 +209,7 @@
         "scenario_discussion"
       ],
       "topicIds": [
+        "react_state_strategies",
         "state_management",
         "react"
       ],
@@ -293,6 +373,593 @@
           "expectedPoints": []
         }
       ]
+    },
+    {
+      "id": "rdd_memoization",
+      "title": "Optimizing unnecessary re-renders",
+      "prompt": "A React page re-renders too much and feels slow. Walk me through how you approach optimizing it — and how you would render a list of one million items.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "react_memoization"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "rm_measure",
+          "label": "Measure first, structural fixes before memo",
+          "description": "Profile; keep state local, split components, trim props — memoization is not the first move.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "measure first",
+            "profile",
+            "state as local",
+            "split components",
+            "not memoize everything"
+          ]
+        },
+        {
+          "id": "rm_tools",
+          "label": "React.memo / useMemo / useCallback",
+          "description": "Component skip, cached value, cached function — each defeats a specific re-render cause.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "react.memo",
+            "usememo",
+            "usecallback",
+            "memoized child",
+            "cache the value"
+          ]
+        },
+        {
+          "id": "rm_references",
+          "label": "Stable references or memo is defeated",
+          "description": "Fresh object/array/inline function props defeat React.memo.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "new reference",
+            "inline function",
+            "stable props",
+            "reference changes",
+            "defeats memo"
+          ]
+        },
+        {
+          "id": "rm_virtualization",
+          "label": "Virtualization for huge lists",
+          "description": "Pagination/infinite scroll/windowing — only visible rows mounted (react-window).",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "virtualization",
+            "windowing",
+            "react-window",
+            "only visible rows",
+            "pagination",
+            "infinite scroll"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "rdd_state_strategy",
+      "title": "Which state goes where?",
+      "prompt": "You join a React project where everything lives in one global store. How do you think about what state belongs where?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "react_state_strategies"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "ss_types",
+          "label": "State types → different tools",
+          "description": "Local UI / shared / complex app / server / navigation state each has a right home.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "local state",
+            "server state",
+            "react query",
+            "url state",
+            "different kinds of state",
+            "not everything global"
+          ]
+        },
+        {
+          "id": "ss_drilling",
+          "label": "Prop drilling threshold",
+          "description": "1–2 levels of props is fine; many unrelated intermediaries → Context or store.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "prop drilling",
+            "few levels is fine",
+            "intermediate components",
+            "context api"
+          ]
+        },
+        {
+          "id": "ss_context_limits",
+          "label": "Context+useReducer and its limits",
+          "description": "Lightweight Redux alternative; split by domain; no devtools/middleware/selectors.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "usereducer",
+            "split contexts",
+            "every consumer re-renders",
+            "no middleware",
+            "no devtools"
+          ]
+        },
+        {
+          "id": "ss_redux_when",
+          "label": "When Redux earns its place",
+          "description": "Cross-module events + predictable updates; selectors decouple store shape.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "cross-module",
+            "application-level events",
+            "predictable updates",
+            "selectors",
+            "not by default"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "rdd_app_structure",
+      "title": "Structuring a large React app",
+      "prompt": "How would you structure a large React application, and when do you decide a component should become reusable?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "design_review"
+      ],
+      "topicIds": [
+        "frontend_app_structure"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "as_features",
+          "label": "Feature-based boundaries",
+          "description": "Routes are entry points; components/hooks/API/state live inside their feature; shared layer for generic UI.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "feature-based",
+            "feature folders",
+            "route is an entry point",
+            "close to the feature",
+            "shared layer"
+          ]
+        },
+        {
+          "id": "as_reuse",
+          "label": "Reuse on repetition, not prediction",
+          "description": "Generalize when the pattern repeats; clear API, sensible defaults, no product logic; too many props → split.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "when it repeats",
+            "not too early",
+            "over-generalize",
+            "clear api",
+            "too configurable",
+            "premature abstraction"
+          ]
+        },
+        {
+          "id": "as_figma",
+          "label": "Designs: hunt the missing states",
+          "description": "Loading/error/empty/disabled/permissions, responsiveness, long localized text; clarify early.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "missing states",
+            "loading error empty",
+            "edge cases",
+            "localization",
+            "ask the designer",
+            "keyboard"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "rdd_legacy_migration",
+      "title": "Migrating a jQuery UI to React",
+      "prompt": "The product has a large jQuery/server-template UI and the team wants React. How do you run that migration?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "system_design"
+      ],
+      "topicIds": [
+        "react_legacy_migration"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "lm_incremental",
+          "label": "Incremental, no big bang",
+          "description": "Isolated areas first, small reviewable steps, behaviour kept stable, strangler-style shrinking of legacy.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "incremental",
+            "no big bang",
+            "no full rewrite",
+            "small steps",
+            "strangler",
+            "isolated areas"
+          ]
+        },
+        {
+          "id": "lm_tests",
+          "label": "Tests around critical flows first",
+          "description": "Safety net before touching risky paths; verify before and after.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "tests around",
+            "safety net",
+            "critical flows",
+            "before and after"
+          ]
+        },
+        {
+          "id": "lm_prioritize",
+          "label": "Refactor by risk/value, not style",
+          "description": "Actively changing or blocking code first; leave stable legacy alone.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "actively changing",
+            "leave stable code",
+            "not for style",
+            "reduce risk",
+            "product goals"
+          ]
+        },
+        {
+          "id": "lm_react_modern",
+          "label": "Old-React modernization details",
+          "description": "Dependency audit, deprecated APIs, createRoot; class components only as needed.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "dependency audit",
+            "deprecated",
+            "createroot",
+            "not rewrite class components"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "rdd_quality_gates",
+      "title": "Frontend quality and safe releases",
+      "prompt": "What does your quality toolchain look like on a frontend project, and how do you reduce the risk of a release going wrong?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "concept_check"
+      ],
+      "topicIds": [
+        "frontend_quality_gates"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "qg_layers",
+          "label": "Layered quality tools",
+          "description": "Typecheck → lint/format → unit/component → E2E on critical flows → CI gates before merge.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "typescript",
+            "eslint",
+            "unit tests",
+            "e2e",
+            "ci checks",
+            "layers",
+            "testing library"
+          ]
+        },
+        {
+          "id": "qg_regression",
+          "label": "Regression + visual regression",
+          "description": "New changes must not break existing behaviour; screenshot comparison for the UI.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "regression",
+            "visual regression",
+            "screenshot comparison",
+            "didn't break existing"
+          ]
+        },
+        {
+          "id": "qg_flags",
+          "label": "Feature flags for release safety",
+          "description": "Deploy ≠ enable; gradual rollout; kill switch; watch for flag debt.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "feature flag",
+            "gradual rollout",
+            "kill switch",
+            "deploy separately",
+            "turn it off",
+            "flag debt"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "rdd_api_contract",
+      "title": "Agreeing an API contract with the backend",
+      "prompt": "A new feature needs new endpoints. What do you clarify with the backend team before you start building the UI?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "backend_developer"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "api_contract_collaboration"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "ac_shapes",
+          "label": "Shapes and error format",
+          "description": "Request/response shapes plus error codes and error body — validation errors included.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "request and response",
+            "shape",
+            "error format",
+            "error codes",
+            "validation errors"
+          ]
+        },
+        {
+          "id": "ac_states",
+          "label": "UI states and pagination",
+          "description": "Loading/empty/error states; offset vs cursor pagination.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "loading",
+            "empty state",
+            "pagination",
+            "cursor",
+            "offset"
+          ]
+        },
+        {
+          "id": "ac_auth_compat",
+          "label": "Auth semantics and compatibility",
+          "description": "401 vs 403 handling; backward compatibility during migration.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "401",
+            "403",
+            "unauthorized",
+            "forbidden",
+            "backward compatibility"
+          ]
+        },
+        {
+          "id": "ac_rest_graphql",
+          "label": "REST vs GraphQL judgment",
+          "description": "REST for resource CRUD; GraphQL when the client must control data shape / avoid over-fetching.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "over-fetching",
+            "under-fetching",
+            "data shape",
+            "rest is simpler",
+            "payload size"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "rdd_ai_dev",
+      "title": "How do you use AI in development?",
+      "prompt": "How do you use AI tools in your development workflow, and where do you draw the line?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "solution_architect"
+      ],
+      "modes": [
+        "experience_deep_dive",
+        "concept_check"
+      ],
+      "topicIds": [
+        "ai_assisted_development"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "ai_accelerator",
+          "label": "Accelerator use cases",
+          "description": "Boilerplate, refactoring, test generation, docs, exploring options.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "boilerplate",
+            "test generation",
+            "refactoring",
+            "documentation",
+            "explore options",
+            "faster"
+          ]
+        },
+        {
+          "id": "ai_responsibility",
+          "label": "Engineer keeps responsibility",
+          "description": "Generated code is reviewed for edge cases, types, security, performance, maintainability.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "not automatically correct",
+            "review",
+            "responsibility",
+            "edge cases",
+            "security",
+            "still verify"
+          ]
+        },
+        {
+          "id": "ai_guardrails",
+          "label": "Guardrails named",
+          "description": "Tests, type checking, code review, architectural ownership make generated code safe.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "tests",
+            "type checking",
+            "code review",
+            "ownership",
+            "guardrails",
+            "judgment"
+          ]
+        }
+      ],
+      "followUps": []
     }
   ]
 }
