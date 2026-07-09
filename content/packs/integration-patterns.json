@@ -15,7 +15,8 @@
       "relatedTopicIds": [
         "microservices",
         "event_driven"
-      ]
+      ],
+      "studyNotes": "SOA and microservices share the idea of services; they differ in where integration logic lives. SOA centralizes it — an ESB (enterprise service bus) carries routing, transformation and orchestration, with shared contracts governed centrally. Microservices decentralize: smart endpoints, dumb pipes — the logic lives in the services, the transport stays thin.\n\nWhy an ESB becomes a bottleneck: business logic accumulates in the bus; every change to any flow funnels through one platform and often one team; deployments and scaling couple everything that touches the bus. The bus becomes the organization's critical path — a Conway's Law artifact: a central integration team produces a central integration layer.\n\nThe balanced take: SOA's ideas survive — contracts, reuse, governance — and central integration still fits some enterprises (many legacy systems, strong compliance). The modern default, though, is decentralized ownership with events for decoupling, and the bus reserved for what genuinely must be central."
     },
     {
       "id": "integration_migration",
@@ -25,7 +26,8 @@
       "relatedTopicIds": [
         "migration_strategy",
         "soa_esb"
-      ]
+      ],
+      "studyNotes": "Migrating flows off a legacy integration platform (Mule/ESB-style) without breaking consumers is a strangler exercise, not a rewrite.\n\nThe method: route ONE flow at a time to the new implementation BEHIND THE SAME CONTRACT — consumers keep calling the same interface and cannot tell the difference. Verify behaviour compatibility empirically, not by reading code: shadow/parallel runs comparing old vs new outputs, contract tests, replaying real recorded traffic. Only after the outputs match does the flow cut over.\n\nOrder by risk: low-risk flows first to harden the process, critical flows last. Keep a fast way back — routing back to the legacy flow must be a switch, not a project — and monitor error rates per migrated flow so a regression is visible immediately.\n\nThe dirty secret of such migrations: legacy flows contain undocumented transformations. Discovery is empirical — capture real inputs and outputs, diff against the new implementation, and treat every mismatch as either a bug to fix or a behaviour to consciously preserve."
     },
     {
       "id": "async_fanout",
@@ -35,7 +37,8 @@
       "relatedTopicIds": [
         "message_queue",
         "event_driven"
-      ]
+      ],
+      "studyNotes": "A booking is created and five systems must know. The design question: what does the USER have to wait for? Only that stays synchronous — persist the booking, answer. Notifications are not on the critical path.\n\nThe shape: publish ONE booking-created event to a broker; the five consumers subscribe independently. The producer does not call five APIs — it does not even know how many consumers exist. Adding a sixth system is a subscription, not a code change.\n\nFailure isolation is the real win: each consumer has its own retries with backoff and its own DLQ; one failing system does not block the other four; duplicates are handled idempotently (at-least-once delivery).\n\nThe exception that proves the rule: if a step must gate the outcome — fraud check before confirmation — it belongs on the synchronous critical path by definition. Sync vs async is decided by the business dependency, not by fashion.\n\nWhy Node.js keeps appearing in this space: integration services are I/O-bound — many concurrent network calls — which a non-blocking event loop handles cheaply. Its weakness is CPU-bound work (one heavy computation stalls every request); mitigations are worker threads, offloading to queues/services, or a different runtime for compute-heavy paths."
     }
   ],
   "questions": [

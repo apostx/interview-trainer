@@ -15,7 +15,8 @@
         "reliability",
         "scalability",
         "distributed_transactions"
-      ]
+      ],
+      "studyNotes": "The three letters: Consistency — every read sees the latest write; Availability — every request gets a response; Partition tolerance — the system keeps working when the network drops messages between nodes.\n\nThe theorem's real content: partitions are not optional — networks fail — so P is mandatory, and the actual choice, DURING a partition, is C versus A. Refuse requests to stay consistent (CP), or keep answering with possibly stale data (AP).\n\nGround it in systems: a bank ledger is CP — better to refuse a withdrawal than allow a double-spend; a shopping cart is AP — better to accept the item and reconcile later than block the customer.\n\nThe refinement that scores senior points — PACELC: even WITHOUT a partition, there is a trade-off between latency and consistency (Else: L vs C). Synchronous replication buys consistency with latency; asynchronous buys speed with staleness. So the full statement: under Partition, A vs C; Else, L vs C. Per-operation nuance beats a single system-wide label: the same product can be CP for payments and AP for its dashboard."
     },
     {
       "id": "design_url_shortener",
@@ -26,7 +27,8 @@
         "caching",
         "scalability",
         "nosql"
-      ]
+      ],
+      "studyNotes": "The bit.ly design — a compact tour of read-heavy system design.\n\nStart by clarifying scale: how many new links/day, and the read/write ratio — redirects outnumber creations by orders of magnitude, so the system is optimized for reads. Ask about custom aliases and expiry; they change the key story.\n\nKey generation options: base62-encode an auto-increment ID (short, no collisions, but guessable and needs a central counter), hash the URL and truncate (collision handling required), or a key-generation service handing out pre-generated batches (scales cleanly). Know one well and name the alternatives.\n\nStorage: the access pattern is a pure key → value lookup, so a key-value/NoSQL store fits and scales horizontally; relational adds nothing the lookup needs.\n\nThe read path is where the design wins: cache hot short-codes (Redis, and a CDN in front) so a redirect never touches the database for popular links. The redirect itself is a 301/302 — permanent caches harder, temporary keeps analytics.\n\nAnalytics without slowing redirects: never write the click synchronously — emit an event to a queue and let a consumer aggregate; the redirect stays a cache hit plus a fire-and-forget publish."
     }
   ],
   "questions": [

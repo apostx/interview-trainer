@@ -2,46 +2,72 @@
   "id": "js_react_drills_eib_holidu",
   "name": "JS & React drills (EIB, Holidu)",
   "description": "Spoken-interview versions of the EIB and Holidu quiz topics: this-binding, React data flow and memoization, script loading, keys and controlled inputs.",
-  "sources": ["tibi/eib", "tibi/company_holidu"],
+  "sources": [
+    "tibi/eib",
+    "tibi/company_holidu"
+  ],
   "topics": [
     {
       "id": "js_this_binding",
       "name": "this & function binding",
       "description": "How this is determined: call-site, methods, arrow functions, bind.",
       "category": "frontend",
-      "relatedTopicIds": ["js_language_basics"]
+      "relatedTopicIds": [
+        "js_language_basics"
+      ],
+      "studyNotes": "`this` is determined at the CALL SITE, not where the function is written — the single sentence that untangles everything.\n\n- Method call: obj.fn() → this is the object before the dot.\n- Standalone call: fn() → the global object, or undefined in strict mode.\n- Constructor: new Fn() → the freshly created instance.\n- Explicit: fn.call(x) / fn.apply(x) / fn.bind(x) set it directly.\n\nArrow functions are the exception that makes modern code work: they have NO own this — they capture it lexically from the enclosing scope at definition time. That is why arrows are the natural fit for callbacks: the surrounding this travels with them.\n\nThe classic bug: passing a method as a callback loses its receiver — onClick={obj.handle} calls handle standalone, so this is undefined. Options: bind in the constructor (this.handle = this.handle.bind(this)), a class-field arrow (handle = () => {...}), or wrapping at the call site (() => obj.handle()). Being able to name all three, and why each works, is the interview point."
     },
     {
       "id": "react_data_flow",
       "name": "React data flow",
       "description": "Passing data through the tree, avoiding prop drilling, memoization semantics.",
       "category": "frontend",
-      "relatedTopicIds": ["react", "state_management"]
+      "relatedTopicIds": [
+        "react",
+        "state_management"
+      ],
+      "studyNotes": "Getting data deep into the tree without threading it through every level.\n\nFirst tool: composition. Passing components as children (slots) often removes the need to drill entirely — the intermediate layers just render {children} and never see the data. Reaching for this before context is a senior tell.\n\nSecond tool: React Context for genuinely app-wide values (theme, language, current user). The performance catch: every consumer re-renders when the context VALUE changes — and if the provider passes a fresh object literal each render, that is every render. Fixes: memoize the value, split contexts by domain (state vs dispatch, auth vs theme), keep hot-changing values out of context.\n\nuseMemo's real contract, which most answers get wrong: it recomputes when dependencies change, and React MAY DISCARD the cache whenever it wants. It is a performance hint, not a guarantee — never hang correctness or side effects on it. If the value must be stable for correctness, that is a ref or state, not a memo."
     },
     {
       "id": "script_loading",
       "name": "Script loading (async/defer)",
       "description": "How script attributes affect parsing, execution order and page load.",
       "category": "frontend",
-      "relatedTopicIds": ["frontend_performance"]
+      "relatedTopicIds": [
+        "frontend_performance"
+      ],
+      "studyNotes": "A plain <script> blocks HTML parsing: the parser stops, downloads, executes, resumes. Both async and defer fix the download — the script fetches in parallel with parsing — and differ in WHEN they execute:\n\n- async: executes the moment it arrives, wherever the parser happens to be — order between multiple async scripts is NOT guaranteed.\n- defer: executes after the document is fully parsed, and deferred scripts run IN DOCUMENT ORDER.\n\nThe decision follows from that: an analytics snippet is independent of the page and of other scripts — async, arrive-and-run. Your app bundle needs the DOM present and its dependency order respected — defer (or type=\"module\", which defers by default).\n\nBonus points for the modern additions: modules defer implicitly, and resource hints (preload) shape download priority separately from execution timing."
     },
     {
       "id": "react_correctness",
       "name": "React correctness basics",
       "description": "Keys in lists, controlled inputs, effect timing and shallow-compare pitfalls.",
       "category": "frontend",
-      "relatedTopicIds": ["react", "react_rendering_model"]
+      "relatedTopicIds": [
+        "react",
+        "react_rendering_model"
+      ],
+      "studyNotes": "Three checks that catch most React bugs.\n\nKeys give list items a stable identity: reconciliation matches items across renders BY KEY. Using the array index as key breaks the moment the list reorders, inserts, or deletes — state, focus and animations stick to the position, not the item. Keys must be stable and unique per item (an id), not per render position.\n\nControlled input means REACT owns the value: value bound to state plus an onChange writing it back — the input renders what state says, always. Uncontrolled leaves the value in the DOM (defaultValue + a ref to read it). Pick one; switching mid-life (value flipping between undefined and a string) triggers the classic warning and real bugs.\n\nEffect timing: useEffect with an empty dependency array runs once after the first render — and TWICE in development under StrictMode, which deliberately double-invokes effects to expose missing cleanups; the cleanup function runs on unmount. Effects never run during render. If the double-run breaks your effect, the effect is the bug — it lacks idempotence or cleanup — not StrictMode."
     }
   ],
   "questions": [
     {
       "id": "eib_this_001",
-      "sources": ["tibi/eib"],
+      "sources": [
+        "tibi/eib"
+      ],
       "title": "How `this` works in JavaScript",
       "prompt": "Explain how `this` is determined in JavaScript. How do regular functions, methods and arrow functions differ?",
-      "roles": ["frontend_developer", "fullstack_developer"],
-      "modes": ["concept_check"],
-      "topicIds": ["js_this_binding"],
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "js_this_binding"
+      ],
       "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "Call-site rules, method calls, standalone calls (global/undefined in strict mode), arrow functions capturing lexically, bind/call/apply.",
@@ -51,7 +77,10 @@
           "label": "this depends on the call site",
           "description": "Method call → the object before the dot; standalone call → global object, or undefined in strict mode.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "call site",
             "how the function is called",
@@ -65,7 +94,10 @@
           "label": "Arrow functions capture this lexically",
           "description": "Arrows have no own this — they inherit from the enclosing scope, which is why they suit callbacks.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "lexical",
             "no own this",
@@ -79,7 +111,9 @@
           "label": "Explicit binding",
           "description": "bind/call/apply set this explicitly; losing this when passing methods as callbacks.",
           "importance": "important",
-          "roleWeight": { "frontend_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 4
+          },
           "acceptedSignals": [
             "bind",
             "call",
@@ -92,7 +126,9 @@
       "followUps": [
         {
           "id": "eib_this_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "A class method passed as an onClick handler logs undefined for this. What are your options?",
           "expectedPoints": []
         }
@@ -100,12 +136,23 @@
     },
     {
       "id": "eib_dataflow_001",
-      "sources": ["tibi/eib"],
+      "sources": [
+        "tibi/eib"
+      ],
       "title": "Avoiding prop drilling, and what useMemo guarantees",
       "prompt": "How do you pass data deep down a React component tree without prop drilling — and what does useMemo actually guarantee?",
-      "roles": ["frontend_developer", "fullstack_developer", "frontend_architect"],
-      "modes": ["concept_check", "tradeoff_decision"],
-      "topicIds": ["react_data_flow"],
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "react_data_flow"
+      ],
       "expectedDurationSeconds": 210,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "Context and composition (children) against drilling; useMemo as a performance hint recomputing on dependency change — not a semantic guarantee.",
@@ -115,7 +162,11 @@
           "label": "Context and composition",
           "description": "React context for app-wide values; component composition (children/slots) often removes the need to drill.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "frontend_architect": 5, "fullstack_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "frontend_architect": 5,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "context",
             "provider",
@@ -130,7 +181,10 @@
           "label": "useMemo is a hint, not a contract",
           "description": "Recomputes when dependencies change; React may discard the cache — never rely on it for correctness or side effects.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "frontend_architect": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "frontend_architect": 4
+          },
           "acceptedSignals": [
             "dependency array",
             "recomputes when deps change",
@@ -144,7 +198,9 @@
       "followUps": [
         {
           "id": "eib_df_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "When does putting a value into context hurt performance, and what's the fix?",
           "expectedPoints": []
         }
@@ -152,12 +208,21 @@
     },
     {
       "id": "hol_script_001",
-      "sources": ["tibi/company_holidu"],
+      "sources": [
+        "tibi/company_holidu"
+      ],
       "title": "async vs defer script loading",
       "prompt": "What is the difference between async and defer on a script tag, and when do you use each?",
-      "roles": ["frontend_developer", "fullstack_developer"],
-      "modes": ["concept_check"],
-      "topicIds": ["script_loading"],
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "script_loading"
+      ],
       "expectedDurationSeconds": 150,
       "thinkingTimeSeconds": 30,
       "answerStructureHint": "Both download without blocking the parser; async executes on arrival (any order), defer executes after parsing in order.",
@@ -167,7 +232,10 @@
           "label": "Both download without blocking",
           "description": "A plain script blocks HTML parsing; async/defer fetch in parallel with parsing.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "blocks the parser",
             "download in parallel",
@@ -180,7 +248,9 @@
           "label": "Execution timing and order",
           "description": "async runs as soon as it arrives (order not guaranteed); defer runs after the document is parsed, in order.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5 },
+          "roleWeight": {
+            "frontend_developer": 5
+          },
           "acceptedSignals": [
             "as soon as it downloads",
             "order not guaranteed",
@@ -193,7 +263,9 @@
       "followUps": [
         {
           "id": "hol_script_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "Which would you pick for an analytics snippet, and which for your app bundle — and why?",
           "expectedPoints": []
         }
@@ -201,12 +273,21 @@
     },
     {
       "id": "hol_react_correct_001",
-      "sources": ["tibi/company_holidu"],
+      "sources": [
+        "tibi/company_holidu"
+      ],
       "title": "Keys, controlled inputs and effect timing",
       "prompt": "Three React correctness checks: why do list keys matter, what makes an input controlled, and when does a useEffect with an empty dependency array run?",
-      "roles": ["frontend_developer", "fullstack_developer"],
-      "modes": ["concept_check"],
-      "topicIds": ["react_correctness"],
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "react_correctness"
+      ],
       "expectedDurationSeconds": 240,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "Stable identity for reconciliation (index pitfall), value+onChange makes React the source of truth, mount-effect runs after first render with cleanup on unmount.",
@@ -216,7 +297,10 @@
           "label": "Keys give list items stable identity",
           "description": "Reconciliation matches items by key; array indexes break state and animations when the list reorders.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "stable identity",
             "reconciliation",
@@ -230,7 +314,10 @@
           "label": "Controlled input = React owns the value",
           "description": "value bound to state plus onChange; uncontrolled uses the DOM with refs/defaultValue.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "value and onchange",
             "state is the source of truth",
@@ -244,7 +331,9 @@
           "label": "Empty-deps effect timing",
           "description": "Runs once after the first render (twice in StrictMode dev), cleanup on unmount — not during render.",
           "importance": "important",
-          "roleWeight": { "frontend_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 4
+          },
           "acceptedSignals": [
             "after the first render",
             "on mount",
@@ -257,7 +346,10 @@
       "followUps": [
         {
           "id": "hol_rc_followup",
-          "trigger": { "type": "rubric_covered", "rubricItemId": "rc_effect" },
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "rc_effect"
+          },
           "prompt": "Why does React StrictMode intentionally double-invoke effects in development?",
           "expectedPoints": []
         }

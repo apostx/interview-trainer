@@ -2,28 +2,40 @@
   "id": "js_ts_fundamentals_lufthansa",
   "name": "JS & TS fundamentals (Lufthansa)",
   "description": "Spoken-interview versions of the Lufthansa quiz topics: equality and coercion, const semantics, promise chains, and TypeScript's type system.",
-  "sources": ["tibi/lufthansa"],
+  "sources": [
+    "tibi/lufthansa"
+  ],
   "topics": [
     {
       "id": "js_language_basics",
       "name": "JavaScript language basics",
       "description": "Equality, coercion, const semantics, template literals and other core language behavior.",
       "category": "frontend",
-      "relatedTopicIds": ["js_event_loop"]
+      "relatedTopicIds": [
+        "js_event_loop"
+      ],
+      "studyNotes": "The equality question first, because it always comes: === compares type and value with NO coercion; == converts the operands first, and the conversions are where the surprises live: '' == 0, '0' == false, null == undefined are all true. Practical rule: default to ===; the one idiomatic == is x == null, which matches both null and undefined in one check.\n\nCoercion's most-asked operator: + with a string concatenates (1 + '2' is '12'), while the other arithmetic operators convert toward numbers ('3' * 2 is 6). + is special because it is overloaded for concatenation.\n\nconst protects the BINDING, not the value: reassignment throws, but the referenced object or array remains mutable — const arr = [1]; arr.push(2) is legal. For real immutability: Object.freeze (shallow!), immutable update patterns (spread into a new object/array), and readonly types in TypeScript at compile time.\n\nWhy immutability keeps coming up with React: state updates must produce NEW references, because React and its memoization compare by reference — an in-place mutation is invisible to them."
     },
     {
       "id": "promise_error_handling",
       "name": "Promise chains & error handling",
       "description": "How .then/.catch/.finally compose and where errors travel in a chain.",
       "category": "frontend",
-      "relatedTopicIds": ["js_event_loop", "error_handling"]
+      "relatedTopicIds": [
+        "js_event_loop",
+        "error_handling"
+      ],
+      "studyNotes": "The propagation rule that answers most chain questions: a rejection SKIPS every following .then until it meets a .catch (or a second then-argument). Errors travel down the chain like exceptions down a stack.\n\nPlacement therefore defines coverage: a .catch at the END covers everything above it; a mid-chain .catch handles what came before and — crucially — RECOVERS: whatever it returns continues the chain as fulfilled. That is a feature (fallback values) and a trap (accidentally swallowing errors).\n\n.finally runs either way, for cleanup, and passes the result/rejection through untouched.\n\nasync/await is the same machinery in try/catch/finally clothing — with one classic bug: forgetting await inside try means the rejection happens after the try block is gone, and the catch never fires. The promise must be awaited for the error to be caught.\n\nAggregation nuance worth volunteering: Promise.all rejects on the FIRST failure (all-or-nothing); Promise.allSettled always resolves with per-promise status — right when you want every result, failures included."
     },
     {
       "id": "typescript_type_system",
       "name": "TypeScript type system",
       "description": "Structural typing, unions, generics, and what the compiler actually guarantees.",
       "category": "frontend",
-      "relatedTopicIds": ["js_language_basics"]
+      "relatedTopicIds": [
+        "js_language_basics"
+      ],
+      "studyNotes": "TypeScript is STRUCTURALLY typed: two types are compatible if their members line up — the names of the types are irrelevant (compile-time duck typing). Any object with { name: string, age: number } satisfies a Person parameter, whether or not it was declared as Person. This is unlike Java/C#'s nominal typing and explains most \"why does this assign?\" surprises.\n\nUnions model alternatives — string | number, literal unions like \"idle\" | \"loading\" — and control-flow NARROWING (typeof, in, instanceof, discriminated unions on a kind field) is how the compiler lets you use them safely, branch by branch.\n\nGenerics parameterize reusable code — identity<T>, ApiResponse<T>, constraints like <T extends { length: number }> — usually inferred at the call site.\n\nWhat the compiler actually guarantees — and does not: types are erased at runtime. There is NO runtime enforcement, so external data (API responses, JSON.parse) still needs validation — zod or hand-written type guards at the boundary.\n\nContaining an untyped dependency: without care one any infects everything it touches. Quarantine it — write a typed wrapper module or a .d.ts declaration for the surface you use, validate at the boundary, and keep any from leaking into your own signatures."
     }
   ],
   "questions": [
@@ -31,9 +43,16 @@
       "id": "luf_equality_001",
       "title": "== vs === and type coercion",
       "prompt": "What is the difference between == and === in JavaScript, and what surprises does type coercion cause?",
-      "roles": ["frontend_developer", "fullstack_developer"],
-      "modes": ["concept_check"],
-      "topicIds": ["js_language_basics"],
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "js_language_basics"
+      ],
       "expectedDurationSeconds": 150,
       "thinkingTimeSeconds": 30,
       "answerStructureHint": "Strict vs loose equality, how coercion rules bite (empty string, null/undefined), and the practical rule.",
@@ -43,7 +62,10 @@
           "label": "=== compares without coercion",
           "description": "Strict equality checks type and value; loose equality converts operands first.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "no coercion",
             "type and value",
@@ -57,7 +79,10 @@
           "label": "Names a coercion surprise",
           "description": "Examples like '' == 0, null == undefined, '0' == false being true.",
           "importance": "important",
-          "roleWeight": { "frontend_developer": 4, "fullstack_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "empty string equals zero",
             "null == undefined",
@@ -71,7 +96,9 @@
           "label": "Practical rule",
           "description": "Default to ===; the only common legit == use is x == null to match both null and undefined.",
           "importance": "important",
-          "roleWeight": { "frontend_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 4
+          },
           "acceptedSignals": [
             "always use strict",
             "prefer ===",
@@ -84,7 +111,9 @@
       "followUps": [
         {
           "id": "luf_eq_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "What does 1 + '2' evaluate to, and why is + special among the operators?",
           "expectedPoints": []
         }
@@ -94,9 +123,16 @@
       "id": "luf_const_001",
       "title": "What const actually protects",
       "prompt": "You declare an array with const and then push into it. Does it work — and what does const actually guarantee?",
-      "roles": ["frontend_developer", "fullstack_developer"],
-      "modes": ["concept_check"],
-      "topicIds": ["js_language_basics"],
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "js_language_basics"
+      ],
       "expectedDurationSeconds": 120,
       "thinkingTimeSeconds": 30,
       "answerStructureHint": "Binding vs value immutability, why mutation still works, and how to get real immutability.",
@@ -106,7 +142,10 @@
           "label": "const freezes the binding, not the value",
           "description": "Reassignment is forbidden; the referenced object/array stays mutable.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "binding",
             "cannot reassign",
@@ -120,7 +159,9 @@
           "label": "Real immutability options",
           "description": "Object.freeze (shallow), immutable updates (spread), readonly types in TS.",
           "importance": "important",
-          "roleWeight": { "frontend_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 4
+          },
           "acceptedSignals": [
             "object.freeze",
             "shallow",
@@ -133,7 +174,9 @@
       "followUps": [
         {
           "id": "luf_const_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "Why does React state benefit from immutable updates rather than mutation?",
           "expectedPoints": []
         }
@@ -143,9 +186,17 @@
       "id": "luf_promises_001",
       "title": "Promise chains and where .catch belongs",
       "prompt": "In a promise chain, where should .catch go and what happens to errors thrown mid-chain?",
-      "roles": ["frontend_developer", "fullstack_developer", "backend_developer"],
-      "modes": ["concept_check"],
-      "topicIds": ["promise_error_handling"],
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "backend_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "promise_error_handling"
+      ],
       "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "Errors skip to the nearest rejection handler; catch placement decides what it covers; finally and async/await equivalents.",
@@ -155,7 +206,11 @@
           "label": "Errors propagate to the nearest catch",
           "description": "A rejection skips the following .then handlers until a catch (or second then-argument) handles it.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 5, "backend_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 5,
+            "backend_developer": 4
+          },
           "acceptedSignals": [
             "skips the then",
             "nearest catch",
@@ -169,7 +224,10 @@
           "label": "Catch placement defines coverage",
           "description": "A catch at the end covers the whole chain; a mid-chain catch recovers and the chain continues fulfilled.",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "at the end of the chain",
             "covers everything before it",
@@ -183,7 +241,9 @@
           "label": "async/await mapping",
           "description": "try/catch/finally is the await-equivalent; forgetting await loses the error.",
           "importance": "nice_to_have",
-          "roleWeight": { "frontend_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 4
+          },
           "acceptedSignals": [
             "try catch",
             "await",
@@ -196,7 +256,9 @@
       "followUps": [
         {
           "id": "luf_pr_followup",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "What is the difference between Promise.all and Promise.allSettled when one request fails?",
           "expectedPoints": []
         }
@@ -206,9 +268,17 @@
       "id": "luf_ts_structural_001",
       "title": "TypeScript's structural type system",
       "prompt": "TypeScript is structurally typed. What does that mean in practice, and how do unions and generics fit in?",
-      "roles": ["frontend_developer", "fullstack_developer", "backend_developer"],
-      "modes": ["concept_check"],
-      "topicIds": ["typescript_type_system"],
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "backend_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "typescript_type_system"
+      ],
       "expectedDurationSeconds": 210,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "Compatibility by shape not name, union narrowing, generics for reusable typing, and compile-time-only guarantees.",
@@ -218,7 +288,11 @@
           "label": "Compatibility by shape",
           "description": "Two types are compatible if their members line up — names don't matter (duck typing).",
           "importance": "critical",
-          "roleWeight": { "frontend_developer": 5, "fullstack_developer": 5, "backend_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 5,
+            "backend_developer": 4
+          },
           "acceptedSignals": [
             "shape",
             "duck typing",
@@ -233,7 +307,10 @@
           "label": "Unions and generics",
           "description": "Union types with narrowing (typeof/in/discriminated unions); generics parameterize reusable code.",
           "importance": "important",
-          "roleWeight": { "frontend_developer": 4, "fullstack_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4
+          },
           "acceptedSignals": [
             "union",
             "narrowing",
@@ -248,7 +325,10 @@
           "label": "Types vanish at runtime",
           "description": "No runtime enforcement — external data still needs validation (zod, guards).",
           "importance": "important",
-          "roleWeight": { "frontend_developer": 4, "backend_developer": 4 },
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4
+          },
           "acceptedSignals": [
             "compile time only",
             "erased",
@@ -261,7 +341,10 @@
       "followUps": [
         {
           "id": "luf_ts_followup",
-          "trigger": { "type": "rubric_covered", "rubricItemId": "ts_erasure" },
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "ts_erasure"
+          },
           "prompt": "An untyped npm package makes everything 'any'. How do you contain that?",
           "expectedPoints": []
         }

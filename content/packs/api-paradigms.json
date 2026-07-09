@@ -14,7 +14,8 @@
       "relatedTopicIds": [
         "api_design",
         "rest"
-      ]
+      ],
+      "studyNotes": "GraphQL is a query language over a single endpoint: the CLIENT specifies exactly which fields it wants, and gets them in one round trip. That is the whole pitch — it solves REST's over-fetching (the endpoint returns more than needed) and under-fetching (one page needs three endpoints, three round trips, or an N+1 cascade of calls).\n\nThe decision frame: how varied and demanding are the clients' data needs? Many different clients (mobile, web, partners) each wanting different slices of a rich graph → GraphQL shines. A stable resource CRUD API with one predictable consumer → REST is simpler.\n\nThe costs to say out loud: server-side complexity (resolvers, schema), HTTP caching no longer free (everything is a POST to one endpoint — you need persisted queries or application-level caching), rate limiting harder (one query can be cheap or enormous — cost analysis needed), and the server-side N+1 problem: a naive resolver fetches each list item's relations one by one; the fix is batching with a DataLoader-style layer.\n\nREST's strengths remain real: simplicity, cache-friendliness, universal tooling. The honest answer is per-situation, never \"GraphQL is newer therefore better\"."
     },
     {
       "id": "grpc",
@@ -23,7 +24,8 @@
       "category": "backend",
       "relatedTopicIds": [
         "api_design"
-      ]
+      ],
+      "studyNotes": "gRPC is contract-first RPC over HTTP/2 with Protocol Buffers: a .proto file defines the strict contract, code generation produces typed client and server stubs, messages travel as compact binary. It is built for service-to-service calls: low latency, multiplexed HTTP/2 connections, and native streaming — server-side (a feed of updates), client-side (uploading chunks), and bidirectional (live sync).\n\nWhen it wins: internal microservice communication where performance and a strict typed contract matter — a payment-service call generates its client from the proto and cannot silently drift from the contract.\n\nThe limitations that complete the answer: browsers cannot call gRPC natively (grpc-web plus a proxy is required), binary payloads are harder to debug than JSON (no curl-and-look), and external partners generally find REST/JSON friendlier. So the typical shape is REST at the edge for people and partners, gRPC inside between services."
     },
     {
       "id": "realtime_transports",
@@ -33,7 +35,8 @@
       "relatedTopicIds": [
         "websocket",
         "api_integration"
-      ]
+      ],
+      "studyNotes": "Four ways to get data to the other side, distinguished by direction and initiator:\n\n- Polling — client pulls repeatedly. Simple, works everywhere, wasteful at frequency; fine for low-frequency checks.\n- SSE (Server-Sent Events) — one-way server push over plain HTTP with automatic reconnection. Right for notifications, live feeds, dashboards.\n- WebSocket — a persistent, bidirectional connection. Right when the client also sends continuously: chat, games, collaborative editing.\n- Webhook — server-to-server callback: your system POSTs to a registered URL when an event happens. Right for third-party integrations; brings retries, signatures, idempotency and delivery logging as your responsibility.\n\nThe scaling note that marks a senior answer: persistent connections cost server resources and complicate load balancing — a WebSocket binds to an instance (stateful), so horizontal scaling needs a pub/sub backbone (Redis) behind the instances. SSE multiplexes over HTTP/2 and passes proxies more easily. Choose by direction of data flow first, operational cost second."
     }
   ],
   "questions": [

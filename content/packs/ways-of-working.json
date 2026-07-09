@@ -14,7 +14,8 @@
       "category": "soft_technical",
       "relatedTopicIds": [
         "kanban"
-      ]
+      ],
+      "studyNotes": "Scrum is empirical process control packaged into a framework: fixed-length sprints (timeboxes), defined roles — Product Owner (what and why, backlog ordering), Scrum Master (process health, impediments), Developers (how) — and events: sprint planning, daily scrum, review (inspect the product), retrospective (inspect the process). Artifacts: product backlog, sprint backlog, increment; each with a commitment (goal / sprint goal / definition of done).\n\nThe mechanism underneath the ceremonies: short cycles force inspection and adaptation — every sprint produces a usable increment and two feedback loops, one on the product (review) and one on the way of working (retro).\n\nWhen Scrum fits: planned feature work in a stable team that benefits from a protected sprint scope and a cadence. When it chafes: interrupt-driven work — support, ops, urgent fixes — where a sprint commitment is fiction from day two; that is Kanban territory."
     },
     {
       "id": "kanban",
@@ -23,7 +24,8 @@
       "category": "soft_technical",
       "relatedTopicIds": [
         "scrum"
-      ]
+      ],
+      "studyNotes": "Kanban manages FLOW instead of timeboxes: visualize the work on a board, LIMIT work in progress, and manage/measure the flow (lead time, cycle time). No prescribed roles or ceremonies — it wraps around what the team already does; change is evolutionary.\n\nWIP limits are the engine, and the interview question is why they help: less parallel work means less context switching, queues become visible instead of hidden in \"in progress\", finishing beats starting (pull, not push), and blocked items surface immediately because they visibly clog a column. Counterintuitively, limiting WIP RAISES throughput — Little's Law in practice.\n\nFit: interrupt-driven and continuous-arrival work — support, operations, maintenance — where priorities shift faster than any sprint could hold. Scrum vs Kanban is not a religion question: cadence and commitment vs continuous flow; many teams run a pragmatic mix (Scrumban)."
     },
     {
       "id": "sdlc_models",
@@ -33,7 +35,8 @@
       "relatedTopicIds": [
         "scrum",
         "devops_culture"
-      ]
+      ],
+      "studyNotes": "The models, by their bet on requirements: waterfall — sequential phases, everything specified up front; V-model — waterfall with a test level mirroring each specification level; iterative/incremental — build in slices, learn between them; spiral — iterations explicitly driven by risk analysis; agile — short cycles, evolving requirements, continuous feedback.\n\nThe honest selection logic: it depends on requirement STABILITY and the COST OF LATE CHANGE. Fixed, well-understood, contract-bound requirements — a regulated medical device, a fixed-bid tender with heavy audit/documentation demands — genuinely favor plan-driven models; the V-model's spec-to-test traceability exists for exactly those audits. Evolving requirements and product discovery favor agile: short feedback loops keep late change cheap instead of catastrophic.\n\nThe mature closing point: real teams run hybrids — plan-driven governance at the milestone level with agile delivery inside; or agile development with a formal verification phase where regulation requires it. Naming a credible hybrid beats declaring one model universally right."
     },
     {
       "id": "devops_culture",
@@ -43,7 +46,8 @@
       "relatedTopicIds": [
         "deployment",
         "sdlc_models"
-      ]
+      ],
+      "studyNotes": "DevOps is a culture before it is a toolchain: tearing down the wall between \"dev throws it over\" and \"ops runs it\". The slogan that captures it — \"you build it, you run it\": the team that writes the software owns it in production, pager included. Shared ownership changes incentives; tooling merely enables it.\n\nThe practices that make it real:\n- CI/CD — every change built, tested and deployable automatically; deploys are boring and frequent, not quarterly events.\n- Infrastructure as code — environments versioned and reproducible, not hand-crafted.\n- Observability and fast feedback — monitoring, alerting, quick rollback; production tells you the truth quickly.\n\nHow to measure whether it is working — the DORA four: deployment frequency, lead time for changes, change failure rate, time to restore. Improving those numbers IS improving DevOps; a tool purchase without them moving is theater."
     }
   ],
   "questions": [
