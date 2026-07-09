@@ -1,7 +1,7 @@
 {
   "id": "data_at_scale",
   "name": "Data patterns at scale",
-  "description": "Outbox pattern and delivery guarantees, sharding and hot partitions, replication, optimistic locking and the N+1 problem — from the Dennemeyer system design 100-topic doc.",
+  "description": "Data at scale from the Dennemeyer 100: outbox, sharding and hot shards, replication and read-your-writes, optimistic locking, SQL performance (indexes, N+1, pools), caching and invalidation, and scaling fundamentals.",
   "sources": [
     "dennemeyer_system_design_100_tema_peldakkal_mobile_hu"
   ],
@@ -15,7 +15,8 @@
         "message_queue",
         "event_driven",
         "idempotency"
-      ]
+      ],
+      "studyNotes": "The problem: a service must change its database AND announce the change as an event — but a DB commit and a message publish are two systems, and a crash between them either loses the event or announces something that never committed. Distributed transactions across DB and broker are impractical.\n\nThe outbox pattern solves it with ONE transaction in ONE system: in the same DB transaction that saves the business data (the renewal), insert the event into an outbox table (RenewalCreated). Commit is atomic — either both exist or neither. A separate worker (poller or CDC) reads the outbox and publishes to the broker, marking rows as sent.\n\nThe consequence to say out loud: delivery becomes at-least-once — the worker may crash after publishing but before marking, so the event can go out twice. Consumers must therefore be idempotent (processed-event table keyed by eventId). Pair: outbox gives you reliable publication, idempotent consumers make the duplicates harmless."
     },
     {
       "id": "sharding",
@@ -25,7 +26,8 @@
       "relatedTopicIds": [
         "scalability",
         "nosql"
-      ]
+      ],
+      "studyNotes": "Splitting data across multiple nodes/databases when one no longer carries the data or traffic. It is a last resort, not a default — first exhaust indexing, caching, and read replicas.\n\nThe design decision is the shard key. A good key spreads load evenly AND still supports your main queries (hash of customerId is the classic). The failure mode is the hot shard: shard by country and most traffic comes from one country; shard by tenantId and one giant customer melts a single shard. Hashing or sub-partitioning the big tenant helps.\n\nThe costs that come with sharding: cross-shard queries (fan-out and merge — expensive), rebalancing when adding nodes, and losing cross-shard transactions. Every one of these is a reason to delay sharding until genuinely necessary."
     },
     {
       "id": "replication",
@@ -35,7 +37,8 @@
       "relatedTopicIds": [
         "scalability",
         "sql"
-      ]
+      ],
+      "studyNotes": "One primary takes writes; read replicas serve reads. This scales read-heavy load and isolates expensive workloads — dashboards and reporting read from replicas so they cannot slow down transactional writes.\n\nThe catch is replica lag: replication is asynchronous, so a fresh write is not instantly visible on the replica. The pattern to describe: right after a payment succeeds, read the status back from the PRIMARY (read-your-own-writes); the dashboard can tolerate a few seconds of lag, the confirmation screen cannot.\n\nReplication also underpins failover: promote a replica when the primary dies — which is an availability story, distinct from the read-scaling story, and worth separating in an interview answer."
     },
     {
       "id": "optimistic_locking",
@@ -44,7 +47,45 @@
       "category": "database",
       "relatedTopicIds": [
         "transactions"
-      ]
+      ],
+      "studyNotes": "Two admins edit the same record; the second save silently overwrites the first — unless you check. Optimistic locking: carry a version with the data; on save, compare. Client saves based on version 7 but the row is already version 8 → reject with 409 Conflict; the client reloads and reapplies.\n\n\"Optimistic\" because you take no lock while editing — you assume conflicts are rare and detect them at write time. The pessimistic alternative locks the row up front: safer under heavy contention, but holds locks across user think-time, which kills throughput.\n\nThis connects to isolation levels: higher isolation makes concurrent transactions safer but locks more; optimistic versioning is often the practical answer for user-facing edit flows where transactions cannot span the whole edit session."
+    },
+    {
+      "id": "sql_performance",
+      "name": "SQL Performance: Indexes, Transactions & Pools",
+      "description": "Indexing trade-offs, transactions and isolation, SQL vs NoSQL, the N+1 problem, connection pools.",
+      "category": "database",
+      "relatedTopicIds": [
+        "indexes",
+        "transactions",
+        "sql",
+        "nosql"
+      ],
+      "studyNotes": "Indexes are fast lookup paths: index the columns you filter, sort, or join on (customerId, status, createdAt — a combined index if they are queried together). The trade-off: indexes speed reads but slow writes and consume space — every insert updates every index. Missing index = table scan; too many indexes = write amplification.\n\nTransactions group operations into one atomic unit: save the renewal AND its first status-history entry, or roll both back. For payment, legal status, and money, half-saved state is not acceptable. Isolation levels tune how much concurrent transactions see of each other's unfinished work: higher = safer but more locking; lower = faster but dirty/phantom-read anomalies. Say it as a consistency-vs-performance trade-off.\n\nSQL vs NoSQL is decided by ACCESS PATTERN, not fashion: relations, joins, transactions, strong consistency → SQL (customer/invoice/payment). Flexible schema, huge scale, document/event/log-shaped data, key-based lookups → NoSQL is a candidate (audit events, document metadata).\n\nThe N+1 problem: fetch 100 renewals, then run 100 more queries for each one's customer. Fix with joins, eager loading, or batch loading (DataLoader-style batching by id set).\n\nConnection pools: opening a connection per request is expensive, so a pool reuses them. Too small → requests queue; too big → the DB drowns. The multi-pod trap: pools ADD UP — 10 pods × 50 connections = 500 against one database. Pool size is a global decision, not a per-instance one."
+    },
+    {
+      "id": "caching_strategies",
+      "name": "Caching & Invalidation",
+      "description": "When to cache, the failure modes (stale data, stampede), and invalidation strategies.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "caching",
+        "cdn",
+        "sql_performance"
+      ],
+      "studyNotes": "Caching keeps frequently read data close and fast — Redis, CDN, or in-memory. But before adding one, understand the read pattern and the consistency need: a customer-portfolio summary can be cached in Redis for five minutes; a payment status must come fresh from the source. Caching the wrong thing shows customers stale business data.\n\nThe dangers to name: stale data, invalidation complexity, and cache stampede (a hot key expires and a thundering herd hits the database simultaneously — mitigate with staggered TTLs or request coalescing).\n\nInvalidation options, in practice usually combined:\n- TTL: simplest — data may be up to N minutes old, and that is an explicit product decision.\n- Explicit invalidation: on update, delete the affected keys (trademark status changes → drop the dashboard cache key). Precise, but you must find every affected key.\n- Write-through: write updates the cache and the store together — cache stays warm and current, writes cost more.\n- Background refresh: a job re-computes hot entries before they expire.\n\nThe two hard problems joke exists because invalidation IS the hard part: every strategy is a different answer to \"how stale is acceptable, and who pays to keep it fresh?\"."
+    },
+    {
+      "id": "scaling_fundamentals",
+      "name": "Scaling Fundamentals",
+      "description": "Horizontal vs vertical, stateless services, latency vs throughput, percentiles, and finding the bottleneck.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "scalability",
+        "sql_performance",
+        "session_vs_token"
+      ],
+      "studyNotes": "Vertical scaling: a bigger machine. Horizontal: more instances/pods — more flexible in cloud/Kubernetes, but it REQUIRES the app to be stateless or to externalize its state. A JWT REST API is stateless (any pod serves any request — load balancing is trivial); a WebSocket service is stateful (the connection binds to an instance — Redis pub/sub bridges the gap).\n\nScalability vs elasticity: scalability is being ABLE to handle more with more resources; elasticity is scaling automatically both ways (Kubernetes HPA from 3 to 10 pods under load, back to 3 after). The senior addendum: scaling DOWN safely and cost control matter as much as scaling up.\n\nThe measurement vocabulary:\n- Latency vs throughput: one request's response time vs requests handled per second. A system can push 5000 req/s while p95 latency is 2s — great throughput, bad experience.\n- Percentiles: averages lie. Average 80ms with p99 at 3s means a real slice of users suffers; tail latency is what you set objectives on (p95/p99), not means.\n- Bottleneck: the actual constraint — DB query, missing index, connection pool, CPU, memory, network, an external API, lock contention, even excessive logging. MEASURE first; adding pods when the DB is the bottleneck makes things worse (more pods = more connections hammering the same DB)."
     }
   ],
   "questions": [
@@ -396,6 +437,269 @@
           "expectedPoints": []
         }
       ]
+    },
+    {
+      "id": "das_sqlperf_001",
+      "title": "Diagnosing a slow list endpoint",
+      "prompt": "A list endpoint backed by SQL got slow as data grew. Walk me through your diagnosis and the usual culprits.",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "sql_performance"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "sp_index",
+          "label": "Index analysis first",
+          "description": "Check the query plan; index the filtered/sorted/joined columns; know indexes slow writes.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "index",
+            "query plan",
+            "explain",
+            "table scan",
+            "filtered columns",
+            "slows writes"
+          ]
+        },
+        {
+          "id": "sp_nplus1",
+          "label": "Spots N+1",
+          "description": "One list query then per-row queries; fix with join/eager/batch loading.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "n+1",
+            "n plus one",
+            "query per row",
+            "join",
+            "eager loading",
+            "batch"
+          ]
+        },
+        {
+          "id": "sp_pool",
+          "label": "Connection pool math",
+          "description": "Pool too small queues requests; pools multiply across pods against one DB.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "connection pool",
+            "pods multiply",
+            "pool size",
+            "too many connections"
+          ]
+        },
+        {
+          "id": "sp_measure",
+          "label": "Measures before scaling",
+          "description": "DB time, external calls, locks — find the bottleneck before adding servers.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "measure",
+            "bottleneck",
+            "before scaling",
+            "lock contention",
+            "profiling"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "das_caching_001",
+      "title": "Introducing a cache without lying to users",
+      "prompt": "A dashboard aggregate is expensive and read constantly. How do you cache it, and how do you keep users from seeing wrong data?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "caching_strategies"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "ca_fit",
+          "label": "Cache-fit judgment",
+          "description": "Read pattern + consistency need decide; summaries cacheable, payment status fresh.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "read pattern",
+            "consistency",
+            "how stale",
+            "not everything",
+            "payment fresh"
+          ]
+        },
+        {
+          "id": "ca_invalidation",
+          "label": "Invalidation strategy",
+          "description": "TTL vs explicit delete on update vs write-through vs background refresh.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "ttl",
+            "invalidate on update",
+            "write-through",
+            "delete the key",
+            "background refresh"
+          ]
+        },
+        {
+          "id": "ca_stampede",
+          "label": "Stampede awareness",
+          "description": "Hot key expiry → thundering herd; stagger TTLs or coalesce requests.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "stampede",
+            "thundering herd",
+            "same time",
+            "staggered",
+            "coalesc"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "das_scaling_001",
+      "title": "Scale out or scale up?",
+      "prompt": "Traffic is growing. How do you decide between scaling vertically and horizontally, and what has to be true about the service for horizontal scaling to work?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "system_design"
+      ],
+      "topicIds": [
+        "scaling_fundamentals"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "sc_hv",
+          "label": "Horizontal vs vertical trade-off",
+          "description": "Bigger machine vs more pods; horizontal is the cloud default but has preconditions.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "horizontal",
+            "vertical",
+            "more instances",
+            "bigger machine",
+            "more pods"
+          ]
+        },
+        {
+          "id": "sc_stateless",
+          "label": "Statelessness precondition",
+          "description": "Any pod must serve any request; state externalized (JWT, Redis); sticky state blocks scaling.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "stateless",
+            "any pod",
+            "externalize state",
+            "sticky",
+            "websocket is stateful"
+          ]
+        },
+        {
+          "id": "sc_bottleneck",
+          "label": "Bottleneck first",
+          "description": "If the DB is the constraint, more pods make it worse; measure before scaling.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "bottleneck",
+            "database is the limit",
+            "more pods won't help",
+            "measure first"
+          ]
+        },
+        {
+          "id": "sc_percentiles",
+          "label": "Tail latency literacy",
+          "description": "p95/p99 over averages; throughput ≠ good latency.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "p95",
+            "p99",
+            "percentile",
+            "tail latency",
+            "average is misleading"
+          ]
+        }
+      ],
+      "followUps": []
     }
   ]
 }

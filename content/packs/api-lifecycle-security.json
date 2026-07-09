@@ -1,7 +1,7 @@
 {
   "id": "api_lifecycle_security",
   "name": "API lifecycle & security",
-  "description": "API versioning and backward compatibility, OAuth2/OIDC/JWT, RBAC vs ABAC — from the Dennemeyer system design 100-topic doc.",
+  "description": "API lifecycle and security from the Dennemeyer 100: contracts and data exchange, versioning/compatibility/deprecation, OAuth/OIDC/JWT, RBAC vs ABAC, API security essentials, and integration styles (webhooks, pagination, gRPC, sync vs async).",
   "sources": [
     "dennemeyer_system_design_100_tema_peldakkal_mobile_hu"
   ],
@@ -13,7 +13,8 @@
       "category": "backend",
       "relatedTopicIds": [
         "api_design"
-      ]
+      ],
+      "studyNotes": "Changing an API without breaking existing clients. The version can live in the URL (/v1/renewals → /v2/renewals), a header, or the media type. The compatibility rules matter more than the mechanism: ADDING an optional field is generally safe; deleting or renaming an existing field is a breaking change — clients that expect status will break when it becomes state.\n\nBackward compatibility in practice: support both forms for a transition period rather than switching abruptly. If you rename a field, ship both, backfill, and retire the old one only after a communicated deprecation.\n\nDeprecation is a process, not a flag: the old endpoint or field still works but is documented as deprecated, with a migration guide and a deadline. For external customers this is non-negotiable — an integration that silently dies is the worst possible API experience. A six-month sunset with a documented replacement is the pattern to describe."
     },
     {
       "id": "oauth_oidc",
@@ -23,7 +24,8 @@
       "relatedTopicIds": [
         "authentication",
         "authorization"
-      ]
+      ],
+      "studyNotes": "The one-line separation that interviewers listen for: OAuth is authorization — what may this app or user do (scopes); OIDC is an authentication layer on top of OAuth — who IS the user; JWT is a token format carrying claims (userId, roles, scopes, expiry) — often the envelope for both.\n\nIn flow terms: an OIDC login tells you who the user is; OAuth scopes decide whether they may call the renewals API; the JWT carries those claims to every request, verified by signature.\n\nThey are frequently confused because they travel together — but one is a protocol for delegated access, one an identity layer, and one a data format. Any of the three can appear without the others: OAuth access tokens may be opaque strings rather than JWTs, and JWTs are used far outside OAuth."
     },
     {
       "id": "rbac_abac",
@@ -32,7 +34,45 @@
       "category": "security",
       "relatedTopicIds": [
         "authorization"
-      ]
+      ],
+      "studyNotes": "First the parent distinction: authentication is \"who are you?\", authorization is \"what may you do?\" — login establishes identity, but every data access still needs a permission check (does THIS user see THIS customer's portfolio?).\n\nRBAC — role-based access control: permissions attach to roles (Admin, Support Agent, Finance User, Read-only), users get roles. Simple, explainable, auditable — but rigid when exceptions multiply.\n\nABAC — attribute-based access control: decisions computed from attributes of user, resource and context — user.companyId == document.companyId AND document.sensitivity != restricted. Far more flexible, notably harder to test and debug.\n\nComplete the answer with least privilege: every user, service and process gets the MINIMUM permission it needs. A reporting service that only reads should not be able to delete; service-to-service calls use scoped tokens. Start with RBAC for clarity; add attribute conditions where real rules demand them."
+    },
+    {
+      "id": "api_contract_design",
+      "name": "API Contracts & Data Exchange",
+      "description": "The API as a contract; DTOs, canonical data models, mapping, and validation vs business rules.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "api_design",
+        "api_versioning",
+        "rest"
+      ],
+      "studyNotes": "An API is not a list of endpoints — it is a CONTRACT between clients and the backend: stable request/response shapes, validation, consistent error codes, pagination, versioning, auth, and documentation. External customers build on the contract, not on your code; OpenAPI/Swagger makes it machine- and human-readable so a partner integrates from the spec (request body, response examples, error codes) without seeing internals.\n\nThe layers that keep the contract stable:\n- DTOs: the objects that cross the API are NOT your database entities. A RenewalRequestDto exposes customerId and trademarkId; the entity's internal notes and audit columns stay inside. This prevents leaking the internal model and keeps the contract stable while internals evolve.\n- Domain model vs database model: the domain object (a Renewal with status-transition rules) may map to several tables (renewals, payments, status_history). Different concerns, different shapes.\n- Canonical data model: in a data-exchange platform, every partner's format converts to ONE internal model. Two partners send different field names; internally everything is TrademarkRenewal { trademarkId, dueDate, customerId }. The core system never learns each partner's quirks.\n- Data mapping: the conversion layer — date formats, enums, country codes (DE vs \"Germany\" → ISO), currencies, optional/required mismatches. Keep it explicit, tested, versioned.\n\nValidation vs business rule — different failures, different handling: validation is technical form (date parses, enum known, required present → 400); a business rule is domain truth (trademark not renewable because it expired → 409/422 with a domain error). Schema evolution ties it together: consumers must tolerate added fields; removing or renaming is the breaking change."
+    },
+    {
+      "id": "api_security_essentials",
+      "name": "API Security Essentials",
+      "description": "Beyond login: input validation, secrets, encryption in transit/at rest, audit logging.",
+      "category": "security",
+      "relatedTopicIds": [
+        "security_basics",
+        "rate_limiting",
+        "auth_security_checklist"
+      ],
+      "studyNotes": "API security is not just login. The full list: authentication, authorization, input validation, rate limiting, audit logging, secrets management, least privilege, and safe error responses.\n\nThe rule that anchors everything: the backend validates EVERYTHING, because the frontend can be bypassed — the API is directly callable. Input validation covers required fields, types, lengths, enums, dates — and authorization-by-data: the user asked for customer 456's portfolio, but their token says customer 123 → deny, regardless of what the request claims.\n\nSecrets — DB passwords, API keys, JWT signing secrets, OAuth client secrets, private keys — never live in Git or logs. They belong in a secrets manager (Vault, AWS Secrets Manager, Kubernetes Secrets) and are injected at runtime.\n\nEncryption comes in two independent layers: in transit (TLS/HTTPS everywhere — browser to API AND service to service — protecting tokens and data from sniffing) and at rest (database, disks, backups, object storage encrypted — storage-level access does not yield plaintext). Neither replaces authorization; they are additional layers.\n\nAudit logging is distinct from debug logging: it proves WHO did WHAT — who changed the trademark status, when, from what old value to what new value, under which requestId. For IP, payment and legal data this is a compliance requirement, not a nice-to-have."
+    },
+    {
+      "id": "integration_styles",
+      "name": "Webhooks, Polling & Communication Styles",
+      "description": "Webhook vs polling, cursor pagination, REST vs RPC/gRPC, sync vs async, schema evolution.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "rest",
+        "grpc",
+        "message_queue",
+        "api_versioning"
+      ],
+      "studyNotes": "How systems talk to each other — the choices and their trade-offs.\n\nWebhook vs polling: polling has the client ask periodically (simple, wasteful — a partner hitting the status endpoint every minute); a webhook has YOUR system call the customer's URL on events (efficient, but now you own retries, signature validation, idempotency, timeouts, and delivery logging). Webhooks are a distributed-systems commitment, not just a POST.\n\nPagination: offset is simple but unstable on changing lists — items shift between pages, causing duplicates or gaps at offset=5000. Cursor-based pagination (?cursor=abc&limit=50) is stable on large, continuously changing data — the usual choice for external APIs.\n\nREST vs RPC: REST is resource-centric (POST /renewals), RPC operation-centric (POST /submitRenewal). Neither always wins: external documented integrations lean REST (OpenAPI tooling); internal high-performance service calls lean gRPC — typed, binary Protocol Buffers, fast, code-generated contracts — at the cost of being less convenient for external clients and harder to debug than JSON.\n\nSync vs async: synchronous calls are simple but a slow dependency blocks the caller. Async — validate the request, enqueue the heavy work (document generation), answer 202/PENDING — decouples from slow or unreliable downstreams. The UI shows pending honestly.\n\nSchema evolution spans all of it: consumers must tolerate new optional fields (statusReason appears — old consumers keep working); deleting, renaming, retyping, or surprising enum values are the breaking changes. In a data-exchange platform this discipline is existential."
     }
   ],
   "questions": [
@@ -306,6 +346,295 @@
           "expectedPoints": []
         }
       ]
+    },
+    {
+      "id": "als_contract_001",
+      "title": "Designing an API as a contract",
+      "prompt": "You are exposing an API to external customers who integrate against it. What makes it a good contract, and how do you keep your internal model from leaking into it?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review",
+        "concept_check"
+      ],
+      "topicIds": [
+        "api_contract_design"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "cd_contract",
+          "label": "Contract thinking",
+          "description": "Stable shapes, consistent errors, pagination, versioning, docs — clients build on the contract.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "contract",
+            "stable",
+            "error codes",
+            "documentation",
+            "openapi",
+            "swagger",
+            "clients depend"
+          ]
+        },
+        {
+          "id": "cd_dto",
+          "label": "DTO ≠ entity",
+          "description": "API objects are separate from DB/domain models; internals stay private and evolvable.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "dto",
+            "not the database entity",
+            "separate model",
+            "don't leak",
+            "internal fields"
+          ]
+        },
+        {
+          "id": "cd_canonical",
+          "label": "Canonical model + explicit mapping",
+          "description": "Partner formats normalize to one internal model; mapping is tested and versioned.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "canonical",
+            "internal model",
+            "normalize",
+            "mapping",
+            "country code",
+            "different formats"
+          ]
+        },
+        {
+          "id": "cd_validation",
+          "label": "Validation vs business rule",
+          "description": "Technical form errors (400) vs domain refusals (409/422) — separated handling.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "validation",
+            "business rule",
+            "400",
+            "409",
+            "malformed",
+            "not allowed"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "als_apisec_001",
+      "title": "Securing an API beyond login",
+      "prompt": "Authentication is done. What else belongs to API security before you expose the service?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "api_security_essentials"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "as_backend_validation",
+          "label": "Backend validates everything",
+          "description": "Frontend is bypassable; types/enums/lengths AND data-level authorization checks.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "backend validation",
+            "frontend can be bypassed",
+            "directly callable",
+            "input validation",
+            "own data only"
+          ]
+        },
+        {
+          "id": "as_secrets",
+          "label": "Secrets out of Git and logs",
+          "description": "Secret manager / K8s Secrets; injected at runtime.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "secrets manager",
+            "not in git",
+            "vault",
+            "kubernetes secret",
+            "not in logs"
+          ]
+        },
+        {
+          "id": "as_encryption",
+          "label": "Encryption in transit and at rest",
+          "description": "TLS everywhere including service-to-service; encrypted storage/backups; neither replaces authz.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "tls",
+            "https",
+            "in transit",
+            "at rest",
+            "encrypted backups",
+            "service to service"
+          ]
+        },
+        {
+          "id": "as_audit",
+          "label": "Audit logging",
+          "description": "Who did what, when, old/new value — distinct from debug logs.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "audit log",
+            "who did what",
+            "old and new value",
+            "compliance",
+            "traceable"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "als_integration_001",
+      "title": "Webhook or polling — and what comes with it",
+      "prompt": "A partner wants real-time updates about renewal status changes. Compare polling and webhooks, and describe what a production webhook implementation needs.",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "system_design"
+      ],
+      "topicIds": [
+        "integration_styles"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "is_tradeoff",
+          "label": "Polling vs webhook trade-off",
+          "description": "Polling: simple, wasteful. Webhook: efficient push, but retry/security/tracking become your problem.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "polling",
+            "webhook",
+            "push",
+            "wasteful",
+            "client asks",
+            "we call them"
+          ]
+        },
+        {
+          "id": "is_webhook_prod",
+          "label": "Production webhook checklist",
+          "description": "Retries with backoff, signature validation, idempotency, timeout, delivery log.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "retry",
+            "signature",
+            "idempoten",
+            "timeout",
+            "delivery log",
+            "hmac"
+          ]
+        },
+        {
+          "id": "is_pagination",
+          "label": "Cursor pagination for changing lists",
+          "description": "Offset duplicates/skips on moving data; cursor is stable for external APIs.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "cursor",
+            "offset",
+            "duplicates",
+            "stable pagination",
+            "changing list"
+          ]
+        },
+        {
+          "id": "is_async",
+          "label": "Async for slow work",
+          "description": "Validate, enqueue, return pending — do not block the request on document generation.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "queue",
+            "async",
+            "pending",
+            "202",
+            "not block"
+          ]
+        }
+      ],
+      "followUps": []
     }
   ]
 }

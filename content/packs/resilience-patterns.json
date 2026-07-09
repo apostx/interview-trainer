@@ -1,7 +1,7 @@
 {
   "id": "resilience_patterns",
   "name": "Resilience & production readiness",
-  "description": "Circuit breaker, timeout/retry budgets, bulkhead, backpressure, SLO/error budget and production readiness — from the Dennemeyer system design 100-topic doc.",
+  "description": "Reliability patterns from the Dennemeyer 100: circuit breakers and cascading failure, backpressure and rate limiting, SLO/SLA/error budgets, production readiness (health checks, graceful shutdown, deploy strategies, observability), idempotent retries, and the resilience toolkit.",
   "sources": [
     "dennemeyer_system_design_100_tema_peldakkal_mobile_hu"
   ],
@@ -14,7 +14,8 @@
       "relatedTopicIds": [
         "reliability",
         "retries"
-      ]
+      ],
+      "studyNotes": "When a downstream keeps failing, stop calling it for a while. Retrying INTO a failing dependency makes the outage worse — the breaker is what prevents that.\n\nThree states: closed (normal, calls pass, failures counted), open (threshold exceeded — e.g. 50% of calls to the payment service failing — calls fail fast or fall back without touching the dependency), half-open (after a cooldown, a few probe calls; success closes the breaker, failure re-opens it).\n\nThe breaker exists because of cascading failure: one slow component topples the rest. The canonical chain: payment service slows → API requests wait on it → connection/thread pools fill → users retry → even more load. The defense stack against that chain: timeouts on every network call (waiting forever is worse than failing predictably — return pending or a controlled error after 3s), circuit breakers, queues, backoff, rate limits. Timeouts and breakers work as a pair: the timeout caps a single call, the breaker recognizes the pattern."
     },
     {
       "id": "backpressure",
@@ -24,7 +25,8 @@
       "relatedTopicIds": [
         "reliability",
         "message_queue"
-      ]
+      ],
+      "studyNotes": "A healthy system signals that it cannot take more work and slows intake — controlled degradation beats collapse. Signals and mechanisms: bounded queues (reject when full), HTTP 429, rate limiting, switching to async processing (202 Accepted + pending), autoscaling.\n\nThe example to give: queue age starts climbing → the API stops accepting new heavy jobs synchronously and answers 202/pending, or throttles non-critical endpoints (reporting) so the core flow stays alive.\n\nRate limiting vs throttling nuance: a rate limit is a fixed rule per user/API key (1000 requests/minute → 429 Too Many Requests); throttling is adaptive slowing under load. Both protect against overload, abuse, and cost explosions — and both are backpressure made visible to clients."
     },
     {
       "id": "slo_sla",
@@ -34,7 +36,8 @@
       "relatedTopicIds": [
         "observability",
         "reliability"
-      ]
+      ],
+      "studyNotes": "Three letters, three different things:\n- SLI — the measured indicator: latency, error rate, availability.\n- SLO — your internal target on an SLI: \"p95 under 500ms for 99% of the month\", \"99.9% successful responses\".\n- SLA — the contractual promise to a customer, often with compensation attached. SLAs are looser than SLOs; you want to breach your internal target long before the contract.\n\nThe error budget makes SLOs actionable: 99.9% allows ~43 minutes of downtime a month — that is budget to SPEND. Budget remaining → ship faster, take deploy risk. Budget exhausted → feature rollouts yield to reliability work, alert tuning, incident follow-ups. It is the mechanism that connects a technical decision to business risk in one sentence.\n\nPercentile literacy belongs here: averages hide the tail. Average 80ms with p99 at 3s means your slowest users suffer invisibly — which is why SLOs are set on p95/p99, not means. And alerts should fire on SLO-relevant, actionable conditions (error rate above 5% for 10 minutes), not on noise (a single CPU spike)."
     },
     {
       "id": "production_readiness",
@@ -44,7 +47,33 @@
       "relatedTopicIds": [
         "observability",
         "deployment"
-      ]
+      ],
+      "studyNotes": "What must be true before traffic hits a service.\n\nHealth checks split in two: liveness (is the process alive — restart it if not) and readiness (can it take traffic — DB connected, config loaded). During rollout the new pod is alive but NOT ready until its dependencies are up; readiness gates the traffic. This is what makes zero-downtime deploys real.\n\nGraceful shutdown is the other half: on termination, flip readiness to false, stop accepting new requests, finish in-flight ones, close DB/Redis connections, then exit. Without it, every deploy drops requests.\n\nDeployment strategies ranked by risk appetite: rolling update (gradual pod replacement — the K8s default), blue-green (two environments, instant switch-back), canary (new version gets 5% of traffic; error rate rises → rollback), feature flags (code deployed dark, feature switched on separately). The theme: shrink the blast radius of every release.\n\nObservability is the third leg — logs, metrics, traces (not just logging): a correlation ID travels through every service so one customer's failure is traceable end to end (API log → payment service log → DB latency metric); structured logs (event=payment_failed, customerId, requestId, reason) make Kibana/Grafana queries possible; alerts fire on actionable conditions."
+    },
+    {
+      "id": "idempotency_retries",
+      "name": "Idempotency & Retries",
+      "description": "Safe retries: idempotency keys, backoff, DLQs, and at-least-once delivery.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "idempotency",
+        "retries",
+        "message_queue",
+        "outbox_pattern"
+      ],
+      "studyNotes": "The starting assumption for external APIs and queues: retries WILL happen — timeouts, crashed consumers, at-least-once brokers. So writes must be safe to repeat.\n\nIdempotency: the same request processed twice causes ONE side effect. The client's renewal request times out and is re-sent with the same idempotency key → the backend recognizes the key and does not create a second renewal. Mechanisms: idempotency key + unique constraint, or a processed-events table keyed by eventId.\n\nRetry discipline: transient failures (503 from a payment provider) are retried with exponential backoff — 1s, 2s, 4s — never instantly and aggressively (that is how you finish off a struggling dependency). Invalid BUSINESS data is not retried at all: it fails fast and visibly. Distinguishing the two classes is the interview point.\n\nDLQ — dead-letter queue: where terminally failed messages land for inspection instead of blocking the queue or being lost. Alert on DLQ depth.\n\nAt-least-once delivery ties it together: brokers typically guarantee delivery by allowing duplicates. The same PaymentCompleted event arrives twice; the consumer sees eventId already processed and does not send two invoices. Exactly-once is approximated by at-least-once delivery + idempotent consumers — say it exactly like that."
+    },
+    {
+      "id": "resilience_toolkit",
+      "name": "The Resilience Toolkit",
+      "description": "Resilience vs fault tolerance, bulkheads, fallbacks, and honest degradation.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "circuit_breaker",
+        "backpressure",
+        "reliability"
+      ],
+      "studyNotes": "Resilience: the system does not collapse entirely under failure — it degrades partially or recovers fast. The notification service dying must not stop the renewal flow; the email waits in a queue and is retried later. Fault tolerance is the narrower term: surviving CONCRETE component failures — a pod dies, Kubernetes restarts it; an instance goes unhealthy, the load balancer routes around it.\n\nBulkhead isolation: partition resources so one failing area cannot drag down the rest — a separate worker pool for document processing, a separate connection pool for payment calls. When document processing floods, the public API keeps answering. Named after ship compartments for exactly the right reason.\n\nFallback: a defined degraded behaviour when a dependency fails — serve slightly stale data from cache, mark the result pending, defer the email. The honesty rule from the source: for critical business operations, NEVER fake success. Explicit pending or failed beats a lie that unwinds later; if reporting is down, the core renewal flow proceeds and the auxiliary data shows as pending.\n\nThe toolkit composes with timeouts, circuit breakers, rate limits and backpressure (their own topics) — in an interview, pick the failure scenario first, then name which tool addresses which link of the chain."
     }
   ],
   "questions": [
@@ -489,6 +518,193 @@
           "expectedPoints": []
         }
       ]
+    },
+    {
+      "id": "res_idempotency_001",
+      "title": "Retries without double effects",
+      "prompt": "A client times out and re-sends a payment request; a queue redelivers an event. How do you make sure nothing happens twice?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "concept_check"
+      ],
+      "topicIds": [
+        "idempotency_retries"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "ir_key",
+          "label": "Idempotency mechanism",
+          "description": "Idempotency key / unique constraint / processed-event table — same request, one effect.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "idempotency key",
+            "unique constraint",
+            "processed",
+            "eventid",
+            "one side effect",
+            "no duplicate"
+          ]
+        },
+        {
+          "id": "ir_backoff",
+          "label": "Backoff + failure classing",
+          "description": "Exponential backoff for transient errors; invalid business data fails fast, no retry.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "backoff",
+            "exponential",
+            "transient",
+            "fail fast",
+            "don't retry business errors"
+          ]
+        },
+        {
+          "id": "ir_dlq",
+          "label": "DLQ for terminal failures",
+          "description": "Dead-letter queue for inspection; alert on its depth.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "dead letter",
+            "dlq",
+            "poison message",
+            "inspect later"
+          ]
+        },
+        {
+          "id": "ir_alo",
+          "label": "At-least-once literacy",
+          "description": "Brokers duplicate by design; exactly-once ≈ at-least-once + idempotent consumer.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "at least once",
+            "duplicates",
+            "redeliver",
+            "idempotent consumer",
+            "exactly once"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "res_toolkit_001",
+      "title": "Degrading without collapsing",
+      "prompt": "A non-critical dependency (notifications/reporting) starts failing under load. How do you keep the core flow alive, and what does honest degradation look like?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "resilience_toolkit"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "rt_isolation",
+          "label": "Bulkhead isolation",
+          "description": "Separate pools/queues so the failing area cannot exhaust shared resources.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "bulkhead",
+            "separate pool",
+            "isolated",
+            "own queue",
+            "cannot drag down"
+          ]
+        },
+        {
+          "id": "rt_fallback",
+          "label": "Fallback behaviour",
+          "description": "Stale-from-cache / pending / deferred work — defined, not improvised.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "fallback",
+            "stale from cache",
+            "pending",
+            "defer",
+            "degraded"
+          ]
+        },
+        {
+          "id": "rt_honest",
+          "label": "Never fake success",
+          "description": "Critical operations show explicit pending/failed, not fabricated OK.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "don't fake",
+            "explicit pending",
+            "honest",
+            "not pretend success",
+            "failed state"
+          ]
+        },
+        {
+          "id": "rt_terms",
+          "label": "Resilience vs fault tolerance",
+          "description": "Partial degradation/recovery vs surviving specific component failures.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "resilience",
+            "fault tolerance",
+            "pod restarts",
+            "routes around"
+          ]
+        }
+      ],
+      "followUps": []
     }
   ]
 }
