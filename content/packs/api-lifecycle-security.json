@@ -3,7 +3,8 @@
   "name": "API lifecycle & security",
   "description": "API lifecycle and security from the Dennemeyer 100: contracts and data exchange, versioning/compatibility/deprecation, OAuth/OIDC/JWT, RBAC vs ABAC, API security essentials, and integration styles (webhooks, pagination, gRPC, sync vs async).",
   "sources": [
-    "dennemeyer_system_design_100_tema_peldakkal_mobile_hu"
+    "dennemeyer_system_design_100_tema_peldakkal_mobile_hu",
+    "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu"
   ],
   "topics": [
     {

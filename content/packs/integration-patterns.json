@@ -4,7 +4,9 @@
   "description": "SOA vs microservices, ESB trade-offs, sync vs async fan-out and legacy integration migration — from the Luxair interview prep docs.",
   "sources": [
     "Luxair_Top_10_Interview_Questions_HU",
-    "Luxair_interju_QA_gyujtemeny"
+    "Luxair_interju_QA_gyujtemeny",
+    "Luxair_Interview_Terms_Glossary_HU",
+    "Luxair_Interview_Terms_Reminder_HU"
   ],
   "topics": [
     {
@@ -16,7 +18,7 @@
         "microservices",
         "event_driven"
       ],
-      "studyNotes": "SOA and microservices share the idea of services; they differ in where integration logic lives. SOA centralizes it — an ESB (enterprise service bus) carries routing, transformation and orchestration, with shared contracts governed centrally. Microservices decentralize: smart endpoints, dumb pipes — the logic lives in the services, the transport stays thin.\n\nWhy an ESB becomes a bottleneck: business logic accumulates in the bus; every change to any flow funnels through one platform and often one team; deployments and scaling couple everything that touches the bus. The bus becomes the organization's critical path — a Conway's Law artifact: a central integration team produces a central integration layer.\n\nThe balanced take: SOA's ideas survive — contracts, reuse, governance — and central integration still fits some enterprises (many legacy systems, strong compliance). The modern default, though, is decentralized ownership with events for decoupling, and the bus reserved for what genuinely must be central."
+      "studyNotes": "SOA and microservices share the idea of services; they differ in where integration logic lives. SOA centralizes it — an ESB (enterprise service bus) carries routing, transformation and orchestration, with shared contracts governed centrally. Microservices decentralize: smart endpoints, dumb pipes — the logic lives in the services, the transport stays thin.\n\nWhy an ESB becomes a bottleneck: business logic accumulates in the bus; every change to any flow funnels through one platform and often one team; deployments and scaling couple everything that touches the bus. The bus becomes the organization's critical path — a Conway's Law artifact: a central integration team produces a central integration layer.\n\nThe balanced take: SOA's ideas survive — contracts, reuse, governance — and central integration still fits some enterprises (many legacy systems, strong compliance). The modern default, though, is decentralized ownership with events for decoupling, and the bus reserved for what genuinely must be central.\n\n## Composition vocabulary\n\n- Orchestration vs choreography: orchestration has a central brain calling the steps (a saga orchestrator); choreography has services reacting to each other's events with no central coordinator. Choreography decouples but makes the overall flow harder to see — observability becomes the price of freedom.\n- Aggregator: one service fans out to several sources and composes a single response — common at the API edge (backend-for-frontend) so clients avoid five round trips.\n- Coarse-grained vs fine-grained services: coarse-grained interfaces exchange bigger, complete business payloads in fewer calls — often better across network boundaries than chatty fine-grained calls."
     },
     {
       "id": "integration_migration",
@@ -39,6 +41,17 @@
         "event_driven"
       ],
       "studyNotes": "A booking is created and five systems must know. The design question: what does the USER have to wait for? Only that stays synchronous — persist the booking, answer. Notifications are not on the critical path.\n\nThe shape: publish ONE booking-created event to a broker; the five consumers subscribe independently. The producer does not call five APIs — it does not even know how many consumers exist. Adding a sixth system is a subscription, not a code change.\n\nFailure isolation is the real win: each consumer has its own retries with backoff and its own DLQ; one failing system does not block the other four; duplicates are handled idempotently (at-least-once delivery).\n\nThe exception that proves the rule: if a step must gate the outcome — fraud check before confirmation — it belongs on the synchronous critical path by definition. Sync vs async is decided by the business dependency, not by fashion.\n\nWhy Node.js keeps appearing in this space: integration services are I/O-bound — many concurrent network calls — which a non-blocking event loop handles cheaply. Its weakness is CPU-bound work (one heavy computation stalls every request); mitigations are worker threads, offloading to queues/services, or a different runtime for compute-heavy paths."
+    },
+    {
+      "id": "capacity_sizing",
+      "name": "Capacity Sizing & Back-of-Envelope Math",
+      "description": "Turning '100M requests/month' into rps, concurrency, and infrastructure questions; I/O vs CPU bound.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "scaling_fundamentals",
+        "async_fanout"
+      ],
+      "studyNotes": "\"The system gets 100 million requests a month\" — the interview wants you to turn that into engineering numbers on the spot.\n\nThe arithmetic: 100M/month ≈ 100M / (30 × 86,400s) ≈ 39 requests per second AVERAGE. The average is the beginning, not the answer: sizing needs the PEAK (daily and seasonal patterns can put peak at 5–10× average), the cost of a request (a cache hit and a 5-table join are different beasts), and the downstream limits — the DB and external APIs cap you long before the app tier does.\n\nConcurrency — how many requests are in flight at once — has a rough formula worth saying aloud: concurrency ≈ rps × latency in seconds. 39 rps at 200ms ≈ 8 concurrent requests — tiny; 39 rps at 3s (slow downstream) ≈ 120 in flight — connection pools and memory suddenly matter. This is why latency degradation cascades into resource exhaustion.\n\nAlways answer with percentiles: average latency hides the tail; p95/p99 tell you what your slowest users experience and what you should size and alert on.\n\nI/O-bound vs CPU-bound decides the runtime story: integration/API workloads are I/O-bound (DB, APIs, files, Redis, queues) — a non-blocking event loop (Node.js) handles many concurrent waits cheaply. CPU-bound work — hashing, image/video, huge JSON parsing, heavy loops — blocks the event loop and stalls everyone; worker threads or a separate service fix that.\n\nRuntime packaging footnote: VMs virtualize hardware with a full OS each (strong isolation, slow to boot, heavy); containers share the host kernel (light, fast, dense) — which is why the container + Kubernetes combination won the deployment story."
     }
   ],
   "questions": [
@@ -391,6 +404,104 @@
           "expectedPoints": []
         }
       ]
+    },
+    {
+      "id": "int_sizing_001",
+      "title": "100M requests a month — now what?",
+      "prompt": "A service is expected to take 100 million requests a month. Walk me through the back-of-envelope sizing and the questions you would ask.",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design",
+        "concept_check"
+      ],
+      "topicIds": [
+        "capacity_sizing"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "cs_math",
+          "label": "Does the arithmetic",
+          "description": "≈39 rps average; states the formula and computes.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "39",
+            "forty",
+            "requests per second",
+            "divide by seconds",
+            "per month over"
+          ]
+        },
+        {
+          "id": "cs_peak",
+          "label": "Average vs peak + request cost",
+          "description": "Peak can be many times average; cache hit vs heavy query; downstream/DB limits bound the system.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "peak",
+            "not the average",
+            "spikes",
+            "cost of a request",
+            "downstream limit",
+            "db is the limit"
+          ]
+        },
+        {
+          "id": "cs_concurrency",
+          "label": "Concurrency formula",
+          "description": "In-flight ≈ rps × latency seconds; slow downstream multiplies concurrency and eats pools.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "concurrency",
+            "in flight",
+            "rps times latency",
+            "connection pool",
+            "little's law"
+          ]
+        },
+        {
+          "id": "cs_percentiles",
+          "label": "Sizes on percentiles",
+          "description": "p95/p99 over averages for sizing and alerting.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "p95",
+            "p99",
+            "percentile",
+            "tail"
+          ]
+        }
+      ],
+      "followUps": []
     }
   ]
 }

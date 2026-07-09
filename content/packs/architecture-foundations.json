@@ -3,7 +3,8 @@
   "name": "Architecture Foundations (Dennemeyer)",
   "description": "Microservices boundaries, DDD/CQRS, SOLID and layered/clean architecture, containers and the Kubernetes runtime, and the architect's working practice (design docs, NFRs, testing strategy, safe DB migration, technical leadership).",
   "sources": [
-    "dennemeyer_system_design_100_tema_peldakkal_mobile_hu"
+    "dennemeyer_system_design_100_tema_peldakkal_mobile_hu",
+    "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu"
   ],
   "topics": [
     {

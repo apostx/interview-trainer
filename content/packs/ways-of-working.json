@@ -48,6 +48,42 @@
         "sdlc_models"
       ],
       "studyNotes": "DevOps is a culture before it is a toolchain: tearing down the wall between \"dev throws it over\" and \"ops runs it\". The slogan that captures it — \"you build it, you run it\": the team that writes the software owns it in production, pager included. Shared ownership changes incentives; tooling merely enables it.\n\nThe practices that make it real:\n- CI/CD — every change built, tested and deployable automatically; deploys are boring and frequent, not quarterly events.\n- Infrastructure as code — environments versioned and reproducible, not hand-crafted.\n- Observability and fast feedback — monitoring, alerting, quick rollback; production tells you the truth quickly.\n\nHow to measure whether it is working — the DORA four: deployment frequency, lead time for changes, change failure rate, time to restore. Improving those numbers IS improving DevOps; a tool purchase without them moving is theater."
+    },
+    {
+      "id": "agile_foundations",
+      "name": "Agile Manifesto, User Stories & Estimation",
+      "description": "The four values and twelve principles; INVEST stories, acceptance criteria, story points, planning poker, velocity.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "scrum",
+        "kanban",
+        "agile_antipatterns"
+      ],
+      "studyNotes": "The Agile Manifesto (2001, seventeen practitioners — Schwaber, Sutherland, Fowler, Martin among them) is a VALUE SYSTEM, not a methodology. The four values, each \"X over Y\" where Y still matters: individuals and interactions over processes and tools; working software over comprehensive documentation; customer collaboration over contract negotiation; responding to change over following a plan.\n\nThe twelve principles reduce to a handful of habits: deliver early and continuously (a working version every couple of weeks beats a big release after six months); welcome changing requirements — the backlog is a living document; working software is THE measure of progress (not documents or meetings); business and technical people work together daily; sustainable pace (crunch is the enemy); continuous attention to technical excellence — clean code, refactoring, TDD, CI, tech-debt work every sprint; simplicity — YAGNI, maximize the work not done; self-organizing teams (management gives the WHAT and WHY, never the HOW); and regular reflection — the retrospective.\n\n## User stories and estimation\n\nThe story format: As a [role], I want [capability], so that [business value]. Good stories pass INVEST: Independent, Negotiable, Valuable, Estimable, Small (fits a sprint), Testable. Acceptance criteria make \"testable\" concrete — Given/When/Then, error cases included. The Definition of Done is the quality bar on top: code reviewed, tests green, CI passed, staging-verified, PO-accepted.\n\nStory points measure RELATIVE size — complexity + effort + uncertainty — never time. Fibonacci scale (1, 2, 3, 5, 8, 13, 21) with reference anchors: 1 = a button-text fix, 5 = complete registration (API + UI + tests), 13 = a payment flow. Infinity means split it; \"?\" means run a spike first.\n\nPlanning poker exists to prevent anchoring: everyone picks a card IN SECRET, all reveal at once; big spreads (3 vs 13) are discussed by the extremes and re-voted.\n\nVelocity is the team's average completed points over the last 3–5 sprints — a PLANNING tool: it tells the team what to commit to next sprint. The abuses to name: comparing velocities between teams (points are relative, per-team), demanding velocity increases (breeds point inflation), and treating it as a KPI."
+    },
+    {
+      "id": "xp_lean",
+      "name": "Extreme Programming & Lean",
+      "description": "XP's technical practices (TDD, pairing, CI, refactoring) and Lean's waste-elimination principles.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "scrum",
+        "devops_culture",
+        "frontend_quality_gates"
+      ],
+      "studyNotes": "XP (Kent Beck, 1996) is the agile framework that puts TECHNICAL excellence first — programming practices over management. Five values: communication, simplicity (YAGNI), feedback, courage (refactor boldly, throw code away), respect.\n\nThe practices that survive in every modern team, whatever it calls itself:\n- Pair programming — driver + navigator on one machine, swapping regularly: quality plus knowledge sharing.\n- TDD — the red → green → refactor loop: write a FAILING test, write the minimal code that passes, clean up with tests staying green, repeat. Never code without a test; never more code than the test demands.\n- Continuous integration — commit, build and test several times a day; the code is always integrable (its absence is the \"big bang integration\" anti-pattern).\n- Refactoring — continuous improvement without behaviour change, keeping tech debt down.\n- Plus: simple design, collective code ownership (no \"my code\"), coding standards, small frequent releases, on-site customer, sustainable pace.\n\nThe practical combo to name: Scrum + XP — Scrum provides the frame (sprints, roles, ceremonies), XP provides the engineering discipline inside it.\n\n## Lean\n\nAdapted from the Toyota Production System (Poppendieck, 2003): everything that does not add customer value is WASTE. Seven principles: eliminate waste, build quality in (TDD, CI, review), create knowledge (pairing, retros), defer commitment (decide when you know the most), deliver fast (small batches), respect people, optimize the WHOLE (the full flow, not just the coding step).\n\nThe seven wastes translated to software: unused features (most features are rarely used), partially done work (WIP), waiting (for review, for deploy approval, for environments), extra processes (approval layers, over-documentation), task switching (one developer on three projects), defects (later found = costlier), manual work (hand deploys, hand testing). Kanban's WIP limits and DevOps automation are both direct attacks on this list."
+    },
+    {
+      "id": "agile_scaling_metrics",
+      "name": "Agile Metrics, Scaling & Anti-patterns",
+      "description": "Burndown/burnup, lead/cycle time, CFD; Scrum of Scrums, LeSS, SAFe PI Planning; the classic failure modes.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "scrum",
+        "kanban",
+        "agile_foundations"
+      ],
+      "studyNotes": "## Metrics\n\nBurndown chart: remaining work through the sprint against an ideal line — above the line means the sprint goal is at risk. Burnup chart: completed work climbing toward a separate total-scope line — its advantage is that SCOPE CHANGES stay visible instead of hiding the progress. Scrum-side metrics: velocity, sprint burndown, sprint-goal success rate. Kanban-side: lead time (backlog → done), cycle time (in-progress → done), throughput (items per unit time), and the cumulative flow diagram — the tool for SPOTTING BOTTLENECKS (a widening band is a clogged column). Both sides: escaped defects. Metrics are diagnostics, not targets.\n\n## Scaling — multiple teams, one product\n\n- Scrum of Scrums: the simplest — each team sends an ambassador to a 15–30 minute coordination standup 2–3× a week: what did the team do, what will it do, impediments, dependencies on other teams.\n- LeSS (2–8 teams): minimal rules — ONE product backlog, ONE Product Owner across teams.\n- SAFe (50–125+ people): the heavyweight — Agile Release Trains, portfolio level, and PI Planning: a two-day, all-teams, face-to-face event every quarter — business context, vision, team breakouts planning ~5 sprints, dependency mapping on a program board, risks, and a confidence vote (fist of five; average under 3 → re-plan). Pragmatic ranking: start with Scrum of Scrums; adopt SAFe only at genuine organizational scale.\n\n## Anti-patterns — the \"what NOT to do\" list\n\nOrganizational: \"Agile in name only\" (waterfall with standups); \"Scrum-but\" (Scrum without retro / PO / review — it is a package, not a menu); micromanagement (management dictating the HOW); velocity pressure (→ point inflation); \"no time to refactor\" (→ reserve capacity for tech debt every sprint).\n\nSprint-level: overcommitting beyond velocity; scope creep mid-sprint (new work goes to the NEXT sprint); chronic carry-over (stories too big); skipping the retro (the heart of improvement); 45-minute standups (15 max — details go to a parking lot).\n\nTechnical: no CI/CD, no tests, big-bang integration. The refrain: the ceremonies without the values and the engineering are theater."
     }
   ],
   "questions": [
@@ -338,6 +374,273 @@
           "expectedPoints": []
         }
       ]
+    },
+    {
+      "id": "wow_estimation_001",
+      "title": "Story points and planning poker",
+      "prompt": "How does story-point estimation work, what makes a good user story, and what should velocity be used for — and not used for?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "agile_foundations"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "ef_relative",
+          "label": "Points are relative, not time",
+          "description": "Complexity + effort + uncertainty on a Fibonacci scale with reference stories.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "relative",
+            "not time",
+            "not hours",
+            "fibonacci",
+            "complexity",
+            "uncertainty"
+          ]
+        },
+        {
+          "id": "ef_invest",
+          "label": "INVEST + acceptance criteria",
+          "description": "Independent/Negotiable/Valuable/Estimable/Small/Testable; Given-When-Then makes it testable.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "invest",
+            "independent",
+            "testable",
+            "acceptance criteria",
+            "given when then",
+            "fits a sprint"
+          ]
+        },
+        {
+          "id": "ef_poker",
+          "label": "Poker prevents anchoring",
+          "description": "Secret simultaneous votes; extremes explain; re-vote to consensus.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "planning poker",
+            "secret",
+            "reveal at once",
+            "anchoring",
+            "discuss the extremes"
+          ]
+        },
+        {
+          "id": "ef_velocity",
+          "label": "Velocity for planning only",
+          "description": "3–5 sprint average guides commitment; never compare teams or push it as a KPI.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "planning tool",
+            "don't compare teams",
+            "not a kpi",
+            "average of sprints",
+            "inflation"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "wow_xp_001",
+      "title": "TDD's red-green-refactor",
+      "prompt": "Describe the TDD cycle and the XP practices you would bring into any team — and where Lean's 'waste' idea connects.",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "experience_deep_dive"
+      ],
+      "topicIds": [
+        "xp_lean"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "xp_tdd",
+          "label": "Red → green → refactor",
+          "description": "Failing test first, minimal pass, cleanup with green tests; no code without a test.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "red green refactor",
+            "failing test first",
+            "minimal code",
+            "test first"
+          ]
+        },
+        {
+          "id": "xp_practices",
+          "label": "XP practice set",
+          "description": "Pairing, CI several times daily, continuous refactoring, collective ownership, small releases.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "pair programming",
+            "continuous integration",
+            "refactoring",
+            "collective ownership",
+            "small releases"
+          ]
+        },
+        {
+          "id": "xp_lean_waste",
+          "label": "Lean waste connection",
+          "description": "Unused features, WIP, waiting, task switching, manual work — practices exist to eliminate waste.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "waste",
+            "unused features",
+            "waiting",
+            "context switching",
+            "manual deploy",
+            "wip"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "wow_scaling_001",
+      "title": "Coordinating multiple agile teams",
+      "prompt": "Three teams now work on one product. How do you coordinate them, which metrics do you watch, and which anti-patterns do you guard against?",
+      "roles": [
+        "solution_architect",
+        "backend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_scaling_metrics"
+      ],
+      "expectedDurationSeconds": 220,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "sm_scaling",
+          "label": "Right-sized scaling mechanism",
+          "description": "Scrum of Scrums ambassadors first; LeSS one-backlog-one-PO; SAFe/PI Planning only at real scale.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "scrum of scrums",
+            "ambassador",
+            "one backlog",
+            "less",
+            "safe",
+            "pi planning",
+            "start simple"
+          ]
+        },
+        {
+          "id": "sm_metrics",
+          "label": "Flow metrics + honest charts",
+          "description": "Lead/cycle time, throughput, CFD for bottlenecks; burnup keeps scope changes visible.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "lead time",
+            "cycle time",
+            "cumulative flow",
+            "bottleneck",
+            "burnup",
+            "scope change"
+          ]
+        },
+        {
+          "id": "sm_antipatterns",
+          "label": "Names concrete anti-patterns",
+          "description": "Velocity comparison/pressure, scope creep, skipped retros, agile-in-name-only.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "velocity pressure",
+            "comparing teams",
+            "scope creep",
+            "no retro",
+            "in name only",
+            "scrum-but"
+          ]
+        }
+      ],
+      "followUps": []
     }
   ]
 }

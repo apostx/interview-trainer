@@ -3,7 +3,8 @@
   "name": "Resilience & production readiness",
   "description": "Reliability patterns from the Dennemeyer 100: circuit breakers and cascading failure, backpressure and rate limiting, SLO/SLA/error budgets, production readiness (health checks, graceful shutdown, deploy strategies, observability), idempotent retries, and the resilience toolkit.",
   "sources": [
-    "dennemeyer_system_design_100_tema_peldakkal_mobile_hu"
+    "dennemeyer_system_design_100_tema_peldakkal_mobile_hu",
+    "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu"
   ],
   "topics": [
     {
