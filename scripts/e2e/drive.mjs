@@ -297,6 +297,11 @@ async function main() {
   console.log("\n--- SUMMARY ---");
   console.log(results.join("\n"));
   await browser.close();
+  // A logged ❌ is a failed assertion — fail the run, not just the log.
+  if (results.some((r) => r.startsWith("❌"))) {
+    console.error("DRIVE FAILED: assertions marked ❌ above");
+    process.exit(1);
+  }
 }
 
 main().catch((e) => {

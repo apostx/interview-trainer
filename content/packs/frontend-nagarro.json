@@ -1,7 +1,7 @@
 {
   "id": "frontend_nagarro",
   "name": "Frontend interview prep (Nagarro)",
-  "description": "Frontend developer topics from the Nagarro/Tesco Hungary interview prep doc: JS internals, React, browser APIs, CSS, a11y, security and performance.",
+  "description": "The 20-topic Nagarro/Tesco frontend prep doc in full: JS internals (Map/WeakMap, generators, closures, event loop), React (hooks, refs, Redux Toolkit), CSS/layout, a11y, security, Web Vitals, microfrontends and TypeScript.",
   "sources": [
     "tibi/tesco_hungary"
   ],
@@ -13,7 +13,8 @@
       "category": "frontend",
       "relatedTopicIds": [
         "state_management"
-      ]
+      ],
+      "studyNotes": "JavaScript has two key-value stores, and the interview question is always \"when do you pick which?\".\n\nObject keys are silently coerced to strings — use an object as a key and it becomes \"[object Object]\", so two different object keys collide and overwrite each other. A Map keeps key types intact: objects, functions, numbers all work as distinct keys. Map also guarantees insertion order, has an O(1) .size (vs counting Object.keys), is natively iterable with for...of, and performs better under frequent adds and deletes. Objects win on ergonomics: literal syntax, native JSON serialization, and they are fine for small, config-like shapes.\n\nWatch out for the prototype: a plain object inherits toString and friends, so a key named \"toString\" shadows a method — a Map is a clean data container with no such surprises.\n\n## WeakMap and WeakSet\n\nA WeakMap holds its (object-only) keys weakly: when nothing else references the key object, the garbage collector may free both the key and its value. That makes it the right tool for caches and memoization keyed by objects, private per-instance data, and metadata attached to DOM elements — a regular Map would keep those objects alive forever, a slow memory leak. The price: WeakMaps are not iterable and have no size.\n\nRule of thumb from the source: frequent add/remove or non-string keys → Map; simple config object → Object; object-keyed cache that must not leak → WeakMap."
     },
     {
       "id": "event_delegation",
@@ -22,7 +23,8 @@
       "category": "frontend",
       "relatedTopicIds": [
         "react"
-      ]
+      ],
+      "studyNotes": "Every DOM event travels a defined path — event propagation — and delegation is built on it.\n\nThree phases: capturing (window → document → down to the target), the target phase, then bubbling (target → back up to window). Listeners fire in the bubbling phase by default; pass true or { capture: true } as the third addEventListener argument to catch the capturing phase instead.\n\nEvent delegation: instead of a listener on every child (which also misses dynamically added children), put ONE listener on the parent and identify the real source from the event. Use e.target.closest(selector) rather than e.target directly — the click may land on a span inside the button. Benefits: one listener, works for future children, less memory.\n\nThe pairs people confuse:\n- e.target is the element actually clicked; e.currentTarget is the element the listener is attached to.\n- stopPropagation() halts travel to the next element but other handlers on the same element still run; stopImmediatePropagation() also cancels the remaining handlers on the same element.\n- preventDefault() cancels the browser's default action (link navigation, form submit) but the event still propagates; stopPropagation() is the opposite — propagation stops, the default still happens.\n\nNot everything bubbles: focus/blur and mouseenter/mouseleave do not — delegate with their bubbling twins focusin/focusout and mouseover/mouseout. load, resize, and scroll (except on the target) do not bubble either."
     },
     {
       "id": "websocket_vs_sse",
@@ -31,21 +33,24 @@
       "category": "frontend",
       "relatedTopicIds": [
         "api_integration"
-      ]
+      ],
+      "studyNotes": "HTTP is request-response; real-time needs something else. The evolution: short polling (ask every N seconds — simple but wasteful), long polling (the server holds the request until there is data — better, still per-message HTTP overhead), then persistent connections: SSE and WebSocket.\n\nWebSocket is a different protocol (ws:// / wss://) entered via an HTTP upgrade handshake. It is full-duplex — both sides push messages any time. The cost: reconnection is yours to implement, HTTP/2 does not apply, and proxies/firewalls are sometimes hostile to it.\n\nServer-Sent Events are plain HTTP: the server keeps a text/event-stream response open and streams text events. The browser's EventSource API handles automatic reconnection out of the box (with lastEventId resume), it multiplexes fine over HTTP/2 and passes proxies easily — but it is one-directional (server → client) and text-only.\n\nThe decision rule from the source: if the client must also send data continuously (chat, multiplayer games, collaborative editing) → WebSocket. If only the server pushes (notifications, live feeds, dashboards) → SSE is simpler AND more robust. Mention polling as the fallback lower bound."
     },
     {
       "id": "css_box_sizing",
       "name": "CSS box-sizing",
       "description": "content-box vs border-box and how padding/border affect the box model.",
       "category": "frontend",
-      "relatedTopicIds": []
+      "relatedTopicIds": [],
+      "studyNotes": "Every CSS element is a box of four layers: content → padding → border → margin. box-sizing decides what width/height refer to.\n\ncontent-box (the spec default): width applies to the content only. width: 200px with 20px padding and 2px border renders 244px wide — the padding and border are added on top. This is why \"width: 50%\" mysteriously overflows when padding is added.\n\nborder-box: width covers content + padding + border. width: 200px means the whole visible box is 200px; the content shrinks to make room. Intuitive: what you say is what you get.\n\nHistorical footnote worth telling in an interview: old IE5 \"incorrectly\" used the border-box model while the W3C standardized content-box — and IE's model turned out to be the intuitive one. Modern practice inverts the default with the universal reset:\n\n*, *::before, *::after { box-sizing: border-box; }\n\nEvery major framework (Tailwind, Bootstrap, Normalize.css) ships this reset. Know both models, the total-width arithmetic for each, and why border-box makes percentage layouts sane."
     },
     {
       "id": "web_accessibility",
       "name": "Web accessibility (a11y)",
       "description": "Semantic HTML, ARIA, keyboard navigation, focus management, contrast.",
       "category": "frontend",
-      "relatedTopicIds": []
+      "relatedTopicIds": [],
+      "studyNotes": "Accessibility (a11y) means everyone can use the page — including users with visual, hearing, motor, or cognitive impairments. It is a legal requirement in many places (EU European Accessibility Act 2025, US ADA / Section 508). WCAG defines levels A / AA (the usual target) / AAA, built on four POUR principles: Perceivable, Operable, Understandable, Robust.\n\nThe foundation is semantic HTML: header, nav, main, article, aside, footer give screen readers landmark navigation for free; button gives you keyboard activation for free. The golden rule: \"No ARIA is better than bad ARIA\" — a real button beats div role=\"button\" every time. Reach for ARIA only where native HTML cannot express it: aria-label for icon-only buttons, aria-describedby for hints and errors, aria-live regions (\"polite\" waits, \"assertive\" interrupts) for dynamic updates, role=\"dialog\" + aria-modal for modals.\n\nThe keyboard checklist:\n- Everything interactive reachable and operable with Tab / Enter / Space; if you must fake a button, add role, tabindex=\"0\", and a keydown handler.\n- tabindex=\"0\" joins the natural order, \"-1\" is programmatic-focus only, positive values are a smell.\n- A visually hidden \"skip to content\" link as the first focusable element.\n- Modals need a focus trap — Tab cycles inside, Escape closes, focus returns to the opener; the native dialog element gives this built in.\n\nAlso: alt text that says what the image conveys (empty alt for decorative), contrast ratios (4.5:1 normal text, 3:1 large text and UI), never color as the only signal, and every input with an associated label. Test with Tab, a screen reader (NVDA/VoiceOver), and Lighthouse (aim 90+)."
     },
     {
       "id": "core_web_vitals",
@@ -54,14 +59,163 @@
       "category": "frontend",
       "relatedTopicIds": [
         "frontend_performance"
-      ]
+      ],
+      "studyNotes": "Google's user-experience metrics; the three Core ones feed search ranking.\n\n- LCP (Largest Contentful Paint): when the biggest visual element appears. Good ≤ 2.5s.\n- INP (Interaction to Next Paint): time from any interaction to visual response, measured across the page's whole life (it replaced FID in March 2024). Good ≤ 200ms.\n- CLS (Cumulative Layout Shift): a unitless score of how much things jump around while loading. Good ≤ 0.1.\n\nSupporting metrics in chronological order: TTFB (server+network, ≤ 800ms) → FCP (first anything visible, ≤ 1.8s) → LCP → TTI (fully interactive). TBT measures total main-thread blocking between FCP and TTI.\n\n## Optimizing each\n\n- LCP: preload the hero image, fetchpriority=\"high\", loading=\"eager\" (never lazy-load the LCP element!), modern formats (WebP/AVIF), CDN, inline critical CSS, cut render-blocking JS, fix TTFB.\n- INP: never block the main thread with long synchronous work — give immediate visual feedback, then chunk the heavy part (setTimeout/yield helpers); in React this is exactly what useTransition is for.\n- CLS: always give images width/height or aspect-ratio; reserve space (min-height) for ads/banners/cookie bars; font-display: swap so text does not reflow-jump.\n\nA performance budget (LCP ≤ 2500ms, total JS ≤ 300KB, etc.) enforced in the build stops regressions from creeping in. Measure with Lighthouse and PageSpeed Insights (lab), the web-vitals library and CrUX (field / real users)."
     },
     {
       "id": "js_event_loop",
       "name": "JavaScript event loop",
       "description": "Call stack, task queue, microtasks, and async execution order.",
       "category": "frontend",
-      "relatedTopicIds": []
+      "relatedTopicIds": [],
+      "studyNotes": "JavaScript is single-threaded, yet it juggles timers, fetches and clicks without freezing. The machinery is four parts: the call stack (LIFO — currently running function frames), the Web APIs (setTimeout, fetch, DOM events actually run in browser C++, not the JS engine), the task queues, and the event loop tying them together.\n\nThe critical distinction is the two queues:\n- Microtasks (high priority): Promise .then/.catch/.finally, queueMicrotask, MutationObserver, and everything after an await.\n- Macrotasks (normal): setTimeout/setInterval, I/O, DOM events.\n\nThe rule: after each macrotask, the loop drains the ENTIRE microtask queue before touching the next macrotask or rendering. That single rule explains every \"what is the output?\" puzzle: synchronous code first, then all pending microtasks, then rAF callbacks, then render, then the next macrotask. A classic: log/setTimeout/promise-chain/rAF/queueMicrotask ordering comes out sync → microtasks (in registration order, chained .then later) → rAF → timeout.\n\nFacts interviewers probe:\n- setTimeout(fn, 0) is not immediate — it queues a macrotask, runs after all sync code and microtasks, and browsers clamp nested timers to ~4ms.\n- async/await is sugar over promises: code before the first await runs synchronously; everything after resumes as a microtask.\n- An infinite microtask loop (a promise that keeps scheduling itself) freezes the page harder than a sync loop — the loop never reaches rendering. To yield to the event loop from heavy work, schedule a macrotask (setTimeout 0).\n- Stack overflow: unbounded recursion exhausts the call stack (RangeError).\n- Real parallelism needs a Web Worker: a separate thread with its own event loop, no DOM access, communicating via postMessage — right for CPU-heavy work like sorting huge arrays or image processing."
+    },
+    {
+      "id": "object_locking",
+      "name": "Freezing & Locking Objects",
+      "description": "preventExtensions, seal, freeze — the three lock levels — and the property descriptors underneath.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "js_language_basics"
+      ],
+      "studyNotes": "JS objects are fully open by default; three built-ins lock them down in increasing strictness:\n\n- Object.preventExtensions() — no NEW properties; existing ones can still be changed and deleted. Check: Object.isExtensible().\n- Object.seal() — no adding AND no deleting; values can still be modified. Check: Object.isSealed().\n- Object.freeze() — read-only: no add, no delete, no modify. Check: Object.isFrozen().\n\nTwo traps carry the interview points. First, all three are SHALLOW: Object.freeze(settings) does not freeze settings.nested — mutating a nested object still works. A deep freeze must recurse over the properties. Second, without strict mode violations fail silently — the assignment is just ignored, which makes for miserable debugging; in strict mode (or any ES module) you get a TypeError. Always use strict mode.\n\n## Property descriptors\n\nThese methods just flip property descriptors. Every property has three meta flags: writable (value can change), configurable (can be deleted/redefined), enumerable (shows up in iteration). seal() sets configurable: false on everything; freeze() additionally sets writable: false. With Object.defineProperty you can craft custom combinations — e.g. a hidden, immutable id (writable: false, enumerable: false, configurable: false) that never shows in Object.keys. Inspect with Object.getOwnPropertyDescriptor."
+    },
+    {
+      "id": "js_generators",
+      "name": "Generator Functions & Iterators",
+      "description": "function*, yield, lazy evaluation, infinite sequences, yield* delegation, and the iterator protocol.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "js_language_basics",
+        "js_event_loop"
+      ],
+      "studyNotes": "A generator (function*) is a function that can pause and resume. Each yield hands out a value and freezes the function's entire state — locals, position — until the next .next() call. Nothing runs when you call the generator; you get an iterator, and code executes lazily as values are pulled. Each next() returns { value, done }.\n\nWhat makes them powerful:\n- Lazy evaluation: values are computed on demand — an infinite Fibonacci generator is fine because you only take what you need (pair it with a take(n, iterable) helper).\n- Two-way communication: next(x) sends x INTO the generator — it becomes the value of the paused yield expression (the first next()'s argument is discarded; nothing is paused yet).\n- Composition: yield* delegates to any iterable (another generator, an array) until it is exhausted — build big generators from small ones.\n- Practical uses: unique ID sequences, pagination, custom iteration.\n\n## The iterator protocol\n\nGenerators work with for...of, spread, and destructuring because they implement the Iterable protocol: an object is iterable if it has a [Symbol.iterator]() method returning an iterator (an object with next()). You can hand-write that on any object — a range object, for instance — and it plugs into the same language features.\n\nAsync generators (async function*, ES2018) combine await with yield and are consumed with for await...of — the classic use is streaming paginated API results page by page. Deep-cut credibility point: async/await itself is built on generators; older transpilers literally compiled async functions into generator state machines."
+    },
+    {
+      "id": "react_concurrent_hooks",
+      "name": "useTransition, useOptimistic & useLayoutEffect",
+      "description": "The UX fine-tuning hooks: priority-aware updates, optimistic UI, and pre-paint DOM measurement.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react",
+        "react_rendering_model",
+        "frontend_performance"
+      ],
+      "studyNotes": "Three specialised hooks, each solving one UX problem; rarely needed, irreplaceable when they are.\n\nuseTransition (React 18, concurrent rendering): mark a state update as low priority so the UI stays responsive during an expensive re-render. The urgent update (the input's own value) applies immediately; the heavy one (filtering a huge list) runs in a transition React can interrupt if the user types again. isPending drives a loading indicator. Sibling hook useDeferredValue does the same for a VALUE you receive rather than a setState you own — render the heavy child with the deferred value, compare to detect staleness.\n\nuseOptimistic (React 19): show the expected result immediately, before the server confirms. You give it the canonical (server) state and a reducer producing the optimistic version; on failure React rolls back automatically. Render the pending item with reduced opacity for honest feedback.\n\nuseLayoutEffect: identical to useEffect but runs synchronously AFTER DOM mutation and BEFORE the browser paints. Use it when you must measure or position DOM (tooltips, animations) without a visible flicker; the user never sees the intermediate frame. It blocks painting, so the default remains useEffect (data fetching, subscriptions) — reach for the layout variant only when a flicker actually appears."
+    },
+    {
+      "id": "usestate_vs_usereducer",
+      "name": "useState vs useReducer",
+      "description": "Choosing between the two state hooks, lazy initialization, and automatic batching.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react",
+        "state_management",
+        "react_rendering_model"
+      ],
+      "studyNotes": "Both manage component state; they target different complexity levels — and useState is literally implemented with useReducer inside React.\n\nuseState: simple, independent values (number, string, boolean). useReducer: complex state where several values change together and the update logic has branches. The reducer is a pure function (state, action) → state, which brings two concrete wins: it is trivially unit-testable without rendering anything, and updates become traceable actions like in Redux. The form pattern — one state object with fields, errors, isSubmitting, updated via SET_FIELD/SET_ERROR/RESET actions — is the canonical example. Rule of thumb from the source: more than 2–3 interrelated useStates → switch to useReducer.\n\n## Lazy initialization\n\nIf computing the initial state is expensive (localStorage read, JSON.parse), do not pass the value — pass a function: useState(() => JSON.parse(...)). The initializer runs only on the first render; the inline-value version re-executes the computation on every render just to throw it away. useReducer has the same feature as its third argument (init function).\n\n## Automatic batching\n\nSince React 18, multiple setState calls in the same tick — including inside setTimeout, promises, native handlers, not just React event handlers as in 17 — are batched into ONE re-render. If you truly need an immediate flush (rare), flushSync forces it."
+    },
+    {
+      "id": "react_imperative_refs",
+      "name": "Imperative Child APIs (refs)",
+      "description": "forwardRef + useImperativeHandle, the React 19 ref prop, and callback refs.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react",
+        "react_rendering_model"
+      ],
+      "studyNotes": "React's data flow is one-directional — props down, callbacks up. But sometimes the parent must imperatively call INTO a child: focus(), reset(), scrollToTop(). That is what refs are for, and because they step outside the normal data flow, the rule is: if props can solve it, do not use a ref.\n\nThe classic pattern: wrap the child in forwardRef so the parent's ref reaches it, then useImperativeHandle to expose a NARROW, controlled API — { focus, clear, getValue } — instead of leaking the raw DOM node. Better encapsulation: the parent can do exactly what you allow, nothing more. In React 19, ref is a regular prop, so forwardRef is no longer needed — but useImperativeHandle keeps its role of limiting the surface.\n\n## Callback refs\n\nInstead of a useRef object you can pass a FUNCTION as ref: React calls it with the DOM node on mount and with null on unmount. Useful when attaching logic at the moment the node appears — measuring with getBoundingClientRect, wiring an IntersectionObserver for lazy loading.\n\nLegitimate ref use cases are DOM-imperative by nature: focus management, scrolling, media playback, animations, integrating non-React libraries. State-like data flowing through refs is a design smell."
+    },
+    {
+      "id": "noopener_noreferrer",
+      "name": "noopener, noreferrer & Tabnabbing",
+      "description": "Why target=\"_blank\" is a security hole and what the rel attributes fix.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "security_basics",
+        "web_security_frontend"
+      ],
+      "studyNotes": "Opening an external link with target=\"_blank\" historically gave the new page JavaScript access to window.opener — and with it the power to REDIRECT YOUR page: window.opener.location = \"https://fake-bank-login.com\". The user returns to your tab and finds a phishing page. This is (reverse) tabnabbing.\n\nThe fix is rel attributes on the link:\n- noopener: the opened page gets no window.opener — it cannot touch your tab. Bonus: the new page may run in a separate process (performance win).\n- noreferrer: additionally suppresses the Referer header, so the target does not learn where the visitor came from. noreferrer implies noopener behaviour — technically one suffices, but writing both states the intent.\n\nModern browsers (Chrome 88+, Firefox 79+, Safari 12.1+) apply noopener implicitly on target=\"_blank\", but noreferrer still needs to be explicit, older browsers exist, and the ESLint rule react/jsx-no-target-blank enforces the habit. The same hole exists with window.open() — pass \"noopener,noreferrer\" as the third argument (or null out .opener on the returned handle).\n\nRelated but different: rel=\"nofollow\" is SEO, not security — it tells crawlers not to follow the link or pass ranking credit; recommended on user-generated links against spam."
+    },
+    {
+      "id": "redux_toolkit",
+      "name": "Redux Toolkit & Selector Performance",
+      "description": "createSlice, extraReducers, useSelector re-render pitfalls, shallowEqual/createSelector, RTK Query.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react",
+        "state_management"
+      ],
+      "studyNotes": "Redux Toolkit is the official, recommended way to write Redux; it kills the classic boilerplate. createSlice generates action creators and type strings from your reducer definitions, Immer lets you write \"mutating\" updates that stay immutable underneath, and createAsyncThunk standardises async flows. reducers holds the slice's own actions; extraReducers (builder API) reacts to OUTSIDE actions — typically the pending/fulfilled/rejected phases of an async thunk driving loading/error/data state.\n\n## The useSelector re-render trap\n\nuseSelector re-renders the component when the selector's return value changes — by default compared with ===. So a selector that RETURNS A NEW REFERENCE each run (a .filter(), a .map(), an object literal) re-renders on EVERY store change, even when the data is identical. Three fixes, in order of preference:\n- Select primitives separately (length, a boolean) — === just works.\n- createSelector (Reselect, re-exported by RTK): memoized selectors that recompute only when inputs change — best for derived data.\n- shallowEqual as useSelector's second argument: compares one level of keys/elements by value, so identical-content fresh objects do not re-render. Note it is only one level deep — nested arrays still differ by reference.\n\n## RTK Query\n\nRTK's built-in data-fetching layer replaces hand-rolled thunk + loading/error state entirely: define endpoints, get generated hooks (useGetUsersQuery, useAddUserMutation) with caching, tag-based invalidation (a mutation invalidates the query's tag → automatic refetch), polling, and optimistic updates. Same niche as React Query, integrated into Redux."
+    },
+    {
+      "id": "js_closures_scoping",
+      "name": "Closures, var/let & the TDZ",
+      "description": "The classic var + setTimeout loop puzzle, hoisting differences, and the temporal dead zone.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "js_language_basics",
+        "js_event_loop"
+      ],
+      "studyNotes": "The most classic JS interview puzzle: a for loop with var i, a setTimeout(() => console.log(i)) inside — what prints? Six sixes (for i < 6), one second later, all at once. It tests three concepts in one line.\n\nWhy: var is function-scoped, so ONE i exists for the whole loop. The timeout callbacks are macrotasks — they run after the synchronous loop finishes, when i is already 6. And the closure captures the VARIABLE, not its value at registration time — all six callbacks share the same i.\n\nFixes, each proving a different insight:\n- let i — block scoping gives every iteration its own i; prints 0..5. The canonical fix.\n- IIFE — an immediately-invoked function creates a scope per iteration, freezing the current value as a parameter.\n- setTimeout's third argument — extra args are passed to the callback (the little-known one).\n- .bind(null, i) — binds the current value.\n\n## Hoisting and the TDZ\n\nAll three declarations hoist, but differently. var hoists WITH initialization to undefined — reading before the line gives undefined, no error. let/const hoist the declaration only: from the block's start to the declaration line the variable is in the Temporal Dead Zone, and any access — even typeof — throws ReferenceError.\n\nSummary table to recite: var = function scope, hoisted+undefined, redeclarable; let = block scope, TDZ; const = block scope, TDZ, no reassignment — but const objects/arrays are internally mutable (push works; reassigning the reference throws)."
+    },
+    {
+      "id": "object_flatten_recursion",
+      "name": "Recursive Object Flattening",
+      "description": "The flatten/unflatten exercise: recursion, typeof traps, and circular-reference safety.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "js_language_basics",
+        "space_complexity"
+      ],
+      "studyNotes": "A standard live-coding task: turn { a: { b: { c: { d: \"123\" } } }, e: \"xyz\" } into { \"a.b.c.d\": \"123\", \"e\": \"xyz\" }. What it really tests is recursive thinking and knowledge of JS's type-checking traps.\n\nThe approach to narrate: walk the keys; base case — the value is primitive, write result[prefixedKey] = value; recursive case — the value is a plain object, recurse with the dot-joined prefix. Reverse (unflatten): split each flat key on dots and rebuild the nesting, creating intermediate objects as you walk.\n\nThe edge cases carry the interview points — raise them proactively:\n- typeof null === \"object\" — JavaScript's most famous wart. Without a null check you recurse into null and crash. The guard is value !== null (or truthiness).\n- Arrays are objects too — typeof [] === \"object\". Decide explicitly: treat arrays as leaf values (Array.isArray check) or flatten them with index keys.\n- Circular references → infinite recursion → RangeError: Maximum call stack size exceeded. Guard with a Set of already-seen objects.\n- Extremely deep nesting can overflow the stack even without cycles — an iterative version with an explicit stack fixes that.\n\nThe habit being scored: stating your base case, your recursive step, and your edge cases out loud before writing anything."
+    },
+    {
+      "id": "web_security_frontend",
+      "name": "Frontend Web Security: XSS, CSP & CORS",
+      "description": "The OWASP frontend essentials: XSS types and defenses, CSRF, Content-Security-Policy, CORS and security headers.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "security_basics",
+        "auth_security_checklist",
+        "cookie_attributes"
+      ],
+      "studyNotes": "Web security interviews orbit the OWASP Top 10; as a frontend engineer the must-knows are XSS, CSRF, CSP and CORS.\n\n## XSS (Cross-Site Scripting)\n\nAn attacker gets their JavaScript to run in other users' browsers. Three flavours: stored (the payload lives in the database — a comment — and hits everyone), reflected (payload in the URL, echoed by the server), DOM-based (client-side JS writes user input into the DOM). Defenses: never element.innerHTML = userInput — use textContent; React escapes JSX interpolation by default, but dangerouslySetInnerHTML with user input reopens the hole (its name is a warning). Sanitize if you must render rich HTML.\n\n## CSRF\n\nA malicious page triggers a request to a site where the victim is logged in; the browser attaches the cookies automatically, and the server cannot tell it was forged. Defenses: CSRF tokens in forms, SameSite=Strict/Lax cookies, Origin/Referer checks. (The auth topics cover this in depth.)\n\n## CSP (Content-Security-Policy)\n\nAn HTTP header whitelisting where the browser may load resources from: default-src 'self'; script-src 'self' https://cdn.example.com; ... Its killer feature against XSS: banning inline scripts — with script-src 'self', an injected <script>alert(1)</script> simply will not execute. Avoid 'unsafe-inline'; when an inline script is unavoidable, use a nonce.\n\n## CORS\n\nThe browser's Same-Origin Policy blocks cross-origin AJAX by default — a security feature, not a bug. CORS headers are the server explicitly opening up: Access-Control-Allow-Origin/-Methods/-Headers, plus -Credentials for cookies (note: wildcard * origin combined with credentials is forbidden). Non-simple requests trigger a preflight OPTIONS check first. Key subtlety: CORS protects the READING of the response in the browser — the request may still reach the server.\n\n## The header checklist\n\nStrict-Transport-Security (force HTTPS), X-Frame-Options: DENY or CSP frame-ancestors (clickjacking), X-Content-Type-Options: nosniff, and hardened cookies (HttpOnly; Secure; SameSite)."
+    },
+    {
+      "id": "microfrontends",
+      "name": "Microfrontend Architecture",
+      "description": "Splitting the frontend monolith: integration options, Module Federation, communication, and when NOT to.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "frontend_performance",
+        "microservices"
+      ],
+      "studyNotes": "Microfrontends apply the microservices idea to the UI: the monolithic frontend splits into independently developed, built and deployed parts owned by separate teams — each free to pick its stack.\n\n## Integration options\n\n- Build-time (npm packages): each microfrontend is a dependency. Simple, but any update forces rebuilding the whole shell — you lose independent deployment, the main point.\n- Runtime, iframe: total isolation, but responsive layout pain, clunky postMessage communication, duplicated resources, SEO and UX seams.\n- Runtime, Module Federation (Webpack 5 / Vite): the modern default. A host (shell) loads remote modules at runtime from separately deployed apps via remoteEntry.js; the shared config deduplicates common dependencies (React as a singleton). Developer experience is nearly monolith-like: React.lazy(() => import(\"productApp/ProductList\")) inside Suspense.\n- Runtime, Web Components: each microfrontend registers a custom element; framework-agnostic, Shadow DOM gives CSS isolation.\n\n## Communication and consistency\n\nKeep communication minimal — chatty microfrontends are a sign they should be one. Options: DOM CustomEvents (framework-neutral), a small pub/sub event bus, or the URL as shared language (single-spa-style routing). The biggest UX risk is inconsistency, so a shared design system package (buttons, inputs, theme) versioned with semver is practically mandatory.\n\n## The honest trade-off\n\nPros: independent deployments, tech freedom, smaller codebases, scalable team structure, gradual legacy migration. Cons: infrastructure complexity, bundle duplication, harder testing, performance overhead. The rule from the source: 5+ teams on one frontend or a gradual framework migration → yes; a 1–3 developer team → a monolith or monorepo is the better choice."
+    },
+    {
+      "id": "typescript_essentials",
+      "name": "TypeScript Essentials",
+      "description": "type vs interface, narrowing, generics, utility types, any/unknown/never, and typing React.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "typescript_type_system",
+        "js_language_basics",
+        "react"
+      ],
+      "studyNotes": "TypeScript is a statically typed superset of JavaScript: all valid JS is valid TS, types are checked at compile time, and then they VANISH — type erasure. The browser runs plain compiled JS, which is why runtime validation needs a separate tool (zod and friends).\n\ntype vs interface: interface is extendable (extends, declaration merging — you can augment an existing Window); type is more flexible (unions, intersections, mapped/conditional types). Rule of thumb: object shapes/props → either; unions and helpers → type.\n\nNarrowing: a union like string | number is refined by control flow — typeof, in, instanceof — and the compiler follows each branch. The discriminated union (a literal kind field switched on) is the pattern to name; it powers exhaustive, type-safe handling of variants.\n\nGenerics parameterize types: identity<T>(value: T): T, constraints like <T extends { length: number }>, generic interfaces (ApiResponse<T>). Usually inferred at the call site.\n\nUtility types to rattle off: Partial, Required, Readonly, Pick, Omit, Record, ReturnType, Parameters, Awaited.\n\nany vs unknown vs never — the reliably asked one: any switches type checking OFF (a.foo.bar compiles, crashes at runtime) — avoid; unknown is the type-safe any — you must narrow before use, right for API responses and JSON.parse; never is \"no value ever\" — a function that always throws, or the exhaustiveness-check trick (assertNever in a switch default catches unhandled union members at compile time).\n\nReact typing: props as a type/interface with literal-union variants, React.ReactNode for children, explicit useState<User | null>(null) when inference is not enough, useRef<HTMLInputElement>(null), React.ChangeEvent<HTMLInputElement> for events."
+    },
+    {
+      "id": "responsive_design",
+      "name": "Responsive Design & Layout",
+      "description": "Mobile-first media queries, Flexbox vs Grid, CSS units, responsive images, and container queries.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "css_box_sizing",
+        "web_accessibility",
+        "frontend_performance"
+      ],
+      "studyNotes": "One codebase adapting to every screen. Three tools: fluid layout (%/fr-based sizes), media queries (breakpoints), responsive images. The modern methodology is mobile-first: the base styles are the mobile view; min-width media queries add columns and spacing as the screen grows. Also honor preference queries: prefers-color-scheme (dark mode) and prefers-reduced-motion.\n\nFlexbox vs Grid — the most asked question — is one dimension vs two: Flexbox lays out a row OR a column and is content-first (sizes flow from content) — navbars, button rows, card internals. Grid controls rows AND columns simultaneously and is layout-first (you define the tracks) — page layouts, galleries. The one-liner worth memorizing: grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) — a responsive card grid with zero media queries.\n\nUnits: px for borders and small fixed details; rem (relative to the root font size) for typography and spacing — it scales with the user's browser font setting, which is an accessibility win over px; em relates to the PARENT's font size; % to the parent's size; vw/vh to the viewport; ch (~character width) for readable line lengths (max-width: 65ch). Fluid typography without media queries: clamp(1.5rem, 5vw, 3rem); and width: min(90%, 1200px) for capped fluid containers.\n\nResponsive images: srcset + sizes lets the browser pick the right resolution; the picture element handles art direction and modern-format fallbacks (AVIF → WebP → JPEG); loading=\"lazy\" for below-the-fold.\n\nContainer queries (all modern browsers since 2023): where media queries respond to the VIEWPORT, @container responds to the parent container's size — a component adapts to the space it actually has, wherever it is dropped. Mark the parent with container-type: inline-size. This is the modern, component-oriented responsive tool to name-drop."
     }
   ],
   "questions": [
@@ -626,6 +780,1133 @@
           "expectedPoints": []
         }
       ]
+    },
+    {
+      "id": "fn_object_locking",
+      "title": "Locking down a JavaScript object",
+      "prompt": "What options do you have to prevent an object from being modified in JavaScript, and what are the gotchas?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "object_locking"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "ol_three_levels",
+          "label": "Three lock levels",
+          "description": "preventExtensions (no add) < seal (no add/delete) < freeze (read-only).",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "preventextensions",
+            "seal",
+            "freeze",
+            "no new properties",
+            "read only",
+            "cannot delete"
+          ]
+        },
+        {
+          "id": "ol_shallow",
+          "label": "Shallow — nested objects stay mutable",
+          "description": "freeze does not recurse; deep freeze needs recursion.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "shallow",
+            "nested objects",
+            "deep freeze",
+            "recursively",
+            "only the first level"
+          ]
+        },
+        {
+          "id": "ol_strict_silent",
+          "label": "Silent failure without strict mode",
+          "description": "Non-strict code ignores violations quietly; strict mode throws TypeError.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "strict mode",
+            "silently",
+            "fails silently",
+            "typeerror",
+            "no error thrown"
+          ]
+        },
+        {
+          "id": "ol_descriptors",
+          "label": "Property descriptors underneath",
+          "description": "writable/configurable/enumerable; defineProperty for custom locks.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "property descriptor",
+            "writable",
+            "configurable",
+            "enumerable",
+            "defineproperty"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "fn_generators",
+      "title": "What are generator functions good for?",
+      "prompt": "Explain how generator functions work and give practical situations where you would use one.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "js_generators"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "gen_pause_resume",
+          "label": "Pause/resume with yield",
+          "description": "function* + yield freezes state; next() resumes; returns {value, done}.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "yield",
+            "pause",
+            "resume",
+            "suspends",
+            "next()",
+            "value and done",
+            "iterator"
+          ]
+        },
+        {
+          "id": "gen_lazy",
+          "label": "Lazy evaluation / infinite sequences",
+          "description": "Values computed on demand — infinite sequences with finite memory.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "lazy",
+            "on demand",
+            "infinite sequence",
+            "only when requested",
+            "fibonacci"
+          ]
+        },
+        {
+          "id": "gen_protocol",
+          "label": "Iterator/iterable protocol",
+          "description": "Symbol.iterator makes for...of and spread work; yield* delegates.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "symbol.iterator",
+            "iterable protocol",
+            "for of",
+            "spread",
+            "yield star",
+            "delegation"
+          ]
+        },
+        {
+          "id": "gen_async",
+          "label": "Async generators",
+          "description": "async function* + for await...of, e.g. paging through an API.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "async generator",
+            "for await",
+            "paginated",
+            "streaming"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "fn_concurrent_hooks",
+      "title": "Keeping the UI responsive during heavy updates",
+      "prompt": "A search input filters a huge list and typing feels janky. Which React tools address this, and how do they work?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting",
+        "concept_check"
+      ],
+      "topicIds": [
+        "react_concurrent_hooks"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "ch_transition",
+          "label": "useTransition for low-priority updates",
+          "description": "Urgent input update applies now; heavy filter runs interruptibly; isPending for feedback.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "usetransition",
+            "starttransition",
+            "low priority",
+            "interruptible",
+            "ispending",
+            "concurrent"
+          ]
+        },
+        {
+          "id": "ch_deferred",
+          "label": "useDeferredValue alternative",
+          "description": "Defer a received value instead of wrapping your own setState.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "usedeferredvalue",
+            "deferred value",
+            "stale",
+            "lags behind"
+          ]
+        },
+        {
+          "id": "ch_split",
+          "label": "Why: main thread blocking",
+          "description": "Long synchronous render blocks paint; splitting priorities restores responsiveness (this is INP).",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "blocks the main thread",
+            "janky",
+            "responsiveness",
+            "inp",
+            "paint"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ch_layout_fu",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would you use useLayoutEffect instead of useEffect?",
+          "expectedPoints": [
+            {
+              "id": "ch_layout",
+              "label": "useLayoutEffect timing",
+              "description": "Runs after DOM update but before paint — DOM measurement/positioning without flicker; blocks painting.",
+              "importance": "important",
+              "roleWeight": {
+                "frontend_developer": 5,
+                "fullstack_developer": 4
+              },
+              "acceptedSignals": [
+                "before paint",
+                "measure the dom",
+                "flicker",
+                "synchronously",
+                "tooltip",
+                "blocks painting"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fn_state_reducer",
+      "title": "useState or useReducer?",
+      "prompt": "How do you decide between useState and useReducer, and what performance details around state initialization and updates are worth knowing?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "usestate_vs_usereducer"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "sr_when",
+          "label": "Complexity-based choice",
+          "description": "Simple independent values → useState; interrelated state with branching update logic → useReducer.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "simple state",
+            "complex state",
+            "interrelated",
+            "multiple related values",
+            "actions",
+            "2-3 usestate"
+          ]
+        },
+        {
+          "id": "sr_pure",
+          "label": "Reducer is pure and testable",
+          "description": "Test the update logic without rendering; actions are traceable.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "pure function",
+            "testable",
+            "unit test",
+            "without rendering",
+            "traceable"
+          ]
+        },
+        {
+          "id": "sr_lazy",
+          "label": "Lazy initialization",
+          "description": "Pass an initializer function so expensive initial state computes once.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "lazy initialization",
+            "initializer function",
+            "only on first render",
+            "localstorage"
+          ]
+        },
+        {
+          "id": "sr_batching",
+          "label": "Automatic batching",
+          "description": "React 18 batches all same-tick updates into one render, even in timeouts/promises; flushSync opts out.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "batching",
+            "batched",
+            "one render",
+            "single re-render",
+            "flushsync"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "fn_imperative_refs",
+      "title": "Calling a child component's methods",
+      "prompt": "A parent needs to trigger focus and reset inside a custom input component. How do you expose that, and what are the caveats?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "concept_check"
+      ],
+      "topicIds": [
+        "react_imperative_refs"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "ir_pattern",
+          "label": "forwardRef + useImperativeHandle",
+          "description": "Forward the ref, expose a narrow API ({focus, clear}), not the raw node.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "forwardref",
+            "useimperativehandle",
+            "expose methods",
+            "narrow api",
+            "controlled api"
+          ]
+        },
+        {
+          "id": "ir_react19",
+          "label": "React 19: ref as a prop",
+          "description": "No forwardRef needed anymore — ref arrives as a normal prop.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "react 19",
+            "ref prop",
+            "no forwardref",
+            "regular prop"
+          ]
+        },
+        {
+          "id": "ir_escape",
+          "label": "Refs escape the data flow — last resort",
+          "description": "Props and callbacks first; refs only for DOM-imperative needs (focus, scroll, animation).",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "last resort",
+            "props first",
+            "escape hatch",
+            "unidirectional",
+            "only for dom",
+            "focus scroll"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "fn_noopener",
+      "title": "The target=\"_blank\" security hole",
+      "prompt": "Why do we add rel=\"noopener noreferrer\" to external links?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "noopener_noreferrer"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "no_tabnabbing",
+          "label": "Tabnabbing via window.opener",
+          "description": "The opened page can redirect the original tab to a phishing page.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "window.opener",
+            "tabnabbing",
+            "redirect the original",
+            "phishing",
+            "access to the opener"
+          ]
+        },
+        {
+          "id": "no_attrs",
+          "label": "What each attribute does",
+          "description": "noopener severs the opener; noreferrer also hides the Referer and implies noopener.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "noopener",
+            "noreferrer",
+            "referer header",
+            "implies noopener",
+            "no referrer sent"
+          ]
+        },
+        {
+          "id": "no_modern",
+          "label": "Modern defaults + window.open",
+          "description": "Browsers now imply noopener on _blank; window.open needs the flags explicitly; nofollow is SEO, not security.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "implicit",
+            "by default now",
+            "window.open",
+            "nofollow",
+            "seo"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "fn_redux_toolkit",
+      "title": "useSelector re-renders too much",
+      "prompt": "A component using useSelector re-renders on every store change even though its data hasn't changed. What's happening and how do you fix it?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "redux_toolkit"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "rt_reference",
+          "label": "New reference per selector run",
+          "description": "filter/map/object literals return fresh references; === sees change every time.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "new reference",
+            "new array",
+            "new object",
+            "strict equality",
+            "every store change",
+            "filter returns"
+          ]
+        },
+        {
+          "id": "rt_fixes",
+          "label": "createSelector / shallowEqual / primitives",
+          "description": "Memoized selectors for derived data; shallowEqual second arg; or select primitives separately.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "createselector",
+            "memoized selector",
+            "shallowequal",
+            "select primitives",
+            "reselect"
+          ]
+        },
+        {
+          "id": "rt_slice",
+          "label": "Knows the RTK model",
+          "description": "createSlice + Immer 'mutation'; extraReducers for thunk lifecycle actions.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "createslice",
+            "immer",
+            "extrareducers",
+            "pending fulfilled rejected",
+            "async thunk"
+          ]
+        },
+        {
+          "id": "rt_query",
+          "label": "RTK Query for data fetching",
+          "description": "Generated hooks, cache, tag invalidation replace manual thunks.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "rtk query",
+            "tag invalidation",
+            "generated hooks",
+            "automatic refetch",
+            "react query"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "fn_closure_loop",
+      "title": "The var + setTimeout loop puzzle",
+      "prompt": "for (var i = 0; i < 6; i++) { setTimeout(() => console.log(i), 1000); } — what does this print, why, and how would you fix it?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "js_closures_scoping"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "cl_output",
+          "label": "Correct output: six 6s",
+          "description": "All callbacks print 6, together, after ~1s.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "six",
+            "prints 6",
+            "all the same",
+            "6 six times",
+            "same value"
+          ]
+        },
+        {
+          "id": "cl_why",
+          "label": "Why: scope + closure + event loop",
+          "description": "var is function-scoped (one shared i); closures capture the variable; timeouts run after the loop ends.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "function scoped",
+            "one shared variable",
+            "closure captures the variable",
+            "after the loop",
+            "macrotask",
+            "loop already finished"
+          ]
+        },
+        {
+          "id": "cl_fixes",
+          "label": "Fixes",
+          "description": "let per-iteration binding; IIFE; setTimeout's third arg; bind.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "let",
+            "block scope",
+            "iife",
+            "third argument",
+            "bind",
+            "per iteration"
+          ]
+        },
+        {
+          "id": "cl_tdz",
+          "label": "Hoisting/TDZ bonus",
+          "description": "var hoists with undefined; let/const sit in the temporal dead zone until declared.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "hoisting",
+            "temporal dead zone",
+            "tdz",
+            "referenceerror",
+            "undefined before"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "fn_flatten",
+      "title": "Flattening a nested object",
+      "prompt": "Walk me through how you would flatten a nested object into dot-notation keys — approach first, then the edge cases you'd guard against.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "object_flatten_recursion"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "fl_recursion",
+          "label": "Recursive approach with base case",
+          "description": "Iterate keys; primitives are the base case; objects recurse with a dot-joined prefix.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "recursion",
+            "recursive",
+            "base case",
+            "prefix",
+            "dot notation",
+            "walk the keys"
+          ]
+        },
+        {
+          "id": "fl_null",
+          "label": "typeof null trap",
+          "description": "typeof null === 'object' — must exclude null explicitly or crash.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "typeof null",
+            "null is object",
+            "null check",
+            "exclude null"
+          ]
+        },
+        {
+          "id": "fl_edges",
+          "label": "Arrays and circular references",
+          "description": "Array.isArray decision; a seen-Set against infinite recursion / stack overflow.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "array.isarray",
+            "arrays are objects",
+            "circular",
+            "seen set",
+            "stack overflow",
+            "infinite recursion"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "fn_web_security",
+      "title": "XSS and how to prevent it",
+      "prompt": "What is XSS, what forms does it take, and how do you defend a React application against it — including at the HTTP header level?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "web_security_frontend"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "ws_types",
+          "label": "Three XSS types",
+          "description": "Stored (in DB), reflected (in URL/response), DOM-based (client-side sink).",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "stored",
+            "reflected",
+            "dom-based",
+            "persisted in the database",
+            "in the url"
+          ]
+        },
+        {
+          "id": "ws_sinks",
+          "label": "Dangerous sinks and safe defaults",
+          "description": "innerHTML/dangerouslySetInnerHTML with user input; React escapes JSX by default; use textContent.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "innerhtml",
+            "dangerouslysetinnerhtml",
+            "react escapes",
+            "textcontent",
+            "sanitize"
+          ]
+        },
+        {
+          "id": "ws_csp",
+          "label": "CSP as a second layer",
+          "description": "Whitelist sources; block inline scripts (no unsafe-inline; nonce if needed).",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "content security policy",
+            "csp",
+            "inline scripts",
+            "nonce",
+            "whitelist",
+            "script-src"
+          ]
+        },
+        {
+          "id": "ws_headers",
+          "label": "Other security headers",
+          "description": "HSTS, X-Frame-Options/frame-ancestors, nosniff, hardened cookies.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "hsts",
+            "strict-transport-security",
+            "x-frame-options",
+            "clickjacking",
+            "nosniff"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "fn_microfrontends",
+      "title": "Do we need microfrontends?",
+      "prompt": "Your organization is considering microfrontends. Explain the integration options and argue when the architecture pays off — and when it does not.",
+      "roles": [
+        "frontend_architect",
+        "solution_architect",
+        "frontend_developer"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "system_design"
+      ],
+      "topicIds": [
+        "microfrontends"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "mf_what",
+          "label": "Independent deploy is the point",
+          "description": "Team-owned parts, independently built and deployed; tech freedom per team.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "independent deployment",
+            "separate teams",
+            "own release",
+            "technology independence",
+            "microservices for frontend"
+          ]
+        },
+        {
+          "id": "mf_integration",
+          "label": "Integration options with trade-offs",
+          "description": "npm build-time loses independence; iframe isolates but hurts UX; Module Federation loads remotes at runtime with shared singletons.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "module federation",
+            "runtime integration",
+            "iframe",
+            "npm package",
+            "remote entry",
+            "shared dependencies",
+            "web components"
+          ]
+        },
+        {
+          "id": "mf_when",
+          "label": "When NOT to",
+          "description": "Small teams / simple apps → monolith; it pays off at 5+ teams or gradual migration.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "small team",
+            "not worth it",
+            "monolith is fine",
+            "five teams",
+            "gradual migration",
+            "legacy"
+          ]
+        },
+        {
+          "id": "mf_consistency",
+          "label": "Design system + minimal communication",
+          "description": "Shared component library against UX drift; custom events/URL for loose coupling.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "design system",
+            "shared components",
+            "custom events",
+            "event bus",
+            "loose coupling",
+            "inconsistent ux"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "fn_ts_essentials",
+      "title": "any vs unknown, type vs interface",
+      "prompt": "Explain the difference between any and unknown, and between type and interface. What does 'type erasure' mean in practice?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "typescript_essentials"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "ts_any_unknown",
+          "label": "any disables, unknown requires narrowing",
+          "description": "any turns checking off (runtime crashes compile fine); unknown must be narrowed first — the safe choice for external input.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "any disables",
+            "turns off type checking",
+            "unknown",
+            "narrow first",
+            "type-safe any",
+            "json.parse"
+          ]
+        },
+        {
+          "id": "ts_type_interface",
+          "label": "type vs interface",
+          "description": "interface: extends + declaration merging; type: unions/intersections. Either for object shapes.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "declaration merging",
+            "extends",
+            "union",
+            "intersection",
+            "either works",
+            "type alias"
+          ]
+        },
+        {
+          "id": "ts_erasure",
+          "label": "Type erasure",
+          "description": "Types exist only at compile time; runtime validation needs zod or similar.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "type erasure",
+            "compile time",
+            "types disappear",
+            "runtime validation",
+            "zod"
+          ]
+        },
+        {
+          "id": "ts_never",
+          "label": "never + exhaustiveness",
+          "description": "never for impossible values; assertNever catches unhandled union cases.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "never",
+            "exhaustiveness",
+            "assertnever",
+            "unhandled case"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "fn_responsive",
+      "title": "Flexbox or Grid — and what makes a layout responsive?",
+      "prompt": "How do you decide between Flexbox and Grid, and what techniques make a modern layout responsive without a pile of media queries?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "responsive_design"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "rd_1d2d",
+          "label": "Flexbox 1D vs Grid 2D",
+          "description": "Flexbox: one axis, content-first (navbars, rows); Grid: two axes, layout-first (page layouts).",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "one dimension",
+            "two dimensions",
+            "1d",
+            "2d",
+            "content-first",
+            "layout-first",
+            "rows and columns"
+          ]
+        },
+        {
+          "id": "rd_mobile_first",
+          "label": "Mobile-first with min-width",
+          "description": "Base styles are mobile; min-width queries enhance upward.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "mobile first",
+            "min-width",
+            "base styles mobile",
+            "enhance upward"
+          ]
+        },
+        {
+          "id": "rd_fluid",
+          "label": "Fluid techniques without media queries",
+          "description": "auto-fit/minmax grids, clamp() typography, min()/max() containers.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "auto-fit",
+            "minmax",
+            "clamp",
+            "fluid",
+            "without media queries"
+          ]
+        },
+        {
+          "id": "rd_modern",
+          "label": "rem for a11y + container queries",
+          "description": "rem scales with user font settings; @container responds to the parent, not the viewport.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "rem",
+            "user font size",
+            "container quer",
+            "parent size",
+            "component adapts"
+          ]
+        }
+      ],
+      "followUps": []
     }
   ]
 }

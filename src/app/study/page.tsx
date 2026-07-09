@@ -314,7 +314,15 @@ export default function StudyPage() {
         : matchingCardsOfTopic(topic.id);
       return { topic, cards };
     })
-    .filter((e) => e.cards.length > 0 || (!searching && e.topic.studyNotes));
+    // Topics with cards follow the role/source filter; a notes-only topic
+    // (no cards anywhere) has no role association, so it is always listed.
+    .filter(
+      (e) =>
+        e.cards.length > 0 ||
+        (!searching &&
+          e.topic.studyNotes &&
+          (cardsByTopicId.get(e.topic.id) ?? []).length === 0),
+    );
 
   const byCategory = new Map<
     Topic["category"],
