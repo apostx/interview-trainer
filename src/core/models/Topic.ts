@@ -6,6 +6,8 @@ export type Topic = {
   description: string;
   category: TopicCategory;
   relatedTopicIds: string[];
+  /** Educational prose for the Study view (paragraphs, "- " bullets). */
+  studyNotes?: string;
   status: TopicStatus;
   userConfidence: 1 | 2 | 3 | 4 | 5;
 };

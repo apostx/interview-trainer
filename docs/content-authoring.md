@@ -44,9 +44,16 @@ errors are shown on the **Topics** page (and in `npm run content:check`).
   "category": "architecture",       // one of: frontend | backend | fullstack |
                                     // architecture | cloud | security | database |
                                     // devops | observability | soft_technical
-  "relatedTopicIds": ["event_driven"] // optional
+  "relatedTopicIds": ["event_driven"], // optional
+  "studyNotes": "Educational prose for the Study view. Paragraphs separated by\nblank lines (\\n\\n); lines starting with \"- \" become bullet lists; a line\nstarting with \"## \" becomes a subheading."  // optional but strongly encouraged
 }
 ```
+
+`studyNotes` is what makes the Study section educational: a well-written
+explanation of the topic that someone can *learn from*, with the question
+cards rendered below it as practice checks. Aim for 150–400 words per topic —
+explain the concept, the why, the trade-offs, and the classic mistakes, in
+the same order a good tutorial would.
 
 Questions may also reference **existing seed topic ids** (see
 `src/core/seed/topics.ts`), e.g. `api_design`, `caching`, `message_queue`,
@@ -139,7 +146,8 @@ The JSON must follow this exact structure (all ids snake_case):
   "topics": [
     { "id": "...", "name": "...", "description": "...",
       "category": "<frontend|backend|fullstack|architecture|cloud|security|database|devops|observability|soft_technical>",
-      "relatedTopicIds": [] }
+      "relatedTopicIds": [],
+      "studyNotes": "<a 150-400 word tutorial-style explanation of the topic: the concept, why it matters, trade-offs, classic mistakes. Paragraphs separated by \\n\\n; lines starting with '- ' become bullets; '## ' starts a subheading>" }
   ],
   "questions": [
     {
@@ -174,6 +182,10 @@ Content rules:
 - acceptedSignals: 4-8 short phrases (1-4 words) a candidate would plausibly
   SAY out loud, including synonyms and paraphrases of the concept — not only
   the jargon term. All lowercase.
+- Every topic MUST have studyNotes: a 150-400 word tutorial-style explanation
+  the learner reads in the Study view (concept, why it matters, trade-offs,
+  classic mistakes). Paragraphs separated by \n\n; "- " lines become bullets;
+  "## " starts a subheading. The questions are practice checks *under* the notes.
 - Every question needs 1-2 followUps that probe the most likely gap.
 - Mix the modes: concept_check for definitions, tradeoff_decision for X-vs-Y,
   scenario_discussion / troubleshooting for practical situations,

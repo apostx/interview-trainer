@@ -14,7 +14,8 @@
       "relatedTopicIds": [
         "react",
         "frontend_performance"
-      ]
+      ],
+      "studyNotes": "React's rendering happens in two phases, and keeping them apart explains most of its behaviour.\n\nThe render phase calls your components to build a new virtual tree and diffs it against the previous one (reconciliation). It must be pure: React may run it many times, throw the result away, or interrupt it — so no side effects, no mutations, no reading refs mid-render. The commit phase then applies the minimal set of real DOM changes and runs effects afterwards.\n\nWhat actually triggers a re-render:\n- A state change in the component (a useState setter / useReducer dispatch).\n- The parent re-rendering — children re-render by default, whether or not their props changed.\n- A context value change, for every consumer of that context.\n\nWhat does NOT trigger one: mutating a prop or an object in place. React compares by reference and never sees the mutation — a classic source of \"why doesn't my UI update\" bugs.\n\nReconciliation compares the trees node by node. For lists, keys tell React which items are the same across renders; index-as-key breaks when the list reorders, because state sticks to the position instead of the item.\n\nOptimisation follows from the model: a re-render is cheap virtual-tree work unless the subtree is large. When it is, memoise it (React.memo, useMemo, useCallback) so reference equality lets React skip it — but measure first. Memoising everything adds overhead and hides the usual real problem: state living higher in the tree than it needs to."
     },
     {
       "id": "ssr_csr",
@@ -25,7 +26,8 @@
         "react",
         "frontend_performance",
         "core_web_vitals"
-      ]
+      ],
+      "studyNotes": "Client-side rendering (CSR) ships an empty HTML shell plus a JavaScript bundle; the browser builds the page. Server-side rendering (SSR) generates the HTML on the server per request; static generation (SSG) does it once at build time. The choice is about who your first visitor is and what they need.\n\nSSR/SSG earns its complexity when:\n- Pages are public and content-heavy — crawlers get real, indexable HTML (SEO).\n- First contentful paint matters — the user sees content before the bundle loads and executes.\n- Content changes per request or per user but must still arrive as HTML (personalised landing pages).\n\nCSR is the right default when the app lives behind a login: dashboards, admin tools, editors. There is nothing to index, the user already committed to waiting for the app, and SSR would add server infrastructure, deployment complexity, and cost for no visible benefit.\n\nHydration is the bridge and the catch: the server sends finished HTML, then React runs on the client, builds the same tree, and attaches event listeners to the existing markup. Until hydration completes, the page looks interactive but is not. Two costs follow: the work is done twice (server render + client hydrate), and any mismatch between server and client output (dates, random values, user-only data) causes hydration errors.\n\nA framework like Next.js packages SSR, SSG, routing, and code-splitting so you do not build them yourself — but it brings a server runtime and its operational burden. The honest answer to \"do we need Next.js?\" starts with \"is anything here public and SEO- or first-paint-critical?\" — if not, plain React with CSR is the simpler system."
     }
   ],
   "questions": [

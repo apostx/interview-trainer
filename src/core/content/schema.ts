@@ -97,6 +97,9 @@ export const packTopicSchema = z.object({
   description: z.string().default(""),
   category: categoryEnum,
   relatedTopicIds: z.array(z.string()).default([]),
+  /** Educational prose for the Study view: paragraphs separated by blank
+   * lines, "- " lines become bullet lists. */
+  studyNotes: z.string().optional(),
 });
 
 export const contentPackSchema = z.object({

@@ -230,6 +230,26 @@ async function main() {
   await page.getByText("CSS box-sizing", { exact: true }).first().waitFor();
   log("🔍", "Search looks across all categories");
   await page.getByLabel("Search topics and questions").fill("");
+
+  // Study notes: a topic with studyNotes renders the prose + a Practice checks label
+  await page.getByLabel("Search topics and questions").fill("Big-O Basics");
+  await page.getByText("Big-O Basics", { exact: false }).first().click();
+  const notesShown = await page
+    .getByText("how does the running time", { exact: false })
+    .first()
+    .isVisible()
+    .catch(() => false);
+  const practiceLabel = await page
+    .getByText("Practice checks", { exact: true })
+    .first()
+    .isVisible()
+    .catch(() => false);
+  log(
+    notesShown && practiceLabel ? "✅" : "❌",
+    "Study view renders educational notes above the practice checks",
+  );
+  await page.getByRole("button", { name: "← All topics" }).click();
+  await page.getByLabel("Search topics and questions").fill("");
   await page.screenshot({ path: `${SHOTS}/17-study.png` });
 
   // ---- Study PDF export (buttons live on the study page now)

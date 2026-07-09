@@ -15,6 +15,7 @@ import {
   type StudyPdfFormat,
   type StudyPdfScope,
 } from "@/core/pdf/studyPdf";
+import { parseStudyNotes } from "@/core/content/notes";
 import { normalizedIncludes } from "@/core/services/transcriptNormalizer";
 import { getSettings } from "@/core/storage/repositories";
 
@@ -38,7 +39,9 @@ for (const card of allQuestions) {
     cardsByTopicId.set(topicId, [...(cardsByTopicId.get(topicId) ?? []), card]);
   }
 }
-const studyTopics = allTopics.filter((t) => cardsByTopicId.has(t.id));
+const studyTopics = allTopics.filter(
+  (t) => cardsByTopicId.has(t.id) || t.studyNotes,
+);
 
 // Source dropdown: root files flat first, then subfolders as groups.
 const sourceGroups: [string, { id: string; name: string }[]][] = (() => {
@@ -74,6 +77,32 @@ function cardMatchesFilters(
 function cardMatchesQuery(card: QuestionCard, query: string): boolean {
   return (
     normalizedIncludes(card.title, query) || normalizedIncludes(card.prompt, query)
+  );
+}
+
+function StudyNotes({ notes }: { notes: string }) {
+  return (
+    <div className="mb-6 flex flex-col gap-3">
+      {parseStudyNotes(notes).map((block, i) =>
+        block.type === "h" ? (
+          <h2 key={i} className="mt-2 font-bold">
+            {block.text}
+          </h2>
+        ) : block.type === "p" ? (
+          <p key={i} className="text-sm leading-relaxed text-secondary">
+            {block.text}
+          </p>
+        ) : (
+          <ul key={i} className="flex list-disc flex-col gap-1 pl-5">
+            {block.items.map((item, j) => (
+              <li key={j} className="text-sm leading-relaxed text-secondary">
+                {item}
+              </li>
+            ))}
+          </ul>
+        ),
+      )}
+    </div>
   );
 }
 
@@ -255,6 +284,14 @@ export default function StudyPage() {
             {pdfError}
           </p>
         )}
+        {selectedTopic.studyNotes && (
+          <StudyNotes notes={selectedTopic.studyNotes} />
+        )}
+        {cards.length > 0 && (
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+            Practice checks
+          </p>
+        )}
         {cards.map((card) => (
           <StudyCard key={card.id} card={card} />
         ))}
@@ -277,7 +314,7 @@ export default function StudyPage() {
         : matchingCardsOfTopic(topic.id);
       return { topic, cards };
     })
-    .filter((e) => e.cards.length > 0);
+    .filter((e) => e.cards.length > 0 || (!searching && e.topic.studyNotes));
 
   const byCategory = new Map<
     Topic["category"],

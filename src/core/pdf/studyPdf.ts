@@ -1,6 +1,7 @@
 import type { QuestionCard, Topic } from "@/core/models";
 import { MODE_LABELS } from "@/core/models";
 import { allQuestions, allTopics } from "@/core/content/bank";
+import { parseStudyNotes } from "@/core/content/notes";
 
 /**
  * Programmatic PDF export of the study material (pdfmake, fully client-side).
@@ -123,6 +124,25 @@ function pointItem(p: QuestionCard["expectedPoints"][number], base: number): any
   };
 }
 
+function notesBlocks(notes: string, base: number): any[] {
+  return parseStudyNotes(notes).map((block) =>
+    block.type === "h"
+      ? { text: block.text, fontSize: base + 1, bold: true, color: INK, margin: [0, 6, 0, 2] }
+      : block.type === "p"
+        ? { text: block.text, fontSize: base - 0.5, color: BODY, margin: [0, 0, 0, 4], lineHeight: 1.35 }
+        : {
+            ul: block.items.map((item) => ({
+              text: item,
+              fontSize: base - 0.5,
+              color: BODY,
+              margin: [0, 0, 0, 2],
+            })),
+            markerColor: MUTED,
+            margin: [2, 0, 0, 4],
+          },
+  );
+}
+
 function cardBox(card: QuestionCard, g: Geometry): any {
   const base = g.base;
   const inner: any[] = [
@@ -197,12 +217,21 @@ export function buildStudyPdfDefinition(
     : allQuestions;
   const cardsByTopicId = new Map<string, QuestionCard[]>();
   for (const card of scopedQuestions) {
-    for (const topicId of card.topicIds) {
-      cardsByTopicId.set(topicId, [...(cardsByTopicId.get(topicId) ?? []), card]);
+    if (scope.topicId) {
+      // Single-topic export keeps every card that references the topic.
+      for (const topicId of card.topicIds) {
+        cardsByTopicId.set(topicId, [...(cardsByTopicId.get(topicId) ?? []), card]);
+      }
+    } else {
+      // Otherwise a card appears only under its primary topic, so the
+      // document never repeats the same card in several chapters.
+      const primary = card.topicIds[0];
+      cardsByTopicId.set(primary, [...(cardsByTopicId.get(primary) ?? []), card]);
     }
   }
   const studyTopics = allTopics.filter((t) => {
-    if (!cardsByTopicId.has(t.id)) return false;
+    if (!cardsByTopicId.has(t.id) && !t.studyNotes) return false;
+    if (cardIdSet && !cardsByTopicId.has(t.id)) return false;
     if (scope.topicId) return t.id === scope.topicId;
     if (scope.category) return t.category === scope.category;
     return true;
@@ -325,7 +354,21 @@ export function buildStudyPdfDefinition(
         ],
         unbreakable: true,
       });
-      for (const card of cardsByTopicId.get(topic.id) ?? []) {
+      if (topic.studyNotes) {
+        content.push(...notesBlocks(topic.studyNotes, base));
+      }
+      const topicCards = cardsByTopicId.get(topic.id) ?? [];
+      if (topicCards.length > 0) {
+        content.push({
+          text: "PRACTICE CHECKS",
+          fontSize: base - 3.5,
+          bold: true,
+          characterSpacing: 0.6,
+          color: MUTED,
+          margin: [0, 4, 0, 2],
+        });
+      }
+      for (const card of topicCards) {
         content.push(cardBox(card, g));
       }
     });

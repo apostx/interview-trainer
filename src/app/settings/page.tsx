@@ -149,6 +149,7 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {settings.speechEngine === "whisper" && (
         <div>
           <label className={labelBase} htmlFor="speech-model">
             Local Whisper model
@@ -168,8 +169,10 @@ export default function SettingsPage() {
           <p className="mt-1 text-xs text-muted">
             If transcriptions look wrong or keep coming back empty, switch to
             Base or Small — they are noticeably more accurate than Tiny.
+            Phones always use Tiny to avoid running out of memory.
           </p>
         </div>
+        )}
 
         <div className="flex flex-col gap-3">
           <label className="flex items-center gap-3 text-sm">
