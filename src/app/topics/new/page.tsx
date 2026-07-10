@@ -24,6 +24,7 @@ const CATEGORIES: Topic["category"][] = [
   "devops",
   "observability",
   "soft_technical",
+  "core",
 ];
 
 export default function NewTopicPage() {

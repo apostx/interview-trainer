@@ -27,6 +27,7 @@ const categoryEnum = z.enum([
   "devops",
   "observability",
   "soft_technical",
+  "core",
 ]);
 
 const idSchema = z

@@ -25,6 +25,7 @@ const CATEGORY_LABELS: Record<Topic["category"], string> = {
   devops: "DevOps",
   observability: "Observability",
   soft_technical: "Soft technical",
+  core: "Core Engineering",
 };
 
 export default function TopicsPage() {

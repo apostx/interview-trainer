@@ -36,7 +36,8 @@ export type TopicCategory =
   | "database"
   | "devops"
   | "observability"
-  | "soft_technical";
+  | "soft_technical"
+  | "core";
 
 export const INTERVIEW_ROLES: InterviewRole[] = [
   "frontend_developer",

@@ -43,6 +43,7 @@ const CATEGORY_LABELS: Record<Topic["category"], string> = {
   devops: "DevOps",
   observability: "Observability",
   soft_technical: "Soft technical",
+  core: "Core Engineering",
 };
 
 // pdfmake's TS types are loose; the definition is plain data.

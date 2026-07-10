@@ -1,0 +1,344 @@
+{
+  "id": "fullstack_integration",
+  "name": "Fullstack Integration",
+  "description": "The layer where frontend and backend actually meet: loading/error/empty states, file upload, and designing a feature end to end across the stack.",
+  "sources": [],
+  "topics": [
+    {
+      "id": "loading_error_states",
+      "name": "Loading, Error & Empty States",
+      "description": "Designing every state a screen can be in — not just the happy path — and how frontend and backend share that responsibility.",
+      "category": "fullstack",
+      "relatedTopicIds": [
+        "api_contract_design",
+        "react_state_strategies",
+        "frontend_app_structure"
+      ],
+      "studyNotes": "## What is it?\n\nEvery screen that shows server data has more than one state: loading (waiting for data), success (data arrived), empty (it arrived, but there is nothing), and error (it failed). Handling all four deliberately — instead of only the happy path — is what makes an app feel finished.\n\n## What problem does it solve?\n\nThe happy path is maybe a third of what users actually experience. Without designed states, users see blank screens while data loads, cryptic crashes when a request fails, and confusing nothing when a list is empty. Most \"the app feels broken\" feedback traces back to a missing state.\n\n## How it works\n\nThe four states, and what each needs:\n\n- Loading: show that something is happening — a spinner or, better, a skeleton that reserves the final layout (which also prevents layout jumps). If loading can take long, say so.\n- Error: say what failed in human words, and give a way forward — usually a Retry button. Distinguish \"your input was wrong\" (fix the form field) from \"the server had a problem\" (retry later).\n- Empty: not an error! \"No results yet\" with a hint about what to do next (create the first item, widen the search) turns a dead end into guidance.\n- Success: the happy path — the easy part.\n\nThe backend's half of the deal: consistent, machine-readable error responses (status code + a stable error body) so the frontend can decide WHICH error UI to show; and meaningful distinctions — 400 with field errors vs 403 vs 500 lead to different screens.\n\nTwo timing details worth knowing: debounce the loading indicator (a spinner that flashes for 80ms looks worse than nothing), and beware race conditions — if the user triggers two requests, the SECOND response must win, not the slower one (cancel the stale request or track the latest request id).\n\n## Common mistakes\n\n- Building only the happy path and bolting an alert() on errors at the end\n- Treating an empty list as an error, or showing a blank white area\n- One generic \"Something went wrong\" for every failure, with no retry\n- The stale-response race: the slower of two requests overwrites the newer one\n\n## Key terms\n\n- Skeleton screen — placeholder layout shown while loading\n- Empty state — \"no data\" designed as guidance, not as an error\n- Error body — the agreed JSON shape errors arrive in\n- Race condition — an older response landing after a newer one"
+    },
+    {
+      "id": "file_upload",
+      "name": "File Upload End to End",
+      "description": "Multipart uploads, validation on both sides, progress, and the presigned-URL pattern for large files.",
+      "category": "fullstack",
+      "relatedTopicIds": [
+        "api_security_essentials",
+        "loading_error_states"
+      ],
+      "studyNotes": "## What is it?\n\nGetting a file from the user's machine to your storage — a feature that touches every layer: a form input in the browser, an HTTP upload, backend validation, and object storage (S3-style) at the end.\n\n## What problem does it solve?\n\nFiles are different from JSON data: they are big, slow to transfer, easy to abuse (malware, disguised file types, gigantic sizes), and expensive to route through your application servers. A naive implementation works in the demo and falls over in production.\n\n## How it works\n\nThe basic flow: the browser sends multipart/form-data (an input type=\"file\" in a form, or FormData built in JavaScript with fetch). The backend reads the file stream, validates it, and stores it — never on the app server's local disk (instances are replaceable), but in object storage like S3.\n\nValidation happens on BOTH sides, for different reasons:\n- Frontend: file size and type checks before uploading — instant feedback, no wasted bandwidth. Purely UX; it can be bypassed.\n- Backend: the checks that count. Size limits, allowed types — checked by the file's actual CONTENT (magic bytes), not its name or claimed MIME type, because both lie. Regenerate the filename (never trust user filenames — path traversal like ../../etc/passwd), and virus-scan if users download each other's files.\n\nThe pattern for large files — presigned URLs: the backend generates a short-lived, signed upload URL for the object storage; the browser uploads DIRECTLY to storage, bypassing your servers entirely. Your API only authorizes (issues the URL) and records the result. This removes the biggest bottleneck: gigabytes flowing through app instances.\n\nProgress and resilience: XMLHttpRequest or fetch-with-streams gives upload progress for the progress bar; big files can be uploaded in chunks so a dropped connection resumes instead of restarting.\n\n## Common mistakes\n\n- Trusting the file extension or client-sent MIME type instead of the content\n- Storing files on the app server's disk (dies on redeploy/scale-out)\n- Routing huge files through the API when presigned direct upload exists\n- No size limit — one user can fill your storage or exhaust memory\n- Keeping the user's original filename (path traversal, collisions)\n\n## Key terms\n\n- multipart/form-data — the HTTP encoding for file uploads\n- Magic bytes — the file's real type, read from its first bytes\n- Presigned URL — short-lived permission to upload directly to storage\n- Chunked/resumable upload — big files in parts, resumable on failure"
+    },
+    {
+      "id": "e2e_feature_design",
+      "name": "Designing a Feature End to End",
+      "description": "The fullstack thought process: from API contract through states, auth and pagination to rollout — in the right order.",
+      "category": "fullstack",
+      "relatedTopicIds": [
+        "api_contract_design",
+        "loading_error_states",
+        "frontend_quality_gates",
+        "token_refresh"
+      ],
+      "studyNotes": "## What is it?\n\nThe checklist a fullstack developer walks through when building a complete feature — say, \"comments on a document\" — covering both sides of the stack and the seam between them, in an order that avoids rework.\n\n## What problem does it solve?\n\nFeatures built frontend-first or backend-first in isolation meet in the middle badly: the API returns shapes the UI cannot use, error cases surface with no design, auth is bolted on late. Designing the SEAM first is what prevents the rework.\n\n## How it works\n\nThe order that works:\n\n- 1. Contract first: agree the endpoints, request/response shapes, error format, and pagination model before writing either side. With the contract fixed, frontend and backend can build in parallel — the frontend against a mock of it.\n- 2. Data and auth: who may see and do what? Which role sees which subset? What do 401 and 403 mean HERE, and what should the UI do for each (redirect to login vs \"no access\" message)?\n- 3. States: for every screen — loading, empty, error, success. For every mutation — pending, failure (with retry), success. Decide whether writes are optimistic (show immediately, roll back on failure) or pessimistic (spinner until confirmed).\n- 4. The edges: pagination for lists that grow; validation messages field by field; concurrent edits (optimistic locking? last-write-wins?); what happens on a slow network.\n- 5. Rollout: feature flag it, ship dark, enable gradually; monitor errors on the new endpoints; keep the flag as the kill switch.\n\nThe habit that ties it together: walk the feature THROUGH the stack as a user action — \"click → request → auth check → query → response → state update → render\" — and ask at every arrow what can fail there and what the user sees when it does.\n\n## Common mistakes\n\n- Building the UI against imagined data, then discovering the real API differs\n- Auth as an afterthought — every endpoint needs the \"who may call this?\" answer\n- Designing only mutations' success path; no pending or failure treatment\n- Shipping without a kill switch — the first bad deploy becomes an emergency\n\n## Key terms\n\n- Contract-first — agree the API before building either side\n- Optimistic vs pessimistic UI — show immediately vs wait for the server\n- Mock/stub backend — lets the frontend build against the contract early\n- Kill switch — the flag that turns a broken feature off without a deploy"
+    }
+  ],
+  "questions": [
+    {
+      "id": "fsi_states_001",
+      "title": "The states nobody designs",
+      "prompt": "You get a design for a list screen showing only the happy path. What other states do you build, and what do you need from the backend for them?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "design_review"
+      ],
+      "topicIds": [
+        "loading_error_states"
+      ],
+      "expectedDurationSeconds": 200,
+      "thinkingTimeSeconds": 45,
+      "expectedPoints": [
+        {
+          "id": "st_four",
+          "label": "Names the four states",
+          "description": "Loading (skeleton), error (with retry), empty (as guidance), success.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5,
+            "frontend_developer": 4,
+            "backend_developer": 4
+          },
+          "acceptedSignals": [
+            "loading",
+            "error state",
+            "empty state",
+            "skeleton",
+            "retry",
+            "happy path is not enough"
+          ]
+        },
+        {
+          "id": "st_backend",
+          "label": "Backend contract for errors",
+          "description": "Consistent error body + status codes so the UI can pick the right treatment (field errors vs server failure).",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5,
+            "frontend_developer": 4,
+            "backend_developer": 4
+          },
+          "acceptedSignals": [
+            "error format",
+            "error body",
+            "status codes",
+            "field errors",
+            "consistent errors",
+            "400 vs 500"
+          ]
+        },
+        {
+          "id": "st_races",
+          "label": "Timing details",
+          "description": "Debounced spinner; stale responses must not overwrite newer ones (cancel or track request id).",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5,
+            "frontend_developer": 4,
+            "backend_developer": 4
+          },
+          "acceptedSignals": [
+            "race",
+            "stale response",
+            "cancel the request",
+            "flashing spinner",
+            "debounce",
+            "abort"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "st_optimistic_fu",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would you update the UI optimistically instead of waiting for the server?",
+          "expectedPoints": [
+            {
+              "id": "st_optimistic",
+              "label": "Optimistic update judgment",
+              "description": "High-success, low-stakes mutations (likes, todos) → optimistic with rollback; payments and destructive actions → wait for the server.",
+              "importance": "important",
+              "roleWeight": {
+                "fullstack_developer": 5,
+                "frontend_developer": 4,
+                "backend_developer": 4
+              },
+              "acceptedSignals": [
+                "optimistic",
+                "roll back",
+                "low risk",
+                "instant feedback",
+                "wait for the server on payments"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fsi_upload_001",
+      "title": "Production-ready file upload",
+      "prompt": "Design a file upload feature for user documents. Walk me through the flow, the validation, and how you handle large files.",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "file_upload"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Flow (multipart → storage) → validation on both sides → large files (presigned/chunked) → security details.",
+      "expectedPoints": [
+        {
+          "id": "up_flow",
+          "label": "Correct basic flow",
+          "description": "Multipart upload; files land in object storage, never on app-server disk.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5,
+            "frontend_developer": 4,
+            "backend_developer": 4
+          },
+          "acceptedSignals": [
+            "multipart",
+            "form data",
+            "object storage",
+            "s3",
+            "not on the server disk"
+          ]
+        },
+        {
+          "id": "up_validation",
+          "label": "Backend validation by content",
+          "description": "Size limits and type checks by magic bytes; regenerate filenames; frontend checks are UX only.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5,
+            "frontend_developer": 4,
+            "backend_developer": 4
+          },
+          "acceptedSignals": [
+            "magic bytes",
+            "content not extension",
+            "size limit",
+            "rename the file",
+            "backend validates",
+            "mime type lies"
+          ]
+        },
+        {
+          "id": "up_presigned",
+          "label": "Presigned direct upload for large files",
+          "description": "Backend authorizes with a short-lived URL; browser uploads straight to storage; API records the result.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5,
+            "frontend_developer": 4,
+            "backend_developer": 4
+          },
+          "acceptedSignals": [
+            "presigned",
+            "direct to storage",
+            "bypass the server",
+            "signed url",
+            "short-lived"
+          ]
+        },
+        {
+          "id": "up_progress",
+          "label": "Progress + resumability",
+          "description": "Upload progress for UX; chunked/resumable for big files.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "fullstack_developer": 5,
+            "frontend_developer": 4,
+            "backend_developer": 4
+          },
+          "acceptedSignals": [
+            "progress bar",
+            "chunked",
+            "resumable",
+            "resume on failure"
+          ]
+        }
+      ],
+      "followUps": []
+    },
+    {
+      "id": "fsi_e2e_001",
+      "title": "A feature across the whole stack",
+      "prompt": "You're asked to add commenting to documents — UI, API, storage, everything. In what order do you design it, and what do you make sure is settled before coding?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design",
+        "experience_deep_dive"
+      ],
+      "topicIds": [
+        "e2e_feature_design"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "expectedPoints": [
+        {
+          "id": "ee_contract",
+          "label": "Contract before code",
+          "description": "Endpoints, shapes, error format, pagination agreed first; frontend builds against a mock in parallel.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5,
+            "frontend_developer": 4,
+            "backend_developer": 4
+          },
+          "acceptedSignals": [
+            "contract first",
+            "agree the api",
+            "mock",
+            "build in parallel",
+            "shapes first"
+          ]
+        },
+        {
+          "id": "ee_auth_states",
+          "label": "Auth + full state coverage",
+          "description": "Who may see/do what; 401 vs 403 behavior; loading/empty/error/success for reads, pending/failure for writes.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5,
+            "frontend_developer": 4,
+            "backend_developer": 4
+          },
+          "acceptedSignals": [
+            "who can",
+            "permission",
+            "401",
+            "403",
+            "every state",
+            "pending",
+            "failure path"
+          ]
+        },
+        {
+          "id": "ee_edges",
+          "label": "Edge thinking",
+          "description": "Pagination from day one, concurrent edits, slow network, field-level validation messages.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5,
+            "frontend_developer": 4,
+            "backend_developer": 4
+          },
+          "acceptedSignals": [
+            "pagination",
+            "concurrent edits",
+            "slow network",
+            "validation messages",
+            "edge cases"
+          ]
+        },
+        {
+          "id": "ee_rollout",
+          "label": "Safe rollout",
+          "description": "Feature flag, dark ship, gradual enable, monitoring, kill switch.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5,
+            "frontend_developer": 4,
+            "backend_developer": 4
+          },
+          "acceptedSignals": [
+            "feature flag",
+            "gradual",
+            "kill switch",
+            "monitor",
+            "ship dark"
+          ]
+        }
+      ],
+      "followUps": []
+    }
+  ]
+}

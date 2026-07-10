@@ -57,6 +57,10 @@ describe("content packs", () => {
           `${file}: topic "${topic.id}" studyNotes must start with "## What is it?" (see docs/content-authoring.md)`,
         ).toBe(true);
         expect(
+          notes.includes("## Common mistakes"),
+          `${file}: topic "${topic.id}" studyNotes must contain a "## Common mistakes" section`,
+        ).toBe(true);
+        expect(
           notes.includes("## Key terms"),
           `${file}: topic "${topic.id}" studyNotes must contain a "## Key terms" section`,
         ).toBe(true);

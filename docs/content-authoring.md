@@ -43,7 +43,7 @@ errors are shown on the **Topics** page (and in `npm run content:check`).
   "description": "Storing state as an append-only sequence of events.",
   "category": "architecture",       // one of: frontend | backend | fullstack |
                                     // architecture | cloud | security | database |
-                                    // devops | observability | soft_technical
+                                    // devops | observability | soft_technical | core
   "relatedTopicIds": ["event_driven"], // optional
   "studyNotes": "Educational prose for the Study view. Paragraphs separated by\nblank lines (\\n\\n); lines starting with \"- \" become bullet lists; a line\nstarting with \"## \" becomes a subheading."  // optional but strongly encouraged
 }
@@ -69,6 +69,9 @@ Why it exists; what goes wrong without it.
 The mechanism / main parts / decision logic, with "- " bullets where a
 list is clearer than prose. (May be titled contextually, e.g.
 "## How it works" plus an extra subsection, but starts here.)
+
+## Common mistakes
+- 2-4 bullets: the misunderstandings and weak answers interviewers hear
 
 ## Key terms
 - term — one-line plain definition
@@ -204,9 +207,9 @@ The JSON must follow this exact structure (all ids snake_case):
   "sources": ["<dataresource file the content comes from, e.g. tibi/login>"],
   "topics": [
     { "id": "...", "name": "...", "description": "...",
-      "category": "<frontend|backend|fullstack|architecture|cloud|security|database|devops|observability|soft_technical>",
+      "category": "<frontend|backend|fullstack|architecture|cloud|security|database|devops|observability|soft_technical|core>",
       "relatedTopicIds": [],
-      "studyNotes": "## What is it?\\n\\n<plain definition>\\n\\n## What problem does it solve?\\n\\n<why it exists>\\n\\n## How it works\\n\\n<mechanism; '- ' lines become bullets>\\n\\n## Key terms\\n\\n- <term> — <one-line definition>" }
+      "studyNotes": "## What is it?\\n\\n<plain definition>\\n\\n## What problem does it solve?\\n\\n<why it exists>\\n\\n## How it works\\n\\n<mechanism; '- ' lines become bullets>\\n\\n## Common mistakes\\n\\n- <misunderstanding or weak answer>\\n\\n## Key terms\\n\\n- <term> — <one-line definition>" }
   ],
   "questions": [
     {
@@ -244,7 +247,8 @@ Content rules:
 - Every topic MUST have studyNotes: a 150-400 word plain-English explanation
   written for someone who does NOT yet know the topic. Fixed structure:
   "## What is it?" (plain definition), "## What problem does it solve?",
-  "## How it works" (mechanism, bullets welcome), "## Key terms"
+  "## How it works" (mechanism, bullets welcome), "## Common mistakes"
+  (2-4 bullets of misunderstandings/weak answers), "## Key terms"
   ("- term — one-line definition" bullets). Simple sentences; explain jargon
   the moment it appears; no insider one-liners. Paragraphs separated by \n\n.
   The questions are practice checks *under* the notes.
