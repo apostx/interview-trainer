@@ -18,6 +18,14 @@ errors are shown on the **Topics** page (and in `npm run content:check`).
 3. Validate: `npm run content:check` — fix anything it reports.
 4. Reload the app. The Topics page lists the pack; its topics appear in the
    library and its questions join the session generator's pool.
+5. Publish to the live site: **`npm run release:content`** — it re-runs the
+   gates, commits everything changed, bumps the minor version and pushes;
+   the `v*` tag triggers the Pages deploy (~2 minutes to live). Custom commit
+   message: `npm run release:content -- "feat: kubernetes pack"`.
+
+Packs need no registration anywhere: every `*.json` in `content/packs/` is
+discovered automatically at build time. Note the flip side: the LIVE site
+only picks up content after a release — dev mode hot-reloads instantly.
 
 ## Pack structure
 
