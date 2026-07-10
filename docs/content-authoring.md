@@ -18,11 +18,16 @@ errors are shown on the **Topics** page (and in `npm run content:check`).
 3. Validate: `npm run content:check` — fix anything it reports.
 4. Reload the app. The Topics page lists the pack; its topics appear in the
    library and its questions join the session generator's pool.
-5. Publish to the live site: **`npm run release:content`** — it re-runs the
+5. Optional dress rehearsal: **`npm run release:beta`** publishes your
+   CURRENT working state (even uncommitted) to
+   <https://interviewtrainer.sallai.cc/beta/> without touching your branch
+   or the version number. The sidebar there shows `vX.Y.Z-beta.<sha>` so it
+   cannot be mistaken for production.
+6. Publish to the live site: **`npm run release:content`** — it re-runs the
    gates, commits everything changed, bumps the minor version and pushes;
    the `v*` tag triggers the Pages deploy (~2 minutes to live). Custom commit
    message: `npm run release:content -- "feat: kubernetes pack"`.
-6. Unhappy with what went out? **`npm run release:revert`** rolls the DATA
+7. Unhappy with what went out? **`npm run release:revert`** rolls the DATA
    back to the previous release (or `-- v0.24.0` for a specific one) and
    ships it as a new patch version — app code stays current, the version
    keeps increasing, only `content/packs/` reverts. Preview with

@@ -11,6 +11,7 @@
     "content:check": "vitest run src/core/content",
     "content:ids": "node scripts/content-ids.mjs",
     "postbuild": "node scripts/flatten-rsc-export.mjs",
+    "release:beta": "node scripts/release-beta.mjs",
     "release:content": "node scripts/release-content.mjs",
     "release:revert": "node scripts/revert-content.mjs",
     "release:patch": "npm version patch -m \"chore(release): %s\" && git push --follow-tags",

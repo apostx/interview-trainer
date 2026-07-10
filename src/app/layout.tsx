@@ -42,7 +42,9 @@ export default function RootLayout({
             reload loop. */}
         {process.env.NODE_ENV === "production" && (
           // eslint-disable-next-line @next/next/no-sync-scripts
-          <script src="/coi-serviceworker.min.js" />
+          <script
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/coi-serviceworker.min.js`}
+          />
         )}
       </head>
       <body className="min-h-dvh">
