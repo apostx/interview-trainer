@@ -20,8 +20,8 @@
     },
     {
       "id": "backpressure",
-      "name": "Backpressure & bulkhead",
-      "description": "Limiting and isolating load so one slow dependency cannot exhaust shared resources.",
+      "name": "Backpressure",
+      "description": "Slowing intake deliberately instead of accepting everything and collapsing.",
       "category": "architecture",
       "relatedTopicIds": [
         "reliability",
@@ -53,26 +53,50 @@
     },
     {
       "id": "idempotency_retries",
-      "name": "Idempotency & Retries",
-      "description": "Safe retries: idempotency keys, backoff, DLQs, and at-least-once delivery.",
+      "name": "Idempotency",
+      "description": "Operations safe to run twice: idempotency keys, unique constraints, and at-least-once delivery.",
       "category": "backend",
       "relatedTopicIds": [
         "message_queue",
         "outbox_pattern"
       ],
-      "studyNotes": "## What is it?\n\nIdempotency means an operation can run TWICE with the effect of running once. Combined with disciplined retries, it is what makes distributed systems safe to operate — because retries and duplicate messages WILL happen.\n\n## What problem does it solve?\n\nA client sends a payment request, the response times out, the client retries. Did the first one go through? Without idempotency, maybe the customer just paid twice. Message queues have the same issue: most brokers guarantee at-least-once delivery, which means duplicates by design.\n\n## How it works\n\nMaking writes idempotent:\n- Idempotency key: the client sends a unique key with the request; the server remembers processed keys and returns the SAME response for a repeat instead of acting again.\n- Unique constraints: the database refuses the duplicate row.\n- Processed-events table: consumers record each handled eventId; a duplicate is recognized and skipped.\n\nRetry discipline — the part interviewers probe:\n- TRANSIENT failures (a 503, a timeout) are retried with exponential backoff — 1s, 2s, 4s — never instantly and aggressively, which would finish off a struggling service.\n- INVALID business data is NOT retried: no amount of retrying fixes a malformed request. It fails fast and visibly.\nTelling these two classes apart is the skill.\n\nDLQ (dead-letter queue): after N failed attempts, the message moves to a separate queue for inspection instead of blocking the main queue or vanishing. Alert when the DLQ grows.\n\nThe summary line worth memorizing: exactly-once processing in practice = at-least-once delivery + idempotent consumers.\n\n## Common mistakes\n\n- Instant, aggressive retries that finish off a struggling dependency (no backoff)\n- Retrying invalid business data — no retry fixes a malformed request\n- Consumers without an eventId dedupe under at-least-once delivery\n- No DLQ — poison messages block the queue or vanish\n\n## Key terms\n\n- Idempotency key — same key, same result, no double effect\n- Exponential backoff — growing delays between retries\n- Transient vs permanent failure — retry vs fail fast\n- DLQ — parking lot for terminally failed messages\n- At-least-once — duplicates are by design; plan for them"
+      "studyNotes": "## What is it?\n\nIdempotency means an operation can run TWICE with the effect of running once. A payment request processed twice must not charge the customer twice.\n\n## What problem does it solve?\n\nDuplicates are a fact of distributed life: a client times out and re-sends; a message broker delivers the same event twice (most brokers guarantee at-least-once delivery, which means duplicates BY DESIGN). Without idempotency, every duplicate is a double charge, a second email, a duplicated record.\n\n## How it works\n\nThe standard mechanisms:\n\n- Idempotency key: the client sends a unique key with the request; the server remembers processed keys and returns the SAME response for a repeat instead of acting again.\n- Unique constraints: the database itself refuses the duplicate row.\n- Processed-events table: consumers record each handled eventId; a duplicate is recognized and skipped.\n\nThe summary line worth memorizing: exactly-once processing in practice = at-least-once delivery + idempotent consumers. Brokers cannot promise exactly-once across systems; your consumer's idempotency is what makes duplicates harmless.\n\nRetries (their own topic) are the main SOURCE of duplicates — the two topics work as a pair: retries make the system persistent, idempotency makes that persistence safe.\n\n## Common mistakes\n\n- Consumers without an eventId dedupe under at-least-once delivery\n- Assuming the broker guarantees exactly-once (it cannot, across systems)\n- Idempotency keys generated per attempt instead of per operation — defeats the purpose\n\n## Key terms\n\n- Idempotency key — same key, same result, no double effect\n- At-least-once — duplicates arrive by design; plan for them\n- Processed-events table — the consumer's memory of what it handled\n- Exactly-once (effective) — at-least-once delivery + idempotent consumer"
     },
     {
       "id": "resilience_toolkit",
-      "name": "The Resilience Toolkit",
-      "description": "Resilience vs fault tolerance, bulkheads, fallbacks, and honest degradation.",
+      "name": "Graceful Degradation",
+      "description": "Keeping a system partially working when parts of it fail: fallbacks and honest degraded states.",
       "category": "architecture",
       "relatedTopicIds": [
         "circuit_breaker",
         "backpressure",
         "reliability"
       ],
-      "studyNotes": "## What is it?\n\nThe collection of patterns that keep a system PARTIALLY working when parts of it fail: bulkheads, fallbacks, and honest degradation. Resilience is the umbrella; fault tolerance is the narrower \"survive a specific component dying\".\n\n## What problem does it solve?\n\nIn a system of many parts, something is always failing. The goal is not preventing all failure — impossible — but making sure a failing notification service does not take the payment flow down with it.\n\n## How it works\n\nThe mindset first: resilience = the system degrades PARTIALLY or recovers fast, instead of collapsing entirely. Fault tolerance = specific failures are absorbed: a pod dies, Kubernetes restarts it; an instance goes unhealthy, the load balancer routes around it.\n\nBulkhead isolation: split resources into compartments (the name comes from ship hulls) so one flooding compartment cannot sink the ship. In practice: a separate worker pool for document processing, a separate connection pool for payment calls. When document processing is overwhelmed, the public API keeps answering because it does not share those resources.\n\nFallback: a DEFINED degraded behavior when a dependency fails — serve slightly stale data from cache, show \"pending\", postpone the email. Defined in advance, not improvised during the incident.\n\nThe honesty rule: for critical business operations, never fake success. If the payment state is unknown, show pending or failed — an explicit uncertain state beats a cheerful lie that unwinds later. If reporting is down, the core flow proceeds and the auxiliary numbers show as unavailable.\n\nThese compose with the rest of the toolkit — timeouts, circuit breakers, rate limits, backpressure. In an interview, pick the failure scenario first, then name which tool breaks which link of the failure chain.\n\n## Common mistakes\n\n- Faking success when a critical dependency failed (show pending/failed instead)\n- Shared pools everywhere — one flooded feature drowns the rest (no bulkheads)\n- Fallbacks improvised during the incident instead of designed before it\n\n## Key terms\n\n- Resilience vs fault tolerance — partial degradation vs surviving specific faults\n- Bulkhead — isolated resource pools; one failure cannot spread\n- Fallback — pre-defined degraded behavior\n- Graceful degradation — less service, not no service\n- Never fake success — explicit pending/failed for critical operations"
+      "studyNotes": "## What is it?\n\nGraceful degradation means a system loses SOME functionality when a part of it fails, instead of collapsing entirely. Resilience is the umbrella word for this ability; fault tolerance is the narrower \"a specific component died and we absorbed it\" (a pod dies, Kubernetes restarts it; an instance goes unhealthy, the load balancer routes around it).\n\n## What problem does it solve?\n\nIn a system of many parts, something is always failing. The goal is not preventing all failure — impossible — but making sure a failing notification service does not take the payment flow down with it.\n\n## How it works\n\nThe core tool is the fallback: a DEFINED degraded behavior for when a dependency fails — serve slightly stale data from cache, show a \"pending\" state, postpone the email to a queue. The key word is defined: decided and built in advance, not improvised during the incident.\n\nThe honesty rule: for critical business operations, never fake success. If the payment's outcome is unknown, show pending or failed — an explicit uncertain state beats a cheerful lie that unwinds later. If a non-critical dependency (reporting, recommendations) is down, the core flow proceeds and the auxiliary data shows as unavailable.\n\nGraceful degradation composes with the other resilience patterns — timeouts, circuit breakers, backpressure, and bulkhead isolation (each its own topic). In an interview, pick the failure scenario first, then name which tool breaks which link of the failure chain.\n\n## Common mistakes\n\n- Faking success when a critical dependency failed (show pending/failed instead)\n- Fallbacks improvised during the incident instead of designed before it\n- Treating \"resilient\" as \"never fails\" instead of \"fails partially and recovers\"\n\n## Key terms\n\n- Fallback — pre-defined degraded behavior for a failed dependency\n- Fault tolerance — surviving a specific component failure\n- Graceful degradation — less service, not no service\n- Never fake success — explicit pending/failed for critical operations"
+    },
+    {
+      "id": "bulkhead_isolation",
+      "name": "Bulkhead Isolation",
+      "description": "Separate resource pools so one failing area cannot drag down the rest.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "resilience_toolkit",
+        "circuit_breaker",
+        "backpressure"
+      ],
+      "studyNotes": "## What is it?\n\nBulkhead isolation means splitting a system's resources into separate compartments — a dedicated worker pool for document processing, a separate connection pool for payment calls — so that one overwhelmed or failing area cannot exhaust the resources everything else needs. The name comes from ship hulls: one flooded compartment must not sink the ship.\n\n## What problem does it solve?\n\nShared resources spread failure. If document processing and the public API share one thread pool, a flood of slow document jobs eats every thread — and the API dies with it, though nothing is wrong with it.\n\n## How it works\n\nIdentify the resources that can be exhausted — threads, connections, queue capacity, memory — and give each risky workload its own bounded share:\n\n- A separate worker pool per job type: document processing melting down leaves API request handling untouched.\n- A separate connection pool per downstream: the slow payment provider fills ITS pool, not the shared one.\n- Bounded queues per consumer, so one slow consumer's backlog does not starve the others.\n\nSizing is the design work: each bulkhead gets enough for its normal load plus headroom, and its limit becomes a natural backpressure point — when the compartment is full, that workload waits or degrades, alone.\n\n## Common mistakes\n\n- One shared pool for everything — the default, and the failure multiplier\n- Bulkheads without limits — an unbounded compartment protects nothing\n- Isolating compute but sharing the one database connection pool anyway\n\n## Key terms\n\n- Bulkhead — an isolated, bounded resource compartment\n- Worker pool / connection pool — the resources usually partitioned\n- Blast radius — how far one failure spreads; bulkheads shrink it"
+    },
+    {
+      "id": "retry_strategies",
+      "name": "Retry Strategies",
+      "description": "Backoff, failure classification, and dead-letter queues — retrying without making things worse.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "idempotency_retries",
+        "circuit_breaker",
+        "backpressure"
+      ],
+      "studyNotes": "## What is it?\n\nThe discipline of retrying failed operations: which failures to retry, how long to wait between attempts (backoff), and where messages go when retrying stops making sense (the dead-letter queue).\n\n## What problem does it solve?\n\nTransient failures — a timeout, a 503, a dropped connection — heal themselves; giving up on the first try loses work unnecessarily. But retrying WRONG is worse than not retrying: instant, aggressive retries onto a struggling service are how outages amplify themselves.\n\n## How it works\n\nFirst, classify the failure — this is the skill being tested:\n\n- TRANSIENT (timeout, 503, connection reset): retry with exponential backoff — wait 1s, then 2s, then 4s — often with a little randomness (jitter) so a thousand clients do not retry in lockstep.\n- PERMANENT (validation error, 404, a malformed request): do NOT retry. No amount of retrying fixes bad input; fail fast and visibly.\n\nCap the attempts. After N failures, the message moves to a DLQ — a dead-letter queue — a parking lot for messages that could not be processed, kept for inspection instead of blocking the queue or vanishing. Alert when the DLQ grows: it is a symptom feed.\n\nRetries create duplicates by design, which is why this topic pairs with idempotency: retries make the system persistent, idempotent consumers make that persistence safe. And a circuit breaker caps the pattern from above: when failures cross a threshold, stop retrying entirely for a while.\n\n## Common mistakes\n\n- Instant, aggressive retries that finish off a struggling dependency\n- Retrying validation/business errors — no retry fixes a malformed request\n- No retry cap and no DLQ — poison messages loop forever\n- Synchronized retries without jitter — the thundering herd, scheduled\n\n## Key terms\n\n- Exponential backoff — growing delays: 1s, 2s, 4s…\n- Jitter — randomness that de-synchronizes mass retries\n- Transient vs permanent failure — retry vs fail fast\n- DLQ (dead-letter queue) — parking lot for terminally failed messages"
     }
   ],
   "questions": [
@@ -532,7 +556,8 @@
         "concept_check"
       ],
       "topicIds": [
-        "idempotency_retries"
+        "idempotency_retries",
+        "retry_strategies"
       ],
       "expectedDurationSeconds": 200,
       "thinkingTimeSeconds": 45,
@@ -626,7 +651,8 @@
         "tradeoff_decision"
       ],
       "topicIds": [
-        "resilience_toolkit"
+        "resilience_toolkit",
+        "bulkhead_isolation"
       ],
       "expectedDurationSeconds": 200,
       "thinkingTimeSeconds": 45,

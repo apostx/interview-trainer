@@ -53,8 +53,8 @@
     },
     {
       "id": "integration_styles",
-      "name": "Webhooks, Polling & Communication Styles",
-      "description": "Webhook vs polling, cursor pagination, REST vs RPC/gRPC, sync vs async, schema evolution.",
+      "name": "Webhooks vs Polling",
+      "description": "Who initiates the update — the client asking repeatedly, or your system calling out on events.",
       "category": "backend",
       "relatedTopicIds": [
         "rest",
@@ -62,7 +62,30 @@
         "message_queue",
         "api_versioning"
       ],
-      "studyNotes": "## What is it?\n\nThe main choices for how systems exchange data: webhook vs polling, offset vs cursor pagination, REST vs RPC/gRPC, and synchronous vs asynchronous calls.\n\n## What problem does it solve?\n\nEvery integration must answer: who initiates, how are large lists transferred, what protocol style, and does the caller wait? Picking wrong causes wasted resources, missed events, or systems that hang together.\n\n## How it works\n\nWebhook vs polling: with polling, the client asks repeatedly (\"anything new?\") — simple but wasteful. With a webhook, YOUR system calls the customer's URL when an event happens — efficient, but now you own the hard parts: retries with backoff, signing the payload so they can verify it came from you, idempotency (they may receive it twice), timeouts, and a delivery log.\n\nPagination: offset (page 100, skip 5000) is simple, but on a list that changes while you page, items shift — you get duplicates or miss rows. Cursor pagination (\"give me 50 items after this marker\") stays stable on changing data — the usual choice for external APIs.\n\nREST vs RPC/gRPC: REST models resources (POST /renewals); RPC models operations (submitRenewal()). For external, documented integrations, REST + OpenAPI is the friendly choice. For internal service-to-service calls, gRPC is faster (binary Protocol Buffers over HTTP/2, generated typed clients) but browsers cannot call it directly and it is harder to debug than JSON.\n\nSync vs async: a synchronous call is simple, but a slow downstream blocks the caller. For heavy work (document generation), validate the request, put it on a queue, and answer 202/\"pending\" — the caller is decoupled from the slow part. The UI shows pending honestly.\n\nSchema evolution spans all of it: consumers must tolerate NEW optional fields; removing, renaming or retyping fields breaks them.\n\n## Common mistakes\n\n- Webhooks shipped without retries, signatures or delivery logs\n- Offset pagination on fast-changing lists — duplicates and gaps\n- Blocking the request on slow work instead of queueing and answering 202\n- Consumers that crash on a new optional field\n\n## Key terms\n\n- Webhook — event push to a registered URL; retries + signatures are on you\n- Cursor pagination — stable paging on changing lists\n- gRPC / protobuf — fast, typed, binary; internal use\n- 202 Accepted — \"queued, in progress\" — the async answer"
+      "studyNotes": "## What is it?\n\nThe two ways a partner system learns about changes in yours: polling — they ask repeatedly (\"anything new?\") — and webhooks — YOUR system calls a URL they registered, when an event happens.\n\n## What problem does it solve?\n\nA partner needs to know when a renewal's status changes. Polling every minute wastes requests (and is still up to a minute late); a webhook tells them the moment it happens.\n\n## How it works\n\nPolling: trivial to build, works everywhere, wasteful at frequency. Long polling (the server holds the request open until there is news) is the halfway house. Fine for low-frequency needs.\n\nWebhooks are efficient push — but production webhooks are a real subsystem you now own:\n\n- Retries with backoff: their endpoint WILL be down sometimes.\n- Signing the payload (HMAC) so the receiver can verify the call really came from you.\n- Idempotency: they may receive the same event twice; include an event id.\n- Timeouts on the delivery call, and a delivery log so support can answer \"did you send it?\".\n\nThe rule of thumb: consume webhooks when offered, offer webhooks when partners integrate with you — and keep a polling endpoint as the fallback for partners who cannot receive calls.\n\nRelated choices live in their own topics: pagination strategies (how large lists transfer), sync vs async communication (does the caller wait), and gRPC (the service-to-service protocol option).\n\n## Common mistakes\n\n- Webhooks shipped without retries, signatures or delivery logs\n- No event id in the payload — receivers cannot dedupe\n- Polling every second \"temporarily\" — forever\n\n## Key terms\n\n- Webhook — event push to a URL the receiver registered\n- Long polling — the request waits until there is news\n- HMAC signature — proof the webhook call is authentic\n- Delivery log — the record of what was sent, when, and the response"
+    },
+    {
+      "id": "pagination_strategies",
+      "name": "Pagination Strategies",
+      "description": "Offset vs cursor — transferring large lists without duplicates or gaps.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "integration_styles",
+        "api_contract_design"
+      ],
+      "studyNotes": "## What is it?\n\nPagination breaks a large list into pages the client fetches one at a time. The two main schemes: offset (\"skip 5000, give me 50\") and cursor (\"give me 50 after this marker\").\n\n## What problem does it solve?\n\nReturning a million rows in one response is impossible for everyone involved. But naive paging has a subtle correctness problem: lists CHANGE while being paged, and offset paging then shows duplicates or silently skips rows.\n\n## How it works\n\nOffset pagination (?offset=5000&limit=50): simple, supports \"jump to page 100\", trivial in SQL. Two weaknesses: on a list that changes between requests, inserting or deleting rows shifts everything — page 3 shows a row you already saw on page 2 (duplicate) or skips one (gap); and deep offsets are slow — the database must count past all 5000 skipped rows.\n\nCursor pagination (?cursor=abc&limit=50): the cursor is an opaque marker encoding \"after this row\" (typically the sort key of the last returned row). Stable on changing data — inserts and deletes cannot shift what \"after row X\" means — and equally fast at any depth. The costs: no random page jumps, and the sort order must be stable and unique (id as a tiebreaker).\n\nThe rule of thumb: internal admin tables with page numbers → offset is fine. External APIs and infinite scrolling over live data → cursor.\n\n## Common mistakes\n\n- Offset paging on fast-changing lists — duplicates and gaps\n- Deep offsets scanning past millions of rows\n- Cursors built on a non-unique sort column — unstable ordering\n- Promising page numbers with cursors — they cannot do random jumps\n\n## Key terms\n\n- Offset/limit — skip N rows; simple but shifts on changing data\n- Cursor — opaque \"after this row\" marker; stable and fast\n- Stable sort key — unique ordering the cursor relies on"
+    },
+    {
+      "id": "sync_vs_async",
+      "name": "Sync vs Async Communication",
+      "description": "Does the caller wait? Deciding by business dependency, not preference.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "async_fanout",
+        "integration_styles",
+        "backpressure"
+      ],
+      "studyNotes": "## What is it?\n\nThe choice between synchronous communication — the caller sends a request and WAITS for the answer — and asynchronous — the caller hands the work off (usually to a queue) and moves on, answering \"accepted, in progress\".\n\n## What problem does it solve?\n\nA synchronous call chains the caller's fate to the callee's: if document generation takes 30 seconds, the API request waits 30 seconds, its connection and thread held the whole time. Slow or flaky downstreams make every caller slow and flaky too.\n\n## How it works\n\nSynchronous: simple to build and reason about — the answer is right there. Right when the caller genuinely cannot proceed without the result: validating credentials, a fraud check that must PASS before confirming.\n\nAsynchronous: validate the request, enqueue the heavy work, answer 202 Accepted with a pending status. The caller is decoupled from the slow part; the queue absorbs spikes; the worker retries failures without the user waiting. The UI shows \"processing\" honestly and updates when done (polling the status or receiving a push).\n\nThe decision rule: what does the USER have to wait for? Only that stays synchronous. Everything else — notifications, document generation, syncing other systems — is not on the critical path and belongs behind a queue. Sync vs async is a business-dependency question, not a style preference.\n\n## Common mistakes\n\n- Blocking the request on slow work instead of queueing and answering 202\n- Making a gating step (fraud check) async and confirming before it passed\n- Async everywhere — even the reads the user is actively waiting on\n- No status endpoint/notification — \"accepted\" with no way to learn the outcome\n\n## Key terms\n\n- 202 Accepted — \"queued, in progress\" — the async answer\n- Critical path — only what the user must wait for stays sync\n- Pending status — the honest UI for in-flight async work"
     }
   ],
   "questions": [
@@ -544,7 +567,9 @@
         "system_design"
       ],
       "topicIds": [
-        "integration_styles"
+        "integration_styles",
+        "pagination_strategies",
+        "sync_vs_async"
       ],
       "expectedDurationSeconds": 200,
       "thinkingTimeSeconds": 45,
