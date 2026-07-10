@@ -22,6 +22,11 @@ errors are shown on the **Topics** page (and in `npm run content:check`).
    gates, commits everything changed, bumps the minor version and pushes;
    the `v*` tag triggers the Pages deploy (~2 minutes to live). Custom commit
    message: `npm run release:content -- "feat: kubernetes pack"`.
+6. Unhappy with what went out? **`npm run release:revert`** rolls the DATA
+   back to the previous release (or `-- v0.24.0` for a specific one) and
+   ships it as a new patch version — app code stays current, the version
+   keeps increasing, only `content/packs/` reverts. Preview with
+   `-- v0.24.0 --dry-run`.
 
 Packs need no registration anywhere: every `*.json` in `content/packs/` is
 discovered automatically at build time. Note the flip side: the LIVE site
