@@ -27,6 +27,9 @@ console.log("Changes to be released:\n" + dirty + "\n");
 run("npm", ["run", "content:check"]);
 run("npm", ["test"]);
 
+// Keep the GitHub-linkable inventory current (docs/content-inventory.md).
+run("node", ["scripts/content-ids.mjs", "--write"]);
+
 const message = process.argv[2] ?? "feat: content update";
 run("git", ["add", "-A"]);
 run("git", ["commit", "-m", message]);

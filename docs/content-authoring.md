@@ -174,15 +174,18 @@ A complete working example: [`content/packs/js-ts-fundamentals-lufthansa.json`](
 The intended workflow for growing or fixing content with *any* AI system
 (Claude, ChatGPT, Gemini, …) — no repo access needed on the AI's side:
 
-1. **Give the AI its context.** Paste into the chat:
-   - this file (`docs/content-authoring.md`) — it is the complete spec;
-   - the output of **`npm run content:ids`** — the inventory of every
-     existing pack/topic/question id, so the AI avoids id collisions and
-     can link `relatedTopicIds` to real topics instead of duplicating them;
-   - if you are *modifying* a pack: the pack's full JSON from
-     `content/packs/`;
-   - your instruction (what to add/change, in any language — the OUTPUT
-     must be English).
+1. **Give the AI its context.** If the AI can fetch URLs, just link these
+   (raw links, always current on `main`):
+   - the spec (this file):
+     <https://raw.githubusercontent.com/apostx/interview-trainer/main/docs/content-authoring.md>
+   - the id inventory (auto-regenerated on every `release:content`):
+     <https://raw.githubusercontent.com/apostx/interview-trainer/main/docs/content-inventory.md>
+   - if *modifying* a pack, its JSON:
+     `https://raw.githubusercontent.com/apostx/interview-trainer/main/content/packs/<name>.json`
+
+   If the AI cannot fetch URLs, paste the same three things instead
+   (`npm run content:ids` prints the inventory). Then add your instruction —
+   what to add/change, in any language; the OUTPUT must be English.
 2. **The AI answers with JSON** — either a brand-new pack or the complete
    updated pack file.
 3. **You copy it back** into `content/packs/<name>.json` (overwrite the old
