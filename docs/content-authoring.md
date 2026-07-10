@@ -49,6 +49,13 @@ errors are shown on the **Topics** page (and in `npm run content:check`).
 }
 ```
 
+**One topic = one concept.** A topic must cover exactly the concept its name
+promises. Comparisons ("SQL vs NoSQL") and single mechanisms with several
+parts ("Caching & Invalidation") are one concept; grab-bags like
+"Indexes, Transactions & Pools" are not — split those into separate topics
+and connect them with `relatedTopicIds`. Notes may reference neighboring
+topics, but must not explain them.
+
 `studyNotes` is what makes the Study section educational: a well-written
 explanation of the topic that someone can *learn from*, with the question
 cards rendered below it as practice checks.
@@ -260,6 +267,9 @@ Content rules:
 - Do NOT reuse or change any id from the inventory I pasted; new ids must not
   collide with it. Where a concept already exists as a topic in the inventory,
   reference it via relatedTopicIds instead of creating a duplicate topic.
+- ONE topic = ONE concept. Never bundle several distinct concepts into a
+  combined topic ("X, Y & Z"); make separate topics linked by relatedTopicIds.
+  Comparisons ("X vs Y") count as one concept.
 - If I asked you to MODIFY an existing pack (its JSON is pasted below),
   return the COMPLETE updated pack file — never a fragment or a diff — and
   keep all existing ids unchanged.
