@@ -222,6 +222,10 @@ export default function SettingsPage() {
           )}
         </div>
       </Card>
+
+      <p className="mt-6 text-center text-[11px] text-muted">
+        Interview Trainer v{process.env.NEXT_PUBLIC_APP_VERSION}
+      </p>
     </div>
   );
 }

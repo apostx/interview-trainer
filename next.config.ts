@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import pkg from "./package.json";
 
 const nextConfig: NextConfig = {
+  // Baked in at build time; shown in the sidebar so the deployed version
+  // is visible at a glance.
+  env: { NEXT_PUBLIC_APP_VERSION: pkg.version },
   // Fully static export — the app is client-only (IndexedDB + Web Worker),
   // so it can be hosted on GitHub Pages or any static file server.
   output: "export",

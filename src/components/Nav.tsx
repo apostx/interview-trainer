@@ -93,6 +93,9 @@ export function SidebarNav() {
           </Link>
         );
       })}
+      <p className="mt-auto px-3 pt-4 text-[11px] text-muted">
+        v{process.env.NEXT_PUBLIC_APP_VERSION}
+      </p>
     </aside>
   );
 }
