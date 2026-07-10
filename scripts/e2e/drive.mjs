@@ -235,7 +235,12 @@ async function main() {
   await page.getByLabel("Search topics and questions").fill("Big-O Basics");
   await page.getByText("Big-O Basics", { exact: false }).first().click();
   const notesShown = await page
-    .getByText("how does the running time", { exact: false })
+    .getByText("how much slower a piece of code gets", { exact: false })
+    .first()
+    .isVisible()
+    .catch(() => false);
+  const structureShown = await page
+    .getByRole("heading", { name: "What is it?" })
     .first()
     .isVisible()
     .catch(() => false);
@@ -245,8 +250,8 @@ async function main() {
     .isVisible()
     .catch(() => false);
   log(
-    notesShown && practiceLabel ? "✅" : "❌",
-    "Study view renders educational notes above the practice checks",
+    notesShown && structureShown && practiceLabel ? "✅" : "❌",
+    "Study view renders structured notes (What is it? …) above the practice checks",
   );
   await page.getByRole("button", { name: "← All topics" }).click();
   await page.getByLabel("Search topics and questions").fill("");

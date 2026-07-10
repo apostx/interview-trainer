@@ -48,6 +48,22 @@ describe("content packs", () => {
     },
   );
 
+  it("every topic has study notes in the standard structure", () => {
+    for (const { file, pack } of parsedPacks) {
+      for (const topic of pack.topics) {
+        const notes = topic.studyNotes ?? "";
+        expect(
+          notes.startsWith("## What is it?"),
+          `${file}: topic "${topic.id}" studyNotes must start with "## What is it?" (see docs/content-authoring.md)`,
+        ).toBe(true);
+        expect(
+          notes.includes("## Key terms"),
+          `${file}: topic "${topic.id}" studyNotes must contain a "## Key terms" section`,
+        ).toBe(true);
+      }
+    }
+  });
+
   it("ids are unique across the topic taxonomy and all packs", () => {
     const topicIds = new Set(seedTopics.map((t) => t.id));
     const questionIds = new Set<string>();

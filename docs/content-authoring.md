@@ -51,9 +51,31 @@ errors are shown on the **Topics** page (and in `npm run content:check`).
 
 `studyNotes` is what makes the Study section educational: a well-written
 explanation of the topic that someone can *learn from*, with the question
-cards rendered below it as practice checks. Aim for 150–400 words per topic —
-explain the concept, the why, the trade-offs, and the classic mistakes, in
-the same order a good tutorial would.
+cards rendered below it as practice checks.
+
+**Every topic's notes MUST follow this fixed structure**, in simple, plain
+English — written for a developer who does NOT yet know the topic (no
+insider shorthand, no clever one-liners that only make sense if you already
+understand it; jargon is explained the moment it appears):
+
+```
+## What is it?
+2-4 plain sentences defining the thing.
+
+## What problem does it solve?
+Why it exists; what goes wrong without it.
+
+## How it works
+The mechanism / main parts / decision logic, with "- " bullets where a
+list is clearer than prose. (May be titled contextually, e.g.
+"## How it works" plus an extra subsection, but starts here.)
+
+## Key terms
+- term — one-line plain definition
+- term — one-line plain definition
+```
+
+Aim for 150–400 words per topic.
 
 Questions may also reference **existing seed topic ids** (see
 `src/core/seed/topics.ts`), e.g. `api_design`, `caching`, `message_queue`,
@@ -182,10 +204,13 @@ Content rules:
 - acceptedSignals: 4-8 short phrases (1-4 words) a candidate would plausibly
   SAY out loud, including synonyms and paraphrases of the concept — not only
   the jargon term. All lowercase.
-- Every topic MUST have studyNotes: a 150-400 word tutorial-style explanation
-  the learner reads in the Study view (concept, why it matters, trade-offs,
-  classic mistakes). Paragraphs separated by \n\n; "- " lines become bullets;
-  "## " starts a subheading. The questions are practice checks *under* the notes.
+- Every topic MUST have studyNotes: a 150-400 word plain-English explanation
+  written for someone who does NOT yet know the topic. Fixed structure:
+  "## What is it?" (plain definition), "## What problem does it solve?",
+  "## How it works" (mechanism, bullets welcome), "## Key terms"
+  ("- term — one-line definition" bullets). Simple sentences; explain jargon
+  the moment it appears; no insider one-liners. Paragraphs separated by \n\n.
+  The questions are practice checks *under* the notes.
 - Every question needs 1-2 followUps that probe the most likely gap.
 - Mix the modes: concept_check for definitions, tradeoff_decision for X-vs-Y,
   scenario_discussion / troubleshooting for practical situations,

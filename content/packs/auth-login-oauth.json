@@ -2,55 +2,83 @@
   "id": "auth_login_oauth",
   "name": "Login, Session & OAuth2/JWT",
   "description": "How modern web authentication works: cookie attributes, session vs token, JWT structure, the OAuth2 authorization-code flow, token refresh, keeping sessions alive, and the security checklist. From the login tutorial.",
-  "sources": ["tibi/login"],
+  "sources": [
+    "tibi/login"
+  ],
   "topics": [
     {
       "id": "cookie_attributes",
       "name": "Cookie Attributes",
       "description": "HttpOnly, Secure, SameSite, Path/Domain, expiry, and the __Secure-/__Host- prefixes — what each one defends against.",
       "category": "security",
-      "relatedTopicIds": ["authentication", "security_basics", "session_vs_token"],
-      "studyNotes": "Every attribute on a Set-Cookie header exists to close a specific attack, so learn them attack-first.\n\n- HttpOnly — the cookie cannot be read from JavaScript (document.cookie). This is the XSS defence: injected script cannot steal the token.\n- Secure — the cookie is only sent over HTTPS, never plain HTTP. Defends against eavesdropping (public wifi sniffing).\n- SameSite — the CSRF defence. Strict: sent only from the same site, maximum protection. Lax (the default): sent on top-level GET navigations (clicking a link) but not on cross-site form POSTs. None: sent on every request including cross-site — allowed only together with Secure.\n- Path — the cookie is only sent under the given path, e.g. Path=/api.\n- Domain — which domains receive the cookie; unset means current host only, .myapp.com includes subdomains.\n- Expires / Max-Age — automatic expiry: a concrete date vs seconds-to-live. With neither set, it is a session cookie that dies when the browser closes.\n- Priority — Low/Medium/High: which cookies the browser evicts first when there are too many.\n- Partitioned — the cookie lives in partitioned storage, the privacy mechanism for third-party cookies in newer browsers.\n\n## Name prefixes\n\n- __Secure- prefix: the browser only accepts the cookie if Secure is set.\n- __Host- prefix: the strictest — requires Secure, Path=/, and NO Domain attribute, so the cookie cannot be scoped wider than the exact host.\n\nA production-grade session cookie looks like: Set-Cookie: __Host-session=abc; Secure; Path=/; HttpOnly; SameSite=Strict.\n\nInterview framing: do not just list flags — say what each one prevents. HttpOnly → XSS token theft; Secure → wire sniffing; SameSite → CSRF; __Host- → subdomain and path scoping tricks."
+      "relatedTopicIds": [
+        "authentication",
+        "security_basics",
+        "session_vs_token"
+      ],
+      "studyNotes": "## What is it?\n\nCookies are small pieces of data the server asks the browser to store and send back with future requests — this is how a login session usually works. Each attribute on a cookie is a switch that controls where and when the browser will send it.\n\n## What problem does it solve?\n\nA session cookie is effectively a key to the user's account. Each attribute closes one specific way of stealing or misusing that key.\n\n## How it works\n\n- HttpOnly — JavaScript on the page cannot read the cookie (document.cookie returns nothing). So even if an attacker manages to inject a script into your page (XSS), the script cannot steal the session.\n- Secure — the cookie is only sent over HTTPS, never over plain HTTP. Protects it from being read on the network (public wifi).\n- SameSite — controls whether the cookie is sent when the request comes FROM ANOTHER SITE. Strict: never. Lax (the default): only on normal link clicks, not on hidden form posts. None: always — allowed only together with Secure. This is the defense against CSRF (another site triggering requests with your cookie).\n- Path and Domain — limit which URLs and (sub)domains receive the cookie.\n- Expires / Max-Age — when the cookie dies. With neither set, it lives until the browser closes.\n- __Host- name prefix — the browser only accepts the cookie if it is Secure, Path=/, and has no Domain set. It is the \"maximum strictness\" marker.\n\nA well-protected session cookie looks like: Set-Cookie: __Host-session=abc; Secure; Path=/; HttpOnly; SameSite=Strict.\n\n## Key terms\n\n- XSS — injected script; HttpOnly stops it from reading cookies\n- CSRF — forged cross-site request; SameSite stops the cookie from riding along\n- Session cookie — no expiry set, dies with the browser\n- __Host- prefix — enforced strict settings, cannot be scoped wider"
     },
     {
       "id": "session_vs_token",
       "name": "Session vs Token Authentication",
       "description": "Server-side sessions, stateless JWTs, and third-party OAuth2 — trade-offs in scaling, logout, and revocation.",
       "category": "security",
-      "relatedTopicIds": ["authentication", "jwt_structure", "oauth2_auth_code_flow", "scalability"],
-      "studyNotes": "Three approaches to \"who is this request from?\", each moving the state somewhere else.\n\n## A) Server-side session (traditional)\n\nOn login the server creates a session record in memory or Redis (user id, login time, IP, user agent) and hands the client only a session ID in a cookie: Set-Cookie: session_id=abc123; HttpOnly; Secure; SameSite=Strict. The browser sends it automatically on every request; the server looks the session up.\n\n- Pros: simple; logout is instant and server-side (delete the record); revocation is easy; CSRF is handled with SameSite.\n- Cons: the server must store every session — scaling to multiple servers needs session sync or a shared store (Redis); session fixation is a risk; cross-domain use is awkward.\n\n## B) Token-based (JWT)\n\nThe server signs a token containing everything it needs (user id, role, permissions, issued-at, expiry) and stores nothing. The client sends it in the Authorization: Bearer header; the server just verifies the signature and the exp claim.\n\n- Pros: stateless and horizontally scalable — any server can verify; works cross-domain and is mobile-friendly (header, not cookie).\n- Cons: logout is hard — the token stays valid until expiry unless you keep a blacklist, which reintroduces state; a stolen token grants access for its whole lifetime; the payload travels with every request.\n\n## C) OAuth2 (third-party login)\n\nThe user authenticates at Google/GitHub; your backend exchanges the returned authorization code for tokens, then typically issues its own session or JWT. Scaling is easy and CSRF is covered by the state parameter.\n\nThe comparison interviewers want: where the data lives (server store / inside the token / at the provider), how each scales (sync needed / stateless / stateless), how logout works (delete session / blacklist / revoke+blacklist), and CSRF defence (SameSite cookie / X-CSRF-Token header / state parameter)."
+      "relatedTopicIds": [
+        "authentication",
+        "jwt_structure",
+        "oauth2_auth_code_flow",
+        "scalability"
+      ],
+      "studyNotes": "## What is it?\n\nThe two main ways a server can remember who you are after login: server-side sessions and tokens (JWT). A third option, OAuth2, lets another company (Google, GitHub) handle the login itself.\n\n## What problem does it solve?\n\nHTTP forgets everything between requests. After login, every request must somehow prove \"this is still Anna\". The question is WHERE that proof lives.\n\n## How it works\n\nServer-side session: after login, the server creates a record in its own storage (memory or Redis) — \"session abc123 = user 42\" — and gives the browser only the ID in a cookie. Every request sends the ID; the server looks it up.\n- Good: logout is instant (delete the record); easy to revoke.\n- Bad: the server must store every session, and with multiple servers they all need access to the same session store.\n\nToken (JWT): after login, the server signs a token that CONTAINS the user data (id, role, expiry) and stores nothing. The browser sends the token with each request; the server just checks the signature.\n- Good: no server storage, any server can verify — easy to scale; works well for mobile and cross-domain.\n- Bad: logout is hard. The token stays valid until it expires — the server cannot \"delete\" it without keeping a blocklist, which brings back server state. A stolen token works until expiry.\n\nOAuth2 (third-party login): the user proves who they are at Google; your backend receives a code, exchanges it for tokens, and then typically issues its own session or JWT.\n\n## Key terms\n\n- Session store — server-side memory/Redis holding session records\n- Stateless — the server keeps nothing; everything needed is in the token\n- Revocation — invalidating access before expiry; easy for sessions, hard for JWTs\n- Blocklist / blacklist — the workaround that makes JWT logout possible"
     },
     {
       "id": "jwt_structure",
       "name": "JWT Structure & Storage",
       "description": "header.payload.signature, standard vs custom claims, what the signature guarantees, and where to store the token on the client.",
       "category": "security",
-      "relatedTopicIds": ["session_vs_token", "oauth_oidc", "auth_security_checklist"],
-      "studyNotes": "A JWT is three Base64 segments separated by dots: xxxxx.yyyyy.zzzzz.\n\n- HEADER: the signing algorithm and type, e.g. {\"alg\": \"HS256\", \"typ\": \"JWT\"}.\n- PAYLOAD: the claims. Standard claims from RFC 7519 — iat (issued at), exp (expires), nbf (not before), jti (token id, needed for revocation) — plus your custom claims (user_id, email, role, permissions).\n- SIGNATURE: HMAC-SHA256(base64(header) + \".\" + base64(payload), secret_key) — or an RSA/asymmetric signature.\n\nThe critical mental model: header and payload are only Base64-encoded, NOT encrypted — anyone can decode and read them. Never put secrets in a JWT payload. What the signature gives you is integrity: only the server knows the secret key, so if anyone alters a claim the signature no longer matches. That is the guarantee the token is not forged.\n\nThe client may decode the payload (to read exp and schedule a refresh, or show the user's name), but signature verification can ONLY happen on the server — the client does not have the secret, and a client-side \"check\" proves nothing. The server must verify signature and expiry on every request.\n\n## Where to store the token on the client\n\n- localStorage: survives reloads, but any XSS can read it — the classic token-theft vector.\n- HttpOnly + Secure + SameSite cookie: invisible to JavaScript, so XSS cannot exfiltrate it; needs CSRF thinking instead.\n- Memory (state/Redux): safest against theft, but a page refresh loses it — behaves like a logout unless paired with a refresh mechanism.\n\nRecommendation from the source: keep the JWT in an HttpOnly cookie; if you must use localStorage, keep access tokens short-lived and rely on a refresh-token strategy so a stolen token ages out quickly."
+      "relatedTopicIds": [
+        "session_vs_token",
+        "oauth_oidc",
+        "auth_security_checklist"
+      ],
+      "studyNotes": "## What is it?\n\nA JWT (JSON Web Token) is a string with three parts separated by dots: header.payload.signature. The header says which algorithm signed it, the payload carries the data (\"claims\": user id, role, expiry), and the signature proves nobody changed it.\n\n## What problem does it solve?\n\nThe server wants to hand the client a piece of data (\"you are user 42 with role admin, valid until 15:00\") and later trust that data WITHOUT storing anything. The signature makes that possible: the data travels with the client, but any tampering is detectable.\n\n## How it works\n\nThe header and payload are just Base64-encoded JSON — encoded, NOT encrypted. Anyone can decode and read them. Never put secrets (passwords, private data) in a JWT payload.\n\nThe signature is computed from the first two parts plus a secret key that only the server knows. If anyone edits a claim (say, changes role to admin), the signature no longer matches and the server rejects the token. That is the whole guarantee: not secrecy, but integrity.\n\nThe client MAY decode the payload — for example to read the expiry time and refresh in advance. But only the server can VERIFY the token, because verification needs the secret key.\n\nStandard claims worth knowing: exp (expires at), iat (issued at), jti (a unique token id, useful for revocation).\n\n## Where to store it in the browser\n\n- localStorage: survives reloads, but any injected script (XSS) can read it — the classic way tokens get stolen.\n- HttpOnly cookie: JavaScript cannot touch it, so XSS cannot steal it; you must think about CSRF instead.\n- In memory only: safest, but a page refresh logs the user out unless there is a refresh mechanism.\n\nCommon recommendation: HttpOnly cookie, or short-lived tokens + refresh tokens if you must use localStorage.\n\n## Key terms\n\n- Claims — the key–value data inside the payload (user_id, role, exp)\n- Base64 — encoding, readable by anyone; not encryption\n- Signature — tamper-proof seal made with the server's secret key\n- exp / iat / jti — expiry, issue time, token id"
     },
     {
       "id": "oauth2_auth_code_flow",
       "name": "OAuth2 Authorization Code Flow",
       "description": "The full third-party login flow step by step, why the client secret never reaches the browser, and how OAuth2 relates to JWT.",
       "category": "security",
-      "relatedTopicIds": ["oauth_oidc", "session_vs_token", "auth_security_checklist"],
-      "studyNotes": "The authorization code flow is the standard \"Log in with Google\" dance. The whole design revolves around one rule: the browser never sees the client secret.\n\n- 1. The user clicks \"Login with Google\"; the frontend redirects to the provider's authorize endpoint with client_id, redirect_uri, scope, and a random state string.\n- 2. The user authenticates at Google and approves the requested scopes (profile, email).\n- 3. Google redirects back to your callback URL with an authorization code (and echoes state back — verify it!).\n- 4. Your BACKEND posts the code + client_id + client_secret to the token endpoint. The secret lives only on the server.\n- 5. Google validates and returns an ID token (user identity) and an access token.\n- 6. The backend reads the user from the ID token, creates or updates the user record, issues its OWN session or JWT, and hands that to the frontend. From here the app works with its own token — Google is out of the loop.\n\nThe authorization code is single-use and short-lived: intercepting it is useless without the secret.\n\n## OAuth2 vs JWT — not the same thing\n\nOAuth2 is a protocol (who is the user, what may they access); JWT is a token format (signed data packaging). OAuth2 MAY use JWTs but does not have to: Google's access tokens are opaque strings (ya29...) that require a server-side lookup, while its ID tokens are JWTs. Modern providers (Auth0, Keycloak) often issue JWT access tokens signed asymmetrically — the provider signs with a private key and your backend verifies with the public key, no callback to the provider per request.\n\n## Why the \"OAuth2 login + own JWT\" combo wins\n\nGoogle handles login UX and credentials; your own JWT handles API access — verification is a local signature check instead of a Google API call per request, no provider rate limits, you control roles/scopes, logout is a local blacklist, and refresh is your policy.\n\nSecurity points to say out loud: client_secret only on the backend; state parameter checked (CSRF); redirect URI whitelisted at the provider; HTTPS mandatory — an authorization code over HTTP is stealable."
+      "relatedTopicIds": [
+        "oauth_oidc",
+        "session_vs_token",
+        "auth_security_checklist"
+      ],
+      "studyNotes": "## What is it?\n\nThe OAuth2 authorization code flow is the standard mechanism behind every \"Log in with Google\" button. It lets your app confirm a user's identity through a provider (Google, GitHub) without ever seeing their password.\n\n## What problem does it solve?\n\nUsers do not want another password; you do not want to store passwords. But letting a third party do the login safely is tricky — the flow is designed so that the sensitive pieces never pass through the browser, where they could be stolen.\n\n## How it works\n\n- 1. The user clicks \"Login with Google\". Your frontend redirects them to Google, sending along your app's client_id, a redirect_uri (where to come back), the scopes you want (profile, email), and a random state string.\n- 2. The user logs in at Google and approves.\n- 3. Google redirects back to your site with a short-lived, single-use authorization code (and echoes the state back — your backend checks it matches, which blocks forged callbacks).\n- 4. Your BACKEND sends the code + client_id + client_secret to Google's token endpoint. The client_secret lives only on your server — this is the crucial rule. Anything in the browser can be read by the user or an attacker; the code alone is useless without the secret.\n- 5. Google returns an ID token (who the user is) and an access token.\n- 6. Your backend reads the identity, creates or finds the user in its own database, and issues its OWN session or JWT. From now on the app uses its own token — Google is out of the picture.\n\nOne clarification interviewers love: OAuth2 is a PROTOCOL, JWT is a TOKEN FORMAT. They are different things that often appear together. OAuth2 providers may hand out JWTs or opaque random strings.\n\n## Key terms\n\n- client_id / client_secret — your app's public name and its server-only password\n- Authorization code — single-use voucher, exchanged server-side for tokens\n- state — random value that must come back unchanged; blocks CSRF on the callback\n- Redirect URI whitelist — provider only redirects to pre-registered URLs\n- ID token vs access token — who the user is vs what may be accessed"
     },
     {
       "id": "token_refresh",
       "name": "Token Refresh & Session Keep-Alive",
       "description": "Short-lived access token + long-lived refresh token, rotation, device tracking, and the three keep-alive strategies.",
       "category": "security",
-      "relatedTopicIds": ["jwt_structure", "session_vs_token", "auth_security_checklist"],
-      "studyNotes": "The problem: access tokens are deliberately short-lived (15–60 minutes) so a stolen token has limited value — but users stay logged in for weeks without retyping passwords. The answer is a two-token system.\n\n- Access token: 15–30 minutes. Sent with every API request. Lives in memory, localStorage, or a cookie.\n- Refresh token: 7–30 days. Usable ONLY at the refresh endpoint, stored ONLY in an HttpOnly cookie (JavaScript cannot touch it), and tracked server-side so it can be revoked.\n\nThe flow the interviewer expects: an expired access token gets a 401 → the client calls POST /auth/refresh (the refresh cookie rides along automatically) → the server verifies the refresh token against its stored session (hashed — never store raw tokens), checks it is active, unexpired, and from the same device → issues a fresh access token → the client retries the original request. In a typical frontend this is an HTTP interceptor: catch the 401, refresh once, replay; if the refresh fails, log out.\n\nBest practices from the source:\n- Store refresh-token sessions in a database (hashed token, device fingerprint, IP, expiry) — this is what makes logout and \"log out of all devices\" possible.\n- Token rotation: every refresh issues a new refresh token and invalidates the old one, so a stolen refresh token that gets used races the legitimate one and gets caught.\n- Device fingerprinting: refresh only honoured from the device that created the session; a new device means logging in again.\n- Logout = deactivate/delete the refresh session server-side AND clear the cookie. Client-only logout (deleting from localStorage) leaves a stolen token fully usable.\n\n## Keeping the session alive\n\nThree strategies when the user is present but idle:\n- Silent refresh (heartbeat): refresh on a timer, e.g. every 10 minutes, in the background.\n- Activity-based: on user interaction (click, keypress) check the decoded exp; if the token expires within ~2 minutes, refresh.\n- Sliding window: every refresh issues a new full-length refresh token, so the session extends as long as the user keeps coming back — inactivity for the whole window logs them out naturally."
+      "relatedTopicIds": [
+        "jwt_structure",
+        "session_vs_token",
+        "auth_security_checklist"
+      ],
+      "studyNotes": "## What is it?\n\nThe two-token system used by most modern apps: a short-lived access token (15–30 minutes) used on every API request, and a long-lived refresh token (days or weeks) whose only job is to get new access tokens.\n\n## What problem does it solve?\n\nA conflict: tokens should be short-lived (if one is stolen, the damage window is small), but users should stay logged in for weeks without retyping their password. Splitting the job into two tokens solves both.\n\n## How it works\n\nThe normal cycle:\n- 1. The access token expires; an API call returns 401 Unauthorized.\n- 2. The client calls the refresh endpoint. The refresh token rides along automatically because it is stored in an HttpOnly cookie (JavaScript cannot read it).\n- 3. The server checks the refresh token against its own records — is it active, unexpired, from the same device? — and issues a fresh access token.\n- 4. The client retries the original request. The user notices nothing. In practice this is one HTTP interceptor: catch 401, refresh once, replay.\n\nProtecting the refresh token, since it is the powerful one:\n- Store it hashed in the database, with device info and expiry — this makes real logout and \"log out everywhere\" possible.\n- Rotation: each refresh issues a NEW refresh token and kills the old one. If a stolen copy is used, it races the real one and gets detected.\n- Logout must invalidate the refresh token on the SERVER. Deleting a token from localStorage alone does nothing — a stolen copy would still work.\n\n## Keeping the session alive while the user is idle\n\n- Silent refresh: refresh on a timer (e.g. every 10 minutes).\n- Activity-based: on click/keypress, check the token's expiry and refresh if it is close.\n- Sliding window: every refresh restarts the full refresh-token lifetime, so active users stay in forever and inactive ones age out.\n\n## Key terms\n\n- Access token — short-lived, sent with every request\n- Refresh token — long-lived, HttpOnly cookie, only for renewal\n- Token rotation — new refresh token on every use; detects theft\n- 401 → refresh → retry — the interceptor pattern"
     },
     {
       "id": "auth_security_checklist",
       "name": "Auth Security Best Practices",
       "description": "The login-system checklist — HTTPS, hashing, rate limiting, CSRF defenses — and the classic mistakes.",
       "category": "security",
-      "relatedTopicIds": ["security_basics", "cookie_attributes", "token_refresh", "rate_limiting"],
-      "studyNotes": "The checklist for any login system, each item with its reason:\n\n- HTTPS everywhere — a token is a password; over HTTP it can be sniffed.\n- HttpOnly cookie for the refresh token — JavaScript (and therefore XSS) cannot reach it.\n- Secure flag — cookies never travel over plain HTTP.\n- SameSite=Strict — cookies only sent from your own site (CSRF defence).\n- CORS configured to trusted origins only.\n- Password hashing with bcrypt or argon2 — never MD5/SHA1, which are fast enough to brute-force.\n- Rate limiting on login — e.g. max 5 attempts per 15 minutes against credential stuffing.\n- Token expiry — access 15–60 minutes, refresh 7–30 days.\n- Signature verification on the server for every single token.\n- Logout invalidation — delete/deactivate the refresh session in the database.\n\n## CSRF defences by auth style\n\n- Cookie-based session: SameSite=Strict on the cookie.\n- JWT in a header: an X-CSRF-Token custom header — cross-origin pages cannot set custom headers, so its presence proves same-origin.\n- OAuth2: the state parameter, generated random, verified at the callback.\n\n## Classic mistakes\n\n- JWT in localStorage with XSS present — trivially stolen.\n- Accepting tokens without verifying the signature — forged tokens walk in.\n- Client-side-only logout — the server still honours the stolen token.\n- OAuth2 over HTTP — authorization code and token theft.\n- Refresh tokens that never expire — a stolen one is permanent access.\n- No device tracking — a stolen refresh token works from anywhere.\n- JWT secret reachable from the client — the whole scheme collapses; whoever has the secret can mint tokens.\n\nInterview tip from the source: do not just recite the flow — attach the security reason to every choice. Why HttpOnly? Why short expiry? Why a refresh token at all? That reasoning is what is actually being scored."
+      "relatedTopicIds": [
+        "security_basics",
+        "cookie_attributes",
+        "token_refresh",
+        "rate_limiting"
+      ],
+      "studyNotes": "## What is it?\n\nThe checklist you walk through before a login system goes live — each item is a real attack it prevents.\n\n## What problem does it solve?\n\nLogin systems fail in well-known, repeated ways. This list is the accumulated \"we learned it the hard way\" of the industry.\n\n## How it works\n\nThe must-haves, each with its reason:\n- HTTPS everywhere — a token is a password; on plain HTTP it can be read off the network.\n- HttpOnly + Secure + SameSite on auth cookies — blocks script access (XSS) and cross-site sending (CSRF).\n- Password hashing with bcrypt or argon2 — these are deliberately slow, so stolen hashes cannot be brute-forced quickly. MD5/SHA1 are fast and therefore unsafe for passwords.\n- Rate limiting on login — e.g. 5 attempts per 15 minutes, against automated password guessing.\n- Token expiry — access tokens 15–60 minutes, refresh tokens bounded too.\n- Signature verification on EVERY request — a token you do not verify is just a suggestion.\n- Server-side logout — invalidate the session/refresh token in the database, not only in the browser.\n- CORS limited to your own origins.\n\n## CSRF defenses, by auth style\n\n- Cookie session → SameSite=Strict on the cookie.\n- JWT in a header → an X-CSRF-Token custom header (other sites cannot set custom headers on requests to you).\n- OAuth2 → the state parameter, verified on the callback.\n\n## The classic mistakes to catch in review\n\nJWT in localStorage on a site with any XSS risk; logout that only clears the browser; refresh tokens that never expire; the JWT secret reachable from client code; accepting tokens without verifying signatures.\n\n## Key terms\n\n- bcrypt / argon2 — slow password hashes, the only acceptable kind\n- Rate limiting — capped login attempts against brute force\n- Credential stuffing — trying leaked passwords in bulk; rate limits + hashing blunt it\n- Server-side invalidation — logout that actually revokes"
     }
   ],
   "questions": [
@@ -58,9 +86,19 @@
       "id": "auth_session_vs_jwt",
       "title": "Session vs JWT",
       "prompt": "What is the difference between server-side sessions and JWT-based authentication? When would you pick each?",
-      "roles": ["backend_developer", "fullstack_developer", "frontend_developer", "solution_architect"],
-      "modes": ["concept_check", "tradeoff_decision"],
-      "topicIds": ["session_vs_token"],
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_developer",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "session_vs_token"
+      ],
       "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "Where the state lives → scaling implications → logout/revocation difference → when each fits.",
@@ -70,30 +108,66 @@
           "label": "Where the state lives",
           "description": "Session: server stores the record (memory/Redis), cookie carries only an ID. JWT: all data in the token, server stateless.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 5, "solution_architect": 5 },
-          "acceptedSignals": ["server stores", "stored on the server", "redis", "stateless", "in the token", "self-contained", "session id in a cookie"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "server stores",
+            "stored on the server",
+            "redis",
+            "stateless",
+            "in the token",
+            "self-contained",
+            "session id in a cookie"
+          ]
         },
         {
           "id": "svj_scaling",
           "label": "Scaling trade-off",
           "description": "Sessions need sync or a shared store across servers; JWTs verify anywhere.",
           "importance": "important",
-          "roleWeight": { "backend_developer": 4, "solution_architect": 5 },
-          "acceptedSignals": ["session sync", "shared store", "sticky sessions", "any server can verify", "horizontally scalable", "scales easily"]
+          "roleWeight": {
+            "backend_developer": 4,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "session sync",
+            "shared store",
+            "sticky sessions",
+            "any server can verify",
+            "horizontally scalable",
+            "scales easily"
+          ]
         },
         {
           "id": "svj_logout",
           "label": "Logout / revocation difference",
           "description": "Session logout is instant (delete the record); JWT stays valid until expiry unless blacklisted.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 4, "solution_architect": 4 },
-          "acceptedSignals": ["logout is easy", "delete the session", "blacklist", "valid until expiry", "hard to revoke", "revocation"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "logout is easy",
+            "delete the session",
+            "blacklist",
+            "valid until expiry",
+            "hard to revoke",
+            "revocation"
+          ]
         }
       ],
       "followUps": [
         {
           "id": "svj_stolen_fu",
-          "trigger": { "type": "rubric_missing", "rubricItemId": "svj_logout" },
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "svj_logout"
+          },
           "prompt": "A user's JWT is stolen. What can you actually do about it?",
           "expectedPoints": [
             {
@@ -101,8 +175,17 @@
               "label": "Mitigating a stolen JWT",
               "description": "Short expiry limits the damage; jti + blacklist or rotating the signing key revokes at a cost.",
               "importance": "important",
-              "roleWeight": { "backend_developer": 4 },
-              "acceptedSignals": ["short expiry", "short lived", "blacklist", "rotate the secret", "rotate the key", "jti"]
+              "roleWeight": {
+                "backend_developer": 4
+              },
+              "acceptedSignals": [
+                "short expiry",
+                "short lived",
+                "blacklist",
+                "rotate the secret",
+                "rotate the key",
+                "jti"
+              ]
             }
           ]
         }
@@ -112,9 +195,18 @@
       "id": "auth_cookie_attributes",
       "title": "Securing a session cookie",
       "prompt": "You are setting the session cookie for a login system. Which cookie attributes do you set, and what does each one defend against?",
-      "roles": ["backend_developer", "fullstack_developer", "frontend_developer"],
-      "modes": ["concept_check", "scenario_discussion"],
-      "topicIds": ["cookie_attributes"],
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "cookie_attributes"
+      ],
       "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "Attribute by attribute: flag → attack it prevents. Finish with the __Host- prefix as the strict default.",
@@ -124,32 +216,72 @@
           "label": "HttpOnly against XSS",
           "description": "Not readable from document.cookie, so injected script cannot steal it.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 5, "frontend_developer": 5 },
-          "acceptedSignals": ["httponly", "http only", "not readable from javascript", "xss", "script cannot read"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_developer": 5
+          },
+          "acceptedSignals": [
+            "httponly",
+            "http only",
+            "not readable from javascript",
+            "xss",
+            "script cannot read"
+          ]
         },
         {
           "id": "cka_secure",
           "label": "Secure = HTTPS only",
           "description": "Never sent over plain HTTP; defends against wifi sniffing.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 4 },
-          "acceptedSignals": ["secure flag", "https only", "not over http", "sniffing", "eavesdropping"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "secure flag",
+            "https only",
+            "not over http",
+            "sniffing",
+            "eavesdropping"
+          ]
         },
         {
           "id": "cka_samesite",
           "label": "SameSite against CSRF",
           "description": "Strict = same-site only; Lax allows top-level GET navigation; None requires Secure.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 5 },
-          "acceptedSignals": ["samesite", "same site", "csrf", "strict", "lax", "cross-site requests"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "samesite",
+            "same site",
+            "csrf",
+            "strict",
+            "lax",
+            "cross-site requests"
+          ]
         },
         {
           "id": "cka_scope_expiry",
           "label": "Scope and expiry attributes",
           "description": "Path/Domain scoping, Expires/Max-Age lifetime, __Secure-/__Host- prefixes for enforced strictness.",
           "importance": "nice_to_have",
-          "roleWeight": { "backend_developer": 3 },
-          "acceptedSignals": ["path", "domain", "max-age", "expires", "session cookie", "host prefix", "secure prefix", "partitioned"]
+          "roleWeight": {
+            "backend_developer": 3
+          },
+          "acceptedSignals": [
+            "path",
+            "domain",
+            "max-age",
+            "expires",
+            "session cookie",
+            "host prefix",
+            "secure prefix",
+            "partitioned"
+          ]
         }
       ],
       "followUps": []
@@ -158,9 +290,17 @@
       "id": "auth_jwt_structure",
       "title": "What is inside a JWT",
       "prompt": "Walk me through the structure of a JWT. What can the client safely do with it, and what must only happen on the server?",
-      "roles": ["backend_developer", "fullstack_developer", "frontend_developer"],
-      "modes": ["concept_check"],
-      "topicIds": ["jwt_structure"],
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "jwt_structure"
+      ],
       "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
       "expectedPoints": [
@@ -169,38 +309,81 @@
           "label": "Header.payload.signature",
           "description": "Three dot-separated Base64 segments: algorithm, claims, signature.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 5, "frontend_developer": 4 },
-          "acceptedSignals": ["three parts", "header payload signature", "base64", "dot separated", "claims"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_developer": 4
+          },
+          "acceptedSignals": [
+            "three parts",
+            "header payload signature",
+            "base64",
+            "dot separated",
+            "claims"
+          ]
         },
         {
           "id": "jwt_not_encrypted",
           "label": "Readable, not encrypted",
           "description": "Base64 is encoding, not encryption — anyone can read the payload; never put secrets in it.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 5, "frontend_developer": 5 },
-          "acceptedSignals": ["not encrypted", "anyone can read", "just encoded", "base64 decode", "no secrets in the payload"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_developer": 5
+          },
+          "acceptedSignals": [
+            "not encrypted",
+            "anyone can read",
+            "just encoded",
+            "base64 decode",
+            "no secrets in the payload"
+          ]
         },
         {
           "id": "jwt_signature_integrity",
           "label": "Signature = integrity guarantee",
           "description": "Only the server knows the secret; altering a claim invalidates the signature — verification is server-only.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 5 },
-          "acceptedSignals": ["signature", "tamper", "cannot be forged", "secret key", "verify on the server", "hmac", "integrity"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "signature",
+            "tamper",
+            "cannot be forged",
+            "secret key",
+            "verify on the server",
+            "hmac",
+            "integrity"
+          ]
         },
         {
           "id": "jwt_std_claims",
           "label": "Standard claims",
           "description": "iat/exp/nbf/jti from RFC 7519; jti enables revocation.",
           "importance": "nice_to_have",
-          "roleWeight": { "backend_developer": 3 },
-          "acceptedSignals": ["exp", "expiry claim", "issued at", "iat", "jti", "standard claims", "not before"]
+          "roleWeight": {
+            "backend_developer": 3
+          },
+          "acceptedSignals": [
+            "exp",
+            "expiry claim",
+            "issued at",
+            "iat",
+            "jti",
+            "standard claims",
+            "not before"
+          ]
         }
       ],
       "followUps": [
         {
           "id": "jwt_storage_fu",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "Where do you store the JWT on the client, and what is the trade-off of each option?",
           "expectedPoints": [
             {
@@ -208,8 +391,19 @@
               "label": "localStorage vs HttpOnly cookie vs memory",
               "description": "localStorage is XSS-exposed; HttpOnly cookie is JS-invisible but needs CSRF care; memory dies on refresh.",
               "importance": "important",
-              "roleWeight": { "frontend_developer": 5, "fullstack_developer": 4, "backend_developer": 3 },
-              "acceptedSignals": ["localstorage", "httponly cookie", "in memory", "xss can read", "lost on refresh", "csrf"]
+              "roleWeight": {
+                "frontend_developer": 5,
+                "fullstack_developer": 4,
+                "backend_developer": 3
+              },
+              "acceptedSignals": [
+                "localstorage",
+                "httponly cookie",
+                "in memory",
+                "xss can read",
+                "lost on refresh",
+                "csrf"
+              ]
             }
           ]
         }
@@ -219,9 +413,18 @@
       "id": "auth_oauth2_flow",
       "title": "OAuth2 authorization code flow",
       "prompt": "Explain the OAuth2 authorization code flow end to end — \"Login with Google\". Why does the browser never receive the client secret?",
-      "roles": ["backend_developer", "fullstack_developer", "solution_architect"],
-      "modes": ["concept_check", "system_design"],
-      "topicIds": ["oauth2_auth_code_flow"],
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "system_design"
+      ],
+      "topicIds": [
+        "oauth2_auth_code_flow"
+      ],
       "expectedDurationSeconds": 240,
       "thinkingTimeSeconds": 60,
       "answerStructureHint": "Redirect with client_id+state → user consents → code to callback → backend exchanges code+secret for tokens → app issues its own token.",
@@ -231,38 +434,83 @@
           "label": "Redirect with client_id, redirect_uri, scope, state",
           "description": "The frontend sends the user to the provider's authorize endpoint.",
           "importance": "important",
-          "roleWeight": { "backend_developer": 4, "fullstack_developer": 4, "solution_architect": 4 },
-          "acceptedSignals": ["redirect to google", "authorize endpoint", "client id", "redirect uri", "scope", "state parameter"]
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "redirect to google",
+            "authorize endpoint",
+            "client id",
+            "redirect uri",
+            "scope",
+            "state parameter"
+          ]
         },
         {
           "id": "oa_code_exchange",
           "label": "Backend exchanges the code with the secret",
           "description": "The authorization code returns via the callback; only the backend trades code + client_secret for tokens.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 5, "solution_architect": 5 },
-          "acceptedSignals": ["authorization code", "exchange the code", "token endpoint", "client secret stays on the server", "backend exchanges", "code for tokens"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "authorization code",
+            "exchange the code",
+            "token endpoint",
+            "client secret stays on the server",
+            "backend exchanges",
+            "code for tokens"
+          ]
         },
         {
           "id": "oa_secret_never_browser",
           "label": "Why the secret never reaches the browser",
           "description": "Anything in the browser is readable; the code alone is useless without the secret, and it is single-use.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "solution_architect": 5 },
-          "acceptedSignals": ["never in the browser", "client can be inspected", "code is useless without the secret", "single use", "one-time code", "public client"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "never in the browser",
+            "client can be inspected",
+            "code is useless without the secret",
+            "single use",
+            "one-time code",
+            "public client"
+          ]
         },
         {
           "id": "oa_own_token",
           "label": "App issues its own token afterwards",
           "description": "Backend reads identity from the ID token, creates the user, and issues its own JWT/session — Google is out of the loop.",
           "importance": "important",
-          "roleWeight": { "backend_developer": 4, "fullstack_developer": 4, "solution_architect": 4 },
-          "acceptedSignals": ["own jwt", "issue our own token", "id token", "own session", "not the google token", "local verification"]
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "own jwt",
+            "issue our own token",
+            "id token",
+            "own session",
+            "not the google token",
+            "local verification"
+          ]
         }
       ],
       "followUps": [
         {
           "id": "oa_vs_jwt_fu",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "Is OAuth2 the same thing as JWT?",
           "expectedPoints": [
             {
@@ -270,8 +518,18 @@
               "label": "Protocol vs token format",
               "description": "OAuth2 is an authorization protocol; JWT is a token format. OAuth2 may use JWTs (ID tokens) or opaque tokens.",
               "importance": "important",
-              "roleWeight": { "backend_developer": 4, "solution_architect": 4 },
-              "acceptedSignals": ["protocol", "token format", "not the same", "opaque token", "may use jwt", "different things"]
+              "roleWeight": {
+                "backend_developer": 4,
+                "solution_architect": 4
+              },
+              "acceptedSignals": [
+                "protocol",
+                "token format",
+                "not the same",
+                "opaque token",
+                "may use jwt",
+                "different things"
+              ]
             }
           ]
         }
@@ -281,9 +539,18 @@
       "id": "auth_token_refresh",
       "title": "Why refresh tokens exist",
       "prompt": "Why do we split authentication into an access token and a refresh token? Walk through what happens when the access token expires mid-session.",
-      "roles": ["backend_developer", "fullstack_developer", "frontend_developer"],
-      "modes": ["concept_check", "scenario_discussion"],
-      "topicIds": ["token_refresh"],
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "token_refresh"
+      ],
       "expectedDurationSeconds": 210,
       "thinkingTimeSeconds": 45,
       "expectedPoints": [
@@ -292,30 +559,66 @@
           "label": "Short access + long refresh",
           "description": "Access: 15–30 min, used on every request — stolen means limited damage. Refresh: days/weeks, only for renewal.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 5, "frontend_developer": 4 },
-          "acceptedSignals": ["short lived access", "long lived refresh", "fifteen minutes", "limits the damage", "only for renewing", "two tokens"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_developer": 4
+          },
+          "acceptedSignals": [
+            "short lived access",
+            "long lived refresh",
+            "fifteen minutes",
+            "limits the damage",
+            "only for renewing",
+            "two tokens"
+          ]
         },
         {
           "id": "tr_401_flow",
           "label": "401 → refresh → retry",
           "description": "Expired access token returns 401; client calls the refresh endpoint (HttpOnly cookie rides along), gets a new access token, replays the request — invisible to the user.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 5, "frontend_developer": 5 },
-          "acceptedSignals": ["401", "unauthorized", "refresh endpoint", "retry the request", "interceptor", "replay", "user doesn't notice"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_developer": 5
+          },
+          "acceptedSignals": [
+            "401",
+            "unauthorized",
+            "refresh endpoint",
+            "retry the request",
+            "interceptor",
+            "replay",
+            "user doesn't notice"
+          ]
         },
         {
           "id": "tr_refresh_protection",
           "label": "Refresh token protection",
           "description": "HttpOnly cookie only, hashed server-side tracking, rotation on use, device fingerprint.",
           "importance": "important",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 4 },
-          "acceptedSignals": ["httponly cookie", "stored hashed", "server side tracking", "rotation", "rotate the refresh token", "device fingerprint", "database session"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "httponly cookie",
+            "stored hashed",
+            "server side tracking",
+            "rotation",
+            "rotate the refresh token",
+            "device fingerprint",
+            "database session"
+          ]
         }
       ],
       "followUps": [
         {
           "id": "tr_keepalive_fu",
-          "trigger": { "type": "always" },
+          "trigger": {
+            "type": "always"
+          },
           "prompt": "How do you keep the session alive while the user is active but idle between requests?",
           "expectedPoints": [
             {
@@ -323,8 +626,19 @@
               "label": "Keep-alive strategies",
               "description": "Silent refresh on a timer, activity-based refresh near expiry, or a sliding window extending on each refresh.",
               "importance": "important",
-              "roleWeight": { "frontend_developer": 4, "fullstack_developer": 4, "backend_developer": 3 },
-              "acceptedSignals": ["silent refresh", "heartbeat", "on user activity", "sliding window", "extend on each refresh", "timer"]
+              "roleWeight": {
+                "frontend_developer": 4,
+                "fullstack_developer": 4,
+                "backend_developer": 3
+              },
+              "acceptedSignals": [
+                "silent refresh",
+                "heartbeat",
+                "on user activity",
+                "sliding window",
+                "extend on each refresh",
+                "timer"
+              ]
             }
           ]
         }
@@ -334,9 +648,19 @@
       "id": "auth_csrf_defense",
       "title": "CSRF defenses in modern login",
       "prompt": "How do you defend against CSRF, and how does the defense differ between cookie-based sessions, JWT-in-header, and OAuth2?",
-      "roles": ["backend_developer", "fullstack_developer", "frontend_developer"],
-      "modes": ["concept_check", "tradeoff_decision"],
-      "topicIds": ["auth_security_checklist", "cookie_attributes"],
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "auth_security_checklist",
+        "cookie_attributes"
+      ],
       "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
       "expectedPoints": [
@@ -345,24 +669,51 @@
           "label": "Understands the attack",
           "description": "A malicious site triggers requests to your API riding on the browser's automatically-attached cookies.",
           "importance": "important",
-          "roleWeight": { "backend_developer": 4, "fullstack_developer": 4, "frontend_developer": 4 },
-          "acceptedSignals": ["cross-site request", "cookies sent automatically", "malicious site", "forged request", "riding the session"]
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_developer": 4
+          },
+          "acceptedSignals": [
+            "cross-site request",
+            "cookies sent automatically",
+            "malicious site",
+            "forged request",
+            "riding the session"
+          ]
         },
         {
           "id": "csrf_samesite",
           "label": "Sessions: SameSite cookie",
           "description": "SameSite=Strict stops the cookie from accompanying cross-site requests.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 5 },
-          "acceptedSignals": ["samesite", "strict", "cookie not sent cross-site"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "samesite",
+            "strict",
+            "cookie not sent cross-site"
+          ]
         },
         {
           "id": "csrf_header_state",
           "label": "Headers and state parameter",
           "description": "JWT: X-CSRF-Token custom header (cross-origin pages cannot set custom headers). OAuth2: random state verified at the callback.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "fullstack_developer": 4 },
-          "acceptedSignals": ["csrf token", "custom header", "x-csrf-token", "state parameter", "verify the state", "cannot set custom headers cross-origin"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "csrf token",
+            "custom header",
+            "x-csrf-token",
+            "state parameter",
+            "verify the state",
+            "cannot set custom headers cross-origin"
+          ]
         }
       ],
       "followUps": []
@@ -371,9 +722,19 @@
       "id": "auth_security_checklist_q",
       "title": "Login system security checklist",
       "prompt": "You are reviewing a login implementation before it ships. What is on your security checklist, and which classic mistakes do you look for?",
-      "roles": ["backend_developer", "fullstack_developer", "backend_architect", "solution_architect"],
-      "modes": ["design_review", "scenario_discussion"],
-      "topicIds": ["auth_security_checklist"],
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "auth_security_checklist"
+      ],
       "expectedDurationSeconds": 240,
       "thinkingTimeSeconds": 60,
       "answerStructureHint": "Transport → storage → credentials → abuse limits → lifecycle (expiry, logout). Then the classic mistakes.",
@@ -383,32 +744,74 @@
           "label": "HTTPS + hardened cookies",
           "description": "HTTPS mandatory; HttpOnly, Secure, SameSite on auth cookies; CORS restricted to trusted origins.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "solution_architect": 5, "backend_architect": 5 },
-          "acceptedSignals": ["https", "httponly", "secure flag", "samesite", "cors", "trusted origins"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "solution_architect": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "https",
+            "httponly",
+            "secure flag",
+            "samesite",
+            "cors",
+            "trusted origins"
+          ]
         },
         {
           "id": "chk_password_rate",
           "label": "Password hashing + rate limiting",
           "description": "bcrypt/argon2 (never MD5/SHA1); login attempts rate-limited against credential stuffing.",
           "importance": "critical",
-          "roleWeight": { "backend_developer": 5, "backend_architect": 4 },
-          "acceptedSignals": ["bcrypt", "argon2", "password hashing", "not md5", "rate limiting", "limit login attempts", "brute force"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "bcrypt",
+            "argon2",
+            "password hashing",
+            "not md5",
+            "rate limiting",
+            "limit login attempts",
+            "brute force"
+          ]
         },
         {
           "id": "chk_lifecycle",
           "label": "Token lifecycle discipline",
           "description": "Expiries set (access short, refresh bounded), signatures verified on every request, logout invalidates server-side.",
           "importance": "important",
-          "roleWeight": { "backend_developer": 5, "solution_architect": 4 },
-          "acceptedSignals": ["token expiry", "verify the signature", "logout invalidation", "revoke on logout", "server-side logout", "bounded lifetime"]
+          "roleWeight": {
+            "backend_developer": 5,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "token expiry",
+            "verify the signature",
+            "logout invalidation",
+            "revoke on logout",
+            "server-side logout",
+            "bounded lifetime"
+          ]
         },
         {
           "id": "chk_mistakes",
           "label": "Spots the classic mistakes",
           "description": "JWT in localStorage, client-only logout, never-expiring refresh tokens, secret reachable from the client.",
           "importance": "important",
-          "roleWeight": { "backend_developer": 4, "backend_architect": 4 },
-          "acceptedSignals": ["localstorage", "client-side logout", "never expires", "secret on the client", "no device tracking", "unverified token"]
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "localstorage",
+            "client-side logout",
+            "never expires",
+            "secret on the client",
+            "no device tracking",
+            "unverified token"
+          ]
         }
       ],
       "followUps": []
