@@ -151,10 +151,45 @@ Guidelines for good signals:
 
 A complete working example: [`content/packs/js-ts-fundamentals-lufthansa.json`](../content/packs/js-ts-fundamentals-lufthansa.json).
 
+## Extending the bank with an external AI
+
+The intended workflow for growing or fixing content with *any* AI system
+(Claude, ChatGPT, Gemini, …) — no repo access needed on the AI's side:
+
+1. **Give the AI its context.** Paste into the chat:
+   - this file (`docs/content-authoring.md`) — it is the complete spec;
+   - the output of **`npm run content:ids`** — the inventory of every
+     existing pack/topic/question id, so the AI avoids id collisions and
+     can link `relatedTopicIds` to real topics instead of duplicating them;
+   - if you are *modifying* a pack: the pack's full JSON from
+     `content/packs/`;
+   - your instruction (what to add/change, in any language — the OUTPUT
+     must be English).
+2. **The AI answers with JSON** — either a brand-new pack or the complete
+   updated pack file.
+3. **You copy it back** into `content/packs/<name>.json` (overwrite the old
+   file when modifying — the AI must always return the *whole* file, never
+   a fragment).
+4. **Validate: `npm run content:check`.** It enforces the schema, id
+   uniqueness, reference integrity, and the studyNotes structure, and names
+   the exact file/path/expectation for anything wrong. Nothing invalid can
+   reach the app — a broken pack is skipped and reported, never crashes.
+5. Reload the app (or `npm run dev`) and review the result in the Study tab.
+
+Rules the AI must follow when **modifying** existing content:
+
+- Never change existing `id` values — user progress (practice history,
+  spaced repetition) is keyed to question/topic ids.
+- Keep every topic's `studyNotes` in the fixed structure below.
+- Prefer linking to an existing topic (`relatedTopicIds`, or reusing its id
+  in `topicIds`) over creating a near-duplicate topic.
+- Keep `sources` accurate: list the `dataresource/` files (path without
+  extension) the content is based on.
+
 ## AI prompt template
 
-Paste this into Claude/ChatGPT, fill in the two placeholders, and save the
-output as `content/packs/<name>.json`:
+Paste this into the AI chat (together with the `content:ids` output), fill
+in the placeholders, and save the output as `content/packs/<name>.json`:
 
 ````text
 You are generating a content pack for a technical interview trainer app.
@@ -165,11 +200,13 @@ The JSON must follow this exact structure (all ids snake_case):
 {
   "id": "<pack id>",
   "name": "<pack name>",
+  "description": "<one sentence>",
+  "sources": ["<dataresource file the content comes from, e.g. tibi/login>"],
   "topics": [
     { "id": "...", "name": "...", "description": "...",
       "category": "<frontend|backend|fullstack|architecture|cloud|security|database|devops|observability|soft_technical>",
       "relatedTopicIds": [],
-      "studyNotes": "<a 150-400 word tutorial-style explanation of the topic: the concept, why it matters, trade-offs, classic mistakes. Paragraphs separated by \\n\\n; lines starting with '- ' become bullets; '## ' starts a subheading>" }
+      "studyNotes": "## What is it?\\n\\n<plain definition>\\n\\n## What problem does it solve?\\n\\n<why it exists>\\n\\n## How it works\\n\\n<mechanism; '- ' lines become bullets>\\n\\n## Key terms\\n\\n- <term> — <one-line definition>" }
   ],
   "questions": [
     {
@@ -216,11 +253,18 @@ Content rules:
   scenario_discussion / troubleshooting for practical situations,
   system_design for design tasks.
 - Write everything in English.
+- Do NOT reuse or change any id from the inventory I pasted; new ids must not
+  collide with it. Where a concept already exists as a topic in the inventory,
+  reference it via relatedTopicIds instead of creating a duplicate topic.
+- If I asked you to MODIFY an existing pack (its JSON is pasted below),
+  return the COMPLETE updated pack file — never a fragment or a diff — and
+  keep all existing ids unchanged.
 
 Generate a pack now for these topics, with 3 questions per topic:
 
 TOPICS: <<< YOUR TOPIC LIST HERE, e.g. "Kubernetes basics, Service Mesh, OAuth2 flows" >>>
 TARGET ROLES: <<< e.g. "backend_developer and backend_architect" >>>
+SOURCES: <<< dataresource file(s) this is based on, e.g. "tibi/system_design" — or omit if none >>>
 ````
 
 After saving, always run `npm run content:check` — if the AI hallucinated a
