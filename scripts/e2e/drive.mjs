@@ -207,11 +207,24 @@ async function main() {
   log("✅", "Topic library lists the new topic (status Unknown)");
 
   // ---- Study view: browse material without being quizzed
-  await page.goto(BASE + "/study/");
+  // role=all makes the visible set deterministic regardless of saved target role.
+  await page.goto(BASE + "/study/?role=all");
   await page.getByRole("heading", { name: "Study", exact: true }).waitFor();
   await page.getByText("Circuit breaker", { exact: true }).first().click();
   await page.getByText("A strong answer covers").first().waitFor();
   log("✅", "Study view: selected topic shows only its cards with answer points");
+  // The open topic is reflected in the URL and survives a reload (linkable).
+  const topicInUrl = /[?&]topic=circuit_breaker\b/.test(page.url());
+  await page.reload();
+  const survivesReload = await page
+    .getByRole("heading", { name: "What is it?" })
+    .first()
+    .isVisible()
+    .catch(() => false);
+  log(
+    topicInUrl && survivesReload ? "✅" : "❌",
+    "Study topic is URL-addressable and survives a refresh",
+  );
   await page.getByRole("button", { name: "← All topics" }).click();
   // Category chips: only the selected category's topics are shown
   await page.getByRole("button", { name: "Backend", exact: true }).click();
@@ -231,26 +244,27 @@ async function main() {
   log("🔍", "Search looks across all categories");
   await page.getByLabel("Search topics and questions").fill("");
 
-  // Study notes: a topic with studyNotes renders the prose + a Practice checks label
+  // Study notes: a topic renders the fixed note structure + a Practice checks label
   await page.getByLabel("Search topics and questions").fill("Big-O Basics");
   await page.getByText("Big-O Basics", { exact: false }).first().click();
-  const notesShown = await page
-    .getByText("how much slower a piece of code gets", { exact: false })
-    .first()
-    .isVisible()
-    .catch(() => false);
-  const structureShown = await page
-    .getByRole("heading", { name: "What is it?" })
-    .first()
-    .isVisible()
-    .catch(() => false);
+  const structureShown = (
+    await Promise.all(
+      ["What is it?", "Common mistakes", "Key terms"].map((h) =>
+        page
+          .getByRole("heading", { name: h })
+          .first()
+          .isVisible()
+          .catch(() => false),
+      ),
+    )
+  ).every(Boolean);
   const practiceLabel = await page
     .getByText("Practice checks", { exact: true })
     .first()
     .isVisible()
     .catch(() => false);
   log(
-    notesShown && structureShown && practiceLabel ? "✅" : "❌",
+    structureShown && practiceLabel ? "✅" : "❌",
     "Study view renders structured notes (What is it? …) above the practice checks",
   );
   await page.getByRole("button", { name: "← All topics" }).click();

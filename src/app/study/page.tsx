@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, ModeBadge, PageHeader, buttonGhost, inputBase, selectCompact } from "@/components/ui";
 import type { InterviewRole, QuestionCard, Topic } from "@/core/models";
 import { ROLE_LABELS, ROLE_TRACKS, TRACK_MEMBER_ROLES } from "@/core/models";
@@ -186,35 +186,91 @@ function PdfButtons({
   );
 }
 
+// Reads the Study view state out of the current query string.
+function readUrlState() {
+  const p = new URLSearchParams(window.location.search);
+  return {
+    topicId: p.get("topic"),
+    role: (p.get("role") as RoleFilter | null) ?? null,
+    source: p.get("source") ?? "all",
+    query: p.get("q") ?? "",
+  };
+}
+
 export default function StudyPage() {
-  const [query, setQuery] = useState("");
-  const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
-  const [selectedRole, setSelectedRoleState] = useState<RoleFilter>("all");
-  const [selectedSource, setSelectedSource] = useState<SourceFilter>("all");
+  // The whole Study view state is mirrored in the URL, so a topic or a
+  // filtered list can be linked, bookmarked, and survives a refresh or the
+  // back/forward buttons. The native History API is used directly (rather
+  // than the Next router) because on a static export the router mis-replays
+  // query changes after a reload + back navigation.
+  const [selectedTopicId, setTopicId] = useState<string | null>(null);
+  const [roleParam, setRoleParam] = useState<RoleFilter | null>(null);
+  const [selectedSource, setSourceState] = useState<SourceFilter>("all");
+  const [query, setQueryState] = useState("");
   const [generating, setGenerating] = useState<StudyPdfFormat | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
-  const roleTouchedRef = useRef(false);
 
-  function setSelectedRole(role: RoleFilter) {
-    roleTouchedRef.current = true;
-    setSelectedRoleState(role);
-  }
+  // Read the URL on mount, and re-read it whenever the user navigates with
+  // the browser back/forward buttons.
+  useEffect(() => {
+    const sync = () => {
+      const s = readUrlState();
+      setTopicId(s.topicId);
+      setRoleParam(s.role);
+      setSourceState(s.source);
+      setQueryState(s.query);
+    };
+    sync();
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, []);
 
-  // Default the role filter to the user's target role — unless the user
-  // already picked one while settings were loading.
+  // The role filter defaults to the user's target role until they pick one
+  // (an explicit choice — including "all" — is written to the URL and wins).
+  const [defaultRole, setDefaultRole] = useState<RoleFilter>("all");
   useEffect(() => {
     let cancelled = false;
     getSettings().then((s) => {
-      setTimeout(() => {
-        if (!cancelled && !roleTouchedRef.current) {
-          setSelectedRoleState(s.targetRole);
-        }
-      }, 0);
+      if (!cancelled) setDefaultRole(s.targetRole);
     });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const selectedRole: RoleFilter = roleParam ?? defaultRole;
+
+  // Writes the given params to the URL, dropping any set to null/"". Filters
+  // replace the entry (view state); opening/closing a topic pushes one (so the
+  // back button returns to the list).
+  function writeUrl(patch: Record<string, string | null>, push = false) {
+    const params = new URLSearchParams(window.location.search);
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === null || value === "") params.delete(key);
+      else params.set(key, value);
+    }
+    const qs = params.toString();
+    const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    if (push) window.history.pushState(null, "", url);
+    else window.history.replaceState(null, "", url);
+  }
+
+  const setQuery = (q: string) => {
+    setQueryState(q);
+    writeUrl({ q: q || null });
+  };
+  const setSelectedRole = (role: RoleFilter) => {
+    setRoleParam(role);
+    writeUrl({ role });
+  };
+  const setSelectedSource = (source: SourceFilter) => {
+    setSourceState(source);
+    writeUrl({ source: source === "all" ? null : source });
+  };
+  const setSelectedTopicId = (id: string | null) => {
+    setTopicId(id);
+    writeUrl({ topic: id }, true);
+  };
 
   async function generatePdf(format: StudyPdfFormat, scope: StudyPdfScope) {
     setGenerating(format);
