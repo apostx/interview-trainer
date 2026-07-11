@@ -371,7 +371,7 @@ export default function StudyPage() {
     const t = localizeTopic(selectedTopic, lang);
     return (
       <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
-        <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => setSelectedTopicId(null)}
@@ -379,12 +379,8 @@ export default function StudyPage() {
           >
             ← All topics
           </button>
-          <LanguagePicker lang={lang} onChange={setLang} />
-        </div>
-        <PageHeader
-          title={t.name}
-          subtitle={t.description || undefined}
-          action={
+          <div className="flex flex-wrap items-center gap-3">
+            <LanguagePicker lang={lang} onChange={setLang} />
             <PdfButtons
               generating={generating}
               onGenerate={(format) =>
@@ -396,8 +392,9 @@ export default function StudyPage() {
                 })
               }
             />
-          }
-        />
+          </div>
+        </div>
+        <PageHeader title={t.name} subtitle={t.description || undefined} />
         {pdfError && (
           <p role="alert" className="mb-4 text-sm font-medium text-critical">
             {pdfError}
@@ -469,18 +466,17 @@ export default function StudyPage() {
       <PageHeader
         title="Study"
         subtitle="Pick a topic and read the material without being quizzed: each question with what a strong answer covers."
-        action={
-          <div className="flex flex-col items-end gap-1">
-            <PdfButtons
-              generating={generating}
-              onGenerate={(format) => generatePdf(format, exportScope)}
-            />
-            <span className="text-xs text-muted">
-              exports {scopeName ?? "everything"}
-            </span>
-          </div>
-        }
       />
+
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <span className="text-xs text-muted">
+          Exports {scopeName ?? "everything"}
+        </span>
+        <PdfButtons
+          generating={generating}
+          onGenerate={(format) => generatePdf(format, exportScope)}
+        />
+      </div>
 
       {pdfError && (
         <p role="alert" className="mb-4 text-sm font-medium text-critical">

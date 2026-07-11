@@ -64,6 +64,20 @@ describe("content packs", () => {
           notes.includes("## Key terms"),
           `${file}: topic "${topic.id}" studyNotes must contain a "## Key terms" section`,
         ).toBe(true);
+        // A "## " header must stand alone (its own blank-line-separated block),
+        // otherwise it renders as literal text instead of a heading.
+        for (const block of notes.split(/\n\s*\n/)) {
+          const lines = block.split("\n");
+          const glued = lines.find(
+            (l) => l.trim().startsWith("## ") && lines.length > 1,
+          );
+          expect(
+            glued,
+            `${file}: topic "${topic.id}" heading ${JSON.stringify(
+              glued?.trim(),
+            )} must be separated by a blank line (it currently renders as plain text)`,
+          ).toBeUndefined();
+        }
       }
     }
   });
