@@ -248,6 +248,12 @@ Rules the AI must follow when **modifying** existing content:
 - Keep `sources` accurate: list the `dataresource/` files (path without
   extension) the content is based on.
 
+To **translate** a pack into another language (for the Study language
+selector), use the ready-made prompt in
+"[Translating a pack into another language](#translating-a-pack-into-another-language-ai-prompt)"
+below — translations are additive `i18n` blocks, so they never touch ids or
+the English text.
+
 ## AI prompt template
 
 Paste this into the AI chat (together with the `content:ids` output), fill
@@ -336,3 +342,45 @@ SOURCES: <<< dataresource file(s) this is based on, e.g. "tibi/system_design" �
 After saving, always run `npm run content:check` — if the AI hallucinated a
 field or an invalid enum value, the test names the file, the exact path and
 what was expected.
+
+## Translating a pack into another language (AI prompt)
+
+Translations power the Study language selector (see "Study translations"
+above). To translate an existing pack, paste its JSON plus this prompt. The
+AI adds `i18n` blocks; it never touches ids or the English text, so English
+stays the base and the translation is pure addition.
+
+````text
+You are translating a content pack for a technical interview trainer app into
+<<< TARGET LANGUAGE, e.g. Hungarian (code "hu") >>>.
+
+Output ONLY the complete updated pack as a single valid JSON object — the same
+file with translations added, no markdown fences, no commentary.
+
+Rules:
+- Do NOT change any id, any English text, or any structural field. Translation
+  is purely additive.
+- For each TOPIC, add an "i18n" object keyed by the language code, e.g. "hu":
+  { "name": "...", "description": "...", "studyNotes": "..." }. Translate the
+  studyNotes fully, KEEPING the exact section structure and blank lines:
+  each "## " heading stays on its own line with a blank line before it (only
+  the heading text is translated, e.g. "## What is it?" -> "## Mi ez?").
+- For each QUESTION, add an "i18n" object keyed by the language code with any
+  of: "title", "prompt", "answerStructureHint",
+  "expectedPoints" (an object keyed by each rubric item's id ->
+  { "label": "...", "description": "..." }),
+  "followUps" (keyed by each follow-up's id -> translated prompt string).
+- NEVER translate "acceptedSignals", "weakSignals" or "negativeSignals" — the
+  scoring engine runs in English.
+- Every field is optional: translate as much as you can; anything omitted
+  falls back to English automatically.
+- The language code must look like "hu", "de", or "pt-BR".
+
+Here is the pack to translate:
+
+<<< PASTE THE PACK JSON HERE >>>
+````
+
+Then save over the same file and run `npm run content:check`. The language
+selector appears in Study automatically once a translation is live (ship with
+`npm run release:content`).
