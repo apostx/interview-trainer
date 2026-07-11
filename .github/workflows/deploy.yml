@@ -58,8 +58,8 @@ jobs:
         # NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
         run: |
           npm run build
-          mkdir -p site
-          cp -r out/. site/
+          mkdir -p "$RUNNER_TEMP/site"
+          cp -r out/. "$RUNNER_TEMP/site/"
 
       # ---------- beta build (the beta branch, if present) ----------
       - name: Check for a beta branch
@@ -90,12 +90,12 @@ jobs:
       - name: Add beta to the site
         if: steps.beta_build.outcome == 'success'
         run: |
-          mkdir -p site/beta
-          cp -r out/. site/beta/
+          mkdir -p "$RUNNER_TEMP/site/beta"
+          cp -r out/. "$RUNNER_TEMP/site/beta/"
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: ${{ runner.temp }}/site
 
   deploy:
     needs: build
