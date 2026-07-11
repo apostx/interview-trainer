@@ -1,5 +1,6 @@
 import type { InterviewMode, InterviewRole } from "./types";
 import type { RubricItem } from "./Rubric";
+import type { CardI18n } from "./Translation";
 
 export type FollowUpTrigger =
   | { type: "rubric_covered"; rubricItemId: string }
@@ -28,4 +29,6 @@ export type QuestionCard = {
   followUps: FollowUpQuestion[];
   sampleStrongAnswer?: string;
   sampleWeakAnswer?: string;
+  /** Study-only translations of the displayed card text. */
+  i18n?: CardI18n;
 };

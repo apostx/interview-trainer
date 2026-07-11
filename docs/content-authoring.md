@@ -63,7 +63,38 @@ only picks up content after a release — dev mode hot-reloads instantly.
                                     // architecture | cloud | security | database |
                                     // devops | observability | soft_technical | core
   "relatedTopicIds": ["event_driven"], // optional
-  "studyNotes": "Educational prose for the Study view. Paragraphs separated by\nblank lines (\\n\\n); lines starting with \"- \" become bullet lists; a line\nstarting with \"## \" becomes a subheading."  // optional but strongly encouraged
+  "studyNotes": "Educational prose for the Study view. Paragraphs separated by\nblank lines (\\n\\n); lines starting with \"- \" become bullet lists; a line\nstarting with \"## \" becomes a subheading.",  // optional but strongly encouraged
+  "i18n": {                             // optional Study-only translations
+    "hu": { "name": "…", "studyNotes": "…" }  // any omitted field falls back to English
+  }
+}
+```
+
+### Study translations (`i18n`)
+
+The **Study section only** can be read in other languages; the interview and
+practice flow stay English. Add an optional `i18n` block keyed by language
+code (`hu`, `de`, `pt-BR`, …) to any topic and/or question card. It is
+**per-field with English fallback**: translate as much or as little as you
+like — anything you omit shows the English original. English is the base and
+is never a key. When at least one translation exists, a language selector
+appears in the Study view (and the exported PDF follows the choice).
+
+- **Topic** `i18n[lang]`: `name`, `description`, `studyNotes` (all optional).
+- **Question** `i18n[lang]`: `title`, `prompt`, `answerStructureHint`,
+  `expectedPoints` (an object keyed by the rubric item's `id` → `{ label,
+  description }`), and `followUps` (keyed by the follow-up's `id` → translated
+  prompt string). `acceptedSignals` are never translated (the scoring engine
+  runs in English).
+
+```jsonc
+// on a question card:
+"i18n": {
+  "hu": {
+    "title": "…", "prompt": "…",
+    "expectedPoints": { "es_definition": { "label": "…", "description": "…" } },
+    "followUps": { "es_replay_followup": "…" }
+  }
 }
 ```
 

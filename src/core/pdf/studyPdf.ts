@@ -1,6 +1,7 @@
-import type { QuestionCard, Topic } from "@/core/models";
+import type { LangCode, QuestionCard, Topic } from "@/core/models";
 import { MODE_LABELS } from "@/core/models";
 import { allQuestions, allTopics } from "@/core/content/bank";
+import { DEFAULT_LANG, localizeCard, localizeTopic } from "@/core/content/i18n";
 import { parseStudyNotes } from "@/core/content/notes";
 
 /**
@@ -23,6 +24,8 @@ export type StudyPdfScope = {
   name?: string;
   /** Filename slug when cardIds are used. */
   slug?: string;
+  /** Study reading language; content falls back to English per field. */
+  lang?: LangCode;
 };
 
 const ACCENT = "#2a78d6";
@@ -211,6 +214,7 @@ export function buildStudyPdfDefinition(
 ): any {
   const g = geometry(format);
   const base = g.base;
+  const lang = scope.lang ?? DEFAULT_LANG;
 
   const cardIdSet = scope.cardIds ? new Set(scope.cardIds) : null;
   const scopedQuestions = cardIdSet
@@ -336,12 +340,14 @@ export function buildStudyPdfDefinition(
       margin: [0, 2, 0, 10],
     });
 
-    const sorted = topics.sort((a, b) => a.name.localeCompare(b.name));
-    sorted.forEach((topic, index) => {
+    const sorted = topics
+      .map((topic) => ({ topic, loc: localizeTopic(topic, lang) }))
+      .sort((a, b) => a.loc.name.localeCompare(b.loc.name));
+    sorted.forEach(({ topic, loc }, index) => {
       content.push({
         stack: [
           {
-            text: topic.name,
+            text: loc.name,
             tocItem: topicsInToc,
             tocMargin: [12, 0, 0, 0],
             fontSize: base + 3,
@@ -349,14 +355,14 @@ export function buildStudyPdfDefinition(
             color: INK,
             margin: [0, index === 0 ? 0 : 12, 0, 1],
           },
-          ...(topic.description
-            ? [{ text: topic.description, fontSize: base - 1, color: MUTED, margin: [0, 0, 0, 4] }]
+          ...(loc.description
+            ? [{ text: loc.description, fontSize: base - 1, color: MUTED, margin: [0, 0, 0, 4] }]
             : []),
         ],
         unbreakable: true,
       });
-      if (topic.studyNotes) {
-        content.push(...notesBlocks(topic.studyNotes, base));
+      if (loc.studyNotes) {
+        content.push(...notesBlocks(loc.studyNotes, base));
       }
       const topicCards = cardsByTopicId.get(topic.id) ?? [];
       if (topicCards.length > 0) {
@@ -370,7 +376,7 @@ export function buildStudyPdfDefinition(
         });
       }
       for (const card of topicCards) {
-        content.push(cardBox(card, g));
+        content.push(cardBox(localizeCard(card, lang), g));
       }
     });
   }

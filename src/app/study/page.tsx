@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, ModeBadge, PageHeader, buttonGhost, inputBase, selectCompact } from "@/components/ui";
-import type { InterviewRole, QuestionCard, Topic } from "@/core/models";
+import type { InterviewRole, LangCode, QuestionCard, Topic } from "@/core/models";
 import { ROLE_LABELS, ROLE_TRACKS, TRACK_MEMBER_ROLES } from "@/core/models";
 import {
   allQuestions,
@@ -10,6 +10,13 @@ import {
   contentSources,
   sourcesByCardId,
 } from "@/core/content/bank";
+import {
+  availableLanguages,
+  DEFAULT_LANG,
+  languageLabel,
+  localizeCard,
+  localizeTopic,
+} from "@/core/content/i18n";
 import {
   downloadStudyPdf,
   type StudyPdfFormat,
@@ -43,6 +50,11 @@ for (const card of allQuestions) {
 const studyTopics = allTopics.filter(
   (t) => cardsByTopicId.has(t.id) || t.studyNotes,
 );
+
+// Languages any content provides (always includes English). The selector is
+// hidden until at least one translation exists.
+const LANGUAGES = availableLanguages(allTopics, allQuestions);
+const LANG_STORAGE_KEY = "study-lang";
 
 // Source dropdown: root files flat first, then subfolders as groups.
 const sourceGroups: [string, { id: string; name: string }[]][] = (() => {
@@ -157,6 +169,38 @@ function StudyCard({ card }: { card: QuestionCard }) {
   );
 }
 
+/** Study reading-language dropdown; renders nothing unless translations exist. */
+function LanguagePicker({
+  lang,
+  onChange,
+  className,
+}: {
+  lang: LangCode;
+  onChange: (lang: LangCode) => void;
+  className?: string;
+}) {
+  if (LANGUAGES.length < 2) return null;
+  return (
+    <div className={`flex items-center gap-2 ${className ?? ""}`}>
+      <label className="text-sm font-medium text-secondary" htmlFor="lang-filter">
+        Language
+      </label>
+      <select
+        id="lang-filter"
+        className={selectCompact}
+        value={lang}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {LANGUAGES.map((code) => (
+          <option key={code} value={code}>
+            {languageLabel(code)}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 function PdfButtons({
   generating,
   onGenerate,
@@ -207,22 +251,35 @@ export default function StudyPage() {
   const [roleParam, setRoleParam] = useState<RoleFilter | null>(null);
   const [selectedSource, setSourceState] = useState<SourceFilter>("all");
   const [query, setQueryState] = useState("");
+  const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
   const [generating, setGenerating] = useState<StudyPdfFormat | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
 
-  // Read the URL on mount, and re-read it whenever the user navigates with
-  // the browser back/forward buttons.
+  // Study reading language is a preference (persisted), not view navigation,
+  // so it lives in localStorage rather than the URL.
+  const setLang = (l: LangCode) => {
+    setLangState(l);
+    localStorage.setItem(LANG_STORAGE_KEY, l);
+  };
+
+  // On mount, load the persisted language and read the URL; then re-read the
+  // URL whenever the user navigates with the browser back/forward buttons.
   useEffect(() => {
-    const sync = () => {
+    const syncUrl = () => {
       const s = readUrlState();
       setTopicId(s.topicId);
       setRoleParam(s.role);
       setSourceState(s.source);
       setQueryState(s.query);
     };
-    sync();
-    window.addEventListener("popstate", sync);
-    return () => window.removeEventListener("popstate", sync);
+    const init = () => {
+      const saved = localStorage.getItem(LANG_STORAGE_KEY);
+      if (saved && LANGUAGES.includes(saved)) setLangState(saved);
+      syncUrl();
+    };
+    init();
+    window.addEventListener("popstate", syncUrl);
+    return () => window.removeEventListener("popstate", syncUrl);
   }, []);
 
   // The role filter defaults to the user's target role until they pick one
@@ -311,26 +368,31 @@ export default function StudyPage() {
 
   if (selectedTopic) {
     const cards = matchingCardsOfTopic(selectedTopic.id);
+    const t = localizeTopic(selectedTopic, lang);
     return (
       <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
-        <button
-          type="button"
-          onClick={() => setSelectedTopicId(null)}
-          className={`${buttonGhost} -ml-3 mb-2`}
-        >
-          ← All topics
-        </button>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => setSelectedTopicId(null)}
+            className={`${buttonGhost} -ml-3`}
+          >
+            ← All topics
+          </button>
+          <LanguagePicker lang={lang} onChange={setLang} />
+        </div>
         <PageHeader
-          title={selectedTopic.name}
-          subtitle={selectedTopic.description || undefined}
+          title={t.name}
+          subtitle={t.description || undefined}
           action={
             <PdfButtons
               generating={generating}
               onGenerate={(format) =>
                 generatePdf(format, {
                   cardIds: cards.map((c) => c.id),
-                  name: selectedTopic.name,
+                  name: t.name,
                   slug: selectedTopic.id,
+                  lang,
                 })
               }
             />
@@ -341,16 +403,14 @@ export default function StudyPage() {
             {pdfError}
           </p>
         )}
-        {selectedTopic.studyNotes && (
-          <StudyNotes notes={selectedTopic.studyNotes} />
-        )}
+        {t.studyNotes && <StudyNotes notes={t.studyNotes} />}
         {cards.length > 0 && (
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
             Practice checks
           </p>
         )}
         {cards.map((card) => (
-          <StudyCard key={card.id} card={card} />
+          <StudyCard key={card.id} card={localizeCard(card, lang)} />
         ))}
       </div>
     );
@@ -361,12 +421,14 @@ export default function StudyPage() {
   const searching = query.trim().length > 0;
   const visibleEntries = studyTopics
     .map((topic) => {
+      // Match search against what the reader actually sees (the chosen language).
+      const localizedName = localizeTopic(topic, lang).name;
       const cards = searching
         ? (cardsByTopicId.get(topic.id) ?? []).filter(
             (c) =>
-              normalizedIncludes(topic.name, query) ||
-              normalizedIncludes(query, topic.name) ||
-              cardMatchesQuery(c, query),
+              normalizedIncludes(localizedName, query) ||
+              normalizedIncludes(query, localizedName) ||
+              cardMatchesQuery(localizeCard(c, lang), query),
           )
         : matchingCardsOfTopic(topic.id);
       return { topic, cards };
@@ -399,8 +461,8 @@ export default function StudyPage() {
   ];
   const exportScope: StudyPdfScope =
     scopeName === null
-      ? {}
-      : { cardIds: exportCardIds, name: scopeName, slug: scopeSlug };
+      ? { lang }
+      : { cardIds: exportCardIds, name: scopeName, slug: scopeSlug, lang };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
@@ -485,6 +547,8 @@ export default function StudyPage() {
             ),
           )}
         </select>
+
+        <LanguagePicker lang={lang} onChange={setLang} className="ml-auto" />
       </div>
 
       <input
@@ -511,8 +575,13 @@ export default function StudyPage() {
             <h2 className="mb-2 font-bold">{CATEGORY_LABELS[category]}</h2>
             <div className="flex flex-col gap-2">
               {entries
-                .sort((a, b) => a.topic.name.localeCompare(b.topic.name))
-                .map(({ topic, cards }) => (
+                .map(({ topic, cards }) => ({
+                  topic,
+                  cards,
+                  loc: localizeTopic(topic, lang),
+                }))
+                .sort((a, b) => a.loc.name.localeCompare(b.loc.name))
+                .map(({ topic, cards, loc }) => (
                   <button
                     key={topic.id}
                     type="button"
@@ -520,10 +589,10 @@ export default function StudyPage() {
                     className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface px-4 py-3 text-left hover:bg-background sm:px-5"
                   >
                     <span>
-                      <span className="text-sm font-semibold">{topic.name}</span>
-                      {topic.description && (
+                      <span className="text-sm font-semibold">{loc.name}</span>
+                      {loc.description && (
                         <span className="block text-xs text-secondary">
-                          {topic.description}
+                          {loc.description}
                         </span>
                       )}
                     </span>

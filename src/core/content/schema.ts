@@ -60,6 +60,40 @@ export const rubricItemSchema = z.object({
   examples: z.array(z.string()).optional(),
 });
 
+// Language code: "hu", "de", "pt-BR". English is the base and never a key.
+const langCodeSchema = z
+  .string()
+  .regex(/^[a-z]{2}(-[A-Z]{2})?$/, 'use a language code like "hu" or "pt-BR"');
+
+// Study-only translations. Every field is optional and falls back to English.
+const topicI18nSchema = z.record(
+  langCodeSchema,
+  z.object({
+    name: z.string().min(1).optional(),
+    description: z.string().optional(),
+    studyNotes: z.string().optional(),
+  }),
+);
+
+const cardI18nSchema = z.record(
+  langCodeSchema,
+  z.object({
+    title: z.string().min(1).optional(),
+    prompt: z.string().min(1).optional(),
+    answerStructureHint: z.string().optional(),
+    expectedPoints: z
+      .record(
+        z.string(),
+        z.object({
+          label: z.string().optional(),
+          description: z.string().optional(),
+        }),
+      )
+      .optional(),
+    followUps: z.record(z.string(), z.string()).optional(),
+  }),
+);
+
 const followUpTriggerSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("rubric_covered"), rubricItemId: z.string() }),
   z.object({ type: z.literal("rubric_missing"), rubricItemId: z.string() }),
@@ -90,6 +124,8 @@ export const packQuestionSchema = z.object({
   followUps: z.array(followUpSchema).default([]),
   sampleStrongAnswer: z.string().optional(),
   sampleWeakAnswer: z.string().optional(),
+  /** Study-only translations of the displayed card text. */
+  i18n: cardI18nSchema.optional(),
 });
 
 export const packTopicSchema = z.object({
@@ -101,6 +137,8 @@ export const packTopicSchema = z.object({
   /** Educational prose for the Study view: paragraphs separated by blank
    * lines, "- " lines become bullet lists. */
   studyNotes: z.string().optional(),
+  /** Study-only translations of name/description/studyNotes. */
+  i18n: topicI18nSchema.optional(),
 });
 
 export const contentPackSchema = z.object({
