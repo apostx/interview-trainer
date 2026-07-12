@@ -1,0 +1,522 @@
+{
+  "id": "backend_node_integration_essential",
+  "name": "Backend Node.js and Integration — Essential",
+  "description": "Curated full-stack essentials selected from the complete pack. Use this as a lighter replacement for the full version.",
+  "sources": [
+    "Luxair_interju_QA_gyujtemeny",
+    "Luxair_Interview_Terms_Glossary_HU",
+    "Luxair_Interview_Terms_Reminder_HU",
+    "Luxair_Top_10_Interview_Questions_HU",
+    "dennemeyer_system_design_100_tema_peldakkal_mobile_hu",
+    "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu"
+  ],
+  "topics": [
+    {
+      "id": "int_node_event_loop",
+      "name": "Node.js Event Loop",
+      "description": "How Node.js continues processing other work while asynchronous operations are waiting.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "int_io_vs_cpu_bound"
+      ],
+      "studyNotes": "## What is it?\n\nThe event loop is the mechanism that lets a Node.js process coordinate JavaScript work and completed asynchronous operations. Node starts an I/O operation, continues with other work, and later runs the callback or Promise continuation when the result is ready.\n\n## What problem does it solve?\n\nA single long synchronous operation prevents the process from handling timers, completed I/O, and other requests. One expensive JSON transformation, regular expression, crypto operation, or loop can therefore increase latency for every request handled by that process.\n\n## How it works\n\n- JavaScript runs on the main event-loop thread unless work is explicitly offloaded.\n- Network and many file operations are handled asynchronously by the runtime and operating system.\n- Completed operations place callbacks or continuations into queues for later execution.\n- Promise microtasks can also starve other work if chained excessively.\n- Event-loop lag shows how late scheduled work actually runs.\n- Short, non-blocking callbacks keep the process responsive.\n\n## Common mistakes\n\n- Describing the event loop as many JavaScript threads running in parallel.\n- Assuming every asynchronous-looking library call is non-blocking internally.\n- Running synchronous file, crypto, compression, or parsing work on hot paths.\n- Looking only at CPU average and not event-loop lag.\n\n## Key terms\n\n- callback — function scheduled after an asynchronous result is ready\n- Promise continuation — code scheduled by then, catch, finally, or await\n- event-loop lag — delay between planned and actual execution\n- blocking operation — work that prevents the event loop from progressing",
+      "i18n": {
+        "hu": {
+          "name": "Node.js Event Loop",
+          "description": "Az event loop teszi lehetővé, hogy a Node.js más requesteket is kezeljen, miközben asynchronous operationök eredményére vár.",
+          "studyNotes": "## Mi ez?\n\nAz event loop koordinálja a JavaScript futását és az elkészült asynchronous operationöket. A Node elindít például egy HTTP vagy database hívást, közben más munkát végez, majd az eredmény megérkezésekor lefuttatja a callbacket vagy a Promise continuationt.\n\n## Milyen problémát old meg?\n\nEgy hosszú synchronous operation közben a process nem tud más requestet, timert vagy elkészült I/O eredményt kezelni. Emiatt egyetlen nagy JSON transformation, regex, crypto operation vagy loop az egész instance latencyjét megemelheti.\n\n## Hogyan működik?\n\n- A JavaScript alapból a main event-loop threaden fut, kivéve ha explicit offload történik.\n- A network és sok file operation asynchronous módon fut a runtime vagy az OS segítségével.\n- Az elkészült operation callbackje vagy continuationje későbbi futásra queue-ba kerül.\n- A Promise microtaskok is feltarthatnak más munkát, ha túl hosszú lánc keletkezik.\n- Az event-loop lag megmutatja, mennyit késik a scheduled work.\n- Rövid, non-blocking callbackek mellett marad responsive a process.\n\n## Gyakori hibák\n\n- Több párhuzamos JavaScript threadként magyarázni az event loopot.\n- Azt feltételezni, hogy minden async API belül is biztosan non-blocking.\n- Synchronous file, crypto, compression vagy parsing operationt hot pathban futtatni.\n- Csak average CPU-t nézni event-loop lag nélkül.\n\n## Kulcsfogalmak\n\n- callback — asynchronous result elkészülése után futtatott function\n- Promise continuation — then, catch, finally vagy await után folytatódó kód\n- event-loop lag — a scheduled és tényleges futási idő közötti késés\n- blocking operation — az event loop továbblépését megakadályozó munka"
+        }
+      }
+    },
+    {
+      "id": "int_io_vs_cpu_bound",
+      "name": "I/O-Bound vs CPU-Bound Work",
+      "description": "Distinguishing work that waits for external systems from work that keeps the processor busy.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "int_node_event_loop"
+      ],
+      "studyNotes": "## What is it?\n\nI/O-bound work spends most of its time waiting for network, database, queue, file, or cache operations. CPU-bound work spends most of its time calculating, parsing, compressing, encrypting, rendering, or transforming data.\n\n## What problem does it solve?\n\nThe distinction determines how a service should scale and where work should run. Adding asynchronous calls helps waiting workloads, but it does not make heavy calculations disappear. CPU-heavy work on the Node.js main thread blocks unrelated requests.\n\n## How it works\n\n- Measure where time is spent instead of classifying by feature name.\n- I/O-bound services benefit from asynchronous clients, connection reuse, and controlled concurrency.\n- CPU-bound work benefits from worker threads, separate processes, queues, or specialised services.\n- Mixed workloads should separate the fast request path from heavy background work.\n- Horizontal scaling helps only when application CPU is the real bottleneck rather than a shared dependency.\n\n## Common mistakes\n\n- Calling a database query CPU-bound because the database uses CPU.\n- Assuming await moves JavaScript calculation to another thread.\n- Offloading tiny operations where coordination costs exceed the benefit.\n- Adding API instances when the database or partner API is the bottleneck.\n\n## Key terms\n\n- I/O-bound — dominated by waiting for external operations\n- CPU-bound — dominated by processor work\n- offloading — moving work away from the request-handling thread or service\n- coordination overhead — cost of passing work and results between execution units",
+      "i18n": {
+        "hu": {
+          "name": "I/O-bound és CPU-bound munka",
+          "description": "Az I/O-bound operation főleg külső rendszerre vár, a CPU-bound operation pedig intenzíven számol.",
+          "studyNotes": "## Mi ez?\n\nAz I/O-bound munka idejének nagy része networkre, database-re, queue-ra, file-ra vagy cache-re várakozás. A CPU-bound munka idejének nagy részében a processor számol, például parsingot, compressiont, encryptiont vagy nagy data transformationt végez.\n\n## Milyen problémát old meg?\n\nA különbség meghatározza, hogyan kell a service-t tervezni és skálázni. Az async/await jól kezeli a várakozást, de a nagy számítást nem teszi automatikusan háttérmunkává. A main threaden futó CPU-heavy kód minden más requestet feltart.\n\n## Hogyan működik?\n\n- Mérés alapján döntsd el, hol telik az idő, ne a feature neve alapján.\n- I/O-bound service-nél asynchronous client, connection reuse és controlled concurrency segít.\n- CPU-bound worknél worker thread, külön process, queue vagy specialised service használható.\n- Mixed workloadnál válaszd szét a gyors request pathot és a heavy background worköt.\n- Horizontal scaling csak akkor segít, ha tényleg az application CPU a bottleneck, nem egy shared dependency.\n\n## Gyakori hibák\n\n- Egy database queryt azért CPU-boundnak nevezni, mert a database szerver használ CPU-t.\n- Azt gondolni, hogy az await másik threadre viszi a JavaScript calculationt.\n- Apró operationöket offloadolni, amikor a coordination cost nagyobb a nyereségnél.\n- Több API instance-t indítani, miközben a database vagy partner API a bottleneck.\n\n## Kulcsfogalmak\n\n- I/O-bound — external operationre várakozás dominál\n- CPU-bound — processor calculation dominál\n- offloading — munka áthelyezése a request-handling threadről vagy service-ből\n- coordination overhead — a munka és eredmény átadásának költsége"
+        }
+      }
+    },
+    {
+      "id": "int_express_service_structure",
+      "name": "Production Express Service Structure",
+      "description": "Separating HTTP delivery, business logic, and external integrations in a maintainable service.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "int_runtime_boundary_validation"
+      ],
+      "studyNotes": "## What is it?\n\nA production Express service keeps route handlers thin and separates cross-cutting HTTP concerns, application logic, and infrastructure clients. Express should be the delivery layer, not the place where every business rule and integration detail accumulates.\n\n## What problem does it solve?\n\nWhen validation, database access, partner calls, and business decisions all live in route handlers, tests become difficult and the code becomes coupled to HTTP. Reusing the same use case from a queue consumer then requires rewriting logic.\n\n## How it works\n\n- Routes define endpoints and delegate work.\n- Middleware handles request context, authentication, validation, rate limiting, and logging.\n- Use-case or service modules implement business workflows.\n- Clients and adapters wrap databases, queues, and external APIs.\n- Central error handling maps known failures to stable API responses.\n- Configuration is validated at startup and dependencies are supplied explicitly.\n- Health, readiness, telemetry, and graceful shutdown are part of the baseline.\n\n## Common mistakes\n\n- Creating many layers that only pass arguments through.\n- Letting route handlers call every dependency directly.\n- Sharing global mutable clients without lifecycle management.\n- Mixing transport DTOs and internal domain models everywhere.\n\n## Key terms\n\n- delivery layer — HTTP-specific request and response handling\n- use case — application workflow implementing a business operation\n- adapter — boundary translating between the application and an external system\n- dependency injection — supplying dependencies explicitly",
+      "i18n": {
+        "hu": {
+          "name": "Production Express service struktúra",
+          "description": "A HTTP delivery, business logic és external integration külön boundarybe kerül, hogy a service karbantartható legyen.",
+          "studyNotes": "## Mi ez?\n\nEgy production Express service-ben a route handler vékony marad. A cross-cutting HTTP concern, az application workflow és az infrastructure client külön felelősség. Az Express delivery layer, nem az a hely, ahol minden business rule és integration detail összegyűlik.\n\n## Milyen problémát old meg?\n\nHa validation, database access, partner call és business decision ugyanabban a route handlerben van, a kód nehezen tesztelhető és erősen HTTP-függő lesz. Ugyanazt a use case-t queue consumerből már nehéz újrahasználni.\n\n## Hogyan működik?\n\n- A route definiálja az endpointot és delegálja a munkát.\n- Middleware kezeli a request contextet, authenticationt, validationt, rate limitinget és loggingot.\n- Use-case vagy service module valósítja meg a business workflow-t.\n- Client és adapter csomagolja a database-t, queue-t és external API-t.\n- Central error handler stabil API response-ra fordítja a hibákat.\n- A config startupkor validálódik, a dependencyk explicit módon kerülnek beadásra.\n- Health, readiness, telemetry és graceful shutdown a baseline része.\n\n## Gyakori hibák\n\n- Sok olyan layert létrehozni, amely csak argumentumot továbbít.\n- A route handlerből közvetlenül minden dependencyt hívni.\n- Lifecycle management nélkül global mutable clienteket használni.\n- Transport DTO-t és internal domain modelt mindenhol összekeverni.\n\n## Kulcsfogalmak\n\n- delivery layer — HTTP-specifikus request és response kezelés\n- use case — business operationt megvalósító application workflow\n- adapter — application és external system közötti fordító boundary\n- dependency injection — dependency explicit beadása"
+        }
+      }
+    },
+    {
+      "id": "int_runtime_boundary_validation",
+      "name": "Runtime Validation at System Boundaries",
+      "description": "Validating HTTP, queue, file, database, and partner data because TypeScript types do not exist at runtime.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "int_express_service_structure"
+      ],
+      "studyNotes": "## What is it?\n\nRuntime validation checks the actual shape and values of data entering a process. TypeScript verifies source code during development, but its types are erased and cannot prove that an HTTP body, queue message, configuration value, or partner response is valid.\n\n## What problem does it solve?\n\nUntrusted data may be missing fields, use wrong types, contain unsupported enum values, or violate constraints. Without validation, invalid input travels deeper into the system and causes misleading errors or corrupt state.\n\n## How it works\n\n- Define schemas at external boundaries using a runtime validation library or JSON Schema.\n- Reject malformed data before business logic or side effects run.\n- Convert validated external DTOs into internal models.\n- Distinguish structural validation from business-rule validation.\n- Validate partner responses and queue messages, not only public HTTP input.\n- Version schemas and test compatibility for long-lived messages.\n\n## Common mistakes\n\n- Believing a TypeScript interface validates network data.\n- Casting untrusted input with as and skipping checks.\n- Mixing transport validation with every business rule in one giant schema.\n- Accepting unknown fields or coercion without an explicit policy.\n\n## Key terms\n\n- runtime schema — executable rules for data shape and values\n- DTO — transport representation crossing a boundary\n- structural validation — checking shape, type, and basic constraints\n- business validation — checking domain rules and current state",
+      "i18n": {
+        "hu": {
+          "name": "Runtime validation system boundaryknél",
+          "description": "A HTTP, queue, file, database és partner adatot futásidőben is validálni kell, mert a TypeScript type nem létezik runtime-ban.",
+          "studyNotes": "## Mi ez?\n\nA runtime validation a processen ténylegesen beérkező adat shape-jét és értékeit ellenőrzi. A TypeScript fejlesztés közben ellenőrzi a source code-ot, de runtime-ban eltűnik, ezért nem bizonyítja, hogy egy HTTP body, queue message, config vagy partner response valid.\n\n## Milyen problémát old meg?\n\nAz untrusted data lehet hiányos, rossz típusú, unsupported enumot tartalmazhat vagy constraintet sérthet. Validation nélkül az invalid input mélyre jut a rendszerben, félrevezető failure-t vagy hibás state-et okoz.\n\n## Hogyan működik?\n\n- External boundaryn használj executable schemát runtime validation libraryvel vagy JSON Schemával.\n- Malformed data business logic és side effect előtt bukjon el.\n- A validated external DTO alakuljon internal modellé.\n- Válaszd külön a structural és business-rule validationt.\n- Partner response-t és queue message-et is validálj, ne csak public HTTP inputot.\n- Long-lived message-nél schema versioning és compatibility test kell.\n\n## Gyakori hibák\n\n- Azt gondolni, hogy egy TypeScript interface network datát validál.\n- Untrusted inputot as casttal ellenőrzés nélkül elfogadni.\n- Transport validationt és minden business rule-t egyetlen óriási schemába keverni.\n- Unknown fieldet vagy coerciont explicit policy nélkül elfogadni.\n\n## Kulcsfogalmak\n\n- runtime schema — futtatható szabály data shape-re és értékre\n- DTO — boundaryn áthaladó transport representation\n- structural validation — shape, type és alap constraint ellenőrzése\n- business validation — domain rule és aktuális state ellenőrzése"
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "int_event_loop_incident_001",
+      "title": "A Node.js service becomes slow during report generation",
+      "prompt": "A Node.js API is healthy until one user starts generating a large report. Then unrelated requests also become slow. Explain the likely cause and your response.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "int_node_event_loop",
+        "int_io_vs_cpu_bound"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Identify event-loop blocking, verify it with evidence, then choose an isolation strategy and capacity limit.",
+      "expectedPoints": [
+        {
+          "id": "int_loop_cause",
+          "label": "Identifies event-loop blocking",
+          "description": "Connects the large synchronous report calculation or transformation to latency across the whole process.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "event loop blocking",
+            "synchronous cpu work",
+            "unrelated requests slow",
+            "main thread"
+          ]
+        },
+        {
+          "id": "int_loop_evidence",
+          "label": "Verifies the hypothesis",
+          "description": "Checks event-loop lag, CPU, profiles, traces, and timing around report generation.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "event loop lag",
+            "cpu profile",
+            "flame graph",
+            "trace timing",
+            "correlate report generation"
+          ]
+        },
+        {
+          "id": "int_loop_offload",
+          "label": "Moves heavy work off the request path",
+          "description": "Uses worker threads, a queue with workers, or a separate service based on the workload.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "worker threads",
+            "background queue",
+            "separate service",
+            "offload cpu work"
+          ]
+        },
+        {
+          "id": "int_loop_limit",
+          "label": "Adds capacity protection",
+          "description": "Limits concurrent jobs and provides a pending or job-status model where asynchronous.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "worker pool limit",
+            "bounded concurrency",
+            "job status",
+            "202 accepted"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "int_event_loop_follow",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would a worker thread be preferable to a separate service?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Report generation közben lelassul a Node.js service",
+          "prompt": "A Node.js API normálisan működik, de egy nagy report generálásakor az unrelated requestek is lelassulnak. Mi lehet az ok, és hogyan reagálnál?",
+          "answerStructureHint": "Azonosítsd az event-loop blockingot, bizonyítsd méréssel, majd válassz isolationt és capacity limitet.",
+          "expectedPoints": {
+            "int_loop_cause": {
+              "label": "Felismeri az event-loop blockingot",
+              "description": "A nagy synchronous report calculationt vagy transformationt összeköti az egész process latencyjével."
+            },
+            "int_loop_evidence": {
+              "label": "Evidence alapján ellenőrzi",
+              "description": "Event-loop lagot, CPU profile-t, trace-et és report timingot néz."
+            },
+            "int_loop_offload": {
+              "label": "Kiviszi a heavy worköt a request pathból",
+              "description": "Workload alapján worker threadet, background queue-t vagy külön service-t választ."
+            },
+            "int_loop_limit": {
+              "label": "Capacity protectiont ad",
+              "description": "Limitálja a concurrent jobokat, async esetben pending vagy job-status modellt ad."
+            }
+          },
+          "followUps": {
+            "int_event_loop_follow": "Mikor jobb a worker thread, mint egy külön service?"
+          }
+        }
+      }
+    },
+    {
+      "id": "int_express_structure_001",
+      "title": "Structuring a production Express service",
+      "prompt": "How would you structure a production Express integration service so that business logic, HTTP concerns, and external clients remain maintainable?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design",
+        "design_review"
+      ],
+      "topicIds": [
+        "int_express_service_structure",
+        "int_runtime_boundary_validation"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Describe the boundaries, then place cross-cutting concerns, validation, external clients, and operational lifecycle.",
+      "expectedPoints": [
+        {
+          "id": "int_expr_thin",
+          "label": "Keeps routes thin",
+          "description": "Routes handle HTTP details and delegate to use-case or service modules.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "thin route handlers",
+            "use case layer",
+            "service module",
+            "http delivery layer"
+          ]
+        },
+        {
+          "id": "int_expr_middleware",
+          "label": "Places cross-cutting concerns in middleware",
+          "description": "Uses middleware for request context, auth, validation, logging, and rate limiting in deliberate order.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "middleware pipeline",
+            "request id",
+            "validation before business logic",
+            "authentication authorization"
+          ]
+        },
+        {
+          "id": "int_expr_adapters",
+          "label": "Wraps external systems",
+          "description": "Uses clients or adapters for databases, queues, and partner APIs with explicit timeouts and contracts.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "client adapters",
+            "external dependencies",
+            "http client wrapper",
+            "database adapter"
+          ]
+        },
+        {
+          "id": "int_expr_errors",
+          "label": "Centralises error handling",
+          "description": "Maps typed internal failures to stable responses and safe logs.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "central error handler",
+            "typed errors",
+            "consistent error response",
+            "no stack trace"
+          ]
+        },
+        {
+          "id": "int_expr_ops",
+          "label": "Includes production lifecycle",
+          "description": "Mentions config validation, health, readiness, telemetry, and graceful shutdown.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "config validation",
+            "health readiness",
+            "graceful shutdown",
+            "telemetry"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "int_express_structure_follow",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you avoid abstracting into a shared layer too early?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Production Express integration service struktúra",
+          "prompt": "Hogyan strukturálnál egy production Express integration service-t, hogy a business logic, HTTP concernök és external clientek karbantarthatók maradjanak?",
+          "answerStructureHint": "Mutasd be a boundaryket, majd helyezd el a cross-cutting concernöket, validationt, external clienteket és lifecycle-t.",
+          "expectedPoints": {
+            "int_expr_thin": {
+              "label": "Vékony route handler",
+              "description": "A route HTTP detailt kezel, majd use-case vagy service module-nak delegál."
+            },
+            "int_expr_middleware": {
+              "label": "Cross-cutting concern middleware-ben",
+              "description": "Request context, auth, validation, logging és rate limiting tudatos sorrendben fut."
+            },
+            "int_expr_adapters": {
+              "label": "External system adapter mögött",
+              "description": "Database, queue és partner API explicit contracttal és timeouttal rendelkező client mögé kerül."
+            },
+            "int_expr_errors": {
+              "label": "Central error handling",
+              "description": "Typed internal failure stabil response-ra és safe logra fordul."
+            },
+            "int_expr_ops": {
+              "label": "Production lifecycle is szerepel",
+              "description": "Config validation, health, readiness, telemetry és graceful shutdown előkerül."
+            }
+          },
+          "followUps": {
+            "int_express_structure_follow": "Mit nem absztrahálnál shared layerbe túl korán?"
+          }
+        }
+      }
+    },
+    {
+      "id": "int_runtime_validation_001",
+      "title": "TypeScript accepted an invalid partner payload",
+      "prompt": "A partner response is typed with a TypeScript interface, but production receives a missing field and the service crashes later. What failed in the design, and how would you fix it?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "concept_check"
+      ],
+      "topicIds": [
+        "int_runtime_boundary_validation"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate compile-time types from runtime evidence, then validate and map the external contract at the boundary.",
+      "expectedPoints": [
+        {
+          "id": "int_val_erasure",
+          "label": "Explains type erasure",
+          "description": "States that TypeScript interfaces do not validate network data at runtime.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "types erased at runtime",
+            "interface does not validate",
+            "compile time only",
+            "untrusted network data"
+          ]
+        },
+        {
+          "id": "int_val_schema",
+          "label": "Adds runtime schema validation",
+          "description": "Validates required fields, types, enums, and constraints before the payload is used.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "runtime schema",
+            "validate at boundary",
+            "required fields",
+            "zod joi ajv"
+          ]
+        },
+        {
+          "id": "int_val_mapping",
+          "label": "Maps external DTO to an internal model",
+          "description": "Prevents partner contract changes from leaking through the codebase.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "external dto",
+            "internal model",
+            "explicit mapping",
+            "adapter boundary"
+          ]
+        },
+        {
+          "id": "int_val_error",
+          "label": "Defines controlled failure behaviour",
+          "description": "Returns or records a clear dependency or contract error with safe context.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "controlled dependency error",
+            "contract violation",
+            "structured log",
+            "partner and schema version"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "int_runtime_validation_follow",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you reject unknown fields, ignore them, or preserve them? What determines the policy?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "A TypeScript elfogadott egy invalid partner payloadot",
+          "prompt": "Egy partner response TypeScript interface-t kapott, de productionben hiányzott egy field, és a service később crash-elt. Mi hibázott a designban, és hogyan javítanád?",
+          "answerStructureHint": "Válaszd külön a compile-time type-ot a runtime evidence-től, majd validáld és mapeld az external contractot a boundaryn.",
+          "expectedPoints": {
+            "int_val_erasure": {
+              "label": "Elmagyarázza a type erasure-t",
+              "description": "A TypeScript interface runtime-ban nem validál network datát."
+            },
+            "int_val_schema": {
+              "label": "Runtime schema validationt ad",
+              "description": "Required field, type, enum és constraint használat előtt ellenőrződik."
+            },
+            "int_val_mapping": {
+              "label": "External DTO-t internal modellé mapel",
+              "description": "A partner contract change nem terjed szét közvetlenül a codebase-ben."
+            },
+            "int_val_error": {
+              "label": "Controlled failure behaviourt ad",
+              "description": "Clear dependency vagy contract error készül safe contexttel."
+            }
+          },
+          "followUps": {
+            "int_runtime_validation_follow": "Unknown fieldet rejectálnál, ignorálnál vagy megőriznél? Mi dönti el a policyt?"
+          }
+        }
+      }
+    }
+  ]
+}

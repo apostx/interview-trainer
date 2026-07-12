@@ -1,433 +1,207 @@
 {
   "id": "ways_of_working",
-  "name": "Agile & delivery methodologies",
-  "description": "Scrum, Kanban, XP and the SDLC models (Waterfall, V-model, iterative, DevOps, SAFe) — process reasoning for senior interviews. From the 'agile' and 'módszertanok' prep docs.",
+  "name": "Ways of Working",
+  "description": "Scrum, Kanban, agile foundations, estimation, flow, DevOps, lean, and multi-team coordination.",
   "sources": [
     "tibi/agile",
     "tibi/modszertanok"
   ],
   "topics": [
     {
-      "id": "scrum",
-      "name": "Scrum",
-      "description": "Roles, events and artifacts of the Scrum framework; empirical process control.",
-      "category": "soft_technical",
-      "relatedTopicIds": [
-        "kanban"
-      ],
-      "studyNotes": "## What is it?\n\nScrum is the most widely used agile framework: work happens in fixed-length sprints (1–4 weeks), with defined roles and a small set of recurring meetings, and every sprint ends with a usable increment of the product.\n\n## What problem does it solve?\n\nLong projects drift: requirements change, progress is invisible, feedback comes too late. Scrum forces a short cycle — plan a little, build a little, show it, adjust.\n\n## How it works\n\nThree roles:\n- Product Owner: decides WHAT to build and in what order (owns the backlog).\n- Scrum Master: keeps the process healthy, removes impediments — not a boss.\n- Developers: decide HOW to build it.\n\nThe events in each sprint: sprint planning (choose what fits, set a sprint goal), daily scrum (15 minutes: what I did, what I will do, what blocks me), sprint review (show the working increment to stakeholders), retrospective (how WE worked — what to change next sprint).\n\nThe artifacts: product backlog (everything, ordered), sprint backlog (this sprint's slice), increment (the working result).\n\nThe engine underneath the ceremonies: two feedback loops per sprint — the review inspects the PRODUCT, the retro inspects the PROCESS. Skipping the retro means the team never improves — which is why \"we skip the retro when busy\" is a classic anti-pattern.\n\nWhen Scrum fits: planned feature work with a stable team, where a protected sprint scope and a demo cadence help. Where it chafes: interrupt-driven work (support, ops) where the sprint plan is fiction by Tuesday — that is Kanban territory.\n\n## Common mistakes\n\n- Daily standup as a status report to a manager\n- Sprint scope changed mid-sprint by the PO (new work → next sprint)\n- Skipping retros \"when busy\" — improvement is the first casualty\n- The Scrum Master as team boss instead of impediment remover\n\n## Key terms\n\n- Sprint — a fixed timebox producing a usable increment\n- Product Owner / Scrum Master / Developers — what / how-we-work / how\n- Sprint goal — the one sentence the sprint commits to\n- Review vs retrospective — inspect the product vs inspect the process"
-    },
-    {
       "id": "kanban",
       "name": "Kanban",
-      "description": "Flow-based method: visualize work, limit WIP, manage flow.",
-      "category": "soft_technical",
-      "relatedTopicIds": [
-        "scrum"
-      ],
-      "studyNotes": "## What is it?\n\nKanban is a way of managing work as a continuous FLOW instead of in sprints: visualize all work on a board, limit how much is in progress at once, and measure how fast items travel.\n\n## What problem does it solve?\n\nFor interrupt-driven work — support, operations, maintenance — sprint plans die on contact with reality. Kanban has no sprints to break: work is pulled continuously as capacity frees up.\n\n## How it works\n\nThree practices:\n- Visualize: every piece of work is a card on a board (To Do → In Progress → Review → Done). Invisible work cannot be managed.\n- Limit WIP: each column has a maximum (\"max 3 in progress\"). This is the engine of the method.\n- Measure flow: lead time (request → done), cycle time (started → done), throughput (items per week).\n\nWhy WIP limits work — the interview question: less parallel work means less context switching; queues become visible instead of hiding inside \"in progress\"; finishing gets prioritized over starting (you PULL new work only when a slot frees); and a blocked item visibly clogs its column, forcing the team to swarm on it. Counterintuitively, limiting work in progress INCREASES total throughput.\n\nScrum vs Kanban is not a religion: Scrum gives cadence and commitment (good for planned product work); Kanban gives flow and flexibility (good for continuous/reactive work). Many teams mix them (\"Scrumban\") — e.g. Scrum's ceremonies with WIP limits on the board.\n\n## Common mistakes\n\n- A board with no WIP limits — that is a todo list, not Kanban\n- Starting new items while blocked ones rot (pull, don't push)\n- No flow measurement — lead/cycle time unknown, so no improvement\n\n## Key terms\n\n- WIP limit — the cap on parallel work; the core mechanism\n- Pull system — take new work only when capacity frees\n- Lead time / cycle time — request-to-done / started-to-done\n- Cumulative flow diagram — the chart that reveals bottlenecks"
-    },
-    {
-      "id": "sdlc_models",
-      "name": "SDLC models",
-      "description": "Waterfall, V-model, iterative/incremental, spiral and when each applies.",
+      "description": "Flow-based work management using visualized work and WIP limits.",
       "category": "soft_technical",
       "relatedTopicIds": [
         "scrum",
-        "devops_culture"
+        "agile_scaling_metrics"
       ],
-      "studyNotes": "## What is it?\n\nThe classic software development lifecycle models — waterfall, V-model, iterative, spiral, agile — and the honest logic for choosing between them.\n\n## What problem does it solve?\n\nDifferent projects carry different risks. A regulated medical device and a startup MVP should NOT be run the same way; the models are different answers to \"how much do we plan up front?\".\n\n## How it works\n\n- Waterfall: sequential phases — requirements → design → implementation → testing → release — each finished before the next begins. Works when requirements are truly fixed; painful otherwise, because change late in the sequence is very expensive.\n- V-model: waterfall bent into a V — every specification level on the left has a matching TEST level on the right (requirements ↔ acceptance tests, design ↔ integration tests). Its spec-to-test traceability is exactly what regulated industries audit.\n- Iterative/incremental: build in slices, learn between slices.\n- Spiral: iterations explicitly driven by RISK analysis — each loop attacks the biggest remaining risk.\n- Agile: short cycles, evolving requirements, continuous feedback.\n\nThe selection logic: it depends on requirement STABILITY and the COST OF LATE CHANGE. Fixed, well-understood, contract-bound requirements — safety-critical software, fixed-bid tenders with heavy audit demands — genuinely favor plan-driven models. Evolving requirements and product discovery favor agile, whose short feedback loops keep late change cheap.\n\nThe mature closing point: real organizations run hybrids — plan-driven governance at the milestone level with agile delivery inside, or agile development with a formal verification phase where regulation demands it. Naming a credible hybrid beats declaring one model universally right.\n\n## Common mistakes\n\n- \"Agile is always better\" — regulated/fixed-bid contexts genuinely favor plan-driven\n- Waterfall phases hidden inside \"sprints\" (design sprint, dev sprint, test sprint)\n- Ignoring the cost-of-late-change question that actually decides the model\n\n## Key terms\n\n- Waterfall — sequential, plan-everything-first\n- V-model — every spec level paired with a test level\n- Spiral — risk-driven iterations\n- Cost of late change — the variable that drives the choice"
+      "studyNotes": "## What is it?\n\nKanban is a flow-based method that visualizes work, limits work in progress, and improves how quickly items move from start to finish. It does not require fixed-length sprints.\n\n## What problem does it solve?\n\nTeams often start too much work, hide queues, and optimize individual busyness instead of delivery. Kanban makes waiting and bottlenecks visible.\n\n## How it works\n\n- Map the real workflow on a board, including waiting states such as review or deployment.\n- Set explicit work-in-progress limits so the team finishes before starting more.\n- Measure lead time, cycle time, throughput, and work-item age to understand flow.\n- Change policies gradually and use service classes only when their rules are explicit.\n\n## Common mistakes\n\n- Using a board without WIP limits and calling it Kanban.\n- Treating blocked work as invisible rather than making the blockage explicit.\n- Optimizing developer utilization while lead time keeps growing.\n\n## Key terms\n\n- WIP limit — Maximum work allowed in a stage.\n- cycle time — Time from starting an item to finishing it.\n- lead time — Time from request to delivery.\n- throughput — Number of completed items per period.",
+      "i18n": {
+        "hu": {
+          "name": "Kanban",
+          "description": "Flow-alapú munkaszervezés vizualizált folyamattal és WIP limitekkel.",
+          "studyNotes": "## Mi ez?\n\nA Kanban flow-alapú módszer, amely láthatóvá teszi a munkát, korlátozza a folyamatban lévő feladatok számát, és javítja, milyen gyorsan jutnak el az elemek a kezdéstől a befejezésig. Nem követel fix hosszúságú sprinteket.\n\n## Milyen problémát old meg?\n\nA csapatok gyakran túl sok munkát kezdenek el, elrejtik a várakozó sorokat, és a tényleges szállítás helyett az egyéni elfoglaltságot optimalizálják. A Kanban láthatóvá teszi a várakozást és a bottleneckeket.\n\n## Hogyan működik\n\n- A valós workflow-t ábrázoljuk a boardon, beleértve a várakozási állapotokat, például review-t vagy deploymentet.\n- Explicit work-in-progress limiteket állítunk be, hogy a csapat új munka kezdése előtt befejezze a meglévőt.\n- Lead time-ot, cycle time-ot, throughputot és work-item age-et mérünk a flow megértéséhez.\n- Fokozatosan változtatjuk a szabályokat, és service classokat csak egyértelmű szabályokkal használunk.\n\n## Gyakori hibák\n\n- WIP limit nélküli boardot Kanbannak nevezni.\n- A blokkolt munkát elrejteni ahelyett, hogy explicit módon jeleznénk.\n- A fejlesztők kihasználtságát növelni, miközben a lead time tovább nő.\n\n## Kulcsfogalmak\n\n- WIP limit — egy állapotban megengedett maximális munkamennyiség\n- cycle time — az elem elkezdésétől a befejezéséig eltelt idő\n- lead time — a kéréstől a szállításig eltelt idő\n- throughput — egy időszak alatt befejezett elemek száma"
+        }
+      }
+    },
+    {
+      "id": "sdlc_models",
+      "name": "SDLC Models",
+      "description": "Waterfall, V-model, iterative, incremental, and spiral delivery models.",
+      "category": "soft_technical",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nSoftware development life-cycle models describe how requirements, design, implementation, testing, and release are ordered. Different models manage uncertainty and risk in different ways.\n\n## What problem does it solve?\n\nA single process does not fit a stable regulated project and an uncertain product experiment equally well. Choosing consciously prevents ceremonies from replacing risk management.\n\n## How it works\n\n- Waterfall moves through major phases sequentially and fits stable requirements with expensive change.\n- The V-model pairs each development stage with a corresponding verification stage and is common in regulated environments.\n- Iterative and incremental delivery learn and deliver in small steps rather than one final release.\n- The spiral model revisits planning and implementation around explicit risk analysis.\n\n## Common mistakes\n\n- Calling every planned project waterfall.\n- Assuming agile means no documentation or architecture.\n- Choosing a model by fashion instead of requirement volatility and risk.\n\n## Key terms\n\n- waterfall — Sequential phase-based delivery.\n- incremental — Delivering usable slices over time.\n- iterative — Refining the solution through repeated cycles.\n- spiral — Risk-driven cycles of planning and implementation.",
+      "i18n": {
+        "hu": {
+          "name": "SDLC modellek",
+          "description": "Waterfall, V-modell, iteratív, inkrementális és spirális szállítási modellek.",
+          "studyNotes": "## Mi ez?\n\nA software development life-cycle modellek leírják, milyen sorrendben követik egymást a követelmények, design, implementáció, tesztelés és release lépései. A különböző modellek eltérően kezelik a bizonytalanságot és a kockázatot.\n\n## Milyen problémát old meg?\n\nUgyanaz a folyamat nem illik egy stabil, szabályozott projekthez és egy bizonytalan termékkísérlethez. A tudatos választás megakadályozza, hogy a ceremóniák helyettesítsék a kockázatkezelést.\n\n## Hogyan működik\n\n- A Waterfall egymás után halad a fő fázisokon, és stabil követelményekhez illik, ahol drága a változtatás.\n- A V-modell minden fejlesztési fázishoz megfelelő verifikációs fázist rendel, ezért gyakori szabályozott környezetben.\n- Az iteratív és inkrementális szállítás kis lépésekben tanul és ad át értéket egyetlen végső release helyett.\n- A spirális modell explicit kockázatelemzés köré szervezve ismétli a tervezést és implementációt.\n\n## Gyakori hibák\n\n- Minden előre tervezett projektet Waterfallnak nevezni.\n- Azt feltételezni, hogy az agile nem igényel dokumentációt vagy architektúrát.\n- Divat alapján választani a követelmények változékonysága és a kockázat helyett.\n\n## Kulcsfogalmak\n\n- waterfall — egymást követő fázisokra épülő szállítás\n- incremental — használható részek fokozatos átadása\n- iterative — a megoldás ismételt ciklusokban történő finomítása\n- spiral — kockázatvezérelt tervezési és implementációs ciklusok"
+        }
+      }
     },
     {
       "id": "devops_culture",
-      "name": "DevOps",
-      "description": "Culture and practices uniting dev and ops: CI/CD, automation, shared ownership.",
-      "category": "devops",
+      "name": "DevOps Culture",
+      "description": "Shared ownership, automation, feedback, and reliable delivery.",
+      "category": "soft_technical",
       "relatedTopicIds": [
-        "deployment",
-        "sdlc_models"
+        "production_readiness"
       ],
-      "studyNotes": "## What is it?\n\nDevOps is a way of working where the people who write the software and the people who run it in production work as one team, with shared responsibility. The name comes from Development + Operations.\n\n## What problem does it solve?\n\nTraditionally, developers wrote code and handed it to a separate operations team to deploy and run. This handover caused slow releases, finger-pointing when something broke (\"works on my machine\" / \"your code crashed my server\"), and developers who never learned how their code behaves in production. DevOps removes the handover: the team that builds it also runs it.\n\n## How it works\n\nThe practices that make it real:\n- CI/CD pipeline: every code change is automatically built, tested and made deployable. Releasing becomes routine — many small deploys instead of one scary quarterly event.\n- Infrastructure as code: servers and environments are defined in version-controlled files, so they can be recreated exactly — no hand-configured, unrepeatable machines.\n- Monitoring and alerting: the team watches how its software behaves in production and can react — or roll back — within minutes.\n- Shared ownership: \"you build it, you run it\" — the team carries the pager for its own services. This changes incentives: writing operable, well-monitored code becomes self-interest.\n\nHow to tell if it is working — the four DORA metrics: how often you deploy, how long a change takes to reach production, what fraction of deploys fail, and how fast you recover. If those numbers improve, DevOps is working; buying tools without moving them is theater.\n\n## Common mistakes\n\n- Buying tools and declaring DevOps while the dev/ops wall stands\n- A separate \"DevOps team\" that becomes the new ops silo\n- No DORA-style measurement — nobody can say if anything improved\n- Quarterly big-bang releases surviving under a CI/CD banner\n\n## Key terms\n\n- CI/CD — automated build, test and deploy of every change\n- Infrastructure as code — environments from versioned files, not clicks\n- You build it, you run it — the ownership principle\n- DORA metrics — deploy frequency, lead time, failure rate, recovery time\n- Rollback — fast, practiced return to the previous version"
+      "studyNotes": "## What is it?\n\nDevOps is a way of working in which development and operations share responsibility for delivering and running software. Automation supports the culture but does not replace it.\n\n## What problem does it solve?\n\nSeparate teams with hand-offs create slow feedback, fragile releases, and incentives to blame each other. Shared ownership connects design decisions to production outcomes.\n\n## How it works\n\n- Automate build, test, security checks, deployment, and infrastructure changes where repeatability matters.\n- Use small changes, continuous integration, and fast rollback to reduce release risk.\n- Make production signals visible to the people who build the service and learn from incidents without blame.\n- Treat reliability, security, and operability as product requirements from the start.\n\n## Common mistakes\n\n- Equating DevOps with a job title or a set of tools.\n- Automating a broken process without changing ownership.\n- Measuring deployment frequency while ignoring failures and recovery time.\n\n## Key terms\n\n- CI/CD — Automated integration and delivery pipeline.\n- shared ownership — Builders also care for production behavior.\n- feedback loop — Information returning quickly to guide change.\n- blameless learning — Improving systems rather than finding a person to punish.",
+      "i18n": {
+        "hu": {
+          "name": "DevOps kultúra",
+          "description": "Közös felelősség, automatizálás, feedback és megbízható szállítás.",
+          "studyNotes": "## Mi ez?\n\nA DevOps olyan működésmód, amelyben a development és operations közösen felel a szoftver szállításáért és futtatásáért. Az automatizálás támogatja ezt a kultúrát, de nem helyettesíti.\n\n## Milyen problémát old meg?\n\nA különálló, hand-offokra épülő csapatok lassú feedbacket, törékeny release-eket és egymás hibáztatását ösztönző célokat hoznak létre. A közös ownership összeköti a design döntéseket a production következményekkel.\n\n## Hogyan működik\n\n- Automatizáljuk a buildet, tesztet, security checkeket, deploymentet és infrastruktúra-változásokat, ahol fontos az ismételhetőség.\n- Kis változtatásokkal, continuous integrationnel és gyors rollbackkel csökkentjük a release kockázatát.\n- A production jeleket láthatóvá tesszük a service készítőinek, az incidensekből pedig hibáztatás nélkül tanulunk.\n- A reliabilityt, securityt és operabilityt kezdettől termékkövetelményként kezeljük.\n\n## Gyakori hibák\n\n- A DevOpsot egy job title-lal vagy eszközkészlettel azonosítani.\n- Egy rossz folyamatot automatizálni az ownership megváltoztatása nélkül.\n- Csak deployment frequencyt mérni, miközben a hibákat és recovery time-ot figyelmen kívül hagyjuk.\n\n## Kulcsfogalmak\n\n- CI/CD — automatizált integration és delivery pipeline\n- shared ownership — a készítők a production működésért is felelnek\n- feedback loop — gyorsan visszatérő információ, amely irányítja a változtatást\n- blameless learning — a rendszer javítása bűnbakkeresés helyett"
+        }
+      }
     },
     {
       "id": "agile_foundations",
       "name": "The Agile Manifesto",
-      "description": "The four values and twelve principles under every agile method — and what they actually mean in practice.",
+      "description": "Values and principles for adapting through frequent delivery and feedback.",
       "category": "soft_technical",
       "relatedTopicIds": [
         "scrum",
-        "kanban",
-        "agile_antipatterns",
-        "user_stories_estimation"
+        "kanban"
       ],
-      "studyNotes": "## What is it?\n\nThe Agile Manifesto (2001) is the value statement seventeen practitioners wrote that underlies Scrum, Kanban, XP and everything since: four values and twelve principles about how software is best built.\n\n## What problem does it solve?\n\nHeavyweight plan-everything-first processes kept failing: requirements changed mid-project, feedback came after release, documents mattered more than working software. The Manifesto names what actually matters when the two collide.\n\n## How it works\n\nThe four values, each \"we value X over Y\" — where Y still matters, X just wins on conflict:\n\n- Individuals and interactions over processes and tools\n- Working software over comprehensive documentation\n- Customer collaboration over contract negotiation\n- Responding to change over following a plan\n\nThe twelve principles boil down to habits: deliver small and often (a working version every couple of weeks beats a big release after six months); welcome changing requirements — the backlog is a living document; working software is THE measure of progress, not documents or meetings; business and technical people work together daily; keep a sustainable pace (crunch is the enemy); continuous attention to technical quality; simplicity — maximize the work NOT done (YAGNI); trust self-organizing teams (management gives the what and why, never the how); and reflect regularly — the retrospective.\n\nThe test of whether a team is agile is not its ceremonies but these values: standups and sprints with none of them is \"waterfall with standups\" (see the anti-patterns topic).\n\n## Common mistakes\n\n- Reading \"over\" as \"instead of\" — the right side still matters\n- Ceremonies adopted, values skipped — agile in name only\n- \"No documentation because agile\" — the Manifesto never said that\n- Change welcomed so hard there is no goal — responding ≠ drifting\n\n## Key terms\n\n- The four values — the X-over-Y pairs above\n- Sustainable pace — no crunch; a marathon cadence\n- YAGNI — \"you aren't gonna need it\"; build when needed\n- Self-organizing team — the team decides the how"
+      "studyNotes": "## What is it?\n\nThe Agile Manifesto is a set of four values and twelve principles favoring people, working software, customer collaboration, and response to change. It does not prescribe Scrum or any specific ceremony.\n\n## What problem does it solve?\n\nLong feedback cycles make teams discover misunderstandings late. Agile principles shorten the distance between an idea, a working result, and learning from users.\n\n## How it works\n\n- Deliver working increments frequently so progress can be inspected rather than inferred from documents.\n- Collaborate with customers and product stakeholders throughout development.\n- Allow plans to change when evidence changes while keeping a clear product goal.\n- Build sustainable teams with technical excellence, simplicity, and regular reflection.\n\n## Common mistakes\n\n- Reading “over” as “the items on the right have no value.”\n- Using agile as a reason to skip planning, architecture, or documentation.\n- Changing scope continuously without protecting focus or quality.\n\n## Key terms\n\n- increment — A usable addition to the product.\n- feedback — Evidence used to adjust product or process.\n- adaptation — Changing based on what was learned.\n- sustainable pace — Delivery that can continue without burnout.",
+      "i18n": {
+        "hu": {
+          "name": "Az Agile Manifesto",
+          "description": "Értékek és alapelvek a gyakori szállításon és feedbacken keresztüli alkalmazkodáshoz.",
+          "studyNotes": "## Mi ez?\n\nAz Agile Manifesto négy értékből és tizenkét alapelvből áll, amelyek az embereket, működő szoftvert, ügyfél-együttműködést és változásra adott reakciót részesítik előnyben. Nem írja elő a Scrumot vagy bármely konkrét ceremóniát.\n\n## Milyen problémát old meg?\n\nA hosszú feedback cycle miatt a félreértések csak későn derülnek ki. Az agile elvek lerövidítik az ötlet, a működő eredmény és a felhasználóktól kapott tanulás közti utat.\n\n## Hogyan működik\n\n- Gyakran szállítunk működő incrementeket, hogy a haladás dokumentumokból való következtetés helyett ellenőrizhető legyen.\n- A fejlesztés során folyamatosan együttműködünk az ügyfelekkel, producttal és stakeholderekkel.\n- Bizonyíték alapján változtatjuk a terveket, miközben világos product goalt tartunk.\n- Fenntartható csapatokat építünk technical excellence-szel, egyszerűséggel és rendszeres reflektálással.\n\n## Gyakori hibák\n\n- Az „over” szót úgy értelmezni, hogy a jobb oldali elemek értéktelenek.\n- Az agile-t ürügyként használni planning, architecture vagy documentation kihagyására.\n- Folyamatosan változtatni a scope-ot a fókusz és minőség védelme nélkül.\n\n## Kulcsfogalmak\n\n- increment — a termék használható bővítése\n- feedback — a termék vagy folyamat módosításához használt bizonyíték\n- adaptation — változtatás a tanultak alapján\n- sustainable pace — burnout nélkül hosszú távon fenntartható szállítás"
+        }
+      }
     },
     {
       "id": "xp_lean",
-      "name": "Extreme Programming (XP)",
-      "description": "The engineering half of agile: TDD, pair programming, continuous integration, refactoring.",
+      "name": "Extreme Programming",
+      "description": "Engineering practices that support rapid feedback and safe change.",
       "category": "soft_technical",
       "relatedTopicIds": [
-        "scrum",
-        "devops_culture",
-        "frontend_quality_gates"
+        "agile_foundations"
       ],
-      "studyNotes": "## What is it?\n\nExtreme Programming (Kent Beck, 1996) is the agile school that focuses on ENGINEERING practices — how code gets written — rather than process. Its practices outlived its name: TDD, pair programming, continuous integration, and continuous refactoring are now simply \"good engineering\".\n\n## What problem does it solve?\n\nScrum says nothing about how to write code. Teams doing Scrum without engineering discipline accumulate bugs and technical debt sprint after sprint — the process looks agile while the codebase calcifies. XP fills exactly that gap.\n\n## How it works\n\nThe practices that survive in every modern team:\n\n- TDD — the red → green → refactor loop: write a small FAILING test first (red), write the minimal code that passes (green), clean up while tests stay green (refactor), repeat. The tests accumulate into a safety net that makes future change safe.\n- Pair programming — two people, one machine: a driver typing, a navigator thinking ahead. Fewer bugs, and knowledge spreads without meetings.\n- Continuous integration — merge, build and test several times a DAY, so integration pain never accumulates into a big-bang merge.\n- Continuous refactoring — small cleanups all the time, instead of \"refactoring sprints\" that never come.\n- Plus: simple design, collective code ownership (no \"my file\"), coding standards, small frequent releases, sustainable pace.\n\nThe combo most real teams run: Scrum provides the frame (sprints, roles, ceremonies), XP provides the engineering inside it.\n\n## Common mistakes\n\n- TDD reduced to \"we write tests… afterwards\"\n- Pairing mandated 100% of the time or dismissed 100% — both dogma\n- \"Refactoring sprints\" instead of continuous cleanup\n- CI that runs nightly — integration pain is back by lunch\n\n## Key terms\n\n- Red → green → refactor — the TDD cycle\n- Driver / navigator — the two pairing roles\n- Continuous integration — merge and verify many times a day\n- Collective ownership — anyone may improve any file"
+      "studyNotes": "## What is it?\n\nExtreme Programming, or XP, is an agile method centered on disciplined engineering practices such as test-driven development, pair programming, continuous integration, refactoring, and small releases.\n\n## What problem does it solve?\n\nFast product change becomes dangerous when the code cannot be changed safely. XP reduces the technical cost of short feedback cycles.\n\n## How it works\n\n- Write tests close to the behavior and integrate changes frequently to expose conflicts early.\n- Use simple design and continuous refactoring to keep the code understandable as requirements evolve.\n- Pair or review closely where shared understanding and rapid feedback are valuable.\n- Release in small increments and keep the customer close to clarify acceptance.\n\n## Common mistakes\n\n- Treating XP as only pair programming.\n- Using TDD mechanically without improving design or behavior clarity.\n- Skipping refactoring until a separate cleanup phase that never arrives.\n\n## Key terms\n\n- TDD — Test-first cycle of failing test, implementation, and refactoring.\n- pair programming — Two developers collaborating on the same change.\n- continuous integration — Merging and validating changes frequently.\n- refactoring — Improving structure without changing behavior.",
+      "i18n": {
+        "hu": {
+          "name": "Extreme Programming",
+          "description": "Gyors feedbacket és biztonságos változtatást támogató engineering practice-ek.",
+          "studyNotes": "## Mi ez?\n\nAz Extreme Programming, vagy XP, olyan agile módszer, amely fegyelmezett engineering practice-ekre épül: test-driven development, pair programming, continuous integration, refactoring és kis release-ek.\n\n## Milyen problémát old meg?\n\nA gyors termékváltozás veszélyessé válik, ha a kód nem módosítható biztonságosan. Az XP csökkenti a rövid feedback cycle technikai költségét.\n\n## Hogyan működik\n\n- A teszteket közel írjuk a viselkedéshez, és gyakran integrálunk, hogy a konfliktusok korán kiderüljenek.\n- Egyszerű designnal és folyamatos refactoringgal érthetően tartjuk a kódot a követelmények változása közben.\n- Párosan dolgozunk vagy szorosan review-zunk ott, ahol fontos a közös megértés és a gyors feedback.\n- Kis incrementekben release-elünk, és közel tartjuk az ügyfelet az acceptance tisztázásához.\n\n## Gyakori hibák\n\n- Az XP-t kizárólag pair programmingként kezelni.\n- Mechanikusan TDD-zni anélkül, hogy javulna a design vagy a viselkedés tisztasága.\n- A refactoringot egy külön cleanup fázisra halasztani, amely soha nem érkezik el.\n\n## Kulcsfogalmak\n\n- TDD — failing test, implementáció és refactoring test-first ciklusa\n- pair programming — két fejlesztő együtt dolgozik ugyanazon a változtatáson\n- continuous integration — változtatások gyakori merge-elése és validálása\n- refactoring — a struktúra javítása a viselkedés megváltoztatása nélkül"
+        }
+      }
     },
     {
       "id": "agile_scaling_metrics",
       "name": "Agile Metrics",
-      "description": "Burndown, burnup, and flow metrics — reading progress without corrupting it.",
+      "description": "Burndown, burnup, velocity, and flow measures used without gaming.",
       "category": "soft_technical",
       "relatedTopicIds": [
-        "scrum",
         "kanban",
-        "agile_foundations"
+        "user_stories_estimation"
       ],
-      "studyNotes": "## What is it?\n\nThe charts and numbers agile teams steer by: burndown and burnup charts for sprint progress, and the flow metrics — lead time, cycle time, throughput, cumulative flow — that Kanban-style work runs on.\n\n## What problem does it solve?\n\n\"Are we on track?\" needs a better answer than a feeling. Each metric answers one specific version of that question — and each gets corrupted the moment it becomes a target instead of a measurement.\n\n## How it works\n\n- Burndown chart: remaining work through the sprint against an ideal line. Above the line = the sprint goal is at risk. Its blind spot: scope changes are invisible — work added mid-sprint just makes the line refuse to fall.\n- Burnup chart: completed work climbing toward a SEPARATE total-scope line. Its advantage is exactly that blind spot: scope growth is visible as the top line rising, without masking real progress.\n- Flow metrics: lead time (request → done, what the customer feels), cycle time (started → done, what the team controls), throughput (items per week). The cumulative flow diagram plots every column's count over time — a widening band IS the bottleneck, visually.\n- Escaped defects: bugs found in production — the quality signal for any method.\n\nThe governing rule (Goodhart's law): when a measure becomes a target, it stops being a good measure. Velocity pressure produces point inflation; cycle-time targets produce sliced-thin tickets. Metrics diagnose; humans decide.\n\n## Common mistakes\n\n- Burndown watched while scope silently grows (burnup shows it)\n- Metrics turned into targets — they stop measuring\n- Comparing velocity between teams (points are relative, per team)\n- Ignoring the widening CFD band that is pointing at the bottleneck\n\n## Key terms\n\n- Burnup vs burndown — scope changes visible vs hidden\n- Lead vs cycle time — customer clock vs team clock\n- Cumulative flow diagram — the bottleneck finder\n- Goodhart's law — targets corrupt measures"
+      "studyNotes": "## What is it?\n\nAgile metrics are signals about delivery and flow. They help a team inspect its process, but they are not direct measures of individual productivity or business value.\n\n## What problem does it solve?\n\nWithout data, teams rely on anecdotes. With poorly chosen targets, people optimize the number instead of the outcome.\n\n## How it works\n\n- Use burnup to show completed scope and total scope separately; it makes scope change visible.\n- Use burndown to visualize remaining work inside a time box, while remembering it can hide added scope.\n- Use cycle time, throughput, and work-item age for flow-based systems.\n- Treat velocity as a local planning aid, never as a cross-team performance target.\n\n## Common mistakes\n\n- Comparing velocity between teams.\n- Turning story points into individual targets.\n- Celebrating output metrics while customer outcomes or quality decline.\n\n## Key terms\n\n- burndown — Remaining work over time.\n- burnup — Completed work and total scope over time.\n- velocity — Recent story points used for local forecasting.\n- work-item age — How long current work has remained unfinished.",
+      "i18n": {
+        "hu": {
+          "name": "Agile metrikák",
+          "description": "Burndown, burnup, velocity és flow metrikák torz ösztönzők nélkül.",
+          "studyNotes": "## Mi ez?\n\nAz agile metrikák a szállításról és flow-ról adnak jeleket. Segítenek a csapatnak megvizsgálni a folyamatát, de nem közvetlen mérőszámai az egyéni produktivitásnak vagy üzleti értéknek.\n\n## Milyen problémát old meg?\n\nAdatok nélkül a csapatok anekdotákra támaszkodnak. Rosszul megválasztott targetek mellett viszont az emberek az eredmény helyett magát a számot optimalizálják.\n\n## Hogyan működik\n\n- A burnup külön mutatja a kész scope-ot és a teljes scope-ot, ezért láthatóvá teszi a scope változását.\n- A burndown egy time boxon belül a hátralévő munkát mutatja, de elrejtheti az újonnan hozzáadott scope-ot.\n- Flow-alapú rendszereknél cycle time-ot, throughputot és work-item age-et használunk.\n- A velocity helyi planning segédeszköz, nem csapatok közti performance target.\n\n## Gyakori hibák\n\n- Csapatok velocityjét összehasonlítani.\n- Story pointokat egyéni targetté tenni.\n- Output metrikákat ünnepelni, miközben romlik a customer outcome vagy a minőség.\n\n## Kulcsfogalmak\n\n- burndown — hátralévő munka az idő függvényében\n- burnup — elkészült munka és teljes scope az idő függvényében\n- velocity — a közelmúlt story pointjai helyi előrejelzéshez\n- work-item age — a jelenlegi munka befejezetlenül töltött ideje"
+        }
+      }
     },
     {
       "id": "user_stories_estimation",
-      "name": "User Stories & Estimation",
-      "description": "INVEST stories, acceptance criteria, story points, planning poker, velocity.",
+      "name": "User Stories and Estimation",
+      "description": "INVEST stories, acceptance criteria, story points, and planning poker.",
       "category": "soft_technical",
       "relatedTopicIds": [
-        "agile_foundations",
-        "scrum",
         "agile_scaling_metrics"
       ],
-      "studyNotes": "## What is it?\n\nThe everyday planning craft of agile teams: writing work items as user stories (\"As a [role], I want [capability], so that [value]\"), and sizing them with story points through planning poker.\n\n## What problem does it solve?\n\n\"Implement the API\" is not plannable: nobody knows what done means or how big it is. Stories tie work to user value with testable completion criteria; relative estimation makes a sprint's capacity predictable without pretending anyone can estimate hours.\n\n## How it works\n\nA good story passes INVEST: Independent, Negotiable, Valuable, Estimable, Small enough for a sprint, Testable. Acceptance criteria make \"testable\" concrete — Given/When/Then, error cases included. The Definition of Done adds the quality bar: reviewed, tested, CI green, accepted.\n\nStory points measure RELATIVE size — complexity + effort + uncertainty — deliberately NOT time. Teams use a Fibonacci scale (1, 2, 3, 5, 8, 13, 21) anchored by reference stories: 1 = tiny fix, 5 = complete small feature with tests, 13 = a payment integration. Too big to estimate → split it; unknown territory → run a spike (a small research task) first.\n\nPlanning poker prevents anchoring: everyone picks a card IN SECRET, all reveal simultaneously; the extremes explain (the 3 knows a shortcut? the 13 knows a landmine?), then re-vote.\n\nVelocity — the team's average completed points over recent sprints — exists for ONE purpose: knowing how much to commit to next sprint. Comparing velocities between teams (points are relative, per team) or pushing velocity as a KPI (invites point inflation) are its two classic abuses.\n\n## Common mistakes\n\n- Story points converted to hours in a spreadsheet\n- Stories without acceptance criteria — \"done\" becomes an argument\n- Estimating aloud in turn — anchoring; the poker exists for a reason\n- Velocity as a performance KPI → point inflation\n\n## Key terms\n\n- INVEST — the six-point checklist for a good story\n- Given/When/Then — acceptance criteria format, error cases included\n- Story point — relative size, never hours\n- Spike — a timeboxed research task for the unestimatable\n- Velocity — a planning input, never a KPI"
+      "studyNotes": "## What is it?\n\nA user story is a small statement of user value, usually completed by acceptance criteria. Estimation expresses uncertainty and relative effort so a team can plan and discuss risks.\n\n## What problem does it solve?\n\nLarge vague requests hide assumptions and make progress impossible to inspect. Breaking work into valuable slices creates faster feedback and more reliable planning.\n\n## How it works\n\n- Use INVEST as a quality check: independent, negotiable, valuable, estimable, small, and testable.\n- Write acceptance criteria that describe observable behavior rather than implementation details.\n- Estimate relatively with story points or another team-local scale, considering complexity, effort, and uncertainty.\n- Use planning poker to reveal different assumptions, not to average opinions mechanically.\n\n## Common mistakes\n\n- Treating the story template as a substitute for conversation.\n- Converting story points into hours or comparing them across teams.\n- Splitting only by technical layer so no slice delivers user value.\n\n## Key terms\n\n- INVEST — Quality characteristics of a useful story.\n- acceptance criteria — Observable conditions for considering work complete.\n- story points — Team-local relative estimate.\n- planning poker — Discussion technique for exposing estimation differences.",
+      "i18n": {
+        "hu": {
+          "name": "User storyk és becslés",
+          "description": "INVEST storyk, acceptance criteria, story pointok és planning poker.",
+          "studyNotes": "## Mi ez?\n\nA user story a felhasználói érték rövid megfogalmazása, amelyet általában acceptance criteria egészít ki. A becslés a bizonytalanságot és relatív erőfeszítést fejezi ki, hogy a csapat tervezhessen és megbeszélhesse a kockázatokat.\n\n## Milyen problémát old meg?\n\nA nagy, homályos kérések elrejtik a feltételezéseket, és ellenőrizhetetlenné teszik a haladást. A munka értéket adó szeletekre bontása gyorsabb feedbacket és megbízhatóbb planninget ad.\n\n## Hogyan működik\n\n- Az INVEST-et quality checkként használjuk: independent, negotiable, valuable, estimable, small és testable.\n- Az acceptance criteria megfigyelhető viselkedést ír le implementációs részletek helyett.\n- Story pointtal vagy más csapatspecifikus skálával relatívan becslünk, figyelembe véve a komplexitást, erőfeszítést és bizonytalanságot.\n- Planning pokert használunk az eltérő feltételezések feltárására, nem a vélemények mechanikus átlagolására.\n\n## Gyakori hibák\n\n- A story template-et a beszélgetés helyettesítőjének tekinteni.\n- Story pointot órára átváltani vagy csapatok között összehasonlítani.\n- Csak technikai rétegenként szeletelni, így egyik rész sem ad felhasználói értéket.\n\n## Kulcsfogalmak\n\n- INVEST — egy hasznos story minőségi jellemzői\n- acceptance criteria — a munka késznek tekintéséhez szükséges megfigyelhető feltételek\n- story points — csapaton belüli relatív becslés\n- planning poker — az eltérő becslési feltételezéseket feltáró beszélgetési technika"
+        }
+      }
     },
     {
       "id": "lean_software",
       "name": "Lean Software Development",
-      "description": "Waste elimination from Toyota applied to software: the seven wastes and seven principles.",
+      "description": "Reducing waste and optimizing the whole delivery system.",
       "category": "soft_technical",
       "relatedTopicIds": [
-        "xp_lean",
         "kanban",
-        "devops_culture"
+        "agile_foundations"
       ],
-      "studyNotes": "## What is it?\n\nLean software development (adapted from the Toyota Production System by Mary and Tom Poppendieck, 2003) is a mindset with one central idea: anything that does not add value to the customer is WASTE, and should be reduced or removed.\n\n## What problem does it solve?\n\nTeams sink enormous effort into things nobody asked for and nobody uses — features, documents, approvals, waiting. Lean gives that loss a name and a catalogue, which makes it visible and attackable.\n\n## How it works\n\nThe seven principles: eliminate waste; build quality in (prevent defects with TDD/CI/review rather than finding them late); create knowledge (pairing, retros); defer commitment (decide when you know the most, not the least); deliver fast (small batches); respect people; optimize the WHOLE (the full flow from idea to production — not just the coding step).\n\nThe seven wastes, translated to software — uncomfortably recognizable:\n\n- Unused features (most features are rarely or never used)\n- Partially done work (WIP: started, unmerged, undeployed)\n- Waiting — for reviews, approvals, environments\n- Extra processes — approval layers, documents nobody reads\n- Task switching — one developer on three projects\n- Defects — the later found, the costlier\n- Manual work — hand deploys, hand testing\n\nThe connections to name: Kanban's WIP limits attack partially-done-work and task-switching directly; DevOps automation attacks waiting and manual work. Lean is the theory those practices implement.\n\n## Common mistakes\n\n- Waste elimination pushed until documentation and slack disappear\n- Optimizing one step (coding speed) while the flow bottleneck is elsewhere\n- \"Defer commitment\" read as \"never decide\"\n\n## Key terms\n\n- Waste — anything not adding customer value\n- The seven wastes — the software translation above\n- Build quality in — prevent defects instead of finding them late\n- Optimize the whole — the full idea-to-production flow"
+      "studyNotes": "## What is it?\n\nLean software development adapts ideas from lean manufacturing: remove waste, build quality in, deliver quickly, respect people, and optimize the whole value stream.\n\n## What problem does it solve?\n\nTeams can be busy while customers wait because work sits in queues, hand-offs, partially done features, or rework. Lean focuses on elapsed flow and value rather than local utilization.\n\n## How it works\n\n- Identify waste such as partially done work, unnecessary features, hand-offs, waiting, defects, task switching, and unused learning.\n- Limit batch size and work in progress so feedback arrives sooner.\n- Build quality into the process through automation and early validation rather than inspecting it in at the end.\n- Optimize the end-to-end system; making one department faster can make the whole flow slower.\n\n## Common mistakes\n\n- Interpreting lean as simply cutting people or documentation.\n- Maximizing utilization and creating long queues.\n- Optimizing one stage while ignoring the full value stream.\n\n## Key terms\n\n- value stream — All steps from request to customer value.\n- waste — Activity consuming time without adding needed value.\n- small batch — A limited amount of work moved through the system.\n- optimize the whole — Improve end-to-end flow, not one silo.",
+      "i18n": {
+        "hu": {
+          "name": "Lean software development",
+          "description": "Waste csökkentése és a teljes delivery rendszer optimalizálása.",
+          "studyNotes": "## Mi ez?\n\nA lean software development a lean manufacturing elveit alkalmazza: waste eltávolítása, minőség beépítése, gyors szállítás, emberek tisztelete és a teljes value stream optimalizálása.\n\n## Milyen problémát old meg?\n\nA csapatok elfoglaltak lehetnek, miközben az ügyfél vár, mert a munka queue-kban, hand-offokban, félig kész feature-ökben vagy reworkben áll. A lean a helyi kihasználtság helyett az eltelt flow időre és értékre koncentrál.\n\n## Hogyan működik\n\n- Azonosítjuk a waste-et: félig kész munka, szükségtelen feature, hand-off, várakozás, defect, task switching és fel nem használt tanulás.\n- Csökkentjük a batch size-t és a WIP-et, hogy hamarabb érkezzen feedback.\n- Automatizálással és korai validációval a folyamatba építjük a minőséget, nem a végén próbáljuk belevizsgálni.\n- Az end-to-end rendszert optimalizáljuk; egy osztály gyorsítása lassíthatja a teljes flow-t.\n\n## Gyakori hibák\n\n- A leant egyszerűen ember- vagy dokumentációcsökkentésként értelmezni.\n- Maximális kihasználtságra törekedni és hosszú queue-kat létrehozni.\n- Egyetlen fázist optimalizálni a teljes value stream figyelmen kívül hagyásával.\n\n## Kulcsfogalmak\n\n- value stream — minden lépés a kéréstől a customer value-ig\n- waste — időt fogyasztó, szükséges értéket nem adó tevékenység\n- small batch — korlátozott mennyiségű, együtt mozgatott munka\n- optimize the whole — az end-to-end flow javítása egyetlen silo helyett"
+        }
+      }
     },
     {
       "id": "agile_at_scale",
       "name": "Agile at Scale",
-      "description": "Coordinating many teams on one product: Scrum of Scrums, LeSS, and SAFe.",
+      "description": "Coordination patterns for several teams working on one product.",
       "category": "soft_technical",
       "relatedTopicIds": [
         "scrum",
-        "agile_scaling_metrics",
-        "agile_antipatterns"
+        "agile_foundations"
       ],
-      "studyNotes": "## What is it?\n\nThe frameworks for running agile when MANY teams build one product: Scrum of Scrums (light), LeSS (medium), and SAFe (heavy).\n\n## What problem does it solve?\n\nOne team's Scrum has no answer for cross-team dependencies: team A's sprint blocks on team B's unfinished API, discovered mid-sprint. Some coordination layer becomes necessary — the question is how much.\n\n## How it works\n\nSmallest hammer first:\n\n- Scrum of Scrums: each team sends a representative to a short coordination standup a few times a week — what we did, what we will do, impediments, and DEPENDENCIES on other teams. Often all you need.\n- LeSS (Large-Scale Scrum, 2–8 teams): deliberately minimal — ONE product backlog, ONE Product Owner, one sprint rhythm across teams; teams coordinate directly.\n- SAFe (Scaled Agile Framework, 50–125+ people): the heavyweight — Agile Release Trains, portfolio management, and PI Planning: a two-day, all-teams planning event every quarter, where every team plans the next ~5 sprints, cross-team dependencies go on a program board, and everyone votes confidence (fist of five; average under 3 → re-plan).\n\nThe honest guidance: adopt the LIGHTEST mechanism that solves your actual coordination problem. SAFe for three teams is process for its own sake; no coordination for twelve teams is chaos. The dependency board — whatever framework name it wears — is the part that actually matters.\n\n## Common mistakes\n\n- SAFe rolled out for three teams — Scrum of Scrums would have done\n- Cross-team dependencies discovered mid-sprint instead of at planning\n- The coordination meeting becoming a status theater without decisions\n- Scaling process while the real problem is unclear team boundaries\n\n## Key terms\n\n- Scrum of Scrums — ambassadors coordinating a few times a week\n- LeSS — one backlog, one PO, minimal added rules\n- SAFe / PI Planning — release trains and the quarterly all-teams event\n- Program board — the cross-team dependency map"
+      "studyNotes": "## What is it?\n\nAgile at scale addresses coordination when many teams contribute to one product or value stream. Examples include Scrum of Scrums, LeSS, and SAFe, but structure should follow the actual dependency problem.\n\n## What problem does it solve?\n\nAs team count grows, shared components, release coordination, and cross-team decisions can recreate long hand-offs. A scaling framework should reduce dependencies rather than add reporting layers.\n\n## How it works\n\n- Organize around products or value streams with clear ownership and a shared product goal.\n- Expose and reduce dependencies through stable interfaces, integration practices, and cross-team planning.\n- Keep feedback and delivery frequent at the integrated product level, not only inside each team.\n- Choose the lightest coordination mechanism that handles the scale and regulatory context.\n\n## Common mistakes\n\n- Copying a large framework before identifying the coordination problem.\n- Creating more program layers while teams still depend on each other for every release.\n- Measuring local sprint success instead of integrated product delivery.\n\n## Key terms\n\n- Scrum of Scrums — Cross-team coordination meeting.\n- LeSS — Minimal scaling of Scrum around one product.\n- SAFe — More prescriptive enterprise scaling framework.\n- value stream — End-to-end path delivering customer value.",
+      "i18n": {
+        "hu": {
+          "name": "Agile nagy léptékben",
+          "description": "Koordinációs minták több, egy terméken dolgozó csapat számára.",
+          "studyNotes": "## Mi ez?\n\nAz agile at scale azt kezeli, hogyan koordinálható sok csapat egy termék vagy value stream körül. Ilyen megközelítés a Scrum of Scrums, LeSS és SAFe, de a struktúrának a valódi dependency problémát kell követnie.\n\n## Milyen problémát old meg?\n\nA csapatok számának növekedésével a megosztott komponensek, release-koordináció és cross-team döntések újra hosszú hand-offokat hozhatnak létre. A scaling frameworknek dependencyket kell csökkentenie, nem reporting rétegeket hozzáadnia.\n\n## Hogyan működik\n\n- Termékek vagy value streamek köré szervezünk világos ownershippel és közös product goallal.\n- Stabil interface-ekkel, integration practice-ekkel és cross-team planninggel láthatóvá tesszük és csökkentjük a dependencyket.\n- Az integrált termék szintjén is gyakori feedbacket és szállítást tartunk fenn, nem csak csapatonként.\n- A legkönnyebb koordinációs mechanizmust választjuk, amely kezeli a skálát és szabályozási környezetet.\n\n## Gyakori hibák\n\n- Nagy frameworköt másolni a koordinációs probléma azonosítása előtt.\n- Több programréteget létrehozni, miközben minden release továbbra is több csapattól függ.\n- Helyi sprint sikert mérni az integrált product delivery helyett.\n\n## Kulcsfogalmak\n\n- Scrum of Scrums — csapatok közti koordinációs meeting\n- LeSS — Scrum minimális skálázása egy termék körül\n- SAFe — előíróbb enterprise scaling framework\n- value stream — a customer value end-to-end útja"
+        }
+      }
     },
     {
       "id": "agile_antipatterns",
       "name": "Agile Anti-patterns",
-      "description": "The ways agile goes wrong: cargo-cult ceremonies, velocity pressure, scope creep, skipped retros.",
+      "description": "Common ways agile practices lose their purpose.",
       "category": "soft_technical",
       "relatedTopicIds": [
         "scrum",
-        "agile_foundations",
         "agile_scaling_metrics"
       ],
-      "studyNotes": "## What is it?\n\nThe catalogue of recognizable ways agile adoption fails — teams performing the ceremonies while losing the substance.\n\n## What problem does it solve?\n\nNaming the failure modes makes them discussable. \"We're doing Scrum-but\" is a diagnosis; \"agile doesn't work here\" is a shrug.\n\n## How it works\n\nOrganizational anti-patterns:\n\n- Agile in name only: waterfall with standups — the standup is a status report to a manager, the review is a slide deck.\n- Scrum-but: \"we do Scrum, but no retro / no PO / no review\". Scrum is a package; each removed part disables a feedback loop.\n- Velocity pressure: management demands rising velocity → the team inflates points → the number climbs, nothing else changes.\n- Micromanagement: management dictating the HOW; self-organization on paper only.\n\nSprint-level anti-patterns:\n\n- Scope creep mid-sprint: new work injected into a running sprint — new work belongs in the NEXT sprint; that protection is the point of sprints.\n- Chronic overcommitment and carry-over: stories too big, estimates ignored, every sprint \"almost\".\n- Skipped retros \"when busy\" — improvement is the first casualty, permanently.\n- 45-minute standups: details belong in a follow-up with the two people involved, not in everyone's morning.\n\nTechnical anti-patterns: no CI, no tests, big-bang integration at sprint end — agile process wrapped around un-agile engineering (XP exists for this).\n\n## Common mistakes\n\n- Treating the list as other teams' problem — every team has at least one\n- Fixing the ceremony (shorter standup) without the cause (status culture)\n- Adding process to fix what a skipped retro would have surfaced\n\n## Key terms\n\n- Cargo-cult agile — the rituals without the values\n- Scrum-but — Scrum minus the inconvenient parts\n- Scope creep — mid-sprint scope injection\n- Point inflation — velocity pressure's inevitable result"
+      "studyNotes": "## What is it?\n\nAgile anti-patterns are practices that keep the vocabulary or ceremonies of agile while removing feedback, autonomy, quality, or customer value. They often look efficient on a status report but slow real delivery.\n\n## What problem does it solve?\n\nCargo-cult process creates meetings and metrics without solving uncertainty. Teams then game velocity, accept uncontrolled scope change, or skip learning activities under pressure.\n\n## How it works\n\n- Evaluate every ceremony by the decision or feedback it enables.\n- Protect technical quality and sustainable pace; speed bought through hidden debt is temporary.\n- Use retrospectives to make small experiments and check whether they worked.\n- Keep product goals stable enough for focus while allowing scope to adapt through explicit decisions.\n\n## Common mistakes\n\n- Daily Scrum used as a manager status report.\n- Velocity targets that encourage point inflation.\n- Retrospectives skipped because the team is too busy to improve.\n\n## Key terms\n\n- cargo cult — Copying a practice without its purpose.\n- scope creep — Uncontrolled additions without conscious trade-offs.\n- velocity gaming — Changing estimates to improve the metric.\n- retrospective action — A small improvement experiment with an owner.",
+      "i18n": {
+        "hu": {
+          "name": "Agile anti-patternök",
+          "description": "Gyakori módok, ahogyan az agile practice-ek elveszítik eredeti céljukat.",
+          "studyNotes": "## Mi ez?\n\nAz agile anti-patternök megtartják az agile szókincsét vagy ceremóniáit, miközben eltávolítják a feedbacket, autonómiát, minőséget vagy customer value-t. Status reportban hatékonynak tűnhetnek, de lassítják a valós szállítást.\n\n## Milyen problémát old meg?\n\nA cargo-cult folyamat meetingeket és metrikákat hoz létre anélkül, hogy kezelné a bizonytalanságot. A csapatok velocityt game-elnek, kontrollálatlan scope change-et fogadnak el, vagy nyomás alatt kihagyják a tanulási tevékenységeket.\n\n## Hogyan működik\n\n- Minden ceremóniát az általa lehetővé tett döntés vagy feedback alapján értékelünk.\n- Védjük a technikai minőséget és sustainable pace-t; a rejtett debtből vásárolt sebesség ideiglenes.\n- Retrospective-ban kis kísérleteket indítunk, majd ellenőrizzük az eredményüket.\n- A product goal elég stabil a fókuszhoz, a scope pedig explicit döntésekkel alkalmazkodhat.\n\n## Gyakori hibák\n\n- A Daily Scrumot manageri status reportként használni.\n- Velocity targettel pointinflációt ösztönözni.\n- Retrospective-ot kihagyni arra hivatkozva, hogy a csapat túl elfoglalt a javuláshoz.\n\n## Kulcsfogalmak\n\n- cargo cult — egy practice másolása a célja nélkül\n- scope creep — kontrollálatlan bővítés tudatos trade-off nélkül\n- velocity gaming — becslések módosítása a metrika javításáért\n- retrospective action — kis javítási kísérlet felelőssel"
+        }
+      }
+    },
+    {
+      "id": "scrum",
+      "name": "Scrum",
+      "description": "Scrum accountabilities, events, artifacts, commitments, and the way a team adapts during a Sprint.",
+      "category": "soft_technical",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nScrum is a lightweight framework for developing complex products through short feedback cycles. A Scrum Team has three accountabilities: Product Owner, Scrum Master, and Developers. The framework defines a small set of events and artifacts, but it does not prescribe engineering practices or a fixed Daily Scrum script.\n\n## What problem does it solve?\n\nComplex work contains uncertainty. A long plan may be wrong before delivery. Scrum creates regular points to inspect the product, the plan, and the way the team works, then adapt based on what was learned.\n\n## How it works\n\n- A Sprint is the fixed-length container for the other events.\n- Sprint Planning creates a Sprint Goal and an initial Sprint Backlog.\n- The Daily Scrum is a short planning event for Developers. They choose any structure that helps progress toward the Sprint Goal.\n- The Sprint Review inspects the product outcome with stakeholders and adapts the Product Backlog.\n- The Sprint Retrospective improves quality and team effectiveness.\n- The Product Backlog, Sprint Backlog, and Increment have the commitments Product Goal, Sprint Goal, and Definition of Done.\n- The Sprint Backlog can change as more is learned, as long as changes do not endanger the Sprint Goal.\n\n## Common mistakes\n\n- Calling the accountabilities job titles with command-and-control ownership\n- Treating the three traditional Daily Scrum questions as mandatory\n- Freezing the Sprint Backlog even when the team learns a better plan\n- Treating the Sprint Review as a status presentation rather than product inspection\n\n## Key terms\n\n- accountability — responsibility defined by the Scrum framework\n- Sprint Goal — the single objective for the Sprint\n- Definition of Done — shared quality commitment for an Increment\n- empiricism — making decisions from observation and feedback",
+      "i18n": {
+        "hu": {
+          "name": "Scrum",
+          "description": "Scrum accountabilities, események, artifactok, commitmentek és a Sprint közbeni alkalmazkodás.",
+          "studyNotes": "## Mi ez?\n\nA Scrum lightweight framework komplex termékek rövid feedback cycle-okban történő fejlesztéséhez. A Scrum Team három accountabilityje a Product Owner, Scrum Master és Developers. A framework kevés eseményt és artifactot határoz meg, de nem ír elő engineering practice-eket vagy fix Daily Scrum scriptet.\n\n## Milyen problémát old meg?\n\nA komplex munka bizonytalanságot tartalmaz. Egy hosszú terv már a szállítás előtt tévessé válhat. A Scrum rendszeres pontokat ad a termék, terv és csapatműködés vizsgálatára, majd a tanultak alapján történő adaptációra.\n\n## Hogyan működik\n\n- A Sprint fix hosszúságú container a többi esemény számára.\n- A Sprint Planning létrehozza a Sprint Goalt és a kezdeti Sprint Backlogot.\n- A Daily Scrum rövid planning esemény a Developers számára; bármilyen struktúrát választhatnak, amely segíti a Sprint Goal felé haladást.\n- A Sprint Review a stakeholderekkel megvizsgálja a product outcome-ot és módosítja a Product Backlogot.\n- A Sprint Retrospective a minőséget és csapathatékonyságot javítja.\n- A Product Backlog, Sprint Backlog és Increment commitmentje rendre a Product Goal, Sprint Goal és Definition of Done.\n- A Sprint Backlog változhat a tanulás során, ha ez nem veszélyezteti a Sprint Goalt.\n\n## Gyakori hibák\n\n- Az accountabilitiest command-and-control ownershipű job title-ként kezelni.\n- A három hagyományos Daily Scrum kérdést kötelezőnek tekinteni.\n- Befagyasztani a Sprint Backlogot akkor is, amikor jobb tervet tanul a csapat.\n- A Sprint Review-t product inspection helyett status presentationként kezelni.\n\n## Kulcsfogalmak\n\n- accountability — a Scrum framework által meghatározott felelősség\n- Sprint Goal — a Sprint egyetlen közös célja\n- Definition of Done — az Increment közös minőségi commitmentje\n- empiricism — döntés megfigyelés és feedback alapján"
+        }
+      }
     }
   ],
   "questions": [
     {
-      "id": "wow_scrum_kanban_001",
-      "sources": [
-        "tibi/agile"
-      ],
+      "id": "hybrid_scrum_vs_kanban",
       "title": "Scrum vs Kanban",
       "prompt": "What is the difference between Scrum and Kanban, and how would you choose between them for a team?",
-      "roles": [
-        "fullstack_developer",
-        "backend_architect",
-        "frontend_architect",
-        "solution_architect"
-      ],
-      "modes": [
-        "tradeoff_decision",
-        "concept_check"
-      ],
-      "topicIds": [
-        "scrum",
-        "kanban"
-      ],
-      "expectedDurationSeconds": 210,
-      "thinkingTimeSeconds": 45,
-      "answerStructureHint": "Cadence/sprints and roles vs continuous flow and WIP limits; which fits planned work vs interrupt-driven work.",
-      "expectedPoints": [
-        {
-          "id": "sk_scrum_cadence",
-          "label": "Scrum = timeboxed sprints, roles, ceremonies",
-          "description": "Fixed-length sprints, defined roles and events, commitment per sprint.",
-          "importance": "critical",
-          "roleWeight": {
-            "fullstack_developer": 4,
-            "backend_architect": 5,
-            "solution_architect": 5,
-            "frontend_architect": 5
-          },
-          "acceptedSignals": [
-            "sprints",
-            "timeboxed",
-            "sprint planning",
-            "roles",
-            "ceremonies",
-            "scrum master",
-            "product owner",
-            "cadence"
-          ]
-        },
-        {
-          "id": "sk_kanban_flow",
-          "label": "Kanban = continuous flow with WIP limits",
-          "description": "Continuous pull, visualize the board, limit work in progress, optimize flow.",
-          "importance": "critical",
-          "roleWeight": {
-            "fullstack_developer": 4,
-            "backend_architect": 5,
-            "solution_architect": 4
-          },
-          "acceptedSignals": [
-            "continuous flow",
-            "wip limit",
-            "work in progress",
-            "pull",
-            "no sprints",
-            "visualize the board",
-            "flow"
-          ]
-        },
-        {
-          "id": "sk_choose",
-          "label": "Matches method to the work",
-          "description": "Scrum for planned feature work in a stable team; Kanban for interrupt-driven/support/ops work.",
-          "importance": "important",
-          "roleWeight": {
-            "backend_architect": 4,
-            "solution_architect": 4
-          },
-          "acceptedSignals": [
-            "interrupt driven",
-            "support work",
-            "unpredictable",
-            "planned work",
-            "stable priorities",
-            "ops team",
-            "maintenance"
-          ]
-        }
-      ],
-      "followUps": [
-        {
-          "id": "wow_wip_followup",
-          "trigger": {
-            "type": "rubric_covered",
-            "rubricItemId": "sk_kanban_flow"
-          },
-          "prompt": "Why do WIP limits actually improve throughput?",
-          "expectedPoints": []
-        }
-      ]
-    },
-    {
-      "id": "wow_agile_vs_waterfall_001",
-      "sources": [
-        "tibi/agile",
-        "tibi/modszertanok"
-      ],
-      "title": "Agile vs Waterfall",
-      "prompt": "When would a waterfall or V-model approach be a better fit than agile?",
-      "roles": [
-        "backend_architect",
-        "solution_architect",
-        "fullstack_developer"
-      ],
-      "modes": [
-        "tradeoff_decision"
-      ],
-      "topicIds": [
-        "sdlc_models"
-      ],
-      "expectedDurationSeconds": 210,
-      "thinkingTimeSeconds": 45,
-      "answerStructureHint": "Fixed vs evolving requirements, regulatory/contractual constraints, cost of late change.",
-      "expectedPoints": [
-        {
-          "id": "aw_requirements_stability",
-          "label": "Depends on requirement stability",
-          "description": "Waterfall fits fixed, well-understood requirements; agile fits evolving ones.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_architect": 5,
-            "solution_architect": 5,
-            "fullstack_developer": 4
-          },
-          "acceptedSignals": [
-            "fixed requirements",
-            "stable requirements",
-            "requirements change",
-            "evolving requirements",
-            "well understood upfront",
-            "clear scope"
-          ]
-        },
-        {
-          "id": "aw_regulatory",
-          "label": "Regulatory / contractual / safety context",
-          "description": "Heavy documentation, audits, safety-critical or fixed-bid contracts favor plan-driven models.",
-          "importance": "important",
-          "roleWeight": {
-            "solution_architect": 5,
-            "backend_architect": 4
-          },
-          "acceptedSignals": [
-            "regulatory",
-            "compliance",
-            "safety critical",
-            "documentation",
-            "audit",
-            "fixed price contract",
-            "medical",
-            "aviation"
-          ]
-        },
-        {
-          "id": "aw_cost_of_change",
-          "label": "Cost of late change",
-          "description": "Waterfall makes late changes expensive; agile keeps feedback loops short to reduce that risk.",
-          "importance": "nice_to_have",
-          "roleWeight": {
-            "backend_architect": 4,
-            "solution_architect": 4
-          },
-          "acceptedSignals": [
-            "cost of change",
-            "late changes are expensive",
-            "feedback loop",
-            "early feedback",
-            "risk of changing late"
-          ]
-        }
-      ],
-      "followUps": [
-        {
-          "id": "wow_hybrid_followup",
-          "trigger": {
-            "type": "always"
-          },
-          "prompt": "In practice teams often mix these. What does a pragmatic hybrid look like?",
-          "expectedPoints": []
-        }
-      ]
-    },
-    {
-      "id": "wow_devops_001",
-      "sources": [
-        "tibi/modszertanok"
-      ],
-      "title": "What DevOps actually means",
-      "prompt": "What does DevOps mean beyond tooling, and what practices make it work?",
-      "roles": [
-        "backend_developer",
-        "backend_architect",
-        "solution_architect",
-        "fullstack_developer"
-      ],
-      "modes": [
-        "concept_check",
-        "experience_deep_dive"
-      ],
-      "topicIds": [
-        "devops_culture",
-        "deployment"
-      ],
-      "expectedDurationSeconds": 210,
-      "thinkingTimeSeconds": 45,
-      "answerStructureHint": "Shared ownership culture, CI/CD automation, fast feedback, observability — not just a job title.",
-      "expectedPoints": [
-        {
-          "id": "do_culture",
-          "label": "Culture of shared ownership",
-          "description": "Breaks the dev/ops wall; teams own their software in production ('you build it, you run it').",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_architect": 5,
-            "solution_architect": 5,
-            "backend_developer": 4,
-            "fullstack_developer": 4
-          },
-          "acceptedSignals": [
-            "shared ownership",
-            "you build it you run it",
-            "break down silos",
-            "culture",
-            "collaboration between dev and ops",
-            "own it in production"
-          ],
-          "weakSignals": [
-            "work together"
-          ]
-        },
-        {
-          "id": "do_cicd",
-          "label": "CI/CD and automation",
-          "description": "Automated pipelines: build, test, deploy; infrastructure as code.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 4,
-            "fullstack_developer": 4
-          },
-          "acceptedSignals": [
-            "ci/cd",
-            "continuous integration",
-            "continuous delivery",
-            "pipeline",
-            "automation",
-            "infrastructure as code",
-            "automated deploy"
-          ]
-        },
-        {
-          "id": "do_feedback",
-          "label": "Fast feedback and observability",
-          "description": "Monitoring, quick rollbacks and short feedback loops to production.",
-          "importance": "important",
-          "roleWeight": {
-            "backend_architect": 4,
-            "solution_architect": 4
-          },
-          "acceptedSignals": [
-            "monitoring",
-            "observability",
-            "fast feedback",
-            "rollback",
-            "metrics",
-            "feedback loop"
-          ]
-        }
-      ],
-      "followUps": [
-        {
-          "id": "wow_dora_followup",
-          "trigger": {
-            "type": "always"
-          },
-          "prompt": "How would you measure whether a team's DevOps is actually improving?",
-          "expectedPoints": []
-        }
-      ]
-    },
-    {
-      "id": "wow_estimation_001",
-      "title": "Story points and planning poker",
-      "prompt": "How does story-point estimation work, what makes a good user story, and what should velocity be used for — and not used for?",
       "roles": [
         "frontend_developer",
         "backend_developer",
@@ -437,97 +211,528 @@
         "solution_architect"
       ],
       "modes": [
-        "concept_check"
+        "concept_check",
+        "tradeoff_decision"
       ],
       "topicIds": [
-        "user_stories_estimation"
+        "scrum",
+        "kanban"
       ],
-      "expectedDurationSeconds": 200,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cadence/sprints and roles vs continuous flow and WIP limits; which fits planned work vs interrupt-driven work.",
       "expectedPoints": [
         {
-          "id": "ef_relative",
-          "label": "Points are relative, not time",
-          "description": "Complexity + effort + uncertainty on a Fibonacci scale with reference stories.",
+          "id": "hybrid_scrum_vs_kanban_point_1",
+          "label": "Scrum = timeboxed sprints, roles, ceremonies",
+          "description": "Fixed-length sprints, defined roles and events, commitment per sprint.",
           "importance": "critical",
           "roleWeight": {
-            "backend_developer": 4,
-            "frontend_developer": 4,
-            "fullstack_developer": 4,
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
             "solution_architect": 5
           },
           "acceptedSignals": [
-            "relative",
-            "not time",
-            "not hours",
-            "fibonacci",
-            "complexity",
-            "uncertainty"
+            "fixed-length sprints",
+            "defined roles and events",
+            "commitment per sprint",
+            "scrum",
+            "timeboxed",
+            "sprints"
           ]
         },
         {
-          "id": "ef_invest",
-          "label": "INVEST + acceptance criteria",
-          "description": "Independent/Negotiable/Valuable/Estimable/Small/Testable; Given-When-Then makes it testable.",
-          "importance": "important",
-          "roleWeight": {
-            "backend_developer": 4,
-            "frontend_developer": 4,
-            "fullstack_developer": 4,
-            "solution_architect": 5
-          },
-          "acceptedSignals": [
-            "invest",
-            "independent",
-            "testable",
-            "acceptance criteria",
-            "given when then",
-            "fits a sprint"
-          ]
-        },
-        {
-          "id": "ef_poker",
-          "label": "Poker prevents anchoring",
-          "description": "Secret simultaneous votes; extremes explain; re-vote to consensus.",
-          "importance": "important",
-          "roleWeight": {
-            "backend_developer": 4,
-            "frontend_developer": 4,
-            "fullstack_developer": 4,
-            "solution_architect": 5
-          },
-          "acceptedSignals": [
-            "planning poker",
-            "secret",
-            "reveal at once",
-            "anchoring",
-            "discuss the extremes"
-          ]
-        },
-        {
-          "id": "ef_velocity",
-          "label": "Velocity for planning only",
-          "description": "3–5 sprint average guides commitment; never compare teams or push it as a KPI.",
+          "id": "hybrid_scrum_vs_kanban_point_2",
+          "label": "Kanban = continuous flow with WIP limits",
+          "description": "Continuous pull, visualize the board, limit work in progress, optimize flow.",
           "importance": "critical",
           "roleWeight": {
-            "backend_developer": 4,
-            "frontend_developer": 4,
-            "fullstack_developer": 4,
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
             "solution_architect": 5
           },
           "acceptedSignals": [
-            "planning tool",
-            "don't compare teams",
-            "not a kpi",
-            "average of sprints",
-            "inflation"
+            "work in progress",
+            "wip limit",
+            "kanban",
+            "continuous pull",
+            "visualize the board",
+            "limit work in progress",
+            "optimize flow"
+          ]
+        },
+        {
+          "id": "hybrid_scrum_vs_kanban_point_3",
+          "label": "Matches method to the work",
+          "description": "Scrum for planned feature work in a stable team; Kanban for interrupt-driven/support/ops work.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "matches method work",
+            "scrum for planned feature",
+            "in a stable team",
+            "kanban for interrupt-driven",
+            "support",
+            "ops work",
+            "matches"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_scrum_vs_kanban_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why do WIP limits actually improve throughput?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Scrum vagy Kanban",
+          "prompt": "Mi a különbség a Scrum és a Kanban között, és hogyan választanál egy csapat számára?",
+          "answerStructureHint": "Cadence és sprintek, accountabilities és események szemben a continuous flow-val és WIP limitekkel; planned vagy interrupt-driven munkához melyik illik.",
+          "expectedPoints": {
+            "hybrid_scrum_vs_kanban_point_1": {
+              "label": "Scrum: timeboxed sprintek, accountabilities és események",
+              "description": "Fix hosszúságú sprintek, meghatározott felelősségek és események, Sprint Goal köré szervezett commitment."
+            },
+            "hybrid_scrum_vs_kanban_point_2": {
+              "label": "Kanban: continuous flow WIP limitekkel",
+              "description": "Folyamatos pull, vizuális board, work-in-progress korlátozása és flow optimalizálása."
+            },
+            "hybrid_scrum_vs_kanban_point_3": {
+              "label": "A módszert a munkához igazítja",
+              "description": "Scrum stabil csapat tervezett feature-munkájához; Kanban interrupt-driven support vagy operations munkához."
+            }
+          },
+          "followUps": {
+            "hybrid_scrum_vs_kanban_followup_1": "Miért javíthatják a WIP limitek ténylegesen a throughputot?"
+          }
+        }
+      }
     },
     {
-      "id": "wow_xp_001",
+      "id": "hybrid_agile_vs_waterfall",
+      "title": "Agile vs Waterfall",
+      "prompt": "When would a waterfall or V-model approach be a better fit than agile?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "sdlc_models"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Fixed vs evolving requirements, regulatory/contractual constraints, cost of late change.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_agile_vs_waterfall_point_1",
+          "label": "Depends on requirement stability",
+          "description": "Waterfall fits fixed, well- understood requirements; agile fits evolving ones.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "waterfall",
+            "depends on requirement stability",
+            "depends requirement stability",
+            "waterfall fits fixed",
+            "well understood requirements",
+            "agile fits evolving ones",
+            "depends"
+          ]
+        },
+        {
+          "id": "hybrid_agile_vs_waterfall_point_2",
+          "label": "Regulatory / contractual / safety context",
+          "description": "Heavy documentation, audits, safety-critical or fixed-bid contracts favor plan-driven models.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "regulatory contractual safety context",
+            "regulatory",
+            "contractual",
+            "safety context",
+            "heavy documentation",
+            "audits",
+            "safety-critical or fixed-bid contracts",
+            "contracts favor plan-driven models"
+          ]
+        },
+        {
+          "id": "hybrid_agile_vs_waterfall_point_3",
+          "label": "Cost of late change",
+          "description": "Waterfall makes late changes expensive; agile keeps feedback loops short to reduce that risk.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "cost of late change",
+            "cost late change",
+            "waterfall makes late changes",
+            "makes late changes expensive",
+            "agile keeps feedback loops",
+            "to reduce that risk",
+            "cost"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_agile_vs_waterfall_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "In practice teams often mix these. What does a pragmatic hybrid look like?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Agile vagy Waterfall",
+          "prompt": "Mikor lehet jobb választás a Waterfall vagy V-modell az agile megközelítésnél?",
+          "answerStructureHint": "Stabil vagy változó követelmények, szabályozási és szerződéses korlátok, késői változtatás költsége.",
+          "expectedPoints": {
+            "hybrid_agile_vs_waterfall_point_1": {
+              "label": "A követelmények stabilitásától függ",
+              "description": "A Waterfall stabil, jól ismert követelményekhez, az agile változó követelményekhez illik."
+            },
+            "hybrid_agile_vs_waterfall_point_2": {
+              "label": "Szabályozási, szerződéses és safety kontextus",
+              "description": "Erős dokumentációs, audit-, safety-critical vagy fixed-bid igények a plan-driven modelleket támogathatják."
+            },
+            "hybrid_agile_vs_waterfall_point_3": {
+              "label": "A késői változtatás költsége",
+              "description": "Waterfallban drága a késői változtatás; agile rövid feedback loopokkal csökkenti ezt a kockázatot."
+            }
+          },
+          "followUps": {
+            "hybrid_agile_vs_waterfall_followup_1": "A gyakorlatban sok csapat keveri a megközelítéseket. Hogyan néz ki egy pragmatikus hibrid?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_what_devops_actually_means",
+      "title": "What DevOps actually means",
+      "prompt": "What does DevOps mean beyond tooling, and what practices make it work?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "experience_deep_dive"
+      ],
+      "topicIds": [
+        "devops_culture"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Shared ownership culture, CI/CD automation, fast feedback, observability — not just a job title.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_what_devops_actually_means_point_1",
+          "label": "Culture of shared ownership",
+          "description": "Breaks the dev/ops wall; teams own their software in production ('you build it, you run it').",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "shared ownership",
+            "culture of shared ownership",
+            "culture shared ownership",
+            "breaks the dev",
+            "ops wall",
+            "teams own their software",
+            "their software in production",
+            "build"
+          ]
+        },
+        {
+          "id": "hybrid_what_devops_actually_means_point_2",
+          "label": "CI/CD and automation",
+          "description": "Automated pipelines: build, test, deploy; infrastructure as code.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "ci/cd",
+            "ci cd and automation",
+            "cd automation",
+            "automated pipelines",
+            "test",
+            "deploy",
+            "infrastructure as code"
+          ]
+        },
+        {
+          "id": "hybrid_what_devops_actually_means_point_3",
+          "label": "Fast feedback and observability",
+          "description": "Monitoring, quick rollbacks and short feedback loops to production.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "rollback",
+            "feedback loop",
+            "fast feedback and observability",
+            "fast feedback observability",
+            "monitoring",
+            "quick rollbacks and short",
+            "feedback loops to production",
+            "fast"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_what_devops_actually_means_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you measure whether a team's DevOps is actually improving?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mit jelent valójában a DevOps?",
+          "prompt": "Mit jelent a DevOps az eszközökön túl, és milyen practice-ek teszik működőképessé?",
+          "answerStructureHint": "Shared ownership kultúra, CI/CD automatizálás, gyors feedback és observability – nem pusztán job title.",
+          "expectedPoints": {
+            "hybrid_what_devops_actually_means_point_1": {
+              "label": "Közös ownership kultúrája",
+              "description": "Lebontja a dev és ops közti falat; a csapat productionben is birtokolja a szoftverét."
+            },
+            "hybrid_what_devops_actually_means_point_2": {
+              "label": "CI/CD és automatizálás",
+              "description": "Automatizált build-, test- és deploy pipeline, valamint infrastructure as code."
+            },
+            "hybrid_what_devops_actually_means_point_3": {
+              "label": "Gyors feedback és observability",
+              "description": "Monitoring, gyors rollback és rövid production feedback loopok."
+            }
+          },
+          "followUps": {
+            "hybrid_what_devops_actually_means_followup_1": "Hogyan mérnéd, hogy egy csapat DevOps működése valóban javul?"
+          }
+        }
+      }
+    },
+    {
+      "id": "manual_agile_beyond_ceremonies",
+      "title": "Agile beyond ceremonies",
+      "prompt": "A team says it is agile because it has daily meetings and two-week sprints. How would you evaluate whether it follows the Agile Manifesto in practice?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "agile_foundations"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Look at feedback, working software, collaboration, adaptation, and outcomes rather than ritual compliance.",
+      "expectedPoints": [
+        {
+          "id": "manual_agile_beyond_ceremonies_point_1",
+          "label": "Looks for working outcomes and feedback",
+          "description": "Checks whether the team delivers usable increments and learns from users frequently.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "working software",
+            "user feedback",
+            "usable increment",
+            "short feedback loop",
+            "looks working outcomes feedback"
+          ]
+        },
+        {
+          "id": "manual_agile_beyond_ceremonies_point_2",
+          "label": "Values collaboration over hand-offs",
+          "description": "Looks for direct cooperation between business, product, developers, and operations.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "customer collaboration",
+            "cross functional",
+            "direct communication",
+            "reduce handoffs",
+            "values collaboration over hand-offs"
+          ]
+        },
+        {
+          "id": "manual_agile_beyond_ceremonies_point_3",
+          "label": "Adapts plans from evidence",
+          "description": "Explains that plans can change when learning or priorities change while goals remain clear.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "respond to change",
+            "adapt plan",
+            "inspect and adapt",
+            "evidence based",
+            "adapts plans from evidence"
+          ]
+        },
+        {
+          "id": "manual_agile_beyond_ceremonies_point_4",
+          "label": "Rejects ceremony as the goal",
+          "description": "Notes that sprints and meetings are tools; they do not make a process agile by themselves.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "not just ceremonies",
+            "cargo cult agile",
+            "ritual compliance",
+            "outcome over process",
+            "rejects ceremony goal"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "manual_agile_beyond_ceremonies_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What delivery or product evidence would show that the team is learning faster?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Agile a ceremóniákon túl",
+          "prompt": "Egy csapat agile-nak nevezi magát, mert van daily meetingje és kéthetes sprintje. Hogyan értékelnéd, hogy a gyakorlatban követi-e az Agile Manifestót?",
+          "answerStructureHint": "A rituálék betartása helyett feedbacket, working software-t, együttműködést, adaptációt és outcome-okat vizsgálj.",
+          "expectedPoints": {
+            "manual_agile_beyond_ceremonies_point_1": {
+              "label": "Működő outcome-ot és feedbacket keres",
+              "description": "Megnézi, hogy a csapat gyakran szállít-e használható incrementet és tanul-e a felhasználóktól."
+            },
+            "manual_agile_beyond_ceremonies_point_2": {
+              "label": "Együttműködést értékel hand-offok helyett",
+              "description": "Közvetlen együttműködést keres business, product, development és operations között."
+            },
+            "manual_agile_beyond_ceremonies_point_3": {
+              "label": "Bizonyíték alapján módosítja a terveket",
+              "description": "Elmagyarázza, hogy tanulás vagy prioritásváltozás miatt a terv módosulhat, miközben a cél világos marad."
+            },
+            "manual_agile_beyond_ceremonies_point_4": {
+              "label": "Nem tekinti célnak a ceremóniát",
+              "description": "A sprint és meeting eszköz; önmagában nem teszi agile-lá a folyamatot."
+            }
+          },
+          "followUps": {
+            "manual_agile_beyond_ceremonies_followup_1": "Milyen delivery- vagy productbizonyíték mutatná, hogy a csapat gyorsabban tanul?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_tdd_s_red_green_refactor",
       "title": "TDD's red-green-refactor",
       "prompt": "Describe the TDD cycle and the XP practices you would bring into any team — and where Lean's 'waste' idea connects.",
       "roles": [
@@ -544,155 +749,694 @@
       ],
       "topicIds": [
         "xp_lean",
-        "lean_software"
+        "testing_strategy"
       ],
-      "expectedDurationSeconds": 200,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "xp_tdd",
-          "label": "Red → green → refactor",
+          "id": "hybrid_tdd_s_red_green_refactor_point_1",
+          "label": "Red green refactor",
           "description": "Failing test first, minimal pass, cleanup with green tests; no code without a test.",
           "importance": "critical",
           "roleWeight": {
-            "backend_developer": 4,
-            "frontend_developer": 4,
-            "fullstack_developer": 4,
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
             "solution_architect": 5
           },
           "acceptedSignals": [
             "red green refactor",
             "failing test first",
-            "minimal code",
-            "test first"
+            "minimal pass",
+            "cleanup with green tests",
+            "no code without a",
+            "code without a test",
+            "green"
           ]
         },
         {
-          "id": "xp_practices",
+          "id": "hybrid_tdd_s_red_green_refactor_point_2",
           "label": "XP practice set",
           "description": "Pairing, CI several times daily, continuous refactoring, collective ownership, small releases.",
           "importance": "critical",
           "roleWeight": {
-            "backend_developer": 4,
-            "frontend_developer": 4,
-            "fullstack_developer": 4,
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
             "solution_architect": 5
           },
           "acceptedSignals": [
-            "pair programming",
-            "continuous integration",
             "refactoring",
+            "xp practice set",
+            "pairing",
+            "ci several times daily",
+            "continuous refactoring",
             "collective ownership",
-            "small releases"
+            "small releases",
+            "practice"
           ]
         },
         {
-          "id": "xp_lean_waste",
+          "id": "hybrid_tdd_s_red_green_refactor_point_3",
           "label": "Lean waste connection",
           "description": "Unused features, WIP, waiting, task switching, manual work — practices exist to eliminate waste.",
           "importance": "important",
           "roleWeight": {
-            "backend_developer": 4,
             "frontend_developer": 4,
+            "backend_developer": 4,
             "fullstack_developer": 4,
-            "solution_architect": 5
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
           },
           "acceptedSignals": [
-            "waste",
+            "lean waste connection",
             "unused features",
+            "wip",
             "waiting",
-            "context switching",
-            "manual deploy",
-            "wip"
+            "task switching",
+            "manual work",
+            "practices exist to eliminate",
+            "exist to eliminate waste"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_tdd_s_red_green_refactor_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give one production example of TDD's red-green-refactor and one common misuse.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "A TDD red-green-refactor ciklusa",
+          "prompt": "Írd le a TDD ciklust és azokat az XP practice-eket, amelyeket bármely csapatba átvennél. Hol kapcsolódik ehhez a lean waste fogalma?",
+          "answerStructureHint": "Red-green-refactor, XP practice-ek és a várakozás, WIP, rework vagy kézi munka csökkentése.",
+          "expectedPoints": {
+            "hybrid_tdd_s_red_green_refactor_point_1": {
+              "label": "Red-green-refactor",
+              "description": "Először failing test, majd minimális implementáció, végül cleanup zöld tesztek mellett."
+            },
+            "hybrid_tdd_s_red_green_refactor_point_2": {
+              "label": "XP practice-ek",
+              "description": "Pairing, gyakori CI, folyamatos refactoring, collective ownership és small release."
+            },
+            "hybrid_tdd_s_red_green_refactor_point_3": {
+              "label": "Kapcsolat a lean waste-tel",
+              "description": "Fel nem használt feature, WIP, várakozás, task switching és kézi munka csökkentése."
+            }
+          },
+          "followUps": {
+            "hybrid_tdd_s_red_green_refactor_followup_1": "Adj egy production példát a red-green-refactor hasznos alkalmazására és egy gyakori félrehasználására."
+          }
+        }
+      }
     },
     {
-      "id": "wow_scaling_001",
+      "id": "hybrid_coordinating_multiple_agile_teams",
       "title": "Coordinating multiple agile teams",
       "prompt": "Three teams now work on one product. How do you coordinate them, which metrics do you watch, and which anti-patterns do you guard against?",
       "roles": [
-        "solution_architect",
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
         "backend_architect",
-        "fullstack_developer"
+        "solution_architect"
       ],
       "modes": [
         "scenario_discussion",
         "tradeoff_decision"
       ],
       "topicIds": [
-        "agile_scaling_metrics",
         "agile_at_scale",
-        "agile_antipatterns"
+        "agile_scaling_metrics"
       ],
-      "expectedDurationSeconds": 220,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "sm_scaling",
+          "id": "hybrid_coordinating_multiple_agile_teams_point_1",
           "label": "Right-sized scaling mechanism",
           "description": "Scrum of Scrums ambassadors first; LeSS one-backlog-one-PO; SAFe/PI Planning only at real scale.",
           "importance": "critical",
           "roleWeight": {
-            "backend_developer": 4,
-            "frontend_developer": 4,
-            "fullstack_developer": 4,
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
             "solution_architect": 5
           },
           "acceptedSignals": [
             "scrum of scrums",
-            "ambassador",
-            "one backlog",
-            "less",
             "safe",
-            "pi planning",
-            "start simple"
+            "right-sized scaling mechanism",
+            "scrum of scrums ambassadors",
+            "of scrums ambassadors first",
+            "one-backlog one-po",
+            "pi planning only at",
+            "only at real scale"
           ]
         },
         {
-          "id": "sm_metrics",
+          "id": "hybrid_coordinating_multiple_agile_teams_point_2",
           "label": "Flow metrics + honest charts",
           "description": "Lead/cycle time, throughput, CFD for bottlenecks; burnup keeps scope changes visible.",
           "importance": "important",
           "roleWeight": {
-            "backend_developer": 4,
             "frontend_developer": 4,
+            "backend_developer": 4,
             "fullstack_developer": 4,
-            "solution_architect": 5
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
           },
           "acceptedSignals": [
-            "lead time",
             "cycle time",
-            "cumulative flow",
-            "bottleneck",
+            "throughput",
             "burnup",
-            "scope change"
+            "flow metrics honest charts",
+            "lead",
+            "cfd for bottlenecks",
+            "burnup keeps scope changes",
+            "keeps scope changes visible"
           ]
         },
         {
-          "id": "sm_antipatterns",
+          "id": "hybrid_coordinating_multiple_agile_teams_point_3",
           "label": "Names concrete anti-patterns",
           "description": "Velocity comparison/pressure, scope creep, skipped retros, agile-in-name-only.",
           "importance": "critical",
           "roleWeight": {
-            "backend_developer": 4,
-            "frontend_developer": 4,
-            "fullstack_developer": 4,
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
             "solution_architect": 5
           },
           "acceptedSignals": [
-            "velocity pressure",
-            "comparing teams",
+            "velocity",
+            "names concrete anti-patterns",
+            "concrete anti-patterns",
+            "velocity comparison",
+            "pressure",
             "scope creep",
-            "no retro",
-            "in name only",
-            "scrum-but"
+            "skipped retros",
+            "agile-in name-only"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_coordinating_multiple_agile_teams_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you monitor during rollout, and what would trigger rollback for this Coordinating multiple agile teams change?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Több agile csapat koordinálása",
+          "prompt": "Három csapat dolgozik ugyanazon a terméken. Hogyan koordinálod őket, milyen metrikákat nézel, és mely anti-patternöket kerülöd?",
+          "answerStructureHint": "A legkönnyebb szükséges scaling mechanizmus, flow metrikák, látható scope és konkrét anti-patternök.",
+          "expectedPoints": {
+            "hybrid_coordinating_multiple_agile_teams_point_1": {
+              "label": "Megfelelő méretű scaling mechanizmust választ",
+              "description": "Először Scrum of Scrums; LeSS egy backloggal és Product Ownerrel; SAFe és PI Planning csak valódi nagy skálán."
+            },
+            "hybrid_coordinating_multiple_agile_teams_point_2": {
+              "label": "Flow metrikákat és őszinte chartokat használ",
+              "description": "Lead/cycle time, throughput és cumulative flow diagram bottleneckekhez; burnup a scope change láthatóvá tételéhez."
+            },
+            "hybrid_coordinating_multiple_agile_teams_point_3": {
+              "label": "Konkrét anti-patternöket nevez meg",
+              "description": "Velocity összehasonlítás vagy nyomás, scope creep, kihagyott retrospectives és csak névleges agility."
+            }
+          },
+          "followUps": {
+            "hybrid_coordinating_multiple_agile_teams_followup_1": "Mit figyelnél a bevezetés alatt, és mi jelezné, hogy vissza kell lépni vagy módosítani?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_story_points_and_planning_poker",
+      "title": "Story points and planning poker",
+      "prompt": "How does story-point estimation work, what makes a good user story, and what should velocity be used for — and not used for?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "user_stories_estimation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_story_points_and_planning_poker_point_1",
+          "label": "Points are relative, not time",
+          "description": "Complexity + effort + uncertainty on a Fibonacci scale with reference stories.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "points relative time",
+            "complexity effort uncertainty on",
+            "scale with reference stories",
+            "points",
+            "relative",
+            "time"
+          ]
+        },
+        {
+          "id": "hybrid_story_points_and_planning_poker_point_2",
+          "label": "INVEST + acceptance criteria",
+          "description": "Independent/Negotiable/Valuable/ Estimable/Small/Testable; Given-When-Then makes it testable.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "invest",
+            "acceptance criteria",
+            "invest acceptance criteria",
+            "independent",
+            "negotiable",
+            "valuable",
+            "estimable",
+            "small"
+          ]
+        },
+        {
+          "id": "hybrid_story_points_and_planning_poker_point_3",
+          "label": "Poker prevents anchoring",
+          "description": "Secret simultaneous votes; extremes explain; re-vote to consensus.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "poker prevents anchoring",
+            "secret simultaneous votes",
+            "extremes explain",
+            "re-vote to consensus",
+            "poker",
+            "prevents"
+          ]
+        },
+        {
+          "id": "hybrid_story_points_and_planning_poker_point_4",
+          "label": "Velocity for planning only",
+          "description": "3–5 sprint average guides commitment; never compare teams or push it as a KPI.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "velocity",
+            "velocity for planning only",
+            "velocity planning",
+            "3 5 sprint average",
+            "sprint average guides commitment",
+            "never compare teams or",
+            "it as a kpi"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_story_points_and_planning_poker_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give one production example of Story points and planning poker and one common misuse.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Story pointok és planning poker",
+          "prompt": "Hogyan működik a story-point becslés, mitől jó egy user story, és mire szabad, illetve nem szabad használni a velocityt?",
+          "answerStructureHint": "Relatív pontok, INVEST és acceptance criteria, egyidejű titkos szavazás, velocity csak helyi planninghez.",
+          "expectedPoints": {
+            "hybrid_story_points_and_planning_poker_point_1": {
+              "label": "A point relatív, nem idő",
+              "description": "Komplexitást, erőfeszítést és bizonytalanságot becsül Fibonacci-skálán reference storykkal."
+            },
+            "hybrid_story_points_and_planning_poker_point_2": {
+              "label": "INVEST és acceptance criteria",
+              "description": "Independent, Negotiable, Valuable, Estimable, Small, Testable; a Given-When-Then tesztelhetővé teszi."
+            },
+            "hybrid_story_points_and_planning_poker_point_3": {
+              "label": "A poker csökkenti az anchoringot",
+              "description": "Titkos, egyidejű szavazás; a szélső értékek indoklása után új szavazás."
+            },
+            "hybrid_story_points_and_planning_poker_point_4": {
+              "label": "Velocity csak planninghez",
+              "description": "A legutóbbi 3–5 sprint átlaga segít forecastolni; nem KPI és nem hasonlítható csapatok között."
+            }
+          },
+          "followUps": {
+            "hybrid_story_points_and_planning_poker_followup_1": "Adj egy hasznos production példát a story pointokra és planning pokerre, valamint egy gyakori félrehasználást."
+          }
+        }
+      }
+    },
+    {
+      "id": "manual_removing_waiting_and_hand_offs",
+      "title": "Removing waiting and hand-offs",
+      "prompt": "Work spends days waiting for review, testing, and approval while every specialist stays busy. How would Lean software development change the workflow?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "lean_software"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Map value flow, identify waiting and hand-offs, reduce WIP and batch size, and build quality into the process.",
+      "expectedPoints": [
+        {
+          "id": "manual_removing_waiting_and_hand_offs_point_1",
+          "label": "Optimizes the value stream",
+          "description": "Measures end-to-end delivery time rather than local utilization of each specialist.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "value stream",
+            "end to end flow",
+            "lead time",
+            "local utilization"
+          ]
+        },
+        {
+          "id": "manual_removing_waiting_and_hand_offs_point_2",
+          "label": "Treats waiting and hand-offs as waste",
+          "description": "Makes queues visible and removes unnecessary approvals, transfers, and partially finished work.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "waiting waste",
+            "handoff delay",
+            "visible queue",
+            "unfinished work",
+            "treats waiting hand-offs waste"
+          ]
+        },
+        {
+          "id": "manual_removing_waiting_and_hand_offs_point_3",
+          "label": "Reduces WIP and batch size",
+          "description": "Finishes fewer items at a time and releases smaller changes to shorten feedback.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "wip limit",
+            "small batch",
+            "finish before start",
+            "short feedback",
+            "reduces wip batch size"
+          ]
+        },
+        {
+          "id": "manual_removing_waiting_and_hand_offs_point_4",
+          "label": "Builds quality and learning into flow",
+          "description": "Automates checks, fixes defects early, and improves the system through regular experiments.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "build quality in",
+            "early defect",
+            "automation",
+            "continuous improvement",
+            "builds quality learning flow"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "manual_removing_waiting_and_hand_offs_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which metric would you improve first: utilization, throughput, cycle time, or lead time, and why?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Várakozás és hand-offok csökkentése",
+          "prompt": "A munka napokig vár review-ra, tesztre és approvalra, miközben minden specialista elfoglalt. Hogyan változtatná meg a workflow-t a lean software development?",
+          "answerStructureHint": "Térképezd fel a value flow-t, azonosítsd a várakozást és hand-offokat, csökkentsd a WIP-et és batch size-t, és építsd be a minőséget.",
+          "expectedPoints": {
+            "manual_removing_waiting_and_hand_offs_point_1": {
+              "label": "A value streamet optimalizálja",
+              "description": "End-to-end delivery time-ot mér az egyes specialisták helyi kihasználtsága helyett."
+            },
+            "manual_removing_waiting_and_hand_offs_point_2": {
+              "label": "Waste-ként kezeli a várakozást és hand-offot",
+              "description": "Láthatóvá teszi a queue-kat, és eltávolítja a szükségtelen approvalokat, átadásokat és félig kész munkát."
+            },
+            "manual_removing_waiting_and_hand_offs_point_3": {
+              "label": "Csökkenti a WIP-et és batch size-t",
+              "description": "Kevesebb elemet visz egyszerre, és kisebb változtatásokat release-el a feedback gyorsításához."
+            },
+            "manual_removing_waiting_and_hand_offs_point_4": {
+              "label": "Minőséget és tanulást épít a flow-ba",
+              "description": "Automatizálja az ellenőrzéseket, korán javítja a defecteket, és rendszeres kísérletekkel fejleszti a rendszert."
+            }
+          },
+          "followUps": {
+            "manual_removing_waiting_and_hand_offs_followup_1": "Melyik metrikát javítanád először: utilization, throughput, cycle time vagy lead time, és miért?"
+          }
+        }
+      }
+    },
+    {
+      "id": "manual_diagnosing_cargo_cult_agility",
+      "title": "Diagnosing cargo-cult agility",
+      "prompt": "A team completes every sprint, but releases rarely, carries work over, and treats velocity as a performance target. What anti-patterns do you see and how would you fix them?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "agile_antipatterns"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate delivery outcomes from ceremony, inspect slicing and Definition of Done, and remove metric incentives that distort behavior.",
+      "expectedPoints": [
+        {
+          "id": "manual_diagnosing_cargo_cult_agility_point_1",
+          "label": "Rejects velocity as a performance target",
+          "description": "Explains that teams game story points when velocity becomes a target or comparison metric.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "velocity target",
+            "gaming points",
+            "not productivity",
+            "team comparison",
+            "story points"
+          ]
+        },
+        {
+          "id": "manual_diagnosing_cargo_cult_agility_point_2",
+          "label": "Finds incomplete increments and weak slicing",
+          "description": "Looks at oversized stories, carry-over, and a Definition of Done that does not include releasable quality.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "story slicing",
+            "carry over",
+            "definition of done",
+            "releasable increment"
+          ]
+        },
+        {
+          "id": "manual_diagnosing_cargo_cult_agility_point_3",
+          "label": "Measures outcomes and flow instead",
+          "description": "Uses delivery frequency, lead time, escaped defects, and product outcomes rather than ceremony completion.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "delivery frequency",
+            "lead time",
+            "escaped defects",
+            "product outcome"
+          ]
+        },
+        {
+          "id": "manual_diagnosing_cargo_cult_agility_point_4",
+          "label": "Changes the system, not just the meeting",
+          "description": "Uses retrospectives to remove dependencies, approval queues, and release bottlenecks.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "remove bottleneck",
+            "retrospective action",
+            "dependency reduction",
+            "release process",
+            "changes just meeting"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "manual_diagnosing_cargo_cult_agility_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you prevent a new metric from becoming another target that people game?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Cargo-cult agility felismerése",
+          "prompt": "Egy csapat minden sprintet lezár, mégis ritkán release-el, folyamatosan átvisz munkát, és performance targetként kezeli a velocityt. Milyen anti-patternöket látsz, és hogyan javítanád őket?",
+          "answerStructureHint": "Válaszd külön a delivery outcome-ot a ceremóniától; vizsgáld a slicingot és Definition of Done-t, majd távolítsd el a metrikák torz ösztönzőit.",
+          "expectedPoints": {
+            "manual_diagnosing_cargo_cult_agility_point_1": {
+              "label": "Elutasítja a velocityt performance targetként",
+              "description": "Elmagyarázza, hogy a csapatok game-elik a story pointot, ha a velocity target vagy összehasonlítás alapja lesz."
+            },
+            "manual_diagnosing_cargo_cult_agility_point_2": {
+              "label": "Felismeri a hiányos incrementeket és gyenge slicingot",
+              "description": "Túlméretezett storykat, carry-overt és nem releasable qualityt jelentő Definition of Done-t keres."
+            },
+            "manual_diagnosing_cargo_cult_agility_point_3": {
+              "label": "Outcome-ot és flow-t mér helyette",
+              "description": "Delivery frequencyt, lead time-ot, escaped defectet és product outcome-ot használ a ceremóniák teljesítése helyett."
+            },
+            "manual_diagnosing_cargo_cult_agility_point_4": {
+              "label": "A rendszert változtatja, nem csak a meetinget",
+              "description": "Retrospective segítségével távolítja el a dependencyket, approval queue-kat és release bottleneckeket."
+            }
+          },
+          "followUps": {
+            "manual_diagnosing_cargo_cult_agility_followup_1": "Hogyan akadályoznád meg, hogy egy új metrika újabb game-elhető targetté váljon?"
+          }
+        }
+      }
     }
   ]
 }

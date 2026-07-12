@@ -33,119 +33,155 @@ sources: ["tibi/10_api_paradigmak"]
 
 ## Pack: architecture_foundations  (file: architecture-foundations.json)
 sources: ["dennemeyer_system_design_100_tema_peldakkal_mobile_hu","dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu"]
-  topic: microservices_boundaries — Microservices, DDD & Service Boundaries [architecture]
   topic: solid_layers — SOLID Principles [architecture]
-  topic: containers_runtime — Containers & the Kubernetes Runtime [devops]
-  topic: architect_practice — The Architect's Working Practice [soft_technical]
-  topic: layered_clean_architecture — Layered & Clean Architecture [architecture]
-  question: arch_boundaries_001 — Drawing service boundaries (topics: microservices_boundaries)
-  question: arch_layers_001 — Where does the business logic live? (topics: solid_layers, layered_clean_architecture)
-  question: arch_runtime_001 — Gateway, load balancer, ingress — who does what? (topics: containers_runtime)
-  question: arch_practice_001 — From feature request to design (topics: architect_practice)
+  topic: layered_clean_architecture — Layered and Clean Architecture [architecture]
+  topic: architect_practice — Architecture Decision Practice [soft_technical]
+  topic: design_documentation — Design Documents [soft_technical]
+  topic: safe_schema_migration — Safe Database Migration [database]
+  topic: testing_strategy — Testing Strategy [soft_technical]
+  topic: microservices_boundaries — Microservice Boundaries [architecture]
+  topic: bounded_context — Bounded Context [architecture]
+  topic: cqrs_pattern — CQRS [architecture]
+  topic: conway_law — Conway’s Law [architecture]
+  topic: containers_runtime — Container Runtime Basics [devops]
+  topic: kubernetes_secrets — Kubernetes Secret Security [security]
+  topic: container_orchestration — Container Orchestration [devops]
+  question: hybrid_where_does_the_business_logic_live — Where does the business logic live? (topics: solid_layers, layered_clean_architecture)
+  question: manual_separating_business_logic_from_infrastructure — Separating business logic from infrastructure (topics: layered_clean_architecture)
+  question: hybrid_from_feature_request_to_design — From feature request to design (topics: architect_practice, design_documentation)
+  question: manual_writing_a_useful_design_document — Writing a useful design document (topics: design_documentation)
+  question: manual_renaming_a_live_database_column_safely — Renaming a live database column safely (topics: safe_schema_migration)
+  question: manual_fixing_a_misleading_test_suite — Fixing a misleading test suite (topics: testing_strategy)
+  question: arch_conway_001 — Architecture and team structure (topics: conway_law, microservices_boundaries)
+  question: hybrid_drawing_service_boundaries — Drawing service boundaries (topics: microservices_boundaries, bounded_context, conway_law)
+  question: arch_bounded_context_001 — Finding bounded contexts (topics: bounded_context, microservices_boundaries)
+  question: arch_cqrs_001 — When CQRS is justified (topics: cqrs_pattern)
+  question: hybrid_gateway_load_balancer_ingress_who_does_what — Gateway, load balancer, ingress — who does what? (topics: containers_runtime, container_orchestration)
+  question: arch_k8s_secrets_001 — Reviewing Kubernetes secret handling (topics: kubernetes_secrets, containers_runtime)
+  question: arch_orchestration_001 — What orchestration adds (topics: containers_runtime, container_orchestration)
 
 ## Pack: auth_login_oauth  (file: auth-login-oauth.json)
 sources: ["tibi/login"]
   topic: cookie_attributes — Cookie Attributes [security]
+  topic: token_refresh — Token Refresh and Session Keep-Alive [security]
+  topic: auth_security_checklist — Authentication Security Checklist [security]
   topic: session_vs_token — Session vs Token Authentication [security]
-  topic: jwt_structure — JWT Structure & Storage [security]
-  topic: oauth2_auth_code_flow — OAuth2 Authorization Code Flow [security]
-  topic: token_refresh — Token Refresh & Session Keep-Alive [security]
-  topic: auth_security_checklist — Auth Security Best Practices [security]
-  question: auth_session_vs_jwt — Session vs JWT (topics: session_vs_token)
-  question: auth_cookie_attributes — Securing a session cookie (topics: cookie_attributes)
-  question: auth_jwt_structure — What is inside a JWT (topics: jwt_structure)
-  question: auth_oauth2_flow — OAuth2 authorization code flow (topics: oauth2_auth_code_flow)
-  question: auth_token_refresh — Why refresh tokens exist (topics: token_refresh)
-  question: auth_csrf_defense — CSRF defenses in modern login (topics: auth_security_checklist, cookie_attributes)
-  question: auth_security_checklist_q — Login system security checklist (topics: auth_security_checklist)
+  topic: jwt_structure — JWT Validation [security]
+  topic: oauth2_auth_code_flow — OAuth 2.0 Authorization Code Flow [security]
+  topic: oauth_pkce — PKCE for OAuth Public Clients [security]
+  topic: oidc_login — OpenID Connect Login [security]
+  question: hybrid_csrf_defenses_in_modern_login — CSRF defenses in modern login (topics: auth_security_checklist, cookie_attributes)
+  question: hybrid_securing_a_session_cookie — Securing a session cookie (topics: cookie_attributes, auth_security_checklist)
+  question: hybrid_why_refresh_tokens_exist — Why refresh tokens exist (topics: token_refresh, jwt_structure)
+  question: hybrid_login_system_security_checklist — Login system security checklist (topics: auth_security_checklist)
+  question: hybrid_session_vs_jwt — Session vs JWT (topics: session_vs_token, jwt_structure)
+  question: auth_oidc_001 — OAuth 2.0 vs OpenID Connect (topics: oidc_login, oauth2_auth_code_flow, jwt_structure)
+  question: hybrid_oauth2_oidc_and_jwt — OAuth2, OIDC and JWT (topics: oauth2_auth_code_flow, oidc_login, jwt_structure)
+  question: hybrid_what_is_inside_a_jwt — What is inside a JWT (topics: jwt_structure)
+  question: hybrid_oauth2_authorization_code_flow — OAuth2 authorization code flow (topics: oauth2_auth_code_flow, oauth_pkce, oidc_login)
+  question: auth_pkce_001 — Why OAuth public clients need PKCE (topics: oauth_pkce, oauth2_auth_code_flow)
 
 ## Pack: complexity_bigo  (file: complexity-bigo.json)
 sources: ["tibi/11_komplexitas"]
-  topic: bigo_basics — Big-O Basics & Why It Matters [core]
-  topic: complexity_classes — Complexity Classes: O(1) to O(n!) [core]
+  topic: complexity_classes — Complexity Classes [core]
   topic: space_complexity — Space Complexity [core]
-  topic: complexity_calculation — Calculating Complexity & Asymptotic Notations [core]
-  question: bigo_what_is — What is Big-O? (topics: bigo_basics)
-  question: bigo_binary_search — Why is binary search O(log n)? (topics: complexity_classes)
-  question: bigo_palindrome — Palindrome check: time and space (topics: complexity_classes, space_complexity)
-  question: bigo_optimize_quadratic — Speeding up an O(n²) duplicate search (topics: complexity_classes, space_complexity)
-  question: bigo_exponential — Exponential blow-up and how to escape it (topics: complexity_classes)
-  question: bigo_space — Space complexity and the call stack (topics: space_complexity)
-  question: bigo_derive — Deriving complexity from code (topics: complexity_calculation)
+  topic: bigo_basics — Big-O Basics [core]
+  topic: complexity_calculation — Calculating Complexity from Code [core]
+  topic: asymptotic_bounds — Asymptotic Bounds [core]
+  question: hybrid_exponential_blow_up_and_how_to_escape_it — Exponential blow-up and how to escape it (topics: complexity_classes)
+  question: hybrid_palindrome_check_time_and_space — Palindrome check: time and space (topics: complexity_classes)
+  question: hybrid_speeding_up_an_o_n2_duplicate_search — Speeding up an O(n²) duplicate search (topics: complexity_classes)
+  question: hybrid_why_is_binary_search_o_log_n — Why is binary search O(log n)? (topics: complexity_classes)
+  question: hybrid_space_complexity_and_the_call_stack — Space complexity and the call stack (topics: space_complexity)
+  question: hybrid_what_is_big_o — What is Big-O? (topics: bigo_basics)
+  question: hybrid_deriving_complexity_from_code — Deriving complexity from code (topics: complexity_calculation)
+  question: bigo_bounds_001 — Big-O vs Omega vs Theta (topics: asymptotic_bounds)
 
 ## Pack: data_at_scale  (file: data-at-scale.json)
 sources: ["dennemeyer_system_design_100_tema_peldakkal_mobile_hu","dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu"]
-  topic: outbox_pattern — Outbox pattern [architecture]
-  topic: sharding — Sharding & partitioning [database]
-  topic: replication — Replication & read replicas [database]
-  topic: optimistic_locking — Optimistic locking [database]
+  topic: outbox_pattern — Outbox Pattern [architecture]
+  topic: replication — Replication and Read Replicas [database]
+  topic: optimistic_locking — Optimistic Locking [database]
   topic: sql_performance — SQL Query Performance [database]
-  topic: caching_strategies — Caching & Invalidation [backend]
-  topic: scaling_fundamentals — Scaling Fundamentals [architecture]
-  topic: db_transactions — Database Transactions [database]
   topic: connection_pooling — Connection Pooling [database]
+  topic: caching_strategies — Caching and Invalidation [backend]
+  topic: scaling_fundamentals — Scaling Fundamentals [architecture]
+  topic: sharding — Database Sharding [database]
+  topic: db_transactions — Database Transactions [database]
   topic: sql_vs_nosql — SQL vs NoSQL [database]
-  question: das_outbox_001 — Outbox pattern and the dual write (topics: outbox_pattern, message_queue, distributed_transactions)
-  question: das_sharding_001 — Sharding and hot partitions (topics: sharding, scaling_fundamentals)
-  question: das_replication_001 — Read replicas and replication lag (topics: replication, scaling_fundamentals)
-  question: das_optimistic_lock_001 — Optimistic locking and N+1 (topics: optimistic_locking, sql)
-  question: das_sqlperf_001 — Diagnosing a slow list endpoint (topics: sql_performance, connection_pooling)
-  question: das_caching_001 — Introducing a cache without lying to users (topics: caching_strategies)
-  question: das_scaling_001 — Scale out or scale up? (topics: scaling_fundamentals)
+  question: hybrid_outbox_pattern_and_the_dual_write — Outbox pattern and the dual write (topics: outbox_pattern)
+  question: hybrid_read_replicas_and_replication_lag — Read replicas and replication lag (topics: replication)
+  question: hybrid_optimistic_locking_and_n_1 — Optimistic locking and N+1 (topics: optimistic_locking, sql_performance)
+  question: hybrid_diagnosing_a_slow_list_endpoint — Diagnosing a slow list endpoint (topics: sql_performance)
+  question: manual_connection_pools_exhausting_the_database — Connection pools exhausting the database (topics: connection_pooling)
+  question: hybrid_introducing_a_cache_without_lying_to_users — Introducing a cache without lying to users (topics: caching_strategies)
+  question: hybrid_100m_requests_a_month_now_what — 100M requests a month — now what? (topics: scaling_fundamentals)
+  question: hybrid_scale_out_or_scale_up — Scale out or scale up? (topics: scaling_fundamentals)
+  question: hybrid_sharding_and_hot_partitions — Sharding and hot partitions (topics: sharding)
+  question: manual_choosing_a_transaction_boundary — Choosing a transaction boundary (topics: db_transactions)
+  question: das_sql_vs_nosql_001 — Choosing SQL or NoSQL (topics: sql_vs_nosql)
 
 ## Pack: frontend_nagarro  (file: frontend-nagarro.json)
 sources: ["tibi/tesco_hungary"]
-  topic: object_vs_map — Object vs Map [frontend]
-  topic: event_delegation — Event delegation [frontend]
-  topic: css_box_sizing — CSS box-sizing [frontend]
-  topic: web_accessibility — Web accessibility (a11y) [frontend]
+  topic: event_delegation — Event Delegation [frontend]
+  topic: css_box_sizing — CSS Box Sizing [frontend]
+  topic: web_accessibility — Web Accessibility [frontend]
   topic: core_web_vitals — Core Web Vitals [frontend]
-  topic: js_event_loop — JavaScript event loop [frontend]
-  topic: object_locking — Freezing & Locking Objects [frontend]
-  topic: js_generators — Generator Functions & Iterators [frontend]
-  topic: react_concurrent_hooks — useTransition & useDeferredValue [frontend]
-  topic: usestate_vs_usereducer — useState vs useReducer [frontend]
-  topic: react_imperative_refs — Imperative Child APIs (refs) [frontend]
-  topic: noopener_noreferrer — noopener, noreferrer & Tabnabbing [security]
-  topic: redux_toolkit — Redux Toolkit & Selector Performance [frontend]
-  topic: js_closures_scoping — Closures, var/let & the TDZ [frontend]
-  topic: object_flatten_recursion — Recursive Object Flattening [core]
-  topic: web_security_frontend — XSS & Content Security Policy [security]
-  topic: microfrontends — Microfrontend Architecture [architecture]
+  topic: js_event_loop — JavaScript Event Loop [frontend]
+  topic: object_locking — Freezing and Locking Objects [frontend]
+  topic: react_imperative_refs — Imperative Child APIs [frontend]
+  topic: noopener_noreferrer — noopener and noreferrer [security]
+  topic: redux_toolkit — Redux Toolkit and Selectors [frontend]
+  topic: js_closures_scoping — Closures, var, let, and the TDZ [frontend]
+  topic: web_security_frontend — XSS and Content Security Policy [security]
+  topic: responsive_design — Responsive Design and Layout [frontend]
   topic: typescript_essentials — TypeScript Essentials [frontend]
-  topic: responsive_design — Responsive Design & Layout [frontend]
+  topic: object_vs_map — Object vs Map in JavaScript [frontend]
+  topic: js_generators — JavaScript Generators [frontend]
+  topic: usestate_vs_usereducer — useState vs useReducer [frontend]
+  topic: react_concurrent_hooks — React Concurrent Rendering Hooks [frontend]
+  topic: react_state_initialization — React State Initialization [frontend]
+  topic: react_batching — React State Update Batching [frontend]
+  topic: object_flatten_recursion — Recursive Object Flattening [core]
+  topic: microfrontends — Microfrontend Architecture [architecture]
   topic: cors_sop — CORS & the Same-Origin Policy [security]
   topic: optimistic_ui — Optimistic UI [frontend]
   topic: use_layout_effect — useLayoutEffect & DOM Measurement [frontend]
-  question: fe_nag_object_vs_map_001 — Object vs Map (topics: object_vs_map, react_state_strategies)
-  question: fe_nag_event_delegation_001 — Event delegation (topics: event_delegation)
+  question: hybrid_event_delegation — Event delegation (topics: event_delegation)
+  question: hybrid_css_box_sizing — CSS box-sizing (topics: css_box_sizing)
+  question: hybrid_web_accessibility_basics — Web accessibility basics (topics: web_accessibility)
+  question: hybrid_core_web_vitals — Core Web Vitals (topics: core_web_vitals)
+  question: hybrid_javascript_event_loop — JavaScript event loop (topics: js_event_loop)
+  question: hybrid_locking_down_a_javascript_object — Locking down a JavaScript object (topics: object_locking)
+  question: hybrid_calling_a_child_component_s_methods — Calling a child component's methods (topics: react_imperative_refs)
+  question: hybrid_the_target_blank_security_hole — The target="_blank" security hole (topics: noopener_noreferrer)
+  question: hybrid_useselector_re_renders_too_much — useSelector re-renders too much (topics: redux_toolkit, react_memoization)
+  question: hybrid_the_var_settimeout_loop_puzzle — The var + setTimeout loop puzzle (topics: js_closures_scoping)
+  question: hybrid_xss_and_how_to_prevent_it — XSS and how to prevent it (topics: web_security_frontend)
+  question: hybrid_flexbox_or_grid_and_what_makes_a_layout_responsive — Flexbox or Grid — and what makes a layout responsive? (topics: responsive_design)
+  question: hybrid_any_vs_unknown_type_vs_interface — any vs unknown, type vs interface (topics: typescript_essentials)
+  question: hybrid_typescript_s_structural_type_system — TypeScript's structural type system (topics: typescript_essentials)
+  question: hybrid_object_vs_map — Object vs Map (topics: object_vs_map)
+  question: hybrid_what_are_generator_functions_good_for — What are generator functions good for? (topics: js_generators)
+  question: hybrid_usestate_or_usereducer — useState or useReducer? (topics: usestate_vs_usereducer)
+  question: hybrid_keeping_the_ui_responsive_during_heavy_updates — Keeping the UI responsive during heavy updates (topics: react_concurrent_hooks)
+  question: fn_state_init_001 — Lazy state initialization (topics: react_state_initialization)
+  question: fn_batching_001 — Why three state updates become one (topics: react_batching)
+  question: hybrid_flattening_a_nested_object — Flattening a nested object (topics: object_flatten_recursion)
+  question: hybrid_do_we_need_microfrontends — Do we need microfrontends? (topics: microfrontends)
+  question: fn_cors_sop_001 — CORS and the same-origin policy (topics: cors_sop)
+  question: fn_optimistic_ui_001 — Optimistic UI with honest rollback (topics: optimistic_ui)
+  question: fn_layout_effect_001 — Measuring layout without flicker (topics: use_layout_effect)
   question: fe_nag_websocket_sse_001 — WebSocket vs SSE for live UI (topics: realtime_transports, api_integration)
-  question: fe_nag_box_sizing_001 — CSS box-sizing (topics: css_box_sizing)
-  question: fe_nag_a11y_001 — Web accessibility basics (topics: web_accessibility)
-  question: fe_nag_web_vitals_001 — Core Web Vitals (topics: core_web_vitals, frontend_performance)
-  question: fe_nag_event_loop_001 — JavaScript event loop (topics: js_event_loop)
-  question: fn_object_locking — Locking down a JavaScript object (topics: object_locking)
-  question: fn_generators — What are generator functions good for? (topics: js_generators)
-  question: fn_concurrent_hooks — Keeping the UI responsive during heavy updates (topics: react_concurrent_hooks, use_layout_effect)
-  question: fn_state_reducer — useState or useReducer? (topics: usestate_vs_usereducer)
-  question: fn_imperative_refs — Calling a child component's methods (topics: react_imperative_refs)
-  question: fn_noopener — The target="_blank" security hole (topics: noopener_noreferrer)
-  question: fn_redux_toolkit — useSelector re-renders too much (topics: redux_toolkit)
-  question: fn_closure_loop — The var + setTimeout loop puzzle (topics: js_closures_scoping)
-  question: fn_flatten — Flattening a nested object (topics: object_flatten_recursion)
-  question: fn_web_security — XSS and how to prevent it (topics: web_security_frontend)
-  question: fn_microfrontends — Do we need microfrontends? (topics: microfrontends)
-  question: fn_ts_essentials — any vs unknown, type vs interface (topics: typescript_essentials)
-  question: fn_responsive — Flexbox or Grid — and what makes a layout responsive? (topics: responsive_design)
 
 ## Pack: fullstack_integration  (file: fullstack-integration.json)
-sources: []
-  topic: loading_error_states — Loading, Error & Empty States [fullstack]
-  topic: file_upload — File Upload End to End [fullstack]
-  topic: e2e_feature_design — Designing a Feature End to End [fullstack]
-  question: fsi_states_001 — The states nobody designs (topics: loading_error_states)
-  question: fsi_upload_001 — Production-ready file upload (topics: file_upload)
-  question: fsi_e2e_001 — A feature across the whole stack (topics: e2e_feature_design)
+sources: ["Fullstack Integration"]
+  topic: loading_error_states — Loading, Error, and Empty States [fullstack]
+  topic: file_upload — File Upload Design [fullstack]
+  topic: e2e_feature_design — End-to-End Feature Design [fullstack]
+  question: hybrid_the_states_nobody_designs — The states nobody designs (topics: loading_error_states)
+  question: hybrid_production_ready_file_upload — Production-ready file upload (topics: file_upload)
+  question: hybrid_a_feature_across_the_whole_stack — A feature across the whole stack (topics: e2e_feature_design)
 
 ## Pack: integration_patterns  (file: integration-patterns.json)
 sources: ["Luxair_Top_10_Interview_Questions_HU","Luxair_interju_QA_gyujtemeny","Luxair_Interview_Terms_Glossary_HU","Luxair_Interview_Terms_Reminder_HU"]
@@ -160,14 +196,14 @@ sources: ["Luxair_Top_10_Interview_Questions_HU","Luxair_interju_QA_gyujtemeny",
 
 ## Pack: js_react_drills_eib_holidu  (file: js-react-drills-eib-holidu.json)
 sources: ["tibi/eib","tibi/company_holidu"]
-  topic: js_this_binding — this & function binding [frontend]
-  topic: react_data_flow — React data flow [frontend]
-  topic: script_loading — Script loading (async/defer) [frontend]
-  topic: react_correctness — React correctness basics [frontend]
-  question: eib_this_001 — How `this` works in JavaScript (topics: js_this_binding)
-  question: eib_dataflow_001 — Avoiding prop drilling, and what useMemo guarantees (topics: react_data_flow)
-  question: hol_script_001 — async vs defer script loading (topics: script_loading)
-  question: hol_react_correct_001 — Keys, controlled inputs and effect timing (topics: react_correctness)
+  topic: js_this_binding — this and Function Binding [frontend]
+  topic: script_loading — Script Loading with async and defer [frontend]
+  topic: react_correctness — React Correctness Basics [frontend]
+  topic: react_data_flow — React Data Flow [frontend]
+  question: hybrid_how_this_works_in_javascript — How `this` works in JavaScript (topics: js_this_binding)
+  question: hybrid_async_vs_defer_script_loading — async vs defer script loading (topics: script_loading)
+  question: hybrid_keys_controlled_inputs_and_effect_timing — Keys, controlled inputs and effect timing (topics: react_correctness)
+  question: hybrid_avoiding_prop_drilling_and_what_usememo_guarantees — Avoiding prop drilling, and what useMemo guarantees (topics: react_data_flow, react_memoization)
 
 ## Pack: js_ts_fundamentals_lufthansa  (file: js-ts-fundamentals-lufthansa.json)
 sources: ["tibi/lufthansa"]
@@ -180,67 +216,70 @@ sources: ["tibi/lufthansa"]
 
 ## Pack: react_deep_dive  (file: react-deep-dive.json)
 sources: ["artec_frontend_interju_felkeszules"]
-  topic: react_rendering_model — React rendering model [frontend]
+  topic: react_rendering_model — React Rendering Model [frontend]
   topic: ssr_csr — SSR vs CSR [frontend]
-  topic: react_memoization — Re-render Optimization & Memoization [frontend]
-  topic: react_state_strategies — Choosing a State Strategy [frontend]
-  topic: frontend_app_structure — App Structure & Reusable Components [frontend]
+  topic: react_state_strategies — React State Strategy [frontend]
+  topic: frontend_app_structure — App Structure and Reusable Components [frontend]
   topic: react_legacy_migration — Legacy Frontend Migration [frontend]
-  topic: frontend_quality_gates — Code Quality, Testing & Release Safety [frontend]
+  topic: frontend_quality_gates — Frontend Quality Gates [frontend]
   topic: ai_assisted_development — AI-Assisted Development [soft_technical]
-  question: rdd_rendering_001 — What triggers a React re-render (topics: react_rendering_model, react)
-  question: rdd_state_mgmt_001 — State management without Redux (topics: react_state_strategies, react)
-  question: rdd_ssr_csr_001 — SSR vs CSR — do you need Next.js? (topics: ssr_csr, frontend_performance)
-  question: rdd_memoization — Optimizing unnecessary re-renders (topics: react_memoization)
-  question: rdd_state_strategy — Which state goes where? (topics: react_state_strategies)
-  question: rdd_app_structure — Structuring a large React app (topics: frontend_app_structure)
-  question: rdd_legacy_migration — Migrating a jQuery UI to React (topics: react_legacy_migration)
-  question: rdd_quality_gates — Frontend quality and safe releases (topics: frontend_quality_gates)
+  topic: react_memoization — React Memoization [frontend]
+  question: hybrid_optimizing_unnecessary_re_renders — Optimizing unnecessary re-renders (topics: react_memoization, react_rendering_model)
+  question: hybrid_what_triggers_a_react_re_render — What triggers a React re-render (topics: react_rendering_model)
+  question: hybrid_ssr_vs_csr_do_you_need_next_js — SSR vs CSR — do you need Next.js? (topics: ssr_csr)
+  question: hybrid_state_management_without_redux — State management without Redux (topics: react_state_strategies, react_data_flow)
+  question: hybrid_which_state_goes_where — Which state goes where? (topics: react_state_strategies, react_data_flow)
+  question: hybrid_structuring_a_large_react_app — Structuring a large React app (topics: frontend_app_structure)
+  question: hybrid_migrating_a_jquery_ui_to_react — Migrating a jQuery UI to React (topics: react_legacy_migration)
+  question: hybrid_frontend_quality_and_safe_releases — Frontend quality and safe releases (topics: frontend_quality_gates, testing_strategy)
+  question: hybrid_how_do_you_use_ai_in_development — How do you use AI in development? (topics: ai_assisted_development)
   question: rdd_api_contract — Agreeing an API contract with the backend (topics: api_contract_design)
-  question: rdd_ai_dev — How do you use AI in development? (topics: ai_assisted_development)
 
 ## Pack: resilience_patterns  (file: resilience-patterns.json)
 sources: ["dennemeyer_system_design_100_tema_peldakkal_mobile_hu","dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu"]
-  topic: circuit_breaker — Circuit breaker [architecture]
-  topic: backpressure — Backpressure [architecture]
-  topic: slo_sla — SLO / SLA / SLI & error budget [observability]
-  topic: production_readiness — Production readiness [devops]
+  topic: circuit_breaker — Circuit Breaker [architecture]
+  topic: production_readiness — Production Readiness [devops]
   topic: idempotency_retries — Idempotency [backend]
   topic: resilience_toolkit — Graceful Degradation [architecture]
   topic: bulkhead_isolation — Bulkhead Isolation [architecture]
   topic: retry_strategies — Retry Strategies [backend]
-  question: res_circuit_breaker_001 — Circuit breaker (topics: circuit_breaker, reliability)
-  question: res_timeout_retry_001 — Timeouts, retries and backoff (topics: idempotency_retries, circuit_breaker, reliability)
-  question: res_bulkhead_backpressure_001 — Bulkhead and backpressure (topics: backpressure, reliability)
-  question: res_slo_001 — SLI, SLO, SLA and error budgets (topics: slo_sla, observability)
-  question: res_prod_ready_001 — Production readiness checklist (topics: production_readiness, observability, deployment)
-  question: res_idempotency_001 — Retries without double effects (topics: idempotency_retries, retry_strategies)
-  question: res_toolkit_001 — Degrading without collapsing (topics: resilience_toolkit, bulkhead_isolation)
+  topic: backpressure — Backpressure [architecture]
+  topic: slo_sla — SLI/SLO/SLA Model [observability]
+  question: hybrid_bulkhead_and_backpressure — Bulkhead and backpressure (topics: backpressure, bulkhead_isolation, circuit_breaker)
+  question: hybrid_circuit_breaker — Circuit breaker (topics: circuit_breaker)
+  question: hybrid_production_readiness_checklist — Production readiness checklist (topics: production_readiness)
+  question: hybrid_retries_without_double_effects — Retries without double effects (topics: idempotency_retries, retry_strategies)
+  question: hybrid_timeouts_retries_and_backoff — Timeouts, retries and backoff (topics: retry_strategies, idempotency_retries)
+  question: hybrid_degrading_without_collapsing — Degrading without collapsing (topics: resilience_toolkit)
+  question: hybrid_sli_slo_sla_and_error_budgets — SLI, SLO, SLA and error budgets (topics: slo_sla)
 
 ## Pack: system_design_concepts  (file: system-design-concepts.json)
 sources: ["tibi/system_design"]
-  topic: cap_theorem — CAP theorem [architecture]
-  topic: design_url_shortener — URL shortener design [architecture]
-  question: sd_cap_001 — CAP theorem (topics: cap_theorem, reliability)
-  question: sd_url_shortener_001 — Design a URL shortener (topics: design_url_shortener, caching_strategies, scaling_fundamentals)
+  topic: cap_theorem — CAP Theorem [architecture]
+  topic: design_url_shortener — URL Shortener Design [architecture]
+  question: hybrid_cap_theorem — CAP theorem (topics: cap_theorem)
+  question: hybrid_design_a_url_shortener — Design a URL shortener (topics: design_url_shortener)
 
 ## Pack: ways_of_working  (file: ways-of-working.json)
 sources: ["tibi/agile","tibi/modszertanok"]
-  topic: scrum — Scrum [soft_technical]
   topic: kanban — Kanban [soft_technical]
-  topic: sdlc_models — SDLC models [soft_technical]
-  topic: devops_culture — DevOps [devops]
+  topic: sdlc_models — SDLC Models [soft_technical]
+  topic: devops_culture — DevOps Culture [soft_technical]
   topic: agile_foundations — The Agile Manifesto [soft_technical]
-  topic: xp_lean — Extreme Programming (XP) [soft_technical]
+  topic: xp_lean — Extreme Programming [soft_technical]
   topic: agile_scaling_metrics — Agile Metrics [soft_technical]
-  topic: user_stories_estimation — User Stories & Estimation [soft_technical]
+  topic: user_stories_estimation — User Stories and Estimation [soft_technical]
   topic: lean_software — Lean Software Development [soft_technical]
   topic: agile_at_scale — Agile at Scale [soft_technical]
   topic: agile_antipatterns — Agile Anti-patterns [soft_technical]
-  question: wow_scrum_kanban_001 — Scrum vs Kanban (topics: scrum, kanban)
-  question: wow_agile_vs_waterfall_001 — Agile vs Waterfall (topics: sdlc_models)
-  question: wow_devops_001 — What DevOps actually means (topics: devops_culture, deployment)
-  question: wow_estimation_001 — Story points and planning poker (topics: user_stories_estimation)
-  question: wow_xp_001 — TDD's red-green-refactor (topics: xp_lean, lean_software)
-  question: wow_scaling_001 — Coordinating multiple agile teams (topics: agile_scaling_metrics, agile_at_scale, agile_antipatterns)
+  topic: scrum — Scrum [soft_technical]
+  question: hybrid_scrum_vs_kanban — Scrum vs Kanban (topics: scrum, kanban)
+  question: hybrid_agile_vs_waterfall — Agile vs Waterfall (topics: sdlc_models)
+  question: hybrid_what_devops_actually_means — What DevOps actually means (topics: devops_culture)
+  question: manual_agile_beyond_ceremonies — Agile beyond ceremonies (topics: agile_foundations)
+  question: hybrid_tdd_s_red_green_refactor — TDD's red-green-refactor (topics: xp_lean, testing_strategy)
+  question: hybrid_coordinating_multiple_agile_teams — Coordinating multiple agile teams (topics: agile_at_scale, agile_scaling_metrics)
+  question: hybrid_story_points_and_planning_poker — Story points and planning poker (topics: user_stories_estimation)
+  question: manual_removing_waiting_and_hand_offs — Removing waiting and hand-offs (topics: lean_software)
+  question: manual_diagnosing_cargo_cult_agility — Diagnosing cargo-cult agility (topics: agile_antipatterns)
 

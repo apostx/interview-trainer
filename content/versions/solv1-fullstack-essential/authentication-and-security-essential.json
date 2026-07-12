@@ -1,0 +1,630 @@
+{
+  "id": "authentication_security_essential",
+  "name": "Authentication and Security — Essential",
+  "description": "Curated full-stack essentials selected from the complete pack. Use this as a lighter replacement for the full version.",
+  "sources": [
+    "login",
+    "Luxair_interju_QA_gyujtemeny",
+    "Luxair_Interview_Terms_Glossary_HU",
+    "Luxair_Interview_Terms_Reminder_HU"
+  ],
+  "topics": [
+    {
+      "id": "sec_authentication_authorization",
+      "name": "Authentication and Authorization",
+      "description": "Authentication establishes who the caller is; authorization decides what that identity may do.",
+      "category": "security",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nAuthentication verifies an identity, for example through a password, passkey, client certificate, or identity provider. Authorization runs after that and evaluates whether the authenticated user or service may perform a specific action on a specific resource.\n\n## What problem does it solve?\n\nA system can know exactly who the caller is and still expose data incorrectly. Login alone does not protect an admin action, another customer’s booking, or a service endpoint. Every protected operation needs an authorization decision at the trusted backend boundary.\n\n## How it works\n\n- Authenticate the credential and create a trusted identity context.\n- Authorize each operation using permissions, roles, scopes, ownership, tenant, and business rules.\n- Return 401 when valid authentication is missing or failed; return 403 when the identity is known but lacks permission.\n- Perform checks on the server even if the frontend hides unavailable buttons.\n- Record important denied actions without leaking sensitive resource details.\n\n## Common mistakes\n\n- Treating login as sufficient authorization for every later request.\n- Checking only the user role and ignoring resource ownership or tenant boundaries.\n- Relying on frontend route guards as the security boundary.\n- Using 401 and 403 interchangeably.\n\n## Key terms\n\n- authentication — proving or establishing an identity\n- authorization — deciding whether an identity may perform an action\n- principal — the authenticated user, service, or client\n- permission — an allowed operation on a resource",
+      "i18n": {
+        "hu": {
+          "name": "Authentication és Authorization",
+          "description": "Az authentication megállapítja, ki a caller; az authorization eldönti, hogy mit tehet meg.",
+          "studyNotes": "## Mi ez?\n\nAz authentication azt állapítja meg, hogy ki a caller, például password, passkey, client certificate vagy identity provider alapján. Az authorization ezután dönti el, hogy az azonosított user vagy service végrehajthat-e egy konkrét műveletet egy konkrét resource-on.\n\n## Milyen problémát old meg?\n\nAttól, hogy a rendszer tudja, ki vagy, még nem biztos, hogy láthatod egy másik customer bookingját vagy használhatsz egy admin endpointot. A login önmagában nem authorization. Minden védett operationnél a trusted backend boundaryn kell jogosultságot ellenőrizni.\n\n## Hogyan működik?\n\n- Először validáld a credentialt, és hozz létre megbízható identity contextet.\n- Minden operationnél ellenőrizd a permissiont, role-t, scope-ot, ownershipöt, tenantot és business rule-t.\n- 401-et adj, ha nincs érvényes authentication; 403-at, ha a caller ismert, de nincs joga.\n- A server akkor is végezze el a checket, ha a frontend elrejti a gombot vagy route-ot.\n- A fontos denied actionöket logold úgy, hogy ne szivárogjon ki sensitive resource detail.\n\n## Gyakori hibák\n\n- A logint minden későbbi operation automatikus engedélyének tekinteni.\n- Csak role-t nézni, resource ownershipöt vagy tenant boundaryt nem.\n- Frontend route guardra biztonsági határként támaszkodni.\n- A 401 és 403 status code-ot felcserélni.\n\n## Kulcsfogalmak\n\n- authentication — identity igazolása vagy létrehozása\n- authorization — annak eldöntése, hogy az identity mit tehet\n- principal — az authenticated user, service vagy client\n- permission — egy resource-on engedélyezett operation"
+        }
+      }
+    },
+    {
+      "id": "sec_session_vs_jwt",
+      "name": "Server Sessions vs JWT",
+      "description": "A comparison of where authentication state lives and how scaling, revocation, and exposure differ.",
+      "category": "security",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nServer sessions keep authentication state in a trusted server-side store and send only an opaque ID to the client. A self-contained JWT carries signed claims that a resource server can validate without loading a session record on every request.\n\n## What problem does it solve?\n\nBoth approaches can authenticate requests, but they create different operational and security trade-offs. The right choice depends on client types, service boundaries, revocation needs, traffic, and the identity platform—not on which option sounds more modern.\n\n## How it works\n\n- Sessions make immediate logout and server-controlled state changes simple but require a shared store or routing across instances.\n- JWTs support local verification across services but remain valid until expiry unless an additional revocation mechanism exists.\n- Sessions expose only an opaque identifier; JWT payloads travel with the client and should contain minimal data.\n- Short-lived JWT access tokens often coexist with server-tracked refresh sessions.\n- Choose per boundary: a browser may use an HttpOnly session cookie while internal APIs receive short-lived access tokens.\n\n## Common mistakes\n\n- Calling JWT automatically more scalable without considering key distribution and revocation.\n- Calling sessions impossible to scale despite shared session stores.\n- Claiming JWT logout works by deleting the browser copy.\n- Using long-lived self-contained tokens for frequently changing permissions.\n\n## Key terms\n\n- stateful authentication — the server stores a session record\n- stateless validation — a request can be validated from the token and trusted keys\n- opaque identifier — random value with no client-readable meaning\n- revocation — invalidating access before normal expiry",
+      "i18n": {
+        "hu": {
+          "name": "Server Session vs JWT",
+          "description": "Összehasonlítás arról, hol él az authentication state, és hogyan különbözik a scaling, revocation és exposure.",
+          "studyNotes": "## Mi ez?\n\nServer session esetén az authentication state trusted server-side store-ban van, a client csak opaque ID-t kap. Self-contained JWT esetén a signed claim-ek a tokenben utaznak, ezért a resource server minden requestnél külön session lookup nélkül is validálhatja.\n\n## Milyen problémát old meg?\n\nMindkettő használható request authenticationre, de más operational és security trade-offot ad. A döntés client type, service boundary, revocation igény, traffic és identity platform kérdése, nem azé, melyik hangzik modernebbnek.\n\n## Hogyan működik?\n\n- Sessionnél az azonnali logout és server-controlled state change egyszerű, viszont több instance-nál shared store vagy routing kell.\n- JWT lokálisan validálható több service-ben, de expiry-ig érvényes maradhat külön revocation mechanism nélkül.\n- Session csak opaque identifiert tesz a clienthez; JWT payload a clientnél van, ezért minimális adatot tartalmazzon.\n- Rövid életű JWT access token gyakran serveren tracked refresh sessionnel együtt működik.\n- Boundary alapján válassz: browser kaphat HttpOnly session cookie-t, internal API pedig short-lived access tokent.\n\n## Gyakori hibák\n\n- A JWT-t automatikusan scalable-ebbnek nevezni key distribution és revocation vizsgálata nélkül.\n- A sessiont nem skálázhatónak mondani shared store ellenére.\n- A JWT logoutot a browser copy törlésével megoldottnak tekinteni.\n- Hosszú életű self-contained tokent használni gyorsan változó permissionökhöz.\n\n## Kulcsfogalmak\n\n- stateful authentication — a server session recordot tárol\n- stateless validation — a request token és trusted key alapján validálható\n- opaque identifier — client számára jelentés nélküli random érték\n- revocation — access lejárat előtti visszavonása"
+        }
+      }
+    },
+    {
+      "id": "sec_cookie_security_attributes",
+      "name": "Cookie Security Attributes",
+      "description": "Cookie flags restrict script access, transport, cross-site sending, scope, and lifetime.",
+      "category": "security",
+      "relatedTopicIds": [
+        "sec_csrf"
+      ],
+      "studyNotes": "## What is it?\n\nAuthentication cookies carry credentials such as a session ID or refresh token. Attributes including HttpOnly, Secure, SameSite, Path, Domain, and Max-Age control when the browser exposes, stores, and sends them.\n\n## What problem does it solve?\n\nA weakly configured cookie may be readable by injected JavaScript, sent over an insecure connection, attached to unwanted cross-site requests, or shared with unnecessary subdomains. Cookie configuration therefore forms part of the authentication boundary.\n\n## How it works\n\n- HttpOnly prevents normal JavaScript access to the cookie value, reducing credential theft through XSS.\n- Secure restricts transmission to HTTPS.\n- SameSite controls cross-site sending; choose Strict, Lax, or None based on the actual login and integration flow.\n- Path and Domain should be as narrow as practical.\n- Use short, explicit lifetime rules and clear server-side expiry.\n- Prefer the __Host- prefix for host-bound cookies when its restrictions fit.\n\n## Common mistakes\n\n- Believing HttpOnly prevents XSS rather than only hiding the cookie value.\n- Using SameSite=None without Secure.\n- Setting a broad Domain for convenience.\n- Assuming cookie deletion alone invalidates a server-side session or refresh token.\n\n## Key terms\n\n- HttpOnly — prevents document.cookie from reading the value\n- Secure — sends the cookie only over HTTPS\n- SameSite — controls cross-site cookie sending\n- __Host- prefix — requires Secure, Path=/, and no Domain attribute",
+      "i18n": {
+        "hu": {
+          "name": "Cookie Security Attributes",
+          "description": "A cookie flagek korlátozzák a JavaScript hozzáférést, transportot, cross-site küldést, scope-ot és lifetime-ot.",
+          "studyNotes": "## Mi ez?\n\nAuthentication cookie credentialt hordoz, például session ID-t vagy refresh tokent. A HttpOnly, Secure, SameSite, Path, Domain és Max-Age attribútumok szabályozzák, hogy a browser mikor olvashatja, tárolja és küldi a cookie-t.\n\n## Milyen problémát old meg?\n\nGyenge cookie config mellett injected JavaScript kiolvashatja a credentialt, insecure connectionön elküldhető, nem kívánt cross-site requesthez csatolódhat, vagy felesleges subdomain is megkaphatja. A cookie configuration ezért az authentication boundary része.\n\n## Hogyan működik?\n\n- A HttpOnly megakadályozza, hogy normál JavaScript kiolvassa a cookie value-t, így csökkenti az XSS token theft kockázatát.\n- A Secure csak HTTPS-en engedi elküldeni.\n- A SameSite a cross-site küldést szabályozza; Strict, Lax vagy None az actual login és integration flow alapján választható.\n- A Path és Domain legyen a szükséges minimumra szűkítve.\n- Legyen rövid, explicit lifetime és egyértelmű server-side expiry.\n- Ha illik a flow-hoz, a __Host- prefix erős host-bound szabályokat kényszerít ki.\n\n## Gyakori hibák\n\n- Azt hinni, hogy a HttpOnly megszünteti az XSS-t; csak a cookie value-t rejti el.\n- SameSite=None értéket Secure nélkül használni.\n- Kényelmi okból túl széles Domaint beállítani.\n- A cookie törlését server-side session vagy refresh token invalidationnek tekinteni.\n\n## Kulcsfogalmak\n\n- HttpOnly — megakadályozza a document.cookie hozzáférést\n- Secure — csak HTTPS-en küldi a cookie-t\n- SameSite — a cross-site cookie küldést szabályozza\n- __Host- prefix — Secure, Path=/ és Domain nélküli cookie-t követel"
+        }
+      }
+    },
+    {
+      "id": "sec_csrf",
+      "name": "Cross-Site Request Forgery",
+      "description": "CSRF causes a browser to send an authenticated state-changing request from an attacker-controlled site.",
+      "category": "security",
+      "relatedTopicIds": [
+        "sec_cookie_security_attributes",
+        "sec_cors_same_origin",
+        "sec_oauth_authorization_code"
+      ],
+      "studyNotes": "## What is it?\n\nCross-Site Request Forgery exploits credentials that the browser sends automatically, usually cookies. A malicious site causes the victim’s browser to submit a request to another site where the victim is logged in.\n\n## What problem does it solve?\n\nThe target server may receive a perfectly valid session cookie even though the user did not intend the transfer, password change, or other action. Authentication alone therefore cannot distinguish the legitimate page from the forged request.\n\n## How it works\n\n- Use SameSite cookies where the product flow allows it.\n- For cookie-authenticated state changes, require an unpredictable CSRF token tied to the user session.\n- Validate Origin or Referer as an additional defence for browser requests.\n- Do not perform state changes with GET.\n- For APIs using custom headers, require the header and configure CORS to allow only trusted origins.\n- In OAuth redirects, use the state value to bind the callback to the initiating browser flow.\n\n## Common mistakes\n\n- Treating CORS as the only CSRF defence.\n- Using a predictable token or one not tied to a session.\n- Assuming POST requests are automatically safe.\n- Disabling SameSite globally to fix one login integration without compensating controls.\n\n## Key terms\n\n- CSRF token — unpredictable value required with a state-changing request\n- SameSite — cookie rule controlling cross-site sending\n- Origin header — browser-provided origin of a request\n- state parameter — OAuth value binding the callback to the initiating request",
+      "i18n": {
+        "hu": {
+          "name": "Cross-Site Request Forgery",
+          "description": "A CSRF ráveszi a browsert, hogy attacker-controlled oldalról authenticated state-changing requestet küldjön.",
+          "studyNotes": "## Mi ez?\n\nA Cross-Site Request Forgery azokat a credentialöket használja ki, amelyeket a browser automatikusan küld, tipikusan cookie-t. Egy malicious site ráveszi a victim browserét, hogy requestet küldjön egy másik oldalra, ahol a user be van jelentkezve.\n\n## Milyen problémát old meg?\n\nA target server teljesen valid session cookie-t kaphat akkor is, ha a user nem akarta a transfer, password change vagy más action végrehajtását. Az authentication önmagában nem különbözteti meg a legitimate page-et a forged requesttől.\n\n## Hogyan működik?\n\n- Használj SameSite cookie-t, ahol a product flow engedi.\n- Cookie-authenticated state change esetén kérj unpredictable, sessionhöz kötött CSRF tokent.\n- Browser requestnél plusz defence-ként validáld az Origin vagy Referer headert.\n- GET request ne módosítson state-et.\n- Custom headeres API-nál követeld meg a headert, CORS-ban pedig csak trusted origint engedj.\n- OAuth redirectnél a state kösse a callbacket az indító browser flow-hoz.\n\n## Gyakori hibák\n\n- A CORS-t egyetlen CSRF defence-nek tekinteni.\n- Predictable vagy sessionhöz nem kötött tokent használni.\n- A POST requestet automatikusan biztonságosnak gondolni.\n- Egy login integration miatt globálisan kikapcsolni a SameSite védelmet compensating control nélkül.\n\n## Kulcsfogalmak\n\n- CSRF token — state-changing requesthez szükséges unpredictable value\n- SameSite — cross-site cookie küldést szabályozó attribútum\n- Origin header — a request browser által jelzett originje\n- state parameter — OAuth callbacket az indító requesthez kötő érték"
+        }
+      }
+    },
+    {
+      "id": "sec_xss",
+      "name": "Cross-Site Scripting",
+      "description": "XSS allows attacker-controlled JavaScript to execute in a trusted application origin.",
+      "category": "security",
+      "relatedTopicIds": [
+        "sec_cookie_security_attributes",
+        "sec_cors_same_origin"
+      ],
+      "studyNotes": "## What is it?\n\nCross-Site Scripting occurs when untrusted input becomes executable JavaScript or dangerous markup in an application. Because the code runs in the application origin, the browser gives it the same privileges as legitimate frontend code.\n\n## What problem does it solve?\n\nInjected code can read JavaScript-accessible tokens and data, change the page, call APIs as the user, capture input, or persist through stored content. HttpOnly may protect a cookie value, but it does not stop the malicious code from issuing authenticated actions.\n\n## How it works\n\n- Use framework escaping and avoid raw HTML injection.\n- Sanitize rich HTML with a well-maintained, allow-list-based sanitizer.\n- Keep untrusted data out of script, style, URL, and event-handler contexts.\n- Use Content Security Policy as defence in depth, with nonces or hashes where practical.\n- Avoid dangerous DOM APIs and review third-party scripts.\n- Keep credentials least-privileged and short-lived to reduce damage.\n\n## Common mistakes\n\n- Relying on input validation alone instead of output-context protection.\n- Using regex to sanitize arbitrary HTML.\n- Believing React or another framework makes every raw HTML escape hatch safe.\n- Assuming HttpOnly completely neutralizes XSS.\n\n## Key terms\n\n- reflected XSS — payload returned immediately in a response\n- stored XSS — payload saved and served to later users\n- DOM XSS — client-side code creates an executable sink\n- CSP — browser policy restricting executable content sources",
+      "i18n": {
+        "hu": {
+          "name": "Cross-Site Scripting",
+          "description": "XSS esetén attacker-controlled JavaScript fut le a trusted application originjén.",
+          "studyNotes": "## Mi ez?\n\nCross-Site Scripting akkor történik, amikor untrusted input executable JavaScriptként vagy veszélyes markupként kerül az applicationbe. Mivel a code az application originjén fut, ugyanazokat a browser privilege-eket kapja, mint a legitimate frontend code.\n\n## Milyen problémát old meg?\n\nAz injected code kiolvashat JavaScript-accessible tokent és data-t, módosíthatja a page-et, API-t hívhat a user nevében, inputot rögzíthet vagy stored contentként tartósan megmaradhat. A HttpOnly elrejtheti a cookie value-t, de nem akadályozza meg az authenticated actionök indítását.\n\n## Hogyan működik?\n\n- Használd a framework escapingjét, és kerüld a raw HTML injectiont.\n- Rich HTML-t maintained, allow-list alapú sanitizerrel tisztíts.\n- Untrusted data ne kerüljön script, style, URL vagy event-handler contextbe.\n- Content Security Policy legyen defence in depth, ahol lehet nonce-szal vagy hash-sel.\n- Kerüld a dangerous DOM API-kat, és review-zd a third-party scripteket.\n- A credential legyen least-privileged és short-lived, hogy kisebb legyen a damage.\n\n## Gyakori hibák\n\n- Csak input validationre támaszkodni output-context protection helyett.\n- Regexszel arbitrary HTML-t sanitize-olni.\n- Azt hinni, hogy React vagy más framework minden raw HTML escape hatch-et biztonságossá tesz.\n- A HttpOnlyt teljes XSS védelemnek tekinteni.\n\n## Kulcsfogalmak\n\n- reflected XSS — a payload azonnal visszakerül a response-ban\n- stored XSS — a payload elmentve későbbi userekhez is eljut\n- DOM XSS — client-side code executable sinket hoz létre\n- CSP — executable content source-okat korlátozó browser policy"
+        }
+      }
+    },
+    {
+      "id": "sec_cors_same_origin",
+      "name": "Same-Origin Policy and CORS",
+      "description": "The browser isolates origins by default; CORS lets a server permit selected cross-origin reads.",
+      "category": "security",
+      "relatedTopicIds": [
+        "sec_csrf"
+      ],
+      "studyNotes": "## What is it?\n\nThe same-origin policy restricts browser scripts from reading responses belonging to another origin, where an origin is scheme, host, and port. CORS is a response-header protocol through which a server allows selected browser origins to read its responses.\n\n## What problem does it solve?\n\nWithout browser isolation, any malicious page could read private data from sites where the user is logged in. At the same time, real products often host the frontend and API on different origins and need controlled communication.\n\n## How it works\n\n- The browser attaches an Origin header to relevant requests.\n- For non-simple requests it may send an OPTIONS preflight first.\n- The server returns allowed origin, methods, headers, and credential policy.\n- Credentialed CORS requires a specific validated origin; wildcard origin cannot be combined with credentials.\n- The browser enforces CORS, but the API must still authenticate and authorize every request.\n- Remember that some cross-origin requests can still be sent even when JavaScript cannot read the response.\n\n## Common mistakes\n\n- Treating CORS as API authentication or protection from non-browser clients.\n- Reflecting every incoming Origin value.\n- Using wildcard origin with cookies or other credentials.\n- Trying to solve a server CORS configuration only in frontend code.\n\n## Key terms\n\n- origin — scheme, host, and port together\n- preflight — OPTIONS request checking cross-origin permission\n- credentialed request — cross-origin browser request carrying cookies or HTTP credentials\n- allow origin — response header specifying who may read the response",
+      "i18n": {
+        "hu": {
+          "name": "Same-Origin Policy és CORS",
+          "description": "A browser alapból izolálja az origineket; a CORS selected cross-origin readet engedélyez.",
+          "studyNotes": "## Mi ez?\n\nA same-origin policy korlátozza, hogy browser script más originhez tartozó response-ot olvasson. Az origin a scheme, host és port együtt. A CORS response-header protocol, amellyel a server selected browser origineket enged a response olvasására.\n\n## Milyen problémát old meg?\n\nBrowser isolation nélkül bármely malicious page kiolvashatná azoknak az oldalaknak a private data-ját, ahol a user be van jelentkezve. Közben valós productokban a frontend és API gyakran külön originen van, ezért controlled communication kell.\n\n## Hogyan működik?\n\n- A browser releváns requestnél Origin headert küld.\n- Non-simple request előtt OPTIONS preflight történhet.\n- A server visszaadja az allowed origin, methods, headers és credential policy értékeket.\n- Credentialed CORS esetén konkrét, validált origin kell; wildcard nem kombinálható credentials-szel.\n- A CORS-t a browser enforce-olja, az API-nak ettől függetlenül minden requestet authenticate-elni és authorize-olni kell.\n- Bizonyos cross-origin requestek akkor is eljuthatnak a serverhez, ha a JavaScript nem olvashatja a response-ot.\n\n## Gyakori hibák\n\n- A CORS-t API authenticationnek vagy non-browser client elleni védelemnek tekinteni.\n- Minden incoming Origin értéket automatikusan visszatükrözni.\n- Wildcard origint cookie-val vagy más credentiallel használni.\n- Server CORS configot csak frontend kóddal megpróbálni javítani.\n\n## Kulcsfogalmak\n\n- origin — scheme, host és port együtt\n- preflight — cross-origin permissiont ellenőrző OPTIONS request\n- credentialed request — cookie-t vagy HTTP credentialt hordozó cross-origin request\n- allow origin — az olvasásra engedélyezett origint megadó response header"
+        }
+      }
+    },
+    {
+      "id": "sec_oauth_authorization_code",
+      "name": "OAuth 2.0 Authorization Code Flow",
+      "description": "A redirect-based delegated authorization flow where a client exchanges a short-lived code for tokens.",
+      "category": "security",
+      "relatedTopicIds": [
+        "sec_oidc"
+      ],
+      "studyNotes": "## What is it?\n\nOAuth 2.0 is a framework for delegated authorization. In the authorization code flow, the user is redirected to an authorization server, approves access, and the client receives a short-lived authorization code that it exchanges for tokens.\n\n## What problem does it solve?\n\nThe application should not collect the user’s password for another provider. It needs a controlled way to receive limited access to an API while the authorization server handles login, consent, policy, and token issuance.\n\n## How it works\n\n- The client creates an authorization request with client ID, redirect URI, scopes, state, and PKCE where applicable.\n- The authorization server authenticates the user and obtains consent or applies policy.\n- It redirects back with a short-lived, single-use code and the state value.\n- The client validates state and exchanges the code at the token endpoint.\n- A confidential client authenticates at the token endpoint; a public client proves possession of the PKCE verifier.\n- The access token is sent to the resource API, not treated as a general login token.\n\n## Common mistakes\n\n- Calling OAuth itself an authentication protocol.\n- Sending the authorization code directly to the resource API.\n- Skipping state validation.\n- Embedding a client secret in browser or mobile application code.\n\n## Key terms\n\n- authorization server — system that grants authorization and issues tokens\n- resource server — API that accepts access tokens\n- authorization code — short-lived value exchanged for tokens\n- scope — requested class of delegated access",
+      "i18n": {
+        "hu": {
+          "name": "OAuth 2.0 Authorization Code Flow",
+          "description": "Redirect-alapú delegated authorization flow, amelyben a client short-lived code-ot cserél tokenre.",
+          "studyNotes": "## Mi ez?\n\nAz OAuth 2.0 delegated authorization framework. Authorization code flow esetén a user az authorization serverhez redirectelődik, ott access-t hagy jóvá, majd a client egy short-lived authorization code-ot kap, amelyet tokenre cserél.\n\n## Milyen problémát old meg?\n\nAz application ne kérje el egy másik providerhez tartozó user passwordöt. Kontrollált mód kell arra, hogy limitált API access-t kapjon, miközben a login, consent, policy és token issuance az authorization server feladata.\n\n## Hogyan működik?\n\n- A client authorization requestet készít client ID-val, redirect URI-val, scope-okkal, state-tel és ahol kell PKCE-vel.\n- Az authorization server authenticate-eli a usert, consentet kér vagy policyt alkalmaz.\n- Short-lived, single-use code-dal és a state értékkel redirectel vissza.\n- A client validálja a state-et, majd a token endpointon code-ot cserél.\n- Confidential client authenticate-eli magát; public client a PKCE verifier birtoklását bizonyítja.\n- Az access token a resource API-hoz kerül, nem általános login tokenként használjuk.\n\n## Gyakori hibák\n\n- Az OAuthot önmagában authentication protocolnak nevezni.\n- Az authorization code-ot közvetlenül a resource API-nak küldeni.\n- State validationt kihagyni.\n- Browser vagy mobile code-ba client secretet beégetni.\n\n## Kulcsfogalmak\n\n- authorization server — authorizationt adó és tokent kibocsátó rendszer\n- resource server — access tokent elfogadó API\n- authorization code — tokenre cserélhető short-lived value\n- scope — kért delegated access kategória"
+        }
+      }
+    },
+    {
+      "id": "sec_oidc",
+      "name": "OpenID Connect",
+      "description": "OIDC adds a standard authentication and identity layer on top of OAuth 2.0.",
+      "category": "security",
+      "relatedTopicIds": [
+        "sec_oauth_authorization_code"
+      ],
+      "studyNotes": "## What is it?\n\nOpenID Connect is an identity protocol built on OAuth 2.0. By requesting the openid scope, a client receives standardized information about the authenticated user and session, commonly in a signed ID token.\n\n## What problem does it solve?\n\nOAuth access tokens describe delegated API access, not a standard login result for the client. Applications need consistent issuer metadata, identity claims, session information, and validation rules to establish who logged in.\n\n## How it works\n\n- Use the authorization code flow and include the openid scope.\n- The token response may contain an access token for an API and an ID token for the client.\n- Validate the ID token signature, issuer, audience, expiry, and nonce where applicable.\n- Use the subject claim as the stable identity within the issuer.\n- Use discovery metadata for endpoints, supported capabilities, and keys.\n- The client consumes the ID token; the API receives the access token intended for it.\n\n## Common mistakes\n\n- Using an ID token as an API access token.\n- Saying OAuth access tokens prove user login to every client.\n- Using email as a globally stable user key.\n- Reading ID-token claims without validation.\n\n## Key terms\n\n- ID token — token containing claims about authentication\n- subject — stable user identifier within one issuer\n- nonce — value binding an ID token to a login request\n- discovery document — provider metadata for endpoints and keys",
+      "i18n": {
+        "hu": {
+          "name": "OpenID Connect",
+          "description": "Az OIDC standard authentication és identity layert ad az OAuth 2.0 fölé.",
+          "studyNotes": "## Mi ez?\n\nAz OpenID Connect identity protocol az OAuth 2.0 fölött. Az openid scope kérésével a client standard információt kap az authenticated userről és sessionről, tipikusan signed ID tokenben.\n\n## Milyen problémát old meg?\n\nAz OAuth access token delegated API access-t ír le, nem standard login resultot a clientnek. Az applicationnek következetes issuer metadata, identity claim, session information és validation rule kell ahhoz, hogy megállapítsa, ki jelentkezett be.\n\n## Hogyan működik?\n\n- Authorization code flow-t használj openid scope-pal.\n- A token response tartalmazhat access tokent az API-hoz és ID tokent a clientnek.\n- Validáld az ID token signature, issuer, audience, expiry és szükség esetén nonce értékeit.\n- Az issueren belüli stabil identity a subject claim legyen.\n- Discovery metadata-ból jöjjenek az endpointok, supported capabilityk és keyk.\n- Az ID tokent a client fogyasztja, az API a neki szánt access tokent kapja.\n\n## Gyakori hibák\n\n- ID tokent API access tokenként használni.\n- Azt mondani, hogy az OAuth access token minden clientnek user login proof.\n- Emailt globálisan stabil user keyként használni.\n- ID-token claimet validation nélkül olvasni.\n\n## Kulcsfogalmak\n\n- ID token — authentication claim-eket tartalmazó token\n- subject — egy issueren belüli stabil user identifier\n- nonce — ID tokent a login requesthez kötő value\n- discovery document — endpointokat és keyket leíró provider metadata"
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "sec_session_or_jwt_001",
+      "title": "Choosing sessions or JWTs",
+      "prompt": "You are designing authentication for a browser-based business application and several backend services. Would you use server sessions, JWTs, or a combination? Explain the boundaries and trade-offs.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "system_design"
+      ],
+      "topicIds": [
+        "sec_session_vs_jwt"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare where state lives, browser exposure, service validation, scaling, and revocation.",
+      "expectedPoints": [
+        {
+          "id": "sec_sj_state",
+          "label": "Explains where state lives",
+          "description": "Sessions keep authoritative state on the server; JWTs carry signed claims to the receiver.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "server side state",
+            "session store",
+            "signed claims",
+            "self contained token"
+          ]
+        },
+        {
+          "id": "sec_sj_browser",
+          "label": "Protects the browser boundary",
+          "description": "Uses a Secure, HttpOnly cookie or a backend-for-frontend instead of exposing long-lived credentials to JavaScript.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "httponly cookie",
+            "secure cookie",
+            "backend for frontend",
+            "avoid long lived token"
+          ]
+        },
+        {
+          "id": "sec_sj_services",
+          "label": "Handles service validation",
+          "description": "Explains when short-lived access tokens are useful for independent APIs and how issuer, audience, and scopes are validated.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "short lived access token",
+            "validate audience",
+            "validate issuer",
+            "scope validation"
+          ]
+        },
+        {
+          "id": "sec_sj_revocation",
+          "label": "Owns revocation and logout",
+          "description": "Contrasts immediate session revocation with short-lived JWTs and server-tracked refresh sessions.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "immediate session logout",
+            "refresh session",
+            "token revocation",
+            "short token lifetime"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "sec_sj_follow_permission",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Permissions change while an access token is still valid. What behaviour do you want?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Session vagy JWT választása",
+          "prompt": "Browser-alapú business applicationt és több backend service-t tervezel. Server sessiont, JWT-t vagy kombinációt használnál? Magyarázd el a boundaryket és trade-offokat.",
+          "answerStructureHint": "Hasonlítsd össze a state helyét, browser exposure-t, service validationt, scalinget és revocationt.",
+          "expectedPoints": {
+            "sec_sj_state": {
+              "label": "Elmagyarázza, hol él a state",
+              "description": "Sessionnél authoritative state serveren van, JWT-nél signed claim-ek utaznak a receiverhez."
+            },
+            "sec_sj_browser": {
+              "label": "Védi a browser boundaryt",
+              "description": "Secure, HttpOnly cookie-t vagy backend-for-frontendet használ long-lived JavaScript credential helyett."
+            },
+            "sec_sj_services": {
+              "label": "Kezeli a service validationt",
+              "description": "Elmondja, mikor hasznos short-lived access token independent API-khoz, és hogyan validál issuer, audience és scope alapján."
+            },
+            "sec_sj_revocation": {
+              "label": "Kezeli a revocationt és logoutot",
+              "description": "Összehasonlítja az immediate session revocationt a short-lived JWT és server-tracked refresh session megoldással."
+            }
+          },
+          "followUps": {
+            "sec_sj_follow_permission": "A permission megváltozik, miközben az access token még valid. Milyen behaviourt szeretnél?"
+          }
+        }
+      }
+    },
+    {
+      "id": "sec_oidc_flow_001",
+      "title": "OIDC authorization code login",
+      "prompt": "Walk through an OpenID Connect authorization code login for a browser application. Explain state, PKCE, access token, ID token, and the local application session.",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "system_design"
+      ],
+      "topicIds": [
+        "sec_oauth_authorization_code",
+        "sec_oidc"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Follow the redirect and callback, separate protections, validate tokens, and finish with the application session.",
+      "expectedPoints": [
+        {
+          "id": "sec_of_request",
+          "label": "Builds a protected authorization request",
+          "description": "Uses openid scope, registered redirect URI, state, nonce, and PKCE challenge.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "openid scope",
+            "registered redirect uri",
+            "state parameter",
+            "pkce challenge",
+            "nonce"
+          ]
+        },
+        {
+          "id": "sec_of_exchange",
+          "label": "Handles the code exchange",
+          "description": "Validates state and exchanges the single-use code with the verifier at the token endpoint.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "validate state",
+            "exchange authorization code",
+            "code verifier",
+            "token endpoint"
+          ]
+        },
+        {
+          "id": "sec_of_tokens",
+          "label": "Separates token purposes",
+          "description": "Access token goes to its resource API; ID token establishes authentication for the requesting client.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "access token for api",
+            "id token for client",
+            "separate token purposes",
+            "resource server"
+          ]
+        },
+        {
+          "id": "sec_of_validate",
+          "label": "Validates the ID token",
+          "description": "Checks signature, issuer, audience, expiry, and nonce before using identity claims.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "validate id token",
+            "issuer audience",
+            "verify signature",
+            "validate nonce"
+          ]
+        },
+        {
+          "id": "sec_of_session",
+          "label": "Creates a controlled local session",
+          "description": "Maps the external subject to a local identity and creates a secure session or equivalent application state.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "local session",
+            "map subject",
+            "secure session cookie",
+            "local identity"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "sec_of_follow_state",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What does state protect, and why is it not replaced by PKCE?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "OIDC authorization code login",
+          "prompt": "Vezesd végig egy browser application OpenID Connect authorization code loginját. Térj ki a state, PKCE, access token, ID token és local application session szerepére.",
+          "answerStructureHint": "Kövesd a redirectet és callbacket, különítsd el a védelmeket, validáld a tokeneket, majd hozd létre az application sessiont.",
+          "expectedPoints": {
+            "sec_of_request": {
+              "label": "Védett authorization requestet készít",
+              "description": "Openid scope, registered redirect URI, state, nonce és PKCE challenge szerepel."
+            },
+            "sec_of_exchange": {
+              "label": "Helyesen kezeli a code exchange-et",
+              "description": "Validálja a state-et, majd single-use code-ot és verifiert küld a token endpointnak."
+            },
+            "sec_of_tokens": {
+              "label": "Elkülöníti a tokenek célját",
+              "description": "Az access token a resource API-hoz, az ID token a requesting client authenticationjéhez tartozik."
+            },
+            "sec_of_validate": {
+              "label": "Validálja az ID tokent",
+              "description": "Identity claim használata előtt signature, issuer, audience, expiry és nonce check történik."
+            },
+            "sec_of_session": {
+              "label": "Controlled local sessiont hoz létre",
+              "description": "External subjectet local identityhez mapel, majd secure sessiont vagy equivalent application state-et készít."
+            }
+          },
+          "followUps": {
+            "sec_of_follow_state": "Mit véd a state, és miért nem helyettesíti a PKCE?"
+          }
+        }
+      }
+    },
+    {
+      "id": "sec_cookie_csrf_001",
+      "title": "Securing a cookie-authenticated API",
+      "prompt": "A browser application authenticates to an API with a session cookie. How would you configure the cookie and protect state-changing requests from CSRF?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "design_review"
+      ],
+      "topicIds": [
+        "sec_cookie_security_attributes",
+        "sec_csrf",
+        "sec_cors_same_origin"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover cookie attributes, CSRF token or origin checks, safe HTTP methods, and credentialed CORS.",
+      "expectedPoints": [
+        {
+          "id": "sec_cc_cookie",
+          "label": "Uses restrictive cookie attributes",
+          "description": "Uses Secure, HttpOnly, suitable SameSite, narrow scope, and explicit lifetime.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "secure cookie",
+            "httponly",
+            "samesite",
+            "narrow domain",
+            "cookie expiry"
+          ]
+        },
+        {
+          "id": "sec_cc_token",
+          "label": "Requires an anti-CSRF signal",
+          "description": "Uses a session-bound unpredictable CSRF token or an equivalent robust pattern for state changes.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "csrf token",
+            "session bound token",
+            "double submit",
+            "custom header"
+          ]
+        },
+        {
+          "id": "sec_cc_origin",
+          "label": "Checks request origin as defence in depth",
+          "description": "Validates Origin or Referer for browser state-changing requests where practical.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "validate origin",
+            "origin header",
+            "check referer",
+            "trusted origin"
+          ]
+        },
+        {
+          "id": "sec_cc_methods",
+          "label": "Keeps safe methods free of side effects",
+          "description": "Does not use GET for state changes and applies protection to every mutation endpoint.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "no state change on get",
+            "protect post",
+            "protect mutation",
+            "safe methods"
+          ]
+        },
+        {
+          "id": "sec_cc_cors",
+          "label": "Configures credentialed CORS narrowly",
+          "description": "Allows only validated origins and never combines wildcard origin with credentials.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "specific allowed origin",
+            "credentials true",
+            "no wildcard credentials",
+            "cors allowlist"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "sec_cc_follow_samesite",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When might SameSite=Lax or Strict break a legitimate authentication flow?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Cookie-authenticated API védelme",
+          "prompt": "Egy browser application session cookie-val authenticate-el az API-hoz. Hogyan konfigurálnád a cookie-t, és hogyan védenéd a state-changing requesteket CSRF ellen?",
+          "answerStructureHint": "Térj ki a cookie attribútumokra, CSRF tokenre vagy origin checkre, safe HTTP methodokra és credentialed CORS-ra.",
+          "expectedPoints": {
+            "sec_cc_cookie": {
+              "label": "Restrictive cookie attribútumokat használ",
+              "description": "Secure, HttpOnly, megfelelő SameSite, narrow scope és explicit lifetime szerepel."
+            },
+            "sec_cc_token": {
+              "label": "Anti-CSRF signalt követel",
+              "description": "State change esetén session-bound unpredictable CSRF token vagy equivalent robust pattern szükséges."
+            },
+            "sec_cc_origin": {
+              "label": "Defence in depthként origin checket használ",
+              "description": "Browser state-changing requestnél ahol lehet Origin vagy Referer validation történik."
+            },
+            "sec_cc_methods": {
+              "label": "A safe methodok nem módosítanak state-et",
+              "description": "GET nem végez state change-et, minden mutation endpoint megkapja a protectiont."
+            },
+            "sec_cc_cors": {
+              "label": "Szűken konfigurálja a credentialed CORS-t",
+              "description": "Csak validált origin engedélyezett, wildcard és credentials nincs együtt."
+            }
+          },
+          "followUps": {
+            "sec_cc_follow_samesite": "Mikor törhet el legitimate authentication flow SameSite=Lax vagy Strict mellett?"
+          }
+        }
+      }
+    }
+  ]
+}

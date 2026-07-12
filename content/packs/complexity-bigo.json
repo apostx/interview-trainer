@@ -1,60 +1,737 @@
 {
   "id": "complexity_bigo",
-  "name": "Big-O: Runtime & Memory Complexity",
-  "description": "Complexity analysis from scratch: reading the growth class off code, every class from O(1) to O(n!), space complexity, calculation rules, and Big-O vs Theta vs Omega. From the komplexitas tutorial.",
+  "name": "Complexity and Big-O",
+  "description": "Big-O, asymptotic bounds, common complexity classes, recursive analysis, and space complexity.",
   "sources": [
     "tibi/11_komplexitas"
   ],
   "topics": [
     {
-      "id": "bigo_basics",
-      "name": "Big-O Basics & Why It Matters",
-      "description": "What Big-O measures, the two simplification rules, and common misconceptions.",
-      "category": "core",
-      "relatedTopicIds": [
-        "complexity_classes",
-        "space_complexity"
-      ],
-      "studyNotes": "## What is it?\n\nBig-O notation describes how much slower a piece of code gets as its input grows. It does not measure seconds. It answers one question: if I give this code 10 times more data, does the work grow 10 times (O(n)), 100 times (O(n²)), or not at all (O(1))?\n\nThe same notation is used for two things: running time (how much the CPU works) and memory (how much extra space the code needs). Every algorithm has both, and they are independent.\n\n## What problem does it solve?\n\nMeasuring speed in seconds is useless for comparing algorithms: it depends on the machine, the language, and the load. Big-O removes all of that and keeps only the shape of the growth. An algorithm that is fine with 10 items can be hopeless with 10 million — Big-O tells you this in advance.\n\n## How it works\n\nYou simplify the exact operation count using two rules:\n\n- Drop constant multipliers: 5n becomes O(n). Doing something 5 times per item or 1 time per item is the same growth shape.\n- Keep only the biggest term: n² + 100n + 500 becomes O(n²), because when n is large, the n² part dwarfs everything else.\n\nOne warning: Big-O says nothing about small inputs. An O(n²) function can be faster than an O(n) one when n is small, because the O(n) one may have big fixed costs. Big-O is about what happens when n gets large.\n\n## Common mistakes\n\n- Quoting Big-O as if it measured seconds (\"O(n) is fast\") instead of growth\n- Forgetting that an O(n²) solution can beat O(n) on small inputs\n- Giving only time complexity when the interviewer also expects space\n\n## Key terms\n\n- O(1), O(n), O(n²) — growth classes: constant, linear, quadratic\n- Worst case — Big-O usually describes the slowest possible run\n- Dominant term — the part of the formula that grows fastest\n- Time vs space complexity — CPU work vs extra memory, stated separately"
-    },
-    {
       "id": "complexity_classes",
-      "name": "Complexity Classes: O(1) to O(n!)",
-      "description": "The growth classes with recognition patterns and canonical examples, including the two-pointer palindrome case study.",
+      "name": "Complexity Classes",
+      "description": "Recognizing common growth rates from constant to factorial.",
       "category": "core",
       "relatedTopicIds": [
         "bigo_basics",
-        "space_complexity",
         "complexity_calculation"
       ],
-      "studyNotes": "## What is it?\n\nThe complexity classes are the standard \"speed categories\" every algorithm falls into. From fastest to slowest: O(1) < O(log n) < O(n) < O(n log n) < O(n²) < O(2ⁿ) < O(n!).\n\n## What problem does it solve?\n\nInstead of analyzing every algorithm from scratch, you learn to recognize a handful of patterns in code and instantly know how it scales.\n\n## How it works\n\n- O(1) — constant: the input size does not matter. Example: reading arr[3], or getting a value from a hash map. The position can be computed directly, so it is one step whether the array has 10 or 10 million items.\n- O(log n) — logarithmic: each step throws away half of the remaining work. Example: binary search in a sorted array — check the middle, discard the wrong half, repeat. 1,000 items need ~10 steps, 1,000,000 need only ~20.\n- O(n) — linear: you touch each item once. Example: summing an array, or checking if a string is a palindrome with two pointers (one from each end, comparing pairs — about n/2 comparisons, and only 2 index variables, so O(1) memory).\n- O(n log n): the class of good sorting algorithms (merge sort, quicksort on average). Sorting splits the data log n times, and each level does n work.\n- O(n²) — quadratic: a loop inside a loop, both over the input. Example: comparing every item with every other item to find duplicates. 1,000 items = 1,000,000 operations. Often fixable: use a Set to remember seen items — O(n) time for O(n) memory.\n- O(2ⁿ) and O(n!) — exponential and factorial: the work doubles (or worse) with each extra item. Example: naive recursive Fibonacci, which recomputes the same values again and again, or generating all permutations. Unusable beyond tiny inputs — memoization or dynamic programming is the way out.\n\n## Common mistakes\n\n- Calling a nested loop O(n) because \"it's just two loops\" — it multiplies\n- Claiming binary search works on unsorted data\n- Missing that the Set-based duplicate fix trades O(n) memory for the speed\n\n## Key terms\n\n- Binary search — halving search in sorted data, O(log n)\n- Two-pointer technique — one pointer from each end, O(n) time, O(1) space\n- Nested loop — the telltale sign of O(n²)\n- Memoization — caching results so exponential recursion becomes linear\n- Space–time trade-off — spending memory (a Set, a cache) to save time"
+      "studyNotes": "## What is it?\n\nComplexity classes group algorithms by how resource use grows as the input becomes larger. Common classes include O(1), O(log n), O(n), O(n log n), O(n²), O(2ⁿ), and O(n!).\n\n## What problem does it solve?\n\nThe classes let engineers compare approaches before hardware or small test data hides the difference. An algorithm that looks fine for one hundred items may become unusable for one million.\n\n## How it works\n\n- Constant and logarithmic work grows slowly and is common in direct lookup or binary search.\n- Linear work visits each item once; n log n commonly appears in efficient comparison sorting.\n- Nested full scans often produce quadratic growth, while branching recursion can become exponential.\n- Input constraints decide which class is acceptable; the notation does not replace measurement.\n\n## Common mistakes\n\n- Treating every nested loop as O(n²) without checking bounds.\n- Ignoring that two different input sizes may require O(n × m).\n- Choosing an asymptotically better approach that has unacceptable constants for tiny inputs.\n\n## Key terms\n\n- growth class — A family of functions with similar scaling behavior.\n- logarithmic — Growth that adds one step when input multiplies.\n- quadratic — Work proportional to the square of input size.\n- factorial — Explosive growth common in trying every ordering.",
+      "i18n": {
+        "hu": {
+          "name": "Komplexitási osztályok",
+          "description": "A konstans időtől a faktoriális növekedésig terjedő gyakori növekedési ütemek felismerése.",
+          "studyNotes": "## Mi ez?\n\nA komplexitási osztályok aszerint csoportosítják az algoritmusokat, hogyan növekszik az erőforrásigényük a bemenet méretével. Gyakori osztály az O(1), O(log n), O(n), O(n log n), O(n²), O(2ⁿ) és O(n!).\n\n## Milyen problémát old meg?\n\nEzek az osztályok lehetővé teszik, hogy a fejlesztők még azelőtt összehasonlítsák a megoldásokat, hogy a gyors hardver vagy a kis tesztadat elfedné a különbséget. Ami száz elemnél jól működik, egymilliónál használhatatlanná válhat.\n\n## Hogyan működik\n\n- A konstans és logaritmikus munka lassan növekszik; ilyen például a közvetlen lekérdezés vagy a bináris keresés.\n- A lineáris algoritmus minden elemet egyszer látogat meg; az n log n gyakran hatékony összehasonlító rendezéseknél jelenik meg.\n- A teljes bejárásokat egymásba ágyazó ciklusok gyakran négyzetes növekedést adnak, az elágazó rekurzió pedig exponenciálissá válhat.\n- A bemeneti korlátok döntik el, melyik osztály elfogadható; a jelölés nem helyettesíti a mérést.\n\n## Gyakori hibák\n\n- Minden egymásba ágyazott ciklust O(n²)-nek tekinteni a határok vizsgálata nélkül.\n- Figyelmen kívül hagyni, hogy két külön bemenet mérete O(n × m) alakot igényelhet.\n- Aszimptotikusan jobb megoldást választani, amely kis bemenetnél a nagy konstansok miatt mégis rosszabb.\n\n## Kulcsfogalmak\n\n- növekedési osztály — hasonló skálázódású függvények családja\n- logaritmikus — a bemenet többszörözése csak egy új lépést ad hozzá\n- négyzetes — a munka a bemenet méretének négyzetével arányos\n- faktoriális — rendkívül gyors növekedés, amely gyakran minden sorrend kipróbálásakor jelenik meg"
+        }
+      }
     },
     {
       "id": "space_complexity",
       "name": "Space Complexity",
-      "description": "Measuring extra memory: data structures, the call stack, and why time and space are independent.",
+      "description": "Measuring extra memory used as input grows.",
       "category": "core",
       "relatedTopicIds": [
         "bigo_basics",
-        "complexity_classes"
+        "complexity_calculation"
       ],
-      "studyNotes": "## What is it?\n\nSpace complexity measures how much EXTRA memory an algorithm needs beyond its input, as the input grows. It uses the same O() notation as running time.\n\n## What problem does it solve?\n\nTwo algorithms can take the same time but very different memory. Checking a palindrome with two pointers uses O(1) space (just two index variables); doing it by reversing the string uses O(n) space (a full copy). On big inputs, or on memory-limited machines, this difference decides which one you can actually run.\n\n## How it works\n\nThere are two main sources of memory use:\n\n- New data structures: if you build an array, map or set that grows with the input (a copy, a Set of all items), that is O(n) space. A few plain variables (a sum, two pointers) is O(1).\n- The call stack: every recursive call adds a frame to the stack. A recursive factorial(n) stacks n frames before unwinding, so it uses O(n) memory even though it creates no visible data structure. Recurse too deep and the program crashes with a stack overflow.\n\nThe habit to build: always state both figures. \"O(n) time and O(1) space\" is a complete answer; \"O(n)\" alone is half of one.\n\n## Common mistakes\n\n- Ignoring the call stack — recursive solutions are not O(1) space\n- Counting the input itself as extra space\n- Saying \"O(n)\" without stating whether it is time or memory\n\n## Key terms\n\n- Auxiliary space — the extra memory, not counting the input itself\n- Call stack — where function calls live; recursion depth = memory\n- Stack overflow — crash when recursion goes too deep\n- In-place algorithm — works in O(1) extra space by modifying the input"
+      "studyNotes": "## What is it?\n\nSpace complexity describes how much additional memory an algorithm needs as the input size grows. It is usually discussed as auxiliary space, separate from the memory occupied by the input itself.\n\n## What problem does it solve?\n\nTwo algorithms with similar running time may have very different memory behavior. This matters for large collections, mobile devices, server concurrency, and recursive code with deep call stacks.\n\n## How it works\n\n- Count data structures allocated in proportion to input, such as copied arrays, maps, and visited sets.\n- Include the call stack: a recursion depth of n uses O(n) stack space even when no array is created.\n- Distinguish in-place algorithms from algorithms that create a second result of similar size.\n- Describe time-space trade-offs, such as using a hash set to make lookup faster at the cost of memory.\n\n## Common mistakes\n\n- Counting the input itself when the question asks for auxiliary space.\n- Forgetting recursive stack frames.\n- Assuming an in-place algorithm uses literally zero memory.\n\n## Key terms\n\n- auxiliary space — Extra memory beyond the input.\n- call stack — Memory holding active function calls.\n- in-place — Uses only a small amount of extra storage.\n- time-space trade-off — Using more of one resource to reduce the other.",
+      "i18n": {
+        "hu": {
+          "name": "Tárkomplexitás",
+          "description": "A bemenet növekedésével felhasznált többletmemória mérése.",
+          "studyNotes": "## Mi ez?\n\nA tárkomplexitás azt írja le, mennyi további memóriára van szüksége egy algoritmusnak a bemenet növekedésével. Általában segédtárként tárgyaljuk, vagyis külön a bemenet által elfoglalt memóriától.\n\n## Milyen problémát old meg?\n\nKét hasonló futásidejű algoritmus memóriahasználata nagyon eltérhet. Ez nagy adathalmazoknál, mobileszközökön, sok párhuzamos szerverkérésnél és mély hívási veremmel dolgozó rekurzív kódnál különösen fontos.\n\n## Hogyan működik\n\n- Számold meg a bemenet méretével arányosan létrehozott adatszerkezeteket, például másolt tömböket, mapeket és visited seteket.\n- A hívási vermet is vedd figyelembe: n mélységű rekurzió O(n) veremmemóriát használ akkor is, ha nem hoz létre tömböt.\n- Különböztesd meg az in-place algoritmust attól, amely a bemenethez hasonló méretű új eredményt hoz létre.\n- Nevezd meg az idő és memória közötti kompromisszumot, például amikor hash set segítségével gyorsítod a keresést több memória árán.\n\n## Gyakori hibák\n\n- A bemenetet is beleszámítani, amikor a kérdés segédtárra vonatkozik.\n- Elfelejteni a rekurzív stack frame-eket.\n- Azt feltételezni, hogy az in-place algoritmus szó szerint nulla memóriát használ.\n\n## Kulcsfogalmak\n\n- segédtár — a bemeneten felül használt memória\n- hívási verem — az aktív függvényhívásokat tároló memória\n- in-place — csak kis mennyiségű további tárhelyet használ\n- idő–tár kompromisszum — az egyik erőforrásból többet használunk a másik csökkentéséhez"
+        }
+      }
+    },
+    {
+      "id": "bigo_basics",
+      "name": "Big-O Basics",
+      "description": "How Big-O describes asymptotic growth and why it is different from measured execution time.",
+      "category": "core",
+      "relatedTopicIds": [
+        "complexity_classes",
+        "space_complexity",
+        "asymptotic_bounds"
+      ],
+      "studyNotes": "## What is it?\n\nBig-O notation describes an asymptotic upper bound: a growth rate that an algorithm does not exceed beyond some sufficiently large input size. In everyday interviews it is commonly used to describe how runtime or extra memory grows as the input grows. It does not measure seconds and it does not automatically mean worst case.\n\n## What problem does it solve?\n\nMeasured execution time changes with the machine, language, compiler, input distribution, and current load. Big-O removes these details and lets us compare growth. It helps reveal why an implementation that works for one thousand records may fail at one million.\n\n## How it works\n\n- Choose the input size, usually written as n.\n- Count how the important operations grow with n.\n- Drop constant multipliers: 5n becomes O(n).\n- Drop lower-order terms: n² + 100n becomes O(n²).\n- State time and auxiliary-space complexity separately.\n\nA case such as best, average, or worst must be named separately. For example, quicksort has average-case Θ(n log n) and worst-case Θ(n²).\n\n## Common mistakes\n\n- Treating Big-O as a stopwatch result or a promise that an algorithm is fast\n- Using Big-O as a synonym for worst case without naming the case being analysed\n- Giving only time complexity when the memory cost also matters\n\n## Key terms\n\n- asymptotic growth — behaviour as the input becomes large\n- upper bound — a growth rate the function eventually does not exceed\n- dominant term — the term that grows fastest\n- auxiliary space — extra memory used apart from the input",
+      "i18n": {
+        "hu": {
+          "name": "A Big-O alapjai",
+          "description": "Hogyan írja le a Big-O az aszimptotikus növekedést, és miért nem ugyanaz, mint a mért futási idő.",
+          "studyNotes": "## Mi ez?\n\nA Big-O jelölés aszimptotikus felső korlátot ír le: olyan növekedési ütemet, amelyet az algoritmus kellően nagy bemenet után már nem lép túl. Interjúkon általában azt fejezzük ki vele, hogyan nő a futási idő vagy a többletmemória a bemenettel. Nem másodperceket mér, és önmagában nem jelent worst case-t.\n\n## Milyen problémát old meg?\n\nA mért futási idő függ a géptől, a nyelvtől, a fordítótól, a bemeneti eloszlástól és az aktuális terheléstől. A Big-O ezektől elvonatkoztatva teszi összehasonlíthatóvá a növekedést. Megmutatja, miért omolhat össze egymillió rekordnál egy olyan megoldás, amely ezernél még jól működött.\n\n## Hogyan működik\n\n- Válaszd ki a bemenet méretét, amelyet általában n jelöl.\n- Vizsgáld meg, hogyan nő a lényeges műveletek száma n-nel.\n- Hagyd el a konstans szorzókat: 5n értéke O(n).\n- Hagyd el az alacsonyabb rendű tagokat: n² + 100n értéke O(n²).\n- Külön add meg az idő- és a segédtár-komplexitást.\n\nA vizsgált esetet — best, average vagy worst case — külön kell megnevezni. A quicksort átlagos esete például Θ(n log n), a legrosszabb pedig Θ(n²).\n\n## Gyakori hibák\n\n- A Big-O-t stoppereredménynek vagy a gyors működés ígéretének tekinteni\n- A Big-O-t a worst case szinonimájaként használni a vizsgált eset megnevezése nélkül\n- Csak az időkomplexitást megadni, amikor a memóriaigény is számít\n\n## Kulcsfogalmak\n\n- aszimptotikus növekedés — a viselkedés nagy bemenetnél\n- felső korlát — olyan növekedési ütem, amelyet a függvény egy pont után nem lép túl\n- domináns tag — a leggyorsabban növekvő tag\n- segédtár — a bemeneten kívül felhasznált memória"
+        }
+      }
     },
     {
       "id": "complexity_calculation",
-      "name": "Calculating Complexity & Asymptotic Notations",
-      "description": "Practical rules for deriving Big-O from code, plus Big-O vs Theta vs Omega and the little-o/little-omega strict bounds.",
+      "name": "Calculating Complexity from Code",
+      "description": "Practical rules for deriving time and space complexity from loops, recursion, and separate inputs.",
       "category": "core",
       "relatedTopicIds": [
         "bigo_basics",
-        "complexity_classes"
+        "complexity_classes",
+        "space_complexity",
+        "asymptotic_bounds"
       ],
-      "studyNotes": "## What is it?\n\nA set of practical rules for reading the Big-O of a function directly from its code, plus the related notations (Θ, Ω) you may be asked about.\n\n## What problem does it solve?\n\nIn an interview you get a function and the question \"what is its complexity?\". These rules let you answer by looking at the structure of the code, without deep math.\n\n## How it works\n\n- Steps that run one after another ADD up, and the biggest wins: an O(n) loop followed by an O(n²) double loop is O(n²) overall.\n- Nested loops MULTIPLY: a loop of n with a loop of n inside is O(n²); a loop of n with a binary search inside is O(n log n).\n- Constants disappear: looping over half the array (n/2) is still O(n).\n- Halving in a loop means log: any loop that cuts the remaining work in half each round runs O(log n) times.\n- Different inputs stay separate: a function over two lists of sizes a and b is O(a + b) if the loops are sequential, O(a × b) if nested. Do not merge them into one n.\n\n## The other notations\n\nBig-O is an upper bound — \"it is at most this bad\" (worst case). Ω (Omega) is the lower bound — the best case. Θ (Theta) means the bound is exact — best and worst are the same shape. In practice everyone uses Big-O, because the worst case is the useful guarantee. The average case matters when the worst case is rare and misleading — quicksort is O(n log n) on average but O(n²) in its rare worst case.\n\nThere are also strict (\"little\") versions: little-o means \"grows strictly slower\" (n = o(n²) is true, n = o(n) is not). Think of O as ≤ and o as <. These are theory; interviews almost always want big-O.\n\n## Common mistakes\n\n- Merging two different input sizes into one n (it is O(a + b), not O(n²))\n- Adding nested loops instead of multiplying them\n- Quoting the best case when the interviewer asked for the usual (worst-case) bound\n\n## Key terms\n\n- Sequential steps add, nested loops multiply — the two core rules\n- Worst / average / best case — O / (context) / Ω\n- Θ (Theta) — exact growth rate\n- O(a + b) — keep separate inputs separate"
+      "studyNotes": "## What is it?\n\nComplexity calculation is the process of translating code structure into a growth function. The goal is not to count every CPU instruction. The goal is to identify which work grows with the input and how those growing parts combine.\n\n## What problem does it solve?\n\nInterview code often contains several loops, helper calls, recursion, or different input collections. Without a repeatable method it is easy to add work that should be multiplied, merge separate variables, or forget the call stack.\n\n## How it works\n\n- Sequential blocks add: O(n) followed by O(n²) becomes O(n²) after simplification.\n- Nested work multiplies: an n loop containing an n loop is O(n²).\n- Halving the remaining work each step usually gives O(log n).\n- A loop containing binary search is often O(n log n).\n- Keep independent inputs separate: two sequential loops over sizes a and b are O(a + b), not O(n²).\n- For recursion, consider both the number of calls and the depth of the call stack.\n- Calculate auxiliary space independently from time.\n\n## Common mistakes\n\n- Assuming every pair of loops is O(n²), even when they are sequential\n- Using one n for independent inputs with different sizes\n- Ignoring recursive stack frames when stating space complexity\n\n## Key terms\n\n- sequential work — blocks whose costs are added\n- nested work — repeated work whose costs are multiplied\n- recursion depth — maximum active calls on the stack\n- independent inputs — collections whose sizes need separate variables",
+      "i18n": {
+        "hu": {
+          "name": "Komplexitás kiszámítása kódból",
+          "description": "Gyakorlati szabályok ciklusok, rekurzió és különálló bemenetek idő- és tárkomplexitásának levezetéséhez.",
+          "studyNotes": "## Mi ez?\n\nA komplexitás kiszámítása azt jelenti, hogy a kód szerkezetét növekedési függvénnyé alakítjuk. Nem minden CPU-utasítást akarunk megszámolni, hanem azt keressük, melyik munka nő a bemenettel, és hogyan kombinálódnak ezek a részek.\n\n## Milyen problémát old meg?\n\nInterjúfeladatokban gyakran több ciklus, helperhívás, rekurzió vagy különböző bemeneti gyűjtemény szerepel. Következetes módszer nélkül könnyű összeadni azt, amit szorozni kellene, egy változóba összevonni eltérő bemeneteket, vagy elfelejteni a hívási vermet.\n\n## Hogyan működik\n\n- A szekvenciális blokkok költsége összeadódik: O(n) után O(n²) egyszerűsítve O(n²).\n- Az egymásba ágyazott munka szorzódik: egy n hosszú ciklusban futó másik n hosszú ciklus O(n²).\n- Ha minden lépésben feleződik a hátralévő munka, az általában O(log n).\n- Egy bináris keresést tartalmazó n hosszú ciklus gyakran O(n log n).\n- A független bemeneteket tartsd külön: a és b méretű két egymás utáni ciklus O(a + b), nem O(n²).\n- Rekurziónál a hívások számát és a hívási verem mélységét is vizsgáld.\n- A segédtár-komplexitást az időtől függetlenül számold ki.\n\n## Gyakori hibák\n\n- Minden két ciklust O(n²)-nek tekinteni akkor is, ha egymás után futnak\n- Egyetlen n változót használni eltérő méretű, független bemenetekhez\n- Tárkomplexitásnál figyelmen kívül hagyni a rekurzív stack frame-eket\n\n## Kulcsfogalmak\n\n- szekvenciális munka — olyan blokkok, amelyek költsége összeadódik\n- beágyazott munka — ismételt munka, amelynek költsége összeszorzódik\n- rekurziós mélység — a veremben egyszerre aktív hívások maximális száma\n- független bemenetek — külön változóval leírandó méretű gyűjtemények"
+        }
+      }
+    },
+    {
+      "id": "asymptotic_bounds",
+      "name": "Asymptotic Bounds",
+      "description": "Upper, lower, and tight asymptotic bounds, kept separate from best-, average-, and worst-case analysis.",
+      "category": "core",
+      "relatedTopicIds": [
+        "bigo_basics",
+        "complexity_calculation"
+      ],
+      "studyNotes": "## What is it?\n\nBig-O, Omega, and Theta describe mathematical bounds on growth. Big-O is an asymptotic upper bound, Omega is an asymptotic lower bound, and Theta is a tight bound that is both an upper and a lower bound. These symbols do not themselves mean worst, best, and average case.\n\n## What problem does it solve?\n\nCandidates often mix two different questions: which input case is being analysed, and how tightly its growth is bounded. Keeping them separate produces precise answers and prevents incorrect statements such as “Omega means best case.”\n\n## How it works\n\n- First name the case: best, average, expected, amortized, or worst.\n- Then state a bound for that case.\n- O(g(n)) means the growth is eventually no more than a constant multiple of g(n).\n- Ω(g(n)) means it is eventually at least a constant multiple of g(n).\n- Θ(g(n)) means both are true, so g(n) describes the growth tightly.\n\nFor example, linear search has best-case Θ(1) and worst-case Θ(n). Both statements use Theta because each named case has a tight bound.\n\n## Common mistakes\n\n- Saying Big-O means worst case and Omega means best case\n- Using Theta only when best and worst cases happen to match\n- Giving a bound without saying which case or operation it describes\n\n## Key terms\n\n- Big-O — asymptotic upper bound\n- Omega — asymptotic lower bound\n- Theta — tight asymptotic bound\n- case analysis — best, average, amortized, or worst input behaviour",
+      "i18n": {
+        "hu": {
+          "name": "Aszimptotikus korlátok",
+          "description": "Felső, alsó és szoros aszimptotikus korlátok, különválasztva a legjobb, átlagos és legrosszabb eset elemzésétől.",
+          "studyNotes": "## Mi ez?\n\nA Big-O, az Omega és a Theta matematikai korlátokat ír le a növekedésre. A Big-O aszimptotikus felső korlát, az Omega aszimptotikus alsó korlát, a Theta pedig szoros korlát, amely egyszerre felső és alsó. Ezek a jelek önmagukban nem jelentik a worst, best és average case-t.\n\n## Milyen problémát old meg?\n\nA jelölteknél gyakran összekeveredik két külön kérdés: melyik bemeneti esetet elemzik, illetve milyen szorosan korlátozott annak növekedése. A kettő szétválasztása pontos választ eredményez, és elkerülhetővé teszi az olyan hibás állítást, mint hogy „az Omega a best case”.\n\n## Hogyan működik\n\n- Először nevezd meg az esetet: best, average, expected, amortized vagy worst.\n- Ezután adj meg korlátot az adott esetre.\n- O(g(n)) azt jelenti, hogy a növekedés egy pont után legfeljebb g(n) konstansszorosa.\n- Ω(g(n)) azt jelenti, hogy egy pont után legalább g(n) konstansszorosa.\n- Θ(g(n)) esetén mindkettő igaz, ezért g(n) szorosan írja le a növekedést.\n\nA lineáris keresés best case-e például Θ(1), worst case-e Θ(n). Mindkét állítás Theta, mert a megnevezett esethez szoros korlátot ad.\n\n## Gyakori hibák\n\n- Azt mondani, hogy Big-O a worst case, Omega pedig a best case\n- Csak akkor használni a Thetát, ha a best és worst case történetesen azonos\n- Korlátot megadni anélkül, hogy megneveznénk az esetet vagy műveletet\n\n## Kulcsfogalmak\n\n- Big-O — aszimptotikus felső korlát\n- Omega — aszimptotikus alsó korlát\n- Theta — szoros aszimptotikus korlát\n- esetelemzés — best, average, amortized vagy worst inputviselkedés"
+        }
+      }
     }
   ],
   "questions": [
     {
-      "id": "bigo_what_is",
+      "id": "hybrid_exponential_blow_up_and_how_to_escape_it",
+      "title": "Exponential blow-up and how to escape it",
+      "prompt": "The naive recursive Fibonacci is O(2ⁿ). Explain why, and how you would bring it down.",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "complexity_classes"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_exponential_blow_up_and_how_to_escape_it_point_1",
+          "label": "Two branches per call, recomputing subresults",
+          "description": "Each call spawns two more; the same fib(k) values are recomputed over and over.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "two to the k",
+            "each call spawns",
+            "same fib",
+            "values are recomputed",
+            "branches",
+            "call"
+          ]
+        },
+        {
+          "id": "hybrid_exponential_blow_up_and_how_to_escape_it_point_2",
+          "label": "Memoization / DP fix",
+          "description": "Caching subresults makes it O(n); dynamic programming or iteration also works.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "memoization",
+            "dynamic programming",
+            "o n",
+            "o n squared",
+            "o n space",
+            "memoization dp fix",
+            "dp fix",
+            "caching subresults makes it"
+          ]
+        },
+        {
+          "id": "hybrid_exponential_blow_up_and_how_to_escape_it_point_3",
+          "label": "Sense of scale",
+          "description": "2ⁿ at n=50 is ~10¹⁵ operations; factorial is even worse (20! ≈ 2.4×10¹⁸).",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "factorial",
+            "sense of scale",
+            "sense scale",
+            "2 at n 50",
+            "50 is 10 operations",
+            "factorial is even worse",
+            "20 2",
+            "4 10"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_exponential_blow_up_and_how_to_escape_it_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give one production example of Exponential blow-up and how to escape it and one common misuse.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Exponenciális robbanás és annak elkerülése",
+          "prompt": "A naiv rekurzív Fibonacci-megoldás O(2ⁿ). Magyarázd el, miért, és hogyan csökkentenéd a komplexitását.",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_exponential_blow_up_and_how_to_escape_it_point_1": {
+              "label": "Hívásonként két ág és az alteredmények ismételt kiszámítása",
+              "description": "Minden hívás további kettőt indít, és ugyanazokat a fib(k) értékeket újra meg újra kiszámítja."
+            },
+            "hybrid_exponential_blow_up_and_how_to_escape_it_point_2": {
+              "label": "Memoizációs vagy dinamikus programozási javítás",
+              "description": "Az alteredmények cache-elése O(n)-re csökkenti az időt; dinamikus programozás vagy iteráció is megfelelő."
+            },
+            "hybrid_exponential_blow_up_and_how_to_escape_it_point_3": {
+              "label": "Érzékelteti a skálát",
+              "description": "2ⁿ n=50 esetén körülbelül 10¹⁵ művelet, a faktoriális pedig még gyorsabban nő, például 20! ≈ 2,4×10¹⁸."
+            }
+          },
+          "followUps": {
+            "hybrid_exponential_blow_up_and_how_to_escape_it_followup_1": "Mondj egy éles rendszerből származó példát exponenciális robbanásra, annak elkerülésére, valamint egy gyakori hibás használatra."
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_palindrome_check_time_and_space",
+      "title": "Palindrome check: time and space",
+      "prompt": "Walk me through checking whether a string is a palindrome, and give the time and space complexity of your approach versus the naive reverse-and-compare solution.",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "complexity_classes"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe two pointers state O(n) time/O(1) space contrast with reverse-and-compare's O(n) space.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_palindrome_check_time_and_space_point_1",
+          "label": "Two-pointer technique",
+          "description": "One pointer from the front, one from the back, comparing pairs toward the middle.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "two-pointer technique",
+            "pointer from the front",
+            "back",
+            "comparing pairs toward the",
+            "pairs toward the middle",
+            "two-pointer"
+          ]
+        },
+        {
+          "id": "hybrid_palindrome_check_time_and_space_point_2",
+          "label": "O(n) time",
+          "description": "About n/2 comparisons; every character touched at most once.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "o n",
+            "o n squared",
+            "o n space",
+            "o n time",
+            "about n",
+            "2 comparisons",
+            "every character touched at",
+            "touched at most once"
+          ]
+        },
+        {
+          "id": "hybrid_palindrome_check_time_and_space_point_3",
+          "label": "O(1) space vs naive O(n)",
+          "description": "Two indices only; reversing creates an n- sized copy.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "o one space",
+            "indices",
+            "reversing creates an n",
+            "an n sized copy",
+            "space"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_palindrome_check_time_and_space_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give one production example of Palindrome check: time and space and one common misuse.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Palindromellenőrzés: idő és tár",
+          "prompt": "Mutasd be, hogyan ellenőriznéd, hogy egy sztring palindrom-e, majd add meg a megoldásod idő- és tárkomplexitását a naiv megfordítás és összehasonlítás módszeréhez képest.",
+          "answerStructureHint": "Írd le a kétmutatós megoldást, add meg az O(n) időt és O(1) tárat, majd hasonlítsd az O(n) többlettárat használó megfordításos megoldáshoz.",
+          "expectedPoints": {
+            "hybrid_palindrome_check_time_and_space_point_1": {
+              "label": "Kétmutatós technika",
+              "description": "Az egyik mutató elölről, a másik hátulról indul, és a közép felé haladva hasonlítja össze a párokat."
+            },
+            "hybrid_palindrome_check_time_and_space_point_2": {
+              "label": "O(n) idő",
+              "description": "Körülbelül n/2 összehasonlítás történik; minden karaktert legfeljebb egyszer érint."
+            },
+            "hybrid_palindrome_check_time_and_space_point_3": {
+              "label": "O(1) tár a naiv O(n)-nel szemben",
+              "description": "Csak két indexet használ; a megfordítás n méretű másolatot hoz létre."
+            }
+          },
+          "followUps": {
+            "hybrid_palindrome_check_time_and_space_followup_1": "Mondj egy éles rendszerből származó példát a palindromellenőrzés idő- és tárkomplexitására, valamint egy gyakori hibás alkalmazást."
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_speeding_up_an_o_n2_duplicate_search",
+      "title": "Speeding up an O(n²) duplicate search",
+      "prompt": "You find a duplicate-detection function with a nested loop comparing every pair. How would you make it faster, and what is the trade-off?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "complexity_classes"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_speeding_up_an_o_n2_duplicate_search_point_1",
+          "label": "Hash set in one pass",
+          "description": "Walk once, add each element to a Set; if already present, it is a duplicate O(n) time.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "o n",
+            "o n squared",
+            "hash set",
+            "o n space",
+            "hash set pass",
+            "walk once",
+            "add each element to",
+            "element to a set"
+          ]
+        },
+        {
+          "id": "hybrid_speeding_up_an_o_n2_duplicate_search_point_2",
+          "label": "Space–time trade-off named",
+          "description": "O(n) time is bought with O(n) memory — the classic trade.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "o one space",
+            "time space tradeoff",
+            "space time trade-off named",
+            "time is bought with",
+            "is bought with o"
+          ]
+        },
+        {
+          "id": "hybrid_speeding_up_an_o_n2_duplicate_search_point_3",
+          "label": "Explains why nested loops are O(n²)",
+          "description": "Every element compared with every other: n × n operations; n=1000 a million.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "nested loops",
+            "nested loops o n",
+            "every element compared with",
+            "compared with every other",
+            "n n operations"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_speeding_up_an_o_n2_duplicate_search_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which metric or observation would confirm the root cause in this Speeding up an O(n²) duplicate search scenario?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy O(n²) duplikátumkeresés felgyorsítása",
+          "prompt": "Találsz egy duplikátumkereső függvényt, amely egymásba ágyazott ciklussal minden elempárt összehasonlít. Hogyan gyorsítanád fel, és mi a kompromisszum?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_speeding_up_an_o_n2_duplicate_search_point_1": {
+              "label": "Hash set egyetlen bejárással",
+              "description": "Egyszer járja be az adatot, minden elemet Setbe tesz; ha már benne van, akkor duplikátum. Az idő O(n)."
+            },
+            "hybrid_speeding_up_an_o_n2_duplicate_search_point_2": {
+              "label": "Megnevezi az idő–tár kompromisszumot",
+              "description": "Az O(n) futási időt O(n) memória használatával érjük el; ez a klasszikus kompromisszum."
+            },
+            "hybrid_speeding_up_an_o_n2_duplicate_search_point_3": {
+              "label": "Elmagyarázza, miért O(n²) a beágyazott ciklus",
+              "description": "Minden elemet minden másikkal összehasonlít: n × n művelet; n=1000 esetén körülbelül egymillió."
+            }
+          },
+          "followUps": {
+            "hybrid_speeding_up_an_o_n2_duplicate_search_followup_1": "Melyik metrika vagy megfigyelés igazolná a kiváltó okot ebben az O(n²) duplikátumkeresési helyzetben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_why_is_binary_search_o_log_n",
+      "title": "Why is binary search O(log n)?",
+      "prompt": "Why is binary search O(log n), and what precondition does it require?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "complexity_classes"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_why_is_binary_search_o_log_n_point_1",
+          "label": "Each step halves the search space",
+          "description": "Inspect the middle, discard the half that cannot contain the target.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "halve search space",
+            "half each step",
+            "inspect the middle",
+            "discard the half that",
+            "cannot contain the target",
+            "each"
+          ]
+        },
+        {
+          "id": "hybrid_why_is_binary_search_o_log_n_point_2",
+          "label": "log₂(n) steps to one element",
+          "description": "1000 elements ~10 steps, a million ~20.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "log n steps",
+            "log n steps element",
+            "1000 elements 10 steps",
+            "million 20",
+            "steps",
+            "element"
+          ]
+        },
+        {
+          "id": "hybrid_why_is_binary_search_o_log_n_point_3",
+          "label": "Requires sorted input",
+          "description": "The halving argument only works on a sorted array.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "sorted input",
+            "halving argument only works",
+            "on a sorted array",
+            "sorted",
+            "input",
+            "halving"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_why_is_binary_search_o_log_n_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Beyond binary search, how do you recognize O(log n) behaviour in code or data structures?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Miért O(log n) a bináris keresés?",
+          "prompt": "Miért O(log n) a bináris keresés, és milyen előfeltételt igényel?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_why_is_binary_search_o_log_n_point_1": {
+              "label": "Minden lépés felezi a keresési tartományt",
+              "description": "Megvizsgálja a középső elemet, majd eldobja azt a felet, amelyben a cél nem lehet benne."
+            },
+            "hybrid_why_is_binary_search_o_log_n_point_2": {
+              "label": "log₂(n) lépés egy elemig",
+              "description": "Ezer elem körülbelül 10, egymillió körülbelül 20 lépést igényel."
+            },
+            "hybrid_why_is_binary_search_o_log_n_point_3": {
+              "label": "Rendezett bemenetet igényel",
+              "description": "A felezéses érvelés csak rendezett tömbön működik."
+            }
+          },
+          "followUps": {
+            "hybrid_why_is_binary_search_o_log_n_followup_1": "A bináris keresésen túl hogyan ismersz fel O(log n) viselkedést kódban vagy adatszerkezetekben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_space_complexity_and_the_call_stack",
+      "title": "Space complexity and the call stack",
+      "prompt": "What does space complexity measure, and why does a recursive factorial use O(n) memory even though it allocates no data structures?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "space_complexity"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_space_complexity_and_the_call_stack_point_1",
+          "label": "Extra memory beyond the input",
+          "description": "How auxiliary memory grows with n; main sources are new structures and the call stack.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "call stack",
+            "extra memory",
+            "extra memory beyond input",
+            "auxiliary memory grows with",
+            "memory grows with n",
+            "sources are new structures",
+            "and the call stack",
+            "extra"
+          ]
+        },
+        {
+          "id": "hybrid_space_complexity_and_the_call_stack_point_2",
+          "label": "Recursion depth = stack frames",
+          "description": "Every recursive call pushes a frame; factorial(n) stacks n frames O(n) space, risk of stack overflow.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "o n",
+            "o one space",
+            "o n squared",
+            "o n space",
+            "recursion depth stack frames",
+            "every recursive call pushes",
+            "call pushes a frame"
+          ]
+        },
+        {
+          "id": "hybrid_space_complexity_and_the_call_stack_point_3",
+          "label": "Time and space are independent",
+          "description": "Two O(n)-time algorithms can differ in space (palindrome two-pointer O(1) vs reverse O(n)); state both. Database",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "time space tradeoff",
+            "time space independent",
+            "time algorithms can differ",
+            "can differ in space"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_space_complexity_and_the_call_stack_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give one production example of Space complexity and the call stack and one common misuse.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Tárkomplexitás és a hívási verem",
+          "prompt": "Mit mér a tárkomplexitás, és miért használ O(n) memóriát a rekurzív faktoriális akkor is, ha nem hoz létre adatszerkezetet?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_space_complexity_and_the_call_stack_point_1": {
+              "label": "A bemeneten felüli többletmemória",
+              "description": "A segédmemória növekedése n-nel; fő forrása az új adatszerkezet és a hívási verem."
+            },
+            "hybrid_space_complexity_and_the_call_stack_point_2": {
+              "label": "A rekurziós mélység stack frame-eket jelent",
+              "description": "Minden rekurzív hívás új frame-et tesz a veremre; factorial(n) n frame-et, vagyis O(n) tárat használ, és stack overflow-t okozhat."
+            },
+            "hybrid_space_complexity_and_the_call_stack_point_3": {
+              "label": "Az idő és a tár egymástól független",
+              "description": "Két O(n) idejű algoritmus tárigénye eltérhet, például kétmutatós palindrom O(1), megfordítás O(n); mindkettőt meg kell adni. Adatbázis"
+            }
+          },
+          "followUps": {
+            "hybrid_space_complexity_and_the_call_stack_followup_1": "Mondj egy éles rendszerből származó példát a tárkomplexitás és a hívási verem jelentőségére, valamint egy gyakori hibás értelmezést."
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_what_is_big_o",
       "title": "What is Big-O?",
       "prompt": "Explain what Big-O notation actually measures and the rules you use to simplify an expression like 3n² + 50n + 200.",
       "roles": [
@@ -71,540 +748,149 @@
       "topicIds": [
         "bigo_basics"
       ],
-      "expectedDurationSeconds": 150,
-      "thinkingTimeSeconds": 30,
-      "answerStructureHint": "Define what it measures (growth, not seconds) → the two simplification rules → what it does NOT mean.",
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define what it measures (growth, not seconds) the two simplification rules what it does NOT mean.",
       "expectedPoints": [
         {
-          "id": "bigo_growth_not_seconds",
+          "id": "hybrid_what_is_big_o_point_1",
           "label": "Growth rate, not wall-clock time",
           "description": "Measures how work grows with input size n, not seconds — machine and language independent.",
           "importance": "critical",
           "roleWeight": {
-            "backend_developer": 5,
             "frontend_developer": 5,
+            "backend_developer": 5,
             "fullstack_developer": 5,
-            "solution_architect": 4
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "growth",
-            "scales",
-            "scaling",
-            "how it grows",
-            "input size",
-            "not seconds",
-            "upper bound",
-            "worst case"
-          ],
-          "weakSignals": [
-            "performance",
-            "speed"
+            "growth rate wall-clock time",
+            "measures how work grows",
+            "with input size n",
+            "seconds",
+            "machine and language independent",
+            "growth"
           ]
         },
         {
-          "id": "bigo_drop_constants",
+          "id": "hybrid_what_is_big_o_point_2",
           "label": "Drops constant factors",
           "description": "5n is O(n); constants do not change the shape of growth.",
           "importance": "critical",
           "roleWeight": {
-            "backend_developer": 5,
             "frontend_developer": 5,
-            "fullstack_developer": 5
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "drop the constants",
-            "ignore constants",
-            "constant factors",
-            "constant multiplier"
+            "drops constant factors",
+            "5n is o",
+            "constants do not change",
+            "the shape of growth",
+            "drops",
+            "constant"
           ]
         },
         {
-          "id": "bigo_dominant_term",
+          "id": "hybrid_what_is_big_o_point_3",
           "label": "Keeps only the dominant term",
           "description": "n² + 100n + 500 is O(n²) because n² dominates for large n.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "frontend_developer": 5,
-            "fullstack_developer": 5
-          },
-          "acceptedSignals": [
-            "dominant term",
-            "largest term",
-            "fastest growing term",
-            "drop lower order",
-            "lower-order terms"
-          ]
-        },
-        {
-          "id": "bigo_two_resources",
-          "label": "Applies to time AND space",
-          "description": "The same notation describes CPU time and memory; an algorithm has both.",
           "importance": "important",
           "roleWeight": {
+            "frontend_developer": 4,
             "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
             "solution_architect": 4
           },
           "acceptedSignals": [
-            "memory",
-            "space complexity",
-            "time and space",
-            "two complexities"
+            "dominant term",
+            "n 100n 500 is",
+            "100n 500 is o",
+            "because n dominates for",
+            "dominates for large n",
+            "dominant"
+          ]
+        },
+        {
+          "id": "hybrid_what_is_big_o_point_4",
+          "label": "Applies to time AND space",
+          "description": "The same notation describes CPU time and memory; an algorithm has both.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "backend_developer": 3,
+            "fullstack_developer": 3,
+            "frontend_architect": 3,
+            "backend_architect": 3,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "to time and space",
+            "time space",
+            "same notation describes cpu",
+            "cpu time and memory",
+            "algorithm has both",
+            "time"
           ]
         }
       ],
       "followUps": [
         {
-          "id": "bigo_small_n_fu",
+          "id": "hybrid_what_is_big_o_followup_1",
           "trigger": {
             "type": "always"
           },
           "prompt": "Can an O(n²) implementation ever be the right choice over an O(n) one?",
-          "expectedPoints": [
-            {
-              "id": "bigo_small_n",
-              "label": "Small n / constant overhead nuance",
-              "description": "For small inputs, constants dominate; O(n²) with tiny constants can win.",
-              "importance": "important",
-              "roleWeight": {
-                "backend_developer": 4,
-                "solution_architect": 4
-              },
-              "acceptedSignals": [
-                "small n",
-                "small inputs",
-                "constant overhead",
-                "constants dominate",
-                "simpler code"
-              ]
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mi a Big-O?",
+          "prompt": "Magyarázd el, valójában mit mér a Big-O jelölés, és milyen szabályokkal egyszerűsítesz egy 3n² + 50n + 200 alakú kifejezést.",
+          "answerStructureHint": "Definiáld, hogy növekedést mér, nem másodpercet; add meg a két egyszerűsítési szabályt; mondd el azt is, mit nem jelent.",
+          "expectedPoints": {
+            "hybrid_what_is_big_o_point_1": {
+              "label": "Növekedési ütem, nem falióraidő",
+              "description": "Azt méri, hogyan nő a munka az n bemenetmérettel, nem másodpercet; független a géptől és a nyelvtől."
+            },
+            "hybrid_what_is_big_o_point_2": {
+              "label": "Elhagyja a konstans szorzókat",
+              "description": "5n értéke O(n); a konstans nem változtatja meg a növekedés alakját."
+            },
+            "hybrid_what_is_big_o_point_3": {
+              "label": "Csak a domináns tagot tartja meg",
+              "description": "n² + 100n + 500 értéke O(n²), mert nagy n esetén az n² dominál."
+            },
+            "hybrid_what_is_big_o_point_4": {
+              "label": "Időre és tárra egyaránt alkalmazható",
+              "description": "Ugyanaz a jelölés írja le a CPU-időt és a memóriaigényt; egy algoritmusnak mindkettő van."
             }
-          ]
+          },
+          "followUps": {
+            "hybrid_what_is_big_o_followup_1": "Lehet-e valaha helyes választás egy O(n²) implementáció egy O(n) megoldással szemben?"
+          }
         }
-      ]
+      }
     },
     {
-      "id": "bigo_binary_search",
-      "title": "Why is binary search O(log n)?",
-      "prompt": "Why is binary search O(log n), and what precondition does it require?",
-      "roles": [
-        "frontend_developer",
-        "backend_developer",
-        "fullstack_developer"
-      ],
-      "modes": [
-        "concept_check"
-      ],
-      "topicIds": [
-        "complexity_classes"
-      ],
-      "expectedDurationSeconds": 120,
-      "thinkingTimeSeconds": 30,
-      "expectedPoints": [
-        {
-          "id": "bs_halving",
-          "label": "Each step halves the search space",
-          "description": "Inspect the middle, discard the half that cannot contain the target.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "frontend_developer": 5,
-            "fullstack_developer": 5
-          },
-          "acceptedSignals": [
-            "halves",
-            "halving",
-            "half the elements",
-            "discard half",
-            "cut in half",
-            "divide by two"
-          ]
-        },
-        {
-          "id": "bs_log_steps",
-          "label": "log₂(n) steps to one element",
-          "description": "1000 elements → ~10 steps, a million → ~20.",
-          "importance": "important",
-          "roleWeight": {
-            "backend_developer": 4,
-            "frontend_developer": 4
-          },
-          "acceptedSignals": [
-            "log2",
-            "logarithm",
-            "ten steps",
-            "10 steps",
-            "20 steps",
-            "doubling adds one step"
-          ]
-        },
-        {
-          "id": "bs_sorted",
-          "label": "Requires sorted input",
-          "description": "The halving argument only works on a sorted array.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "frontend_developer": 5,
-            "fullstack_developer": 5
-          },
-          "acceptedSignals": [
-            "sorted",
-            "ordered",
-            "must be sorted"
-          ]
-        }
-      ],
-      "followUps": [
-        {
-          "id": "bs_recognize_fu",
-          "trigger": {
-            "type": "rubric_covered",
-            "rubricItemId": "bs_halving"
-          },
-          "prompt": "Beyond binary search, how do you recognize O(log n) behaviour in code or data structures?",
-          "expectedPoints": [
-            {
-              "id": "bs_recognition",
-              "label": "Recognition pattern",
-              "description": "Halving/thirding per step instead of one-by-one; balanced trees (BST) search/insert.",
-              "importance": "nice_to_have",
-              "roleWeight": {
-                "backend_developer": 3
-              },
-              "acceptedSignals": [
-                "balanced tree",
-                "bst",
-                "tree search",
-                "halving each iteration",
-                "divide the problem"
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "bigo_palindrome",
-      "title": "Palindrome check: time and space",
-      "prompt": "Walk me through checking whether a string is a palindrome, and give the time and space complexity of your approach versus the naive reverse-and-compare solution.",
-      "roles": [
-        "frontend_developer",
-        "backend_developer",
-        "fullstack_developer"
-      ],
-      "modes": [
-        "concept_check",
-        "tradeoff_decision"
-      ],
-      "topicIds": [
-        "complexity_classes",
-        "space_complexity"
-      ],
-      "expectedDurationSeconds": 180,
-      "thinkingTimeSeconds": 45,
-      "answerStructureHint": "Describe two pointers → state O(n) time / O(1) space → contrast with reverse-and-compare's O(n) space.",
-      "expectedPoints": [
-        {
-          "id": "pal_two_pointer",
-          "label": "Two-pointer technique",
-          "description": "One pointer from the front, one from the back, comparing pairs toward the middle.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "frontend_developer": 5,
-            "fullstack_developer": 5
-          },
-          "acceptedSignals": [
-            "two pointers",
-            "two pointer",
-            "from both ends",
-            "front and back",
-            "left and right pointer",
-            "meet in the middle"
-          ]
-        },
-        {
-          "id": "pal_linear_time",
-          "label": "O(n) time",
-          "description": "About n/2 comparisons; every character touched at most once.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "frontend_developer": 5,
-            "fullstack_developer": 5
-          },
-          "acceptedSignals": [
-            "linear time",
-            "o(n) time",
-            "n over 2 comparisons",
-            "each character once"
-          ]
-        },
-        {
-          "id": "pal_constant_space",
-          "label": "O(1) space vs naive O(n)",
-          "description": "Two indices only; reversing creates an n-sized copy.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "frontend_developer": 5,
-            "fullstack_developer": 5
-          },
-          "acceptedSignals": [
-            "constant space",
-            "o(1) space",
-            "no extra memory",
-            "reverse creates a copy",
-            "reversing allocates",
-            "o(n) memory"
-          ]
-        }
-      ],
-      "followUps": []
-    },
-    {
-      "id": "bigo_optimize_quadratic",
-      "title": "Speeding up an O(n²) duplicate search",
-      "prompt": "You find a duplicate-detection function with a nested loop comparing every pair. How would you make it faster, and what is the trade-off?",
-      "roles": [
-        "frontend_developer",
-        "backend_developer",
-        "fullstack_developer",
-        "backend_architect"
-      ],
-      "modes": [
-        "tradeoff_decision",
-        "troubleshooting"
-      ],
-      "topicIds": [
-        "complexity_classes",
-        "space_complexity"
-      ],
-      "expectedDurationSeconds": 150,
-      "thinkingTimeSeconds": 30,
-      "expectedPoints": [
-        {
-          "id": "dup_hashset",
-          "label": "Hash set in one pass",
-          "description": "Walk once, add each element to a Set; if already present, it is a duplicate → O(n) time.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "frontend_developer": 5,
-            "fullstack_developer": 5,
-            "backend_architect": 4
-          },
-          "acceptedSignals": [
-            "set",
-            "hash set",
-            "hashset",
-            "hash map",
-            "seen set",
-            "single pass",
-            "one pass"
-          ]
-        },
-        {
-          "id": "dup_tradeoff",
-          "label": "Space–time trade-off named",
-          "description": "O(n) time is bought with O(n) memory — the classic trade.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5,
-            "solution_architect": 4
-          },
-          "acceptedSignals": [
-            "space-time trade-off",
-            "space time tradeoff",
-            "memory for speed",
-            "trade memory",
-            "o(n) memory",
-            "extra memory"
-          ]
-        },
-        {
-          "id": "dup_quadratic_why",
-          "label": "Explains why nested loops are O(n²)",
-          "description": "Every element compared with every other: n × n operations; n=1000 → a million.",
-          "importance": "important",
-          "roleWeight": {
-            "backend_developer": 4,
-            "frontend_developer": 4
-          },
-          "acceptedSignals": [
-            "nested loop",
-            "every pair",
-            "n times n",
-            "n squared",
-            "quadratic"
-          ]
-        }
-      ],
-      "followUps": []
-    },
-    {
-      "id": "bigo_exponential",
-      "title": "Exponential blow-up and how to escape it",
-      "prompt": "The naive recursive Fibonacci is O(2ⁿ). Explain why, and how you would bring it down.",
-      "roles": [
-        "backend_developer",
-        "fullstack_developer",
-        "frontend_developer"
-      ],
-      "modes": [
-        "concept_check",
-        "troubleshooting"
-      ],
-      "topicIds": [
-        "complexity_classes"
-      ],
-      "expectedDurationSeconds": 150,
-      "thinkingTimeSeconds": 45,
-      "expectedPoints": [
-        {
-          "id": "fib_branching",
-          "label": "Two branches per call, recomputing subresults",
-          "description": "Each call spawns two more; the same fib(k) values are recomputed over and over.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "fullstack_developer": 5,
-            "frontend_developer": 4
-          },
-          "acceptedSignals": [
-            "branches",
-            "two recursive calls",
-            "call tree doubles",
-            "recomputes",
-            "same subproblem",
-            "overlapping subproblems"
-          ]
-        },
-        {
-          "id": "fib_memoization",
-          "label": "Memoization / DP fix",
-          "description": "Caching subresults makes it O(n); dynamic programming or iteration also works.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "fullstack_developer": 5,
-            "frontend_developer": 4
-          },
-          "acceptedSignals": [
-            "memoization",
-            "memoize",
-            "cache the results",
-            "dynamic programming",
-            "iterative",
-            "bottom-up"
-          ]
-        },
-        {
-          "id": "fib_scale_sense",
-          "label": "Sense of scale",
-          "description": "2ⁿ at n=50 is ~10¹⁵ operations; factorial is even worse (20! ≈ 2.4×10¹⁸).",
-          "importance": "nice_to_have",
-          "roleWeight": {
-            "backend_developer": 3
-          },
-          "acceptedSignals": [
-            "astronomical",
-            "explodes",
-            "unusable",
-            "years to run",
-            "factorial is worse",
-            "permutations",
-            "traveling salesman",
-            "travelling salesman"
-          ]
-        }
-      ],
-      "followUps": []
-    },
-    {
-      "id": "bigo_space",
-      "title": "Space complexity and the call stack",
-      "prompt": "What does space complexity measure, and why does a recursive factorial use O(n) memory even though it allocates no data structures?",
-      "roles": [
-        "backend_developer",
-        "fullstack_developer",
-        "frontend_developer"
-      ],
-      "modes": [
-        "concept_check"
-      ],
-      "topicIds": [
-        "space_complexity"
-      ],
-      "expectedDurationSeconds": 150,
-      "thinkingTimeSeconds": 30,
-      "expectedPoints": [
-        {
-          "id": "space_extra_memory",
-          "label": "Extra memory beyond the input",
-          "description": "How auxiliary memory grows with n; main sources are new structures and the call stack.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "fullstack_developer": 5,
-            "frontend_developer": 4
-          },
-          "acceptedSignals": [
-            "extra memory",
-            "additional memory",
-            "auxiliary",
-            "beyond the input",
-            "memory grows"
-          ]
-        },
-        {
-          "id": "space_call_stack",
-          "label": "Recursion depth = stack frames",
-          "description": "Every recursive call pushes a frame; factorial(n) stacks n frames → O(n) space, risk of stack overflow.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "fullstack_developer": 5,
-            "frontend_developer": 4
-          },
-          "acceptedSignals": [
-            "call stack",
-            "stack frames",
-            "recursion depth",
-            "stack overflow",
-            "frame per call"
-          ]
-        },
-        {
-          "id": "space_independent",
-          "label": "Time and space are independent",
-          "description": "Two O(n)-time algorithms can differ in space (palindrome two-pointer O(1) vs reverse O(n)); state both.",
-          "importance": "important",
-          "roleWeight": {
-            "backend_developer": 4,
-            "solution_architect": 4
-          },
-          "acceptedSignals": [
-            "independent",
-            "separate",
-            "state both",
-            "time and space differ",
-            "same time different memory"
-          ]
-        }
-      ],
-      "followUps": []
-    },
-    {
-      "id": "bigo_derive",
+      "id": "hybrid_deriving_complexity_from_code",
       "title": "Deriving complexity from code",
       "prompt": "Give me your practical rules for deriving the Big-O of a function: sequential steps, nested loops, and functions taking two inputs of different sizes.",
       "roles": [
+        "frontend_developer",
         "backend_developer",
         "fullstack_developer",
-        "frontend_developer",
-        "backend_architect"
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
       ],
       "modes": [
         "concept_check"
@@ -614,94 +900,259 @@
       ],
       "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "calc_add_sequential",
+          "id": "hybrid_deriving_complexity_from_code_point_1",
           "label": "Sequential steps add, dominant wins",
           "description": "O(n) + O(n²) = O(n²).",
           "importance": "critical",
           "roleWeight": {
+            "frontend_developer": 5,
             "backend_developer": 5,
             "fullstack_developer": 5,
-            "frontend_developer": 5
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "add up",
-            "sum the steps",
-            "dominant term wins",
-            "biggest term",
-            "sequential"
+            "sequential",
+            "steps",
+            "dominant",
+            "wins"
           ]
         },
         {
-          "id": "calc_multiply_nested",
+          "id": "hybrid_deriving_complexity_from_code_point_2",
           "label": "Nested loops multiply",
           "description": "Outer n × inner n = O(n²); outer n × inner log n = O(n log n).",
           "importance": "critical",
           "roleWeight": {
+            "frontend_developer": 5,
             "backend_developer": 5,
             "fullstack_developer": 5,
-            "frontend_developer": 5
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "multiply",
-            "multiplied",
-            "n times n",
+            "log n",
+            "nested loops multiply",
+            "outer n inner n",
+            "n inner n o",
+            "outer n inner log",
+            "inner log n o",
             "n log n",
-            "nested loops"
+            "nested"
           ]
         },
         {
-          "id": "calc_separate_inputs",
+          "id": "hybrid_deriving_complexity_from_code_point_3",
           "label": "Separate inputs stay separate",
           "description": "Two sizes a and b give O(a + b) or O(a × b) — not collapsed into O(n²).",
           "importance": "important",
           "roleWeight": {
+            "frontend_developer": 4,
             "backend_developer": 4,
-            "backend_architect": 4
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
           },
           "acceptedSignals": [
-            "a plus b",
-            "a + b",
-            "a times b",
-            "different inputs",
-            "two inputs",
-            "don't merge",
-            "separate variables"
+            "inputs stay separate",
+            "sizes a and b",
+            "and b give o",
+            "collapsed into o",
+            "inputs",
+            "stay"
           ]
         }
       ],
       "followUps": [
         {
-          "id": "calc_theta_fu",
+          "id": "hybrid_deriving_complexity_from_code_followup_1",
           "trigger": {
             "type": "always"
           },
           "prompt": "What is the difference between Big-O, Theta, and Omega — and when does the average case matter?",
-          "expectedPoints": [
-            {
-              "id": "calc_notations",
-              "label": "O/Θ/Ω distinction",
-              "description": "Upper bound (worst) / tight bound / lower bound (best); quicksort as the average-case example.",
-              "importance": "nice_to_have",
-              "roleWeight": {
-                "backend_developer": 3,
-                "solution_architect": 3
-              },
-              "acceptedSignals": [
-                "upper bound",
-                "lower bound",
-                "tight bound",
-                "theta",
-                "omega",
-                "worst case",
-                "best case",
-                "quicksort average"
-              ]
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Komplexitás levezetése kódból",
+          "prompt": "Mondd el a gyakorlati szabályaidat egy függvény Big-O-jának levezetéséhez: egymást követő lépések, beágyazott ciklusok és két különböző méretű bemenetet fogadó függvények.",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_deriving_complexity_from_code_point_1": {
+              "label": "A szekvenciális lépések összeadódnak, a domináns marad",
+              "description": "O(n) + O(n²) = O(n²)."
+            },
+            "hybrid_deriving_complexity_from_code_point_2": {
+              "label": "A beágyazott ciklusok költsége szorzódik",
+              "description": "Külső n × belső n = O(n²); külső n × belső log n = O(n log n)."
+            },
+            "hybrid_deriving_complexity_from_code_point_3": {
+              "label": "A külön bemenetek külön változók maradnak",
+              "description": "a és b méret esetén O(a + b) vagy O(a × b) adódik, nem szabad O(n²)-re összevonni."
             }
+          },
+          "followUps": {
+            "hybrid_deriving_complexity_from_code_followup_1": "Mi a különbség a Big-O, a Theta és az Omega között, és mikor számít az átlagos eset?"
+          }
+        }
+      }
+    },
+    {
+      "id": "bigo_bounds_001",
+      "title": "Big-O vs Omega vs Theta",
+      "prompt": "Explain the difference between Big-O, Omega, and Theta. How is that separate from best-case and worst-case analysis?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "asymptotic_bounds"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define the three bounds, then use one algorithm to separate the bound from the input case.",
+      "expectedPoints": [
+        {
+          "id": "bounds_upper",
+          "label": "Defines Big-O as an upper bound",
+          "description": "Explains that O(g(n)) is an eventual asymptotic upper bound, not a synonym for worst case.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "upper bound",
+            "at most this growth",
+            "does not exceed",
+            "asymptotic upper"
+          ],
+          "negativeSignals": [
+            "big-o means worst case"
+          ]
+        },
+        {
+          "id": "bounds_lower",
+          "label": "Defines Omega as a lower bound",
+          "description": "Explains that Ω(g(n)) is an eventual asymptotic lower bound.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "lower bound",
+            "at least this growth",
+            "omega lower bound",
+            "minimum growth"
+          ],
+          "negativeSignals": [
+            "omega means best case"
+          ]
+        },
+        {
+          "id": "bounds_tight",
+          "label": "Defines Theta as a tight bound",
+          "description": "Explains that Θ(g(n)) is both an upper and lower bound for the named case.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "tight bound",
+            "upper and lower",
+            "both bounds",
+            "exact growth class"
+          ]
+        },
+        {
+          "id": "bounds_case_separate",
+          "label": "Separates bounds from cases",
+          "description": "Names best, average, amortized, or worst case separately and gives an example.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "separate the case",
+            "best-case theta",
+            "worst-case theta",
+            "name the case",
+            "worst case"
           ]
         }
-      ]
+      ],
+      "followUps": [
+        {
+          "id": "bigo_bounds_example_fu",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "bounds_case_separate"
+          },
+          "prompt": "Give Big-O and Theta statements for the best and worst cases of linear search.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Big-O, Omega és Theta",
+          "prompt": "Magyarázd el a Big-O, az Omega és a Theta közötti különbséget. Hogyan különül ez el a best-case és worst-case elemzéstől?",
+          "answerStructureHint": "Definiáld a három korlátot, majd egy algoritmus példáján válaszd külön a korlátot a bemeneti esettől.",
+          "expectedPoints": {
+            "bounds_upper": {
+              "label": "A Big-O-t felső korlátként definiálja",
+              "description": "Elmagyarázza, hogy O(g(n)) egy végső aszimptotikus felső korlát, nem a worst case szinonimája."
+            },
+            "bounds_lower": {
+              "label": "Az Omegát alsó korlátként definiálja",
+              "description": "Elmagyarázza, hogy Ω(g(n)) egy végső aszimptotikus alsó korlát."
+            },
+            "bounds_tight": {
+              "label": "A Thetát szoros korlátként definiálja",
+              "description": "Elmagyarázza, hogy Θ(g(n)) a megnevezett esetre egyszerre felső és alsó korlát."
+            },
+            "bounds_case_separate": {
+              "label": "Elkülöníti a korlátokat az esetektől",
+              "description": "Külön megnevezi a best, average, amortized vagy worst case-t, és példát ad."
+            }
+          },
+          "followUps": {
+            "bigo_bounds_example_fu": "Adj Big-O- és Theta-állításokat a lineáris keresés legjobb és legrosszabb esetére."
+          }
+        }
+      }
     }
   ]
 }

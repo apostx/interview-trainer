@@ -1,55 +1,70 @@
 {
   "id": "fullstack_integration",
   "name": "Fullstack Integration",
-  "description": "The layer where frontend and backend actually meet: loading/error/empty states, file upload, and designing a feature end to end across the stack.",
-  "sources": [],
+  "description": "Loading and failure states, production-ready file upload, and end-to-end feature design.",
+  "sources": [
+    "Fullstack Integration"
+  ],
   "topics": [
     {
       "id": "loading_error_states",
-      "name": "Loading, Error & Empty States",
-      "description": "Designing every state a screen can be in — not just the happy path — and how frontend and backend share that responsibility.",
+      "name": "Loading, Error, and Empty States",
+      "description": "Designing every meaningful screen state instead of only the happy path.",
       "category": "fullstack",
-      "relatedTopicIds": [
-        "api_contract_design",
-        "react_state_strategies",
-        "frontend_app_structure"
-      ],
-      "studyNotes": "## What is it?\n\nEvery screen that shows server data has more than one state: loading (waiting for data), success (data arrived), empty (it arrived, but there is nothing), and error (it failed). Handling all four deliberately — instead of only the happy path — is what makes an app feel finished.\n\n## What problem does it solve?\n\nThe happy path is maybe a third of what users actually experience. Without designed states, users see blank screens while data loads, cryptic crashes when a request fails, and confusing nothing when a list is empty. Most \"the app feels broken\" feedback traces back to a missing state.\n\n## How it works\n\nThe four states, and what each needs:\n\n- Loading: show that something is happening — a spinner or, better, a skeleton that reserves the final layout (which also prevents layout jumps). If loading can take long, say so.\n- Error: say what failed in human words, and give a way forward — usually a Retry button. Distinguish \"your input was wrong\" (fix the form field) from \"the server had a problem\" (retry later).\n- Empty: not an error! \"No results yet\" with a hint about what to do next (create the first item, widen the search) turns a dead end into guidance.\n- Success: the happy path — the easy part.\n\nThe backend's half of the deal: consistent, machine-readable error responses (status code + a stable error body) so the frontend can decide WHICH error UI to show; and meaningful distinctions — 400 with field errors vs 403 vs 500 lead to different screens.\n\nTwo timing details worth knowing: debounce the loading indicator (a spinner that flashes for 80ms looks worse than nothing), and beware race conditions — if the user triggers two requests, the SECOND response must win, not the slower one (cancel the stale request or track the latest request id).\n\n## Common mistakes\n\n- Building only the happy path and bolting an alert() on errors at the end\n- Treating an empty list as an error, or showing a blank white area\n- One generic \"Something went wrong\" for every failure, with no retry\n- The stale-response race: the slower of two requests overwrites the newer one\n\n## Key terms\n\n- Skeleton screen — placeholder layout shown while loading\n- Empty state — \"no data\" designed as guidance, not as an error\n- Error body — the agreed JSON shape errors arrive in\n- Race condition — an older response landing after a newer one"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nLoading, error, and empty states describe what a screen shows before data arrives, when a request fails, and when a successful response contains no items. They are part of the feature contract, not decoration added at the end.\n\n## What problem does it solve?\n\nA page that only handles success becomes confusing or unusable during normal network delay, partial failure, permission changes, retries, and legitimate empty results.\n\n## How it works\n\n- Distinguish initial loading from background refresh so existing data does not disappear unnecessarily.\n- Give errors useful recovery actions and preserve user input where possible.\n- Treat empty results as a successful state with context and a next step, not as a generic error.\n- Align frontend states with backend status codes, retry rules, pagination metadata, and partial-result behavior.\n\n## Common mistakes\n\n- Using one spinner for every kind of waiting.\n- Showing a technical error with no recovery action.\n- Treating an empty list and a failed request as the same state.\n\n## Key terms\n\n- initial loading — No usable data is available yet.\n- background refresh — Existing data remains while fresh data loads.\n- empty state — Successful result with no items.\n- recoverable error — Failure the user or system can retry safely.",
+      "i18n": {
+        "hu": {
+          "name": "Betöltési, hiba- és üres állapotok",
+          "description": "Minden lényeges képernyőállapot megtervezése ahelyett, hogy csak a hibamentes folyamatra koncentrálnánk.",
+          "studyNotes": "## Mi ez?\n\nA betöltési, hiba- és üres állapotok azt írják le, mit mutat a képernyő az adatok megérkezése előtt, sikertelen kérés esetén, illetve akkor, ha egy sikeres válasz nem tartalmaz elemeket. Ezek a funkció szerződésének részei, nem a végén hozzáadott díszítések.\n\n## Milyen problémát old meg?\n\nAz a képernyő, amely csak a sikeres állapotot kezeli, a normális hálózati késleltetés, részleges hiba, jogosultságváltozás, újrapróbálkozás vagy jogosan üres találati lista alatt zavaróvá, sőt használhatatlanná válik.\n\n## Hogyan működik\n\n- Különböztesd meg a kezdeti betöltést a háttérben történő frissítéstől, hogy a már megjelenített adatok ne tűnjenek el feleslegesen.\n- A hibákhoz adj használható helyreállítási lehetőséget, és ahol lehet, őrizd meg a felhasználó bevitelét.\n- Az üres találatot sikeres állapotként kezeld magyarázattal és következő lépéssel, ne általános hibaként.\n- Hangold össze a frontend állapotait a backend státuszkódjaival, retry-szabályaival, lapozási metaadataival és a részleges eredmények viselkedésével.\n\n## Gyakori hibák\n\n- Ugyanazt a spinnert használni mindenféle várakozásra.\n- Technikai hibaüzenetet mutatni helyreállítási lehetőség nélkül.\n- Az üres listát és a sikertelen kérést ugyanannak az állapotnak tekinteni.\n\n## Kulcsfogalmak\n\n- kezdeti betöltés — még nincs megjeleníthető, használható adat\n- háttérfrissítés — a meglévő adat látható marad, miközben az új verzió betöltődik\n- üres állapot — sikeres eredmény elemek nélkül\n- helyreállítható hiba — olyan hiba, amelyet a felhasználó vagy a rendszer biztonságosan újrapróbálhat"
+        }
+      }
     },
     {
       "id": "file_upload",
-      "name": "File Upload End to End",
-      "description": "Multipart uploads, validation on both sides, progress, and the presigned-URL pattern for large files.",
+      "name": "File Upload Design",
+      "description": "Validation, upload progress, presigned URLs, multipart uploads, resumability, and post-processing.",
       "category": "fullstack",
       "relatedTopicIds": [
-        "api_security_essentials",
-        "loading_error_states"
+        "security_basics",
+        "scalability"
       ],
-      "studyNotes": "## What is it?\n\nGetting a file from the user's machine to your storage — a feature that touches every layer: a form input in the browser, an HTTP upload, backend validation, and object storage (S3-style) at the end.\n\n## What problem does it solve?\n\nFiles are different from JSON data: they are big, slow to transfer, easy to abuse (malware, disguised file types, gigantic sizes), and expensive to route through your application servers. A naive implementation works in the demo and falls over in production.\n\n## How it works\n\nThe basic flow: the browser sends multipart/form-data (an input type=\"file\" in a form, or FormData built in JavaScript with fetch). The backend reads the file stream, validates it, and stores it — never on the app server's local disk (instances are replaceable), but in object storage like S3.\n\nValidation happens on BOTH sides, for different reasons:\n- Frontend: file size and type checks before uploading — instant feedback, no wasted bandwidth. Purely UX; it can be bypassed.\n- Backend: the checks that count. Size limits, allowed types — checked by the file's actual CONTENT (magic bytes), not its name or claimed MIME type, because both lie. Regenerate the filename (never trust user filenames — path traversal like ../../etc/passwd), and virus-scan if users download each other's files.\n\nThe pattern for large files — presigned URLs: the backend generates a short-lived, signed upload URL for the object storage; the browser uploads DIRECTLY to storage, bypassing your servers entirely. Your API only authorizes (issues the URL) and records the result. This removes the biggest bottleneck: gigabytes flowing through app instances.\n\nProgress and resilience: XMLHttpRequest or fetch-with-streams gives upload progress for the progress bar; big files can be uploaded in chunks so a dropped connection resumes instead of restarting.\n\n## Common mistakes\n\n- Trusting the file extension or client-sent MIME type instead of the content\n- Storing files on the app server's disk (dies on redeploy/scale-out)\n- Routing huge files through the API when presigned direct upload exists\n- No size limit — one user can fill your storage or exhaust memory\n- Keeping the user's original filename (path traversal, collisions)\n\n## Key terms\n\n- multipart/form-data — the HTTP encoding for file uploads\n- Magic bytes — the file's real type, read from its first bytes\n- Presigned URL — short-lived permission to upload directly to storage\n- Chunked/resumable upload — big files in parts, resumable on failure"
+      "studyNotes": "## What is it?\n\nFile upload design covers how a client transfers user-selected bytes, how the server or object store accepts them, and how the application tracks validation and processing. Small files can use one request. Large or unreliable transfers often need direct-to-storage, multipart, or resumable protocols.\n\n## What problem does it solve?\n\nUploads combine security, memory, bandwidth, user feedback, and failure recovery. Buffering a large file through an application server can exhaust memory and double network traffic. A failed transfer near the end is frustrating if it must restart from zero.\n\n## How it works\n\n- Validate file type, size, authorization, and destination on the server; browser checks are only user feedback.\n- XMLHttpRequest exposes upload progress events in browsers. The Fetch API does not provide the same general upload-progress event model, so choose the transport deliberately.\n- A backend can issue a short-lived presigned URL so the browser uploads directly to object storage.\n- Multipart or resumable upload splits data into chunks, records completed parts, and retries only failed parts.\n- Store application metadata separately and process scanning, thumbnails, or transcoding asynchronously.\n- Define cancellation, idempotency, expiry, orphan cleanup, and finalization behaviour.\n\n## Common mistakes\n\n- Trusting only the filename extension or browser MIME type\n- Buffering large files entirely in application memory\n- Claiming Fetch provides the same simple upload progress API as XMLHttpRequest\n- Creating presigned URLs without narrow permissions, size limits, or expiry\n\n## Key terms\n\n- presigned URL — time-limited permission to upload to object storage\n- multipart upload — transfer split into independently retried parts\n- resumable upload — protocol that continues after interruption\n- content scanning — asynchronous safety check after upload",
+      "i18n": {
+        "hu": {
+          "name": "Fájlfeltöltés tervezése",
+          "description": "Validáció, feltöltési folyamatjelzés, előre aláírt URL-ek, több részes és folytatható feltöltés, valamint utófeldolgozás.",
+          "studyNotes": "## Mi ez?\n\nA fájlfeltöltés tervezése lefedi, hogyan továbbítja a kliens a felhasználó által kiválasztott bájtokat, hogyan fogadja azokat a szerver vagy az objektumtár, és hogyan követi az alkalmazás a validációt és a feldolgozást. Kis fájlokhoz elegendő lehet egyetlen kérés. Nagy vagy bizonytalan kapcsolat mellett gyakran közvetlen objektumtár-feltöltésre, multipart vagy folytatható protokollra van szükség.\n\n## Milyen problémát old meg?\n\nA feltöltés egyszerre érinti a biztonságot, a memóriát, a sávszélességet, a felhasználói visszajelzést és a hibából való helyreállást. Ha egy nagy fájl teljes egészében az alkalmazásszerveren halad át, az kifogyaszthatja a memóriát és megduplázhatja a hálózati forgalmat. Különösen rossz élmény, ha a végéhez közel megszakadó feltöltést nulláról kell újrakezdeni.\n\n## Hogyan működik\n\n- A szerveren ellenőrizd a fájltípust, a méretet, a jogosultságot és a célhelyet; a böngészős ellenőrzés csak felhasználói segítség.\n- Böngészőben az XMLHttpRequest feltöltési progress eseményeket biztosít. A Fetch API nem ad ugyanilyen általános feltöltési progress modellt, ezért tudatosan válaszd meg a transportot.\n- A backend rövid élettartamú presigned URL-t adhat, amellyel a böngésző közvetlenül az objektumtárba tölt.\n- A multipart vagy folytatható feltöltés darabokra bontja az adatot, nyilvántartja a kész részeket, és csak a hibás részeket próbálja újra.\n- Az alkalmazás metaadatait külön tárold, a vírusellenőrzést, bélyegképkészítést vagy transzkódolást pedig aszinkron végezd.\n- Határozd meg a megszakítás, az idempotencia, a lejárat, az árván maradt objektumok takarítása és a véglegesítés szabályait.\n\n## Gyakori hibák\n\n- Csak a fájlkiterjesztésben vagy a böngésző által jelzett MIME-típusban megbízni\n- Nagy fájlokat teljes egészében az alkalmazás memóriájába tölteni\n- Azt állítani, hogy a Fetch ugyanazt az egyszerű feltöltési progress API-t biztosítja, mint az XMLHttpRequest\n- Túl tág jogosultságú, méretkorlát vagy lejárat nélküli presigned URL-eket létrehozni\n\n## Kulcsfogalmak\n\n- presigned URL — időben korlátozott engedély objektumtárba történő feltöltéshez\n- multipart feltöltés — külön-külön újrapróbálható részekre bontott átvitel\n- folytatható feltöltés — megszakítás után ugyanonnan továbbhaladó protokoll\n- tartalomvizsgálat — a feltöltés után aszinkron végzett biztonsági ellenőrzés"
+        }
+      }
     },
     {
       "id": "e2e_feature_design",
-      "name": "Designing a Feature End to End",
-      "description": "The fullstack thought process: from API contract through states, auth and pagination to rollout — in the right order.",
+      "name": "End-to-End Feature Design",
+      "description": "Designing a feature from requirements and API contract through UI states and rollout.",
       "category": "fullstack",
-      "relatedTopicIds": [
-        "api_contract_design",
-        "loading_error_states",
-        "frontend_quality_gates",
-        "token_refresh"
-      ],
-      "studyNotes": "## What is it?\n\nThe checklist a fullstack developer walks through when building a complete feature — say, \"comments on a document\" — covering both sides of the stack and the seam between them, in an order that avoids rework.\n\n## What problem does it solve?\n\nFeatures built frontend-first or backend-first in isolation meet in the middle badly: the API returns shapes the UI cannot use, error cases surface with no design, auth is bolted on late. Designing the SEAM first is what prevents the rework.\n\n## How it works\n\nThe order that works:\n\n- 1. Contract first: agree the endpoints, request/response shapes, error format, and pagination model before writing either side. With the contract fixed, frontend and backend can build in parallel — the frontend against a mock of it.\n- 2. Data and auth: who may see and do what? Which role sees which subset? What do 401 and 403 mean HERE, and what should the UI do for each (redirect to login vs \"no access\" message)?\n- 3. States: for every screen — loading, empty, error, success. For every mutation — pending, failure (with retry), success. Decide whether writes are optimistic (show immediately, roll back on failure) or pessimistic (spinner until confirmed).\n- 4. The edges: pagination for lists that grow; validation messages field by field; concurrent edits (optimistic locking? last-write-wins?); what happens on a slow network.\n- 5. Rollout: feature flag it, ship dark, enable gradually; monitor errors on the new endpoints; keep the flag as the kill switch.\n\nThe habit that ties it together: walk the feature THROUGH the stack as a user action — \"click → request → auth check → query → response → state update → render\" — and ask at every arrow what can fail there and what the user sees when it does.\n\n## Common mistakes\n\n- Building the UI against imagined data, then discovering the real API differs\n- Auth as an afterthought — every endpoint needs the \"who may call this?\" answer\n- Designing only mutations' success path; no pending or failure treatment\n- Shipping without a kill switch — the first bad deploy becomes an emergency\n\n## Key terms\n\n- Contract-first — agree the API before building either side\n- Optimistic vs pessimistic UI — show immediately vs wait for the server\n- Mock/stub backend — lets the frontend build against the contract early\n- Kill switch — the flag that turns a broken feature off without a deploy"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nEnd-to-end feature design connects product behavior, data ownership, API contracts, frontend states, authorization, observability, and delivery. It treats the feature as one user-facing flow rather than separate frontend and backend tickets.\n\n## What problem does it solve?\n\nLocal optimizations can create a poor whole: an API may be technically clean but not support required UI states, or a polished screen may depend on unsafe or inefficient backend behavior.\n\n## How it works\n\n- Clarify the user goal, actors, permissions, edge cases, volume, and non-functional requirements first.\n- Define the API and data contract, including validation, errors, pagination, idempotency, and compatibility.\n- Design loading, success, empty, partial, and failure states together with retry and optimistic behavior.\n- Plan tests, telemetry, migration, feature flags, rollout, and rollback before release.\n\n## Common mistakes\n\n- Starting implementation before agreeing on the contract.\n- Designing only the happy path.\n- Treating authorization as a frontend visibility rule.\n\n## Key terms\n\n- API contract — Shared agreement on requests, responses, and errors.\n- NFR — Quality requirement such as latency or security.\n- feature flag — Control that separates deployment from activation.\n- rollback — Safe return to a previous behavior.",
+      "i18n": {
+        "hu": {
+          "name": "Teljes folyamatot lefedő funkciótervezés",
+          "description": "Egy funkció megtervezése a követelményektől és az API-szerződéstől a felületi állapotokon át a bevezetésig.",
+          "studyNotes": "## Mi ez?\n\nA teljes folyamatot lefedő funkciótervezés összeköti a termékviselkedést, az adattulajdonlást, az API-szerződéseket, a frontend állapotait, a jogosultságkezelést, a megfigyelhetőséget és a szállítást. A funkciót egyetlen, felhasználó számára látható folyamatként kezeli, nem külön frontend- és backend-ticketekként.\n\n## Milyen problémát old meg?\n\nA helyi optimumok gyenge egészet eredményezhetnek. Egy API technikailag tiszta lehet, mégsem támogatja a szükséges UI-állapotokat; egy szép képernyő pedig veszélyes vagy pazarló backend-viselkedésre támaszkodhat.\n\n## Hogyan működik\n\n- Először tisztázd a felhasználói célt, a szereplőket, a jogosultságokat, a szélső eseteket, a volumeneket és a nem funkcionális követelményeket.\n- Definiáld az API- és adatszerződést, beleértve a validációt, a hibákat, a lapozást, az idempotenciát és a kompatibilitást.\n- Együtt tervezd meg a betöltési, sikeres, üres, részleges és hibás állapotokat az újrapróbálással és az optimista működéssel.\n- Már a kiadás előtt tervezd meg a teszteket, a telemetriát, a migrációt, a feature flageket, a rolloutot és a rollbacket.\n\n## Gyakori hibák\n\n- Az implementációt az API-szerződés egyeztetése előtt elkezdeni.\n- Csak a hibamentes útvonalat megtervezni.\n- A jogosultságkezelést pusztán frontend-láthatósági szabálynak tekinteni.\n\n## Kulcsfogalmak\n\n- API-szerződés — közös megállapodás a kérésekről, válaszokról és hibákról\n- NFR — minőségi követelmény, például késleltetés vagy biztonság\n- feature flag — a telepítést az aktiválástól elválasztó kapcsoló\n- rollback — biztonságos visszatérés egy korábbi viselkedéshez"
+        }
+      }
     }
   ],
   "questions": [
     {
-      "id": "fsi_states_001",
+      "id": "hybrid_the_states_nobody_designs",
       "title": "The states nobody designs",
       "prompt": "You get a design for a list screen showing only the happy path. What other states do you build, and what do you need from the backend for them?",
       "roles": [
-        "frontend_developer",
-        "backend_developer",
-        "fullstack_developer"
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
       ],
       "modes": [
         "scenario_discussion",
@@ -58,200 +73,273 @@
       "topicIds": [
         "loading_error_states"
       ],
-      "expectedDurationSeconds": 200,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "st_four",
+          "id": "hybrid_the_states_nobody_designs_point_1",
           "label": "Names the four states",
           "description": "Loading (skeleton), error (with retry), empty (as guidance), success.",
           "importance": "critical",
           "roleWeight": {
             "fullstack_developer": 5,
-            "frontend_developer": 4,
-            "backend_developer": 4
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
+            "loading error and empty",
+            "loading error states",
+            "names the four states",
+            "four",
             "loading",
-            "error state",
-            "empty state",
             "skeleton",
-            "retry",
-            "happy path is not enough"
+            "error",
+            "retry"
           ]
         },
         {
-          "id": "st_backend",
+          "id": "hybrid_the_states_nobody_designs_point_2",
           "label": "Backend contract for errors",
           "description": "Consistent error body + status codes so the UI can pick the right treatment (field errors vs server failure).",
           "importance": "critical",
           "roleWeight": {
             "fullstack_developer": 5,
-            "frontend_developer": 4,
-            "backend_developer": 4
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "error format",
-            "error body",
-            "status codes",
-            "field errors",
-            "consistent errors",
-            "400 vs 500"
+            "backend contract for errors",
+            "backend contract errors",
+            "consistent error body status",
+            "pick the right treatment",
+            "field errors vs server",
+            "errors vs server failure",
+            "backend"
           ]
         },
         {
-          "id": "st_races",
+          "id": "hybrid_the_states_nobody_designs_point_3",
           "label": "Timing details",
           "description": "Debounced spinner; stale responses must not overwrite newer ones (cancel or track request id).",
           "importance": "important",
           "roleWeight": {
-            "fullstack_developer": 5,
-            "frontend_developer": 4,
-            "backend_developer": 4
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
           },
           "acceptedSignals": [
-            "race",
-            "stale response",
-            "cancel the request",
-            "flashing spinner",
-            "debounce",
-            "abort"
+            "timing details",
+            "debounced spinner",
+            "stale responses must not",
+            "not overwrite newer ones",
+            "cancel or track request",
+            "or track request id",
+            "timing"
           ]
         }
       ],
       "followUps": [
         {
-          "id": "st_optimistic_fu",
+          "id": "hybrid_the_states_nobody_designs_followup_1",
           "trigger": {
             "type": "always"
           },
           "prompt": "When would you update the UI optimistically instead of waiting for the server?",
-          "expectedPoints": [
-            {
-              "id": "st_optimistic",
-              "label": "Optimistic update judgment",
-              "description": "High-success, low-stakes mutations (likes, todos) → optimistic with rollback; payments and destructive actions → wait for the server.",
-              "importance": "important",
-              "roleWeight": {
-                "fullstack_developer": 5,
-                "frontend_developer": 4,
-                "backend_developer": 4
-              },
-              "acceptedSignals": [
-                "optimistic",
-                "roll back",
-                "low risk",
-                "instant feedback",
-                "wait for the server on payments"
-              ]
-            }
-          ]
+          "expectedPoints": []
+        },
+        {
+          "id": "hybrid_the_states_nobody_designs_followup_2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Observability",
+          "expectedPoints": []
         }
-      ]
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Az állapotok, amelyeket senki sem tervez meg",
+          "prompt": "Egy listanézet terve csak a hibamentes állapotot mutatja. Milyen további állapotokat készítesz el, és mire van szükséged hozzájuk a backendtől?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a lehetséges hibákra.",
+          "expectedPoints": {
+            "hybrid_the_states_nobody_designs_point_1": {
+              "label": "Megnevezi a négy állapotot",
+              "description": "Betöltés, lehetőleg skeletonnal; hiba újrapróbálással; útmutatást adó üres állapot; sikeres állapot."
+            },
+            "hybrid_the_states_nobody_designs_point_2": {
+              "label": "Backend-szerződés a hibákhoz",
+              "description": "Következetes hibatörzs és státuszkódok, hogy a UI megfelelően különböztesse meg például a mezőhibát a szerverhibától."
+            },
+            "hybrid_the_states_nobody_designs_point_3": {
+              "label": "Időzítési részletek",
+              "description": "Késleltetett spinner; a régi válasz nem írhatja felül az újabbat, ezért meg kell szakítani a kérést vagy követni kell a kérésazonosítót."
+            }
+          },
+          "followUps": {
+            "hybrid_the_states_nobody_designs_followup_1": "Mikor frissítenéd optimistán a felületet ahelyett, hogy megvárnád a szervert?",
+            "hybrid_the_states_nobody_designs_followup_2": "Megfigyelhetőség"
+          }
+        }
+      }
     },
     {
-      "id": "fsi_upload_001",
+      "id": "hybrid_production_ready_file_upload",
       "title": "Production-ready file upload",
       "prompt": "Design a file upload feature for user documents. Walk me through the flow, the validation, and how you handle large files.",
       "roles": [
-        "frontend_developer",
-        "backend_developer",
-        "fullstack_developer"
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
       ],
       "modes": [
-        "system_design",
-        "scenario_discussion"
+        "scenario_discussion",
+        "system_design"
       ],
       "topicIds": [
         "file_upload"
       ],
-      "expectedDurationSeconds": 240,
-      "thinkingTimeSeconds": 60,
-      "answerStructureHint": "Flow (multipart → storage) → validation on both sides → large files (presigned/chunked) → security details.",
+      "expectedDurationSeconds": 420,
+      "thinkingTimeSeconds": 90,
+      "answerStructureHint": "Flow (multipart storage) validation on both sides large files (presigned/chunked) security details.",
       "expectedPoints": [
         {
-          "id": "up_flow",
+          "id": "hybrid_production_ready_file_upload_point_1",
           "label": "Correct basic flow",
           "description": "Multipart upload; files land in object storage, never on app-server disk.",
           "importance": "critical",
           "roleWeight": {
             "fullstack_developer": 5,
-            "frontend_developer": 4,
-            "backend_developer": 4
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "multipart",
-            "form data",
-            "object storage",
-            "s3",
-            "not on the server disk"
+            "multipart upload",
+            "correct basic flow",
+            "basic flow",
+            "files land in object",
+            "land in object storage",
+            "never on app-server disk",
+            "basic"
           ]
         },
         {
-          "id": "up_validation",
+          "id": "hybrid_production_ready_file_upload_point_2",
           "label": "Backend validation by content",
           "description": "Size limits and type checks by magic bytes; regenerate filenames; frontend checks are UX only.",
           "importance": "critical",
           "roleWeight": {
             "fullstack_developer": 5,
-            "frontend_developer": 4,
-            "backend_developer": 4
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "magic bytes",
-            "content not extension",
-            "size limit",
-            "rename the file",
-            "backend validates",
-            "mime type lies"
+            "backend validation by content",
+            "backend validation content",
+            "size limits and type",
+            "checks by magic bytes",
+            "regenerate filenames",
+            "frontend checks are ux",
+            "backend"
           ]
         },
         {
-          "id": "up_presigned",
+          "id": "hybrid_production_ready_file_upload_point_3",
           "label": "Presigned direct upload for large files",
           "description": "Backend authorizes with a short-lived URL; browser uploads straight to storage; API records the result.",
-          "importance": "critical",
+          "importance": "important",
           "roleWeight": {
-            "fullstack_developer": 5,
-            "frontend_developer": 4,
-            "backend_developer": 4
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
           },
           "acceptedSignals": [
-            "presigned",
-            "direct to storage",
-            "bypass the server",
-            "signed url",
-            "short-lived"
+            "presigned url",
+            "backend authorizes with a",
+            "with a short-lived url",
+            "browser uploads straight to",
+            "uploads straight to storage",
+            "api records the result",
+            "presigned"
           ]
         },
         {
-          "id": "up_progress",
+          "id": "hybrid_production_ready_file_upload_point_4",
           "label": "Progress + resumability",
           "description": "Upload progress for UX; chunked/resumable for big files.",
           "importance": "nice_to_have",
           "roleWeight": {
-            "fullstack_developer": 5,
-            "frontend_developer": 4,
-            "backend_developer": 4
+            "fullstack_developer": 3,
+            "frontend_architect": 3,
+            "backend_architect": 3,
+            "solution_architect": 3
           },
           "acceptedSignals": [
-            "progress bar",
+            "resumable upload",
+            "upload progress",
+            "progress resumability",
+            "upload progress for ux",
             "chunked",
-            "resumable",
-            "resume on failure"
+            "resumable for big files",
+            "progress"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_production_ready_file_upload_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you monitor during rollout, and what would trigger rollback for this Production-ready file upload change?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Éles használatra kész fájlfeltöltés",
+          "prompt": "Tervezz fájlfeltöltési funkciót felhasználói dokumentumokhoz. Mutasd be a folyamatot, a validációt és a nagy fájlok kezelését.",
+          "answerStructureHint": "Folyamat és multipart objektumtár; validáció mindkét oldalon; nagy fájlok presigned vagy darabolt feltöltéssel; biztonsági részletek.",
+          "expectedPoints": {
+            "hybrid_production_ready_file_upload_point_1": {
+              "label": "Helyes alapfolyamat",
+              "description": "Multipart feltöltés; a fájlok objektumtárba kerülnek, nem az alkalmazásszerver lemezére."
+            },
+            "hybrid_production_ready_file_upload_point_2": {
+              "label": "Tartalomalapú backend-validáció",
+              "description": "Méretkorlát és típusellenőrzés magic byte-ok alapján; új fájlnevek generálása; a frontend-ellenőrzés csak UX."
+            },
+            "hybrid_production_ready_file_upload_point_3": {
+              "label": "Presigned közvetlen feltöltés nagy fájlokhoz",
+              "description": "A backend rövid élettartamú URL-lel engedélyez; a böngésző közvetlenül a tárhelyre tölt; az API rögzíti az eredményt."
+            },
+            "hybrid_production_ready_file_upload_point_4": {
+              "label": "Folyamatjelzés és folytathatóság",
+              "description": "Feltöltési progress a felhasználói élményhez, valamint darabolt vagy folytatható átvitel nagy fájloknál."
+            }
+          },
+          "followUps": {
+            "hybrid_production_ready_file_upload_followup_1": "Mit figyelnél a bevezetés során, és milyen jel alapján állítanád vissza ezt a fájlfeltöltési változtatást?"
+          }
+        }
+      }
     },
     {
-      "id": "fsi_e2e_001",
+      "id": "hybrid_a_feature_across_the_whole_stack",
       "title": "A feature across the whole stack",
       "prompt": "You're asked to add commenting to documents — UI, API, storage, everything. In what order do you design it, and what do you make sure is settled before coding?",
       "roles": [
-        "frontend_developer",
-        "backend_developer",
-        "fullstack_developer"
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
       ],
       "modes": [
         "system_design",
@@ -260,85 +348,134 @@
       "topicIds": [
         "e2e_feature_design"
       ],
-      "expectedDurationSeconds": 240,
-      "thinkingTimeSeconds": 60,
+      "expectedDurationSeconds": 420,
+      "thinkingTimeSeconds": 90,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "ee_contract",
+          "id": "hybrid_a_feature_across_the_whole_stack_point_1",
           "label": "Contract before code",
           "description": "Endpoints, shapes, error format, pagination agreed first; frontend builds against a mock in parallel.",
           "importance": "critical",
           "roleWeight": {
             "fullstack_developer": 5,
-            "frontend_developer": 4,
-            "backend_developer": 4
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "contract first",
-            "agree the api",
-            "mock",
-            "build in parallel",
-            "shapes first"
+            "contract before code",
+            "contract code",
+            "endpoints",
+            "shapes",
+            "error format",
+            "pagination agreed first",
+            "frontend builds against a",
+            "a mock in parallel"
           ]
         },
         {
-          "id": "ee_auth_states",
+          "id": "hybrid_a_feature_across_the_whole_stack_point_2",
           "label": "Auth + full state coverage",
           "description": "Who may see/do what; 401 vs 403 behavior; loading/empty/error/success for reads, pending/failure for writes.",
           "importance": "critical",
           "roleWeight": {
             "fullstack_developer": 5,
-            "frontend_developer": 4,
-            "backend_developer": 4
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "who can",
-            "permission",
-            "401",
-            "403",
-            "every state",
-            "pending",
-            "failure path"
+            "auth full state coverage",
+            "see",
+            "401 vs 403 behavior",
+            "loading",
+            "empty",
+            "error",
+            "success for reads",
+            "pending"
           ]
         },
         {
-          "id": "ee_edges",
+          "id": "hybrid_a_feature_across_the_whole_stack_point_3",
           "label": "Edge thinking",
           "description": "Pagination from day one, concurrent edits, slow network, field-level validation messages.",
           "importance": "important",
           "roleWeight": {
-            "fullstack_developer": 5,
-            "frontend_developer": 4,
-            "backend_developer": 4
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
           },
           "acceptedSignals": [
-            "pagination",
+            "edge thinking",
+            "pagination from day",
             "concurrent edits",
             "slow network",
-            "validation messages",
-            "edge cases"
+            "field-level validation messages",
+            "edge"
           ]
         },
         {
-          "id": "ee_rollout",
+          "id": "hybrid_a_feature_across_the_whole_stack_point_4",
           "label": "Safe rollout",
           "description": "Feature flag, dark ship, gradual enable, monitoring, kill switch.",
-          "importance": "important",
+          "importance": "nice_to_have",
           "roleWeight": {
-            "fullstack_developer": 5,
-            "frontend_developer": 4,
-            "backend_developer": 4
+            "fullstack_developer": 3,
+            "frontend_architect": 3,
+            "backend_architect": 3,
+            "solution_architect": 3
           },
           "acceptedSignals": [
             "feature flag",
-            "gradual",
+            "safe rollout",
+            "dark ship",
+            "gradual enable",
+            "monitoring",
             "kill switch",
-            "monitor",
-            "ship dark"
+            "safe"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_a_feature_across_the_whole_stack_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where would this A feature across the whole stack design fail first as traffic, data, or team size grows?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy funkció a teljes stacken keresztül",
+          "prompt": "Dokumentumokhoz kell kommentelési funkciót hozzáadnod: UI, API, tárolás és minden más. Milyen sorrendben tervezed meg, és minek kell eldőlnie a kódolás előtt?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a lehetséges hibákra.",
+          "expectedPoints": {
+            "hybrid_a_feature_across_the_whole_stack_point_1": {
+              "label": "Szerződés a kód előtt",
+              "description": "Előbb egyeztetik az endpointokat, adatstruktúrákat, hibaformátumot és lapozást; a frontend közben mock ellen fejleszthet."
+            },
+            "hybrid_a_feature_across_the_whole_stack_point_2": {
+              "label": "Jogosultság és teljes állapotlefedettség",
+              "description": "Ki mit láthat és tehet; 401 és 403 viselkedése; olvasásnál betöltés, üres, hiba és siker, írásnál függő és hibás állapot."
+            },
+            "hybrid_a_feature_across_the_whole_stack_point_3": {
+              "label": "Szélső esetek átgondolása",
+              "description": "Lapozás az első naptól, párhuzamos szerkesztések, lassú hálózat és mezőszintű validációs üzenetek."
+            },
+            "hybrid_a_feature_across_the_whole_stack_point_4": {
+              "label": "Biztonságos bevezetés",
+              "description": "Feature flag, rejtett szállítás, fokozatos engedélyezés, monitorozás és kill switch."
+            }
+          },
+          "followUps": {
+            "hybrid_a_feature_across_the_whole_stack_followup_1": "Hol hibásodna meg először ez a teljes stacken átívelő megoldás a forgalom, az adatmennyiség vagy a csapat növekedésével?"
+          }
+        }
+      }
     }
   ]
 }

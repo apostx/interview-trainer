@@ -1,7 +1,7 @@
 {
   "id": "data_at_scale",
-  "name": "Data patterns at scale",
-  "description": "Data at scale from the Dennemeyer 100: outbox, sharding and hot shards, replication and read-your-writes, optimistic locking, SQL performance (indexes, N+1, pools), caching and invalidation, and scaling fundamentals.",
+  "name": "Data Patterns at Scale",
+  "description": "Outbox, sharding, replication, optimistic locking, SQL performance, connection pools, caching, and scaling fundamentals.",
   "sources": [
     "dennemeyer_system_design_100_tema_peldakkal_mobile_hu",
     "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu"
@@ -9,214 +9,174 @@
   "topics": [
     {
       "id": "outbox_pattern",
-      "name": "Outbox pattern",
-      "description": "Solving the dual-write problem: persist state and publish events atomically via an outbox table.",
+      "name": "Outbox Pattern",
+      "description": "Atomically storing business data and events in one database transaction.",
       "category": "architecture",
-      "relatedTopicIds": [
-        "message_queue",
-        "event_driven",
-        "idempotency_retries"
-      ],
-      "studyNotes": "## What is it?\n\nThe outbox pattern is a reliable way to do two things that must happen together: save a change in the database AND publish an event about it — without losing either when things crash.\n\n## What problem does it solve?\n\nA service saves a renewal and must announce \"RenewalCreated\" to other systems. Database commit and message publish are two separate systems: if you crash between them, you either saved without announcing (others never learn about it) or announced something that was never saved. Distributed transactions across a DB and a message broker are impractical.\n\n## How it works\n\nUse ONE transaction in ONE system: in the same database transaction that saves the business data, also insert the event into an \"outbox\" table. The commit is atomic — either both rows exist or neither does.\n\nA separate worker then reads the outbox table and publishes the events to the broker, marking rows as sent (either by polling or by change-data-capture).\n\nThe consequence to know: delivery becomes at-least-once. The worker may crash after publishing but before marking the row, so the same event can go out TWICE. Consumers must therefore be idempotent — typically a processed-events table keyed by eventId: \"seen it, skipping\". The pair works together: outbox guarantees the event goes out, idempotent consumers make duplicates harmless.\n\n## Common mistakes\n\n- Publishing to the broker inside the DB transaction (or after it) and losing events on crash\n- Forgetting delivery becomes at-least-once — consumers must be idempotent\n- No cleanup/monitoring on the outbox table; it grows forever\n\n## Key terms\n\n- Outbox table — events written in the same transaction as the data\n- Atomic commit — both saved or neither\n- At-least-once delivery — duplicates possible by design\n- Idempotent consumer — processing twice has no double effect"
-    },
-    {
-      "id": "sharding",
-      "name": "Sharding & partitioning",
-      "description": "Splitting data across nodes by key; choosing partition keys and handling hot shards.",
-      "category": "database",
-      "relatedTopicIds": [
-        "scaling_fundamentals",
-        "nosql"
-      ],
-      "studyNotes": "## What is it?\n\nSharding (partitioning) means splitting one database's data across several databases/nodes — for example, customers A–M on one shard and N–Z on another — because a single node can no longer handle the data volume or traffic.\n\n## What problem does it solve?\n\nA single database has a ceiling: storage, connections, write throughput. When indexes, caching and read replicas are exhausted, splitting the DATA itself is what remains.\n\n## How it works\n\nThe central decision is the shard key — the field that decides which shard a row lives on. A good key spreads load evenly AND matches your main queries (hash of customerId is the classic: even spread, and customer lookups know exactly where to go).\n\nThe failure mode is the hot shard: one shard getting a disproportionate share of traffic. Shard by country and 80% of traffic comes from one country; shard by tenant and one giant customer melts a shard alone. Fixes: hash-based keys, or splitting the big tenant further.\n\nThe costs that make sharding a LAST resort:\n- Cross-shard queries: a query touching many shards must fan out to all of them and merge results — expensive.\n- No cross-shard transactions: atomic updates across shards are gone.\n- Rebalancing: adding a shard means moving data while live.\n\nInterview framing: mention sharding as the escalation AFTER indexing, caching, and read replicas — not the first move.\n\n## Common mistakes\n\n- Sharding before exhausting indexes, caching and read replicas\n- A shard key that matches queries but skews load (country, big tenant) → hot shard\n- Designing as if cross-shard joins and transactions still existed\n\n## Key terms\n\n- Shard key — the field that routes rows to shards\n- Hot shard — one shard overloaded by skewed data/traffic\n- Fan-out query — asking every shard and merging results\n- Rebalancing — redistributing data when shards are added"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nThe outbox pattern writes a business change and an event record to the same database transaction. A separate publisher sends stored outbox events to the message broker.\n\n## What problem does it solve?\n\nWriting to a database and broker is a dual-write problem: a crash between the two operations can save data without an event or publish an event for data that never committed.\n\n## How it works\n\n- Insert the business row and outbox row atomically in one local transaction.\n- Publish unsent rows by polling or change-data capture.\n- Use stable event identifiers and idempotent consumers because publishing is at-least-once.\n- Monitor publisher lag, failures, and outbox retention or cleanup.\n\n## Common mistakes\n\n- Publishing directly after the database commit and assuming the gap is harmless.\n- Marking an event sent before the broker acknowledges it.\n- Forgetting duplicate delivery after publisher crashes.\n\n## Key terms\n\n- dual write — Related writes to two independent systems.\n- outbox table — Durable local records waiting to publish.\n- CDC — Change-data capture used to stream committed rows.\n- idempotent consumer — Consumer safe under duplicate delivery.",
+      "i18n": {
+        "hu": {
+          "name": "Outbox minta",
+          "description": "Az üzleti adatok és az események atomi mentése egyetlen adatbázis-tranzakcióban.",
+          "studyNotes": "## Mi ez?\n\nAz outbox minta az üzleti módosítást és az esemény rekordját ugyanabban az adatbázis-tranzakcióban menti el. Egy külön publisher folyamat később elküldi az outboxban tárolt eseményeket az üzenetközvetítőnek.\n\n## Milyen problémát old meg?\n\nAz adatbázisba írás és a brokerbe publikálás két külön művelet, vagyis dual write probléma. A két lépés között bekövetkező hiba miatt az adat elmentődhet esemény nélkül, vagy olyan esemény jelenhet meg, amelyhez az üzleti adat soha nem commitolódott.\n\n## Hogyan működik\n\n- Az üzleti rekord és az outbox rekord egyetlen helyi tranzakcióban, atomikusan kerül be.\n- A még el nem küldött rekordokat pollinggal vagy change data capture-rel publikáljuk.\n- Stabil eseményazonosítókat és idempotens consumereket használunk, mert a publikálás tipikusan at-least-once.\n- Figyeljük a publisher késését, hibáit, valamint az outbox megőrzését és takarítását.\n\n## Gyakori hibák\n\n- A commit után közvetlenül publikálni, és azt feltételezni, hogy a két művelet közti rés nem számít.\n- Az eseményt elküldöttnek jelölni, mielőtt a broker visszaigazolta volna.\n- Elfelejteni, hogy publisherhiba után ugyanaz az esemény többször is kézbesülhet.\n\n## Kulcsfogalmak\n\n- dual write — összetartozó írás két egymástól független rendszerbe\n- outbox tábla — tartósan tárolt, publikálásra váró rekordok\n- CDC — a commitolt adatbázis-változások továbbítása\n- idempotens consumer — ismételt kézbesítés mellett is biztonságosan működő fogyasztó"
+        }
+      }
     },
     {
       "id": "replication",
-      "name": "Replication & read replicas",
-      "description": "Copies of data for read scaling and availability; replication lag trade-offs.",
+      "name": "Replication and Read Replicas",
+      "description": "Copies of data for read scaling and failover.",
       "category": "database",
-      "relatedTopicIds": [
-        "scaling_fundamentals",
-        "sql"
-      ],
-      "studyNotes": "## What is it?\n\nDatabase replication keeps live copies of the data on several servers: one primary takes all the WRITES, one or more replicas serve READS.\n\n## What problem does it solve?\n\nTwo problems at once. Scale: most applications read far more than they write, so spreading reads over replicas multiplies capacity, and heavy dashboards/reports can read from a replica without slowing down transactions. Availability: when the primary dies, a replica can be promoted to take over.\n\n## How it works\n\nWrites go to the primary, which streams its changes to the replicas. Replication is usually asynchronous — and that creates replication lag: a freshly written row may take a moment to appear on a replica.\n\nThe classic bug this causes: the user saves a payment (write → primary), the next screen reads the status (read → replica), and the replica has not caught up yet — the user sees the OLD status right after a successful save.\n\nThe standard fix is read-your-own-writes: right after a write, read that data back from the PRIMARY; use replicas for everything that tolerates a few seconds of staleness (dashboards, lists, reports).\n\nKeep the two purposes separate in an answer: read scaling (replicas share the read load) and failover (a replica is promoted when the primary fails) — related machinery, different stories.\n\n## Common mistakes\n\n- Reading your own write from a replica — the user sees pre-save data\n- Treating read scaling and failover as the same story\n- Ignoring replica lag in dashboards that claim to be real-time\n\n## Key terms\n\n- Primary / replica — writes vs reads\n- Replication lag — the delay before a write appears on replicas\n- Read-your-own-writes — read fresh data from the primary after writing\n- Failover — promoting a replica when the primary dies"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nDatabase replication copies changes from a primary node to one or more replicas. Replicas may serve reads and may be promoted during failover.\n\n## What problem does it solve?\n\nRead-heavy workloads can exceed one node, and a single node is also an availability risk. Replication adds capacity and redundancy without splitting ownership of each record.\n\n## How it works\n\n- Send authoritative writes to the primary and route suitable reads to replicas.\n- Account for asynchronous replication lag and define which screens tolerate stale data.\n- Use read-your-writes routing after updates when users must see their change immediately.\n- Test failover and understand possible data loss or recovery-point objectives.\n\n## Common mistakes\n\n- Reading immediately from a lagging replica after a write.\n- Treating a replica backup as a replacement for tested backups.\n- Assuming failover is instantaneous and consequence-free.\n\n## Key terms\n\n- primary — Node accepting authoritative writes.\n- replica — Copy receiving changes from a source.\n- replication lag — Delay before a change reaches a replica.\n- read-your-writes — Client sees its own recent update.",
+      "i18n": {
+        "hu": {
+          "name": "Replikáció és read replicák",
+          "description": "Adatmásolatok olvasási skálázáshoz és failoverhez.",
+          "studyNotes": "## Mi ez?\n\nAz adatbázis-replikáció a primary node változásait egy vagy több replicára másolja. A replicák kiszolgálhatnak olvasásokat, hiba esetén pedig valamelyikük primaryvá léptethető elő.\n\n## Milyen problémát old meg?\n\nAz olvasásintenzív terhelés meghaladhatja egyetlen node kapacitását, és egyetlen node rendelkezésre állási kockázatot is jelent. A replikáció kapacitást és redundanciát ad anélkül, hogy egy rekord tulajdonjogát több helyre kellene szétosztani.\n\n## Hogyan működik\n\n- Az authoritative írásokat a primary kapja, a megfelelő olvasásokat replicákra irányítjuk.\n- Aszinkron replikációnál számolunk replication laggel, és meghatározzuk, mely képernyők viselnek el elavult adatot.\n- Frissítés után read-your-writes routingot használunk, ha a felhasználónak azonnal látnia kell a saját módosítását.\n- Teszteljük a failovert, és tisztázzuk a lehetséges adatvesztést, illetve a recovery point objective-et.\n\n## Gyakori hibák\n\n- Írás után azonnal egy lemaradó replicáról olvasni.\n- A replicát tesztelt backup helyettesítőjeként kezelni.\n- A failovert azonnalinak és következménymentesnek feltételezni.\n\n## Kulcsfogalmak\n\n- primary — az authoritative írásokat fogadó node\n- replica — egy forrás változásait átvevő másolat\n- replication lag — késés, amíg egy módosítás eléri a replicát\n- read-your-writes — a kliens látja a saját friss módosítását"
+        }
+      }
     },
     {
       "id": "optimistic_locking",
-      "name": "Optimistic locking",
-      "description": "Detecting concurrent updates with versions instead of holding locks.",
+      "name": "Optimistic Locking",
+      "description": "Detecting concurrent updates with a version check.",
       "category": "database",
-      "relatedTopicIds": [
-        "transactions"
-      ],
-      "studyNotes": "## What is it?\n\nOptimistic locking is a way to handle two people editing the same record at once: instead of locking the record, you detect the conflict at SAVE time using a version number.\n\n## What problem does it solve?\n\nTwo admins open the same record. Both edit. Both save. Without protection, the second save silently overwrites the first — the \"lost update\" problem. Nobody notices until the data is wrong.\n\n## How it works\n\nEach record carries a version number. When a client loads the record, it gets version 7. When it saves, the update says \"set these fields WHERE version = 7, and bump to 8\". If someone else saved in between, the row is already version 8, the update matches nothing, and the server answers 409 Conflict. The client then reloads the fresh data and reapplies its change deliberately — no silent overwrite.\n\nIt is called OPTIMISTIC because you assume conflicts are rare and pay only when they happen. The alternative, pessimistic locking, locks the record up front — nobody else can even open it for editing. That is safer under constant contention but terrible for user-facing flows, because locks get held while users think, go to lunch, or close the laptop.\n\nThis connects to transaction isolation levels: databases can also prevent anomalies with stronger isolation, at the cost of more locking. For long user-facing edit sessions — which cannot be wrapped in one DB transaction — the version check is the practical answer.\n\n## Common mistakes\n\n- No version check at all — the second save silently erases the first\n- Pessimistic locks held across user think-time\n- Retrying a 409 automatically with the stale data instead of reloading\n\n## Key terms\n\n- Lost update — the second save silently erasing the first\n- Version column — the counter that detects concurrent edits\n- 409 Conflict — the HTTP answer for \"someone saved before you\"\n- Optimistic vs pessimistic — detect at save vs lock up front"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nOptimistic locking detects whether a record changed after a client read it. The update includes an expected version and succeeds only if the stored version still matches.\n\n## What problem does it solve?\n\nWithout conflict detection, two users can edit the same record and the later save silently overwrites the earlier one.\n\n## How it works\n\n- Return a version number or ETag with the record.\n- Update with a condition such as WHERE id=? AND version=? and increment the version atomically.\n- Return a conflict response when no row matches, then let the caller reload or merge.\n- Use pessimistic locking only when contention is high and holding a lock is acceptable.\n\n## Common mistakes\n\n- Checking the version in application code before an unconditional update.\n- Automatically retrying with stale data and recreating the lost update.\n- Holding database locks while a human edits a form.\n\n## Key terms\n\n- lost update — One concurrent change overwrites another.\n- version column — Counter used for conditional updates.\n- ETag — HTTP representation version identifier.\n- 409 Conflict — Common response for concurrent-update conflict.",
+      "i18n": {
+        "hu": {
+          "name": "Optimista zárolás",
+          "description": "Párhuzamos módosítások felismerése verzióellenőrzéssel.",
+          "studyNotes": "## Mi ez?\n\nAz optimista zárolás felismeri, ha egy rekord megváltozott azután, hogy a kliens beolvasta. A frissítés tartalmazza az elvárt verziót, és csak akkor sikerül, ha a tárolt verzió még mindig megegyezik vele.\n\n## Milyen problémát old meg?\n\nKonfliktusészlelés nélkül két felhasználó egyszerre szerkesztheti ugyanazt a rekordot, és a későbbi mentés észrevétlenül felülírhatja a korábbit.\n\n## Hogyan működik\n\n- A rekorddal együtt verziószámot vagy ETaget adunk vissza.\n- A frissítés feltételt használ, például `WHERE id=? AND version=?`, majd atomikusan növeli a verziót.\n- Ha egyetlen sor sem illeszkedik, konfliktusválaszt adunk; a kliens újratölthet, egyesíthet vagy döntést kérhet a felhasználótól.\n- Pesszimista zárolást inkább nagy ütközési aránynál használunk, amikor a lock tartása elfogadható.\n\n## Gyakori hibák\n\n- Az alkalmazáskódban ellenőrizni a verziót, majd feltétel nélküli update-et futtatni.\n- Automatikusan újrapróbálni elavult adattal, ezzel újra létrehozva a lost update-et.\n- Adatbázis-lockot tartani, miközben egy ember szerkeszt egy űrlapot.\n\n## Kulcsfogalmak\n\n- lost update — egyik párhuzamos módosítás felülírja a másikat\n- version column — feltételes frissítéshez használt számláló\n- ETag — egy HTTP-reprezentáció verzióazonosítója\n- 409 Conflict — párhuzamos módosításnál gyakori HTTP-válasz"
+        }
+      }
     },
     {
       "id": "sql_performance",
       "name": "SQL Query Performance",
-      "description": "Why the list endpoint got slow: indexes, query plans, and the N+1 problem.",
+      "description": "Indexes, query plans, N+1 queries, and selective access.",
       "category": "database",
-      "relatedTopicIds": [
-        "indexes",
-        "transactions",
-        "sql",
-        "nosql"
-      ],
-      "studyNotes": "## What is it?\n\nThe diagnosis toolkit for slow database reads: indexes (fast lookup paths), the query plan (how the database actually executes your SQL), and the N+1 problem (one query per row).\n\n## What problem does it solve?\n\n\"The list endpoint got slow as data grew\" is one of the most common production issues — and interview scenarios. Almost always the cause is a missing index, a bad query shape, or a hidden N+1.\n\n## How it works\n\nIndexes: an index is a fast lookup path on chosen columns — like a book's index. Index the columns you filter, sort or join on (customerId, status, createdAt — a combined index if they are queried together). Without one, the database scans the whole table. The trade-off: every index slows WRITES a little (it must be updated too) and takes space — index deliberately, not everything.\n\nThe query plan: EXPLAIN shows how the database executes a query — index lookup or full table scan, join order, row estimates. Reading the plan is the difference between guessing and knowing.\n\nThe N+1 problem: fetch a list with one query, then run one MORE query per row (load 100 renewals, then 100 customer lookups). Each query is fast, the sum is deadly, and ORMs generate this pattern silently. Fix: a join, eager loading, or batch loading by id set.\n\nThe method: measure first. Query times, the plan, lock waits — find the actual bottleneck before adding hardware or caching.\n\n## Common mistakes\n\n- Indexing everything — writes pay for every index\n- Missing the N+1 because each query is individually fast\n- Adding hardware or a cache before reading a single query plan\n\n## Key terms\n\n- Index — fast lookup path; speeds reads, taxes writes\n- EXPLAIN / query plan — how the DB actually executes your query\n- Table scan — reading everything for lack of an index\n- N+1 — one query per row; fix with join/eager/batch loading"
-    },
-    {
-      "id": "caching_strategies",
-      "name": "Caching & Invalidation",
-      "description": "When to cache, the failure modes (stale data, stampede), and invalidation strategies.",
-      "category": "backend",
-      "relatedTopicIds": [
-        "cdn",
-        "sql_performance"
-      ],
-      "studyNotes": "## What is it?\n\nCaching keeps frequently read data in a fast place (Redis, a CDN, memory) so you do not recompute or re-fetch it every time — plus the strategies for keeping the cache from serving stale data.\n\n## What problem does it solve?\n\nAn expensive aggregate (a customer dashboard summary) computed on every request wastes the database. Caching answers most requests instantly — IF you manage the staleness honestly.\n\n## How it works\n\nBefore caching anything, ask two questions: how often is this read, and how fresh must it be? A portfolio summary can be 5 minutes old; a payment status cannot. Caching the wrong thing shows customers wrong business data.\n\nInvalidation — deciding when cached data must be refreshed — is the famous hard part. The options, usually combined:\n- TTL (time-to-live): entries expire after N minutes. Simplest; \"data may be N minutes old\" becomes an explicit product decision.\n- Explicit invalidation: when the underlying data changes, delete the affected cache keys. Precise, but you must find every key the change affects.\n- Write-through: writes update the cache and the store together — always fresh, writes cost more.\n- Background refresh: a job recomputes hot entries before they expire.\n\nThe failure mode with a name: cache stampede. A popular key expires, and a thousand simultaneous requests all miss and hit the database at once. Mitigations: staggered TTLs, or letting one request recompute while the rest briefly get the old value.\n\n## Common mistakes\n\n- Caching payment/critical status because \"it's read often\"\n- No stampede protection on hot keys — expiry becomes a DB thundering herd\n- Invalidation as an afterthought; users see stale business data\n- TTL chosen by feel, not as an explicit staleness decision\n\n## Key terms\n\n- TTL — expiry time; staleness as an explicit decision\n- Invalidation — removing/updating cache entries on change\n- Write-through — update cache and store together\n- Cache stampede — thundering herd on an expired hot key\n- Stale data — the risk that makes cache design a product question"
-    },
-    {
-      "id": "scaling_fundamentals",
-      "name": "Scaling Fundamentals",
-      "description": "Horizontal vs vertical, stateless services, latency vs throughput, percentiles, and finding the bottleneck.",
-      "category": "architecture",
-      "relatedTopicIds": [
-        "sql_performance",
-        "session_vs_token"
-      ],
-      "studyNotes": "## What is it?\n\nThe basic vocabulary of making a system handle more load: vertical vs horizontal scaling, stateless services, latency vs throughput, percentiles, and bottlenecks.\n\n## What problem does it solve?\n\n\"Traffic is growing\" forces decisions. These concepts are the shared language for making them correctly instead of just \"add more servers\".\n\n## How it works\n\nVertical scaling: a bigger machine. Simple, but has a ceiling and a single point of failure. Horizontal scaling: more instances/pods behind a load balancer — the cloud default, but it has a precondition: the service must be STATELESS. If any instance can serve any request (state lives in the DB, Redis, or a JWT), balancing is trivial. A WebSocket service is stateful — the connection is pinned to one instance — so it needs extra machinery (Redis pub/sub) to scale out.\n\nScalability vs elasticity: scalability = CAN handle more with more resources; elasticity = scales itself up AND down automatically (Kubernetes HPA: 3 pods → 10 under load → back to 3). Scaling down safely is a cost story worth mentioning.\n\nThe measurement vocabulary:\n- Latency = one request's response time. Throughput = requests completed per second. They are independent: a system can push 5000 req/s while each request takes 2 seconds — great throughput, bad experience.\n- Percentiles: averages hide suffering. Average 80ms with p99 = 3s means 1% of users wait three seconds — invisible in the mean. Set targets and alerts on p95/p99 (tail latency), not averages.\n- Bottleneck: the actual limiting factor — a DB query, a missing index, the connection pool, CPU, an external API, lock contention. MEASURE first: if the database is the bottleneck, adding app pods makes things WORSE (more connections hammering the same DB).\n\n## Sizing math (back of the envelope)\n\nTurn big numbers into engineering quantities before designing. 100 million requests/month ÷ (30 × 86,400 s) ≈ 39 requests per second on AVERAGE — suddenly not scary. Then refine: peak can be 5–10× the average (size for peak); ask what a typical request COSTS (a cache hit vs a five-table join); and remember the database and external APIs cap you long before the app tier does.\n\nThe formula connecting speed and resources: concurrency ≈ rps × latency in seconds. 39 rps at 200ms ≈ 8 requests in flight — trivial. The same 39 rps with a slow 3-second downstream ≈ 120 in flight — suddenly connection pools and memory matter. This is why latency degradation cascades into resource exhaustion.\n\n## Common mistakes\n\n- Adding app pods when the database is the bottleneck (it gets worse)\n- Scaling a stateful service horizontally and losing sessions/connections\n- Reasoning from average latency while p99 users suffer\n- Quoting throughput as if it proved good latency\n\n## Key terms\n\n- Stateless — any instance can serve any request; the scaling precondition\n- Horizontal vs vertical — more machines vs bigger machine\n- p95 / p99 — tail latency; what you set objectives on\n- Bottleneck — find it by measuring before scaling anything\n- Concurrency ≈ rps × latency — the back-of-envelope formula\n- Peak vs average — size for the spike, not the mean"
-    },
-    {
-      "id": "db_transactions",
-      "name": "Database Transactions",
-      "description": "All-or-nothing operation groups, and what isolation levels trade for speed.",
-      "category": "database",
-      "relatedTopicIds": [
-        "sql_performance",
-        "optimistic_locking",
-        "outbox_pattern"
-      ],
-      "studyNotes": "## What is it?\n\nA transaction groups several database operations into one all-or-nothing unit: either every change commits, or none do. Isolation levels tune how much concurrently running transactions can see of each other's unfinished work.\n\n## What problem does it solve?\n\nMoney and legal state cannot be half-saved. Creating a renewal means writing the renewal row AND its first history entry — a crash between the two must not leave one without the other. Transactions guarantee it: both, or a clean rollback.\n\n## How it works\n\nThe classic guarantees are ACID: Atomicity (all or nothing), Consistency (constraints hold), Isolation (concurrent transactions do not trample each other), Durability (committed means saved).\n\nIsolation is the tunable one, and it is a dial between safety and speed:\n\n- Stricter levels (serializable) make concurrent transactions behave as if they ran one after another — safest, most locking, slowest under load.\n- Looser levels (read committed, the common default) are faster but allow anomalies: another transaction's committed changes appearing mid-transaction (non-repeatable reads), or new rows appearing (phantoms).\n\nFrame it as a trade-off, not a right answer: payment writes may deserve stricter isolation; a dashboard read does not. And for user-facing edit sessions — which cannot hold a transaction open while a human thinks — optimistic locking (its own topic) is the practical concurrency answer.\n\n## Common mistakes\n\n- No transaction around multi-step writes that belong together\n- Cranking isolation to maximum globally and paying for it in throughput\n- Holding a transaction open across a network call or user think-time\n\n## Key terms\n\n- ACID — atomicity, consistency, isolation, durability\n- Rollback — undoing everything when one step fails\n- Isolation level — the safety-vs-speed dial for concurrent transactions\n- Dirty/phantom read — the anomalies looser isolation permits"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nSQL performance work finds where the database spends time and reduces unnecessary rows, lookups, sorting, and network round trips. The query plan is the evidence for how a query executes.\n\n## What problem does it solve?\n\nA correct query can become slow as data grows. Guessing at indexes or caching may hide the real bottleneck and increase write cost.\n\n## How it works\n\n- Inspect the execution plan and actual row counts before changing the query.\n- Create indexes that support selective filters, joins, and ordering while considering column order.\n- Avoid N+1 access by fetching related data in batches or appropriate joins.\n- Return only needed columns and rows, and use cursor pagination for large changing lists.\n\n## Common mistakes\n\n- Adding indexes to every column.\n- Using SELECT * in hot paths.\n- Diagnosing a slow endpoint without counting database round trips.\n\n## Key terms\n\n- execution plan — Database strategy for running a query.\n- selectivity — How strongly a condition narrows rows.\n- N+1 query — One parent query followed by one query per item.\n- covering index — Index containing all data needed by a query.",
+      "i18n": {
+        "hu": {
+          "name": "SQL-lekérdezések teljesítménye",
+          "description": "Indexek, végrehajtási tervek, N+1 lekérdezések és szelektív adatelérés.",
+          "studyNotes": "## Mi ez?\n\nAz SQL-teljesítményhangolás feltárja, hol tölt időt az adatbázis, majd csökkenti a feleslegesen feldolgozott sorokat, lookupokat, rendezéseket és hálózati köröket. A query plan mutatja meg tényszerűen, hogyan hajtódik végre a lekérdezés.\n\n## Milyen problémát old meg?\n\nEgy helyes lekérdezés az adatmennyiség növekedésével lassúvá válhat. Vaktában indexelni vagy cache-elni elfedheti a valódi bottlenecket, és növelheti az írás költségét.\n\n## Hogyan működik\n\n- Módosítás előtt megnézzük az execution plant és a tényleges sorszámokat.\n- Olyan indexeket készítünk, amelyek támogatják a szelektív filtereket, joinokat és rendezést, figyelembe véve az oszlopsorrendet.\n- Az N+1 hozzáférést joinnal, batch lekéréssel vagy megfelelő eager loadinggal kerüljük el.\n- Csak a szükséges oszlopokat és sorokat adjuk vissza; nagy, változó listáknál cursor paginationt használunk.\n\n## Gyakori hibák\n\n- Minden oszlopra indexet tenni.\n- Forró útvonalakon `SELECT *`-ot használni.\n- Lassú endpointot úgy vizsgálni, hogy nem számoljuk meg az adatbázis-round tripeket.\n\n## Kulcsfogalmak\n\n- execution plan — az adatbázis stratégiája a lekérdezés végrehajtására\n- selectivity — mennyire szűkíti le egy feltétel a sorokat\n- N+1 query — egy szülőlekérdezés, majd elemenként egy további lekérdezés\n- covering index — a lekérdezés minden szükséges adatát tartalmazó index"
+        }
+      }
     },
     {
       "id": "connection_pooling",
       "name": "Connection Pooling",
-      "description": "Reusing database connections — and why pool sizes multiply across instances.",
+      "description": "Reusing bounded database connections across requests.",
+      "category": "database",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nA connection pool maintains a bounded set of reusable database connections. Requests borrow a connection briefly and return it after the transaction or query.\n\n## What problem does it solve?\n\nOpening a new connection for every request is expensive, but allowing every application request to hold one can exhaust database limits.\n\n## How it works\n\n- Size the pool from database capacity, application instance count, and expected query duration.\n- Remember total possible connections equal pool size multiplied by the number of instances and workers.\n- Use acquisition timeouts and monitor wait time, usage, and saturation.\n- Keep transactions short and always release connections on success or failure.\n\n## Common mistakes\n\n- Choosing a large pool per instance without multiplying across autoscaling.\n- Holding a connection while waiting for a remote API.\n- Treating pool exhaustion only by increasing the limit.\n\n## Key terms\n\n- pool size — Maximum reusable connections per process or instance.\n- acquisition timeout — Maximum wait to borrow a connection.\n- saturation — All pool connections are busy.\n- transaction scope — Period a connection and locks are held.",
+      "i18n": {
+        "hu": {
+          "name": "Kapcsolatpoolozás",
+          "description": "Korlátozott számú adatbázis-kapcsolat újrahasználata a kérések között.",
+          "studyNotes": "## Mi ez?\n\nA connection pool korlátozott számú, újrahasználható adatbázis-kapcsolatot tart fenn. A kérések rövid időre kölcsönöznek egy kapcsolatot, majd a tranzakció vagy lekérdezés után visszaadják.\n\n## Milyen problémát old meg?\n\nMinden kéréshez új kapcsolatot nyitni drága, de ha minden alkalmazáskérés tartósan saját kapcsolatot foglalhat, az adatbázis connection limitje gyorsan kimerül.\n\n## Hogyan működik\n\n- A pool méretét az adatbázis kapacitása, az alkalmazáspéldányok száma és a várható queryidő alapján választjuk.\n- A teljes lehetséges kapcsolatszám a poolméret, az instance-ok és a workerek számának szorzata.\n- Acquisition timeoutot használunk, és mérjük a várakozást, használatot és telítettséget.\n- Rövid tranzakciókat tartunk, és siker vagy hiba esetén is mindig visszaadjuk a kapcsolatot.\n\n## Gyakori hibák\n\n- Nagy poolt választani instance-onként anélkül, hogy azt megszoroznánk az autoscaling maximális méretével.\n- Kapcsolatot foglalva tartani, miközben egy távoli API-ra várunk.\n- A pool kimerülését kizárólag a limit emelésével kezelni.\n\n## Kulcsfogalmak\n\n- pool size — egy process vagy instance maximális újrahasználható kapcsolatszáma\n- acquisition timeout — maximális várakozás egy kapcsolat kölcsönzésére\n- saturation — a pool minden kapcsolata foglalt\n- transaction scope — az időszak, amíg kapcsolatokat és lockokat tartunk"
+        }
+      }
+    },
+    {
+      "id": "caching_strategies",
+      "name": "Caching and Invalidation",
+      "description": "Serving reused data faster while controlling staleness.",
+      "category": "backend",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nA cache stores results closer to consumers so repeated reads avoid slower computation or storage. Invalidation defines when cached data is removed or replaced.\n\n## What problem does it solve?\n\nHot reads can overload databases and increase latency. A cache helps only if freshness, failure, and consistency behavior are explicit.\n\n## How it works\n\n- Choose cache-aside, write-through, or another strategy based on ownership and consistency needs.\n- Use TTLs and event-based invalidation according to how stale the data may be.\n- Protect misses with request coalescing, jittered expiry, or stale-while-revalidate to avoid stampedes.\n- Define behavior when the cache is unavailable and monitor hit rate, latency, evictions, and stale errors.\n\n## Common mistakes\n\n- Caching before measuring a repeated expensive path.\n- Using one TTL for data with different freshness needs.\n- Letting many callers rebuild the same expired hot key.\n\n## Key terms\n\n- cache-aside — Application loads and stores data on a miss.\n- TTL — Automatic expiry duration.\n- cache stampede — Many callers rebuild one missing value.\n- invalidation — Removing or updating stale entries.",
+      "i18n": {
+        "hu": {
+          "name": "Cache-elés és invalidálás",
+          "description": "Újrahasznált adatok gyorsabb kiszolgálása a frissesség kontrollálásával.",
+          "studyNotes": "## Mi ez?\n\nA cache az eredményeket a fogyasztóhoz közelebb tárolja, így az ismételt olvasások elkerülhetik a lassabb számítást vagy háttértárat. Az invalidálás határozza meg, mikor távolítjuk el vagy cseréljük le a cache-elt adatot.\n\n## Milyen problémát old meg?\n\nA gyakran olvasott adatok túlterhelhetik az adatbázist és növelhetik a latencyt. A cache csak akkor segít biztonságosan, ha a frissességi, hibakezelési és konzisztenciaviselkedés egyértelmű.\n\n## Hogyan működik\n\n- Cache-aside, write-through vagy más stratégiát választunk a tulajdonjog és konzisztenciaigény alapján.\n- TTL-t és eseményalapú invalidálást alkalmazunk aszerint, mennyire lehet elavult az adat.\n- Request coalescinggal, jitterelt lejárattal vagy stale-while-revalidate-tel védjük a cache misst, hogy elkerüljük a stampede-et.\n- Meghatározzuk a cache kiesésekor követendő viselkedést, és mérjük a hit rate-et, latencyt, evictiont és stale hibákat.\n\n## Gyakori hibák\n\n- Mérés nélkül cache-elni, mielőtt kiderülne, hogy valóban ismétlődő és drága az útvonal.\n- Ugyanazt a TTL-t használni eltérő frissességigényű adatokhoz.\n- Hagyni, hogy sok caller egyszerre építse újra ugyanazt a lejárt hot keyt.\n\n## Kulcsfogalmak\n\n- cache-aside — miss esetén az alkalmazás tölti be és menti el az adatot\n- TTL — automatikus lejárati idő\n- cache stampede — sok caller egyszerre épít újra egy hiányzó értéket\n- invalidálás — elavult bejegyzések eltávolítása vagy frissítése"
+        }
+      }
+    },
+    {
+      "id": "scaling_fundamentals",
+      "name": "Scaling Fundamentals",
+      "description": "Capacity, horizontal and vertical scaling, statelessness, and bottlenecks.",
+      "category": "architecture",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nScaling is increasing a system’s ability to handle data, traffic, or work while meeting latency and reliability goals. Vertical scaling uses a larger machine; horizontal scaling adds instances.\n\n## What problem does it solve?\n\nLoad does not grow evenly across every component. Adding application servers does nothing when the database, lock, queue, or external dependency is the bottleneck.\n\n## How it works\n\n- Estimate workload, read/write ratio, peak traffic, payload size, and latency goals.\n- Measure saturation and tail latency to locate the current bottleneck.\n- Keep request-processing instances stateless where practical so load can be distributed.\n- Scale the constrained component and include backpressure because capacity is never infinite.\n\n## Common mistakes\n\n- Saying horizontal scaling automatically fixes stateful data.\n- Designing from average traffic only.\n- Adding replicas without identifying the actual bottleneck.\n\n## Key terms\n\n- vertical scaling — Using a larger machine.\n- horizontal scaling — Adding more instances.\n- stateless service — Instance does not own durable client state.\n- tail latency — Slow high-percentile request time.",
+      "i18n": {
+        "hu": {
+          "name": "A skálázás alapjai",
+          "description": "Kapacitás, horizontális és vertikális skálázás, stateless működés és bottleneckek.",
+          "studyNotes": "## Mi ez?\n\nA skálázás egy rendszer képességének növelése arra, hogy több adatot, forgalmat vagy munkát kezeljen a latency- és megbízhatósági célok betartásával. A vertikális skálázás nagyobb gépet, a horizontális több példányt jelent.\n\n## Milyen problémát old meg?\n\nA terhelés nem minden komponensen nő egyformán. További alkalmazásszerverek nem segítenek, ha az adatbázis, egy lock, queue vagy külső dependency a bottleneck.\n\n## Hogyan működik\n\n- Megbecsüljük a workloadot, read/write arányt, csúcsforgalmat, payloadméretet és latencycélokat.\n- Saturationt és tail latencyt mérünk, hogy megtaláljuk az aktuális szűk keresztmetszetet.\n- A requestet feldolgozó instance-okat lehetőség szerint statelessre tervezzük, hogy szétosztható legyen a forgalom.\n- A korlátozó komponenst skálázzuk, és backpressure-t is tervezünk, mert a kapacitás soha nem végtelen.\n\n## Gyakori hibák\n\n- Azt állítani, hogy a horizontális skálázás automatikusan megoldja a stateful adatkezelést.\n- Csak átlagos forgalom alapján tervezni.\n- Replicákat hozzáadni a valódi bottleneck azonosítása nélkül.\n\n## Kulcsfogalmak\n\n- vertical scaling — nagyobb gép használata\n- horizontal scaling — több instance hozzáadása\n- stateless service — az instance nem birtokol tartós kliensállapotot\n- tail latency — magas percentilisű, lassú válaszidő"
+        }
+      }
+    },
+    {
+      "id": "sharding",
+      "name": "Database Sharding",
+      "description": "Partitioning one logical dataset across database nodes, with routing, rebalancing, and cross-shard trade-offs.",
       "category": "database",
       "relatedTopicIds": [
-        "sql_performance",
-        "scaling_fundamentals"
+        "scalability",
+        "sql",
+        "nosql"
       ],
-      "studyNotes": "## What is it?\n\nA connection pool keeps a set of open database connections and lends them to requests, instead of opening a new connection per request.\n\n## What problem does it solve?\n\nOpening a database connection is expensive — a TCP handshake, authentication, session setup. Doing it per request wastes time and, under load, floods the database with connection churn.\n\n## How it works\n\nThe application borrows a connection from the pool, runs its queries, and returns it. Sizing is the whole game:\n\n- Too small: requests queue up waiting for a free connection — latency climbs even though the database is idle.\n- Too large: the database drowns in concurrent sessions; every connection costs it memory and scheduling.\n\nThe trap that catches teams in Kubernetes: pools multiply across instances. 10 pods × 50 connections each = 500 connections against ONE database. Pool size must be planned globally (per-database), not per instance — scale out the app tier and the math changes.\n\nSlow downstream calls make it worse: concurrency ≈ rps × latency, so when queries slow down, connections are held longer, the pool exhausts, and a latency problem becomes an availability problem. Explicit query timeouts keep one slow query class from eating the pool.\n\n## Common mistakes\n\n- Per-pod pool sizes set in isolation (10 pods × 50 = 500 on one DB)\n- No query timeout — one slow query class exhausts the pool\n- Reading \"pool exhausted\" as a DB problem when it is a latency problem\n\n## Key terms\n\n- Pool exhaustion — all connections busy; requests queue\n- Connection churn — the per-request open/close the pool prevents\n- Global sizing — pools are budgeted per database, not per instance"
+      "studyNotes": "## What is it?\n\nSharding divides one logical dataset across several database nodes. A shard key determines where each record belongs, and a routing layer sends reads and writes to the correct shard. Each shard stores only part of the data.\n\n## What problem does it solve?\n\nA single database can reach limits in storage, write throughput, maintenance time, or geographic placement. Sharding adds horizontal capacity, but it also turns local database operations into distributed-system problems.\n\n## How it works\n\n- Choose a shard key with good distribution and query locality.\n- Hash-based sharding spreads keys well but makes range queries and rebalancing harder.\n- Range-based sharding supports ordered access but can create hot ranges.\n- A directory or routing service can support flexible placement at the cost of another dependency.\n- Cross-shard joins and transactions are possible in some systems, but they are usually slower and more complex than single-shard operations.\n- Rebalancing moves data while traffic continues and needs careful consistency and failure handling.\n- Monitor skew, hot shards, storage growth, cross-shard traffic, and routing errors.\n\n## Common mistakes\n\n- Choosing a sequential or tenant key without checking skew\n- Saying cross-shard transactions are impossible in every database\n- Sharding before indexes, query design, or vertical capacity are understood\n- Ignoring how data will be rebalanced as shards fill\n\n## Key terms\n\n- shard key — value used to place and route data\n- skew — uneven data or traffic distribution\n- hot shard — shard receiving disproportionate load\n- rebalancing — moving partitions between nodes",
+      "i18n": {
+        "hu": {
+          "name": "Adatbázis-sharding",
+          "description": "Egy logikai adathalmaz felosztása adatbázis-node-ok között, routinggal, rebalancinggel és cross-shard trade-offokkal.",
+          "studyNotes": "## Mi ez?\n\nA sharding egy logikai adathalmazt több adatbázis-node között oszt szét. A shard key dönti el, melyik rekord hová tartozik, a routing réteg pedig a megfelelő shardhoz küldi az olvasásokat és írásokat. Minden shard csak az adatok egy részét tárolja.\n\n## Milyen problémát old meg?\n\nEgyetlen adatbázis elérheti a tárhely-, írási throughput-, karbantartási idő- vagy földrajzi elhelyezési korlátait. A sharding horizontális kapacitást ad, de a korábban helyi adatbázis-műveletekből elosztott rendszeri problémákat csinál.\n\n## Hogyan működik\n\n- Olyan shard keyt választunk, amely egyenletes eloszlást és jó query localityt ad.\n- A hash-alapú sharding jól osztja el a kulcsokat, de nehezíti a range queryket és a rebalancinget.\n- A range-alapú sharding támogatja a rendezett hozzáférést, de hot range-eket hozhat létre.\n- Directory vagy routing service rugalmas elhelyezést tesz lehetővé, egy új dependency árán.\n- Egyes rendszerek támogatnak cross-shard joinokat és tranzakciókat, de ezek általában lassabbak és összetettebbek az egy shardon belüli műveleteknél.\n- Rebalancing közben élő forgalom mellett mozgatjuk az adatot, ezért gondos konzisztencia- és hibakezelés kell.\n- Mérjük a skew-t, hot shardokat, tárhelynövekedést, cross-shard forgalmat és routinghibákat.\n\n## Gyakori hibák\n\n- Szekvenciális vagy tenant kulcsot választani a skew ellenőrzése nélkül.\n- Azt állítani, hogy cross-shard tranzakció minden adatbázisban lehetetlen.\n- Indexek, query design és vertikális kapacitás megértése előtt shardolni.\n- Figyelmen kívül hagyni, hogyan fogjuk újraosztani az adatot a shardok telítődésével.\n\n## Kulcsfogalmak\n\n- shard key — az adat elhelyezéséhez és route-olásához használt érték\n- skew — egyenetlen adat- vagy forgalomeloszlás\n- hot shard — aránytalanul nagy terhelést kapó shard\n- rebalancing — partíciók mozgatása node-ok között"
+        }
+      }
+    },
+    {
+      "id": "db_transactions",
+      "name": "Database Transactions",
+      "description": "All-or-nothing operation groups and the isolation trade-offs between correctness and concurrency.",
+      "category": "database",
+      "relatedTopicIds": [
+        "transactions",
+        "optimistic_locking"
+      ],
+      "studyNotes": "## What is it?\n\nA database transaction groups several reads and writes into one logical unit. The database either commits the complete unit or rolls it back so callers do not observe a partially applied business operation.\n\n## What problem does it solve?\n\nWithout a transaction, a failure between related writes can leave data inconsistent. Concurrent requests can also overwrite or observe intermediate state unless the database applies an appropriate isolation model.\n\n## How it works\n\n- Keep the transaction boundary aligned with one business invariant.\n- ACID describes atomicity, consistency, isolation, and durability.\n- Isolation levels trade stronger guarantees for concurrency and may still allow specific anomalies.\n- Keep transactions short and avoid network calls while locks or versions are held.\n\n## Common mistakes\n\n- Treating a transaction as a replacement for domain validation.\n- Keeping a transaction open while calling another service.\n- Assuming every isolation level prevents every anomaly.\n\n## Key terms\n\n- atomicity — All operations commit or none do.\n- isolation — Controls what concurrent transactions can observe.\n- commit — Makes the transaction durable.\n- rollback — Discards the transaction changes.",
+      "i18n": {
+        "hu": {
+          "name": "Adatbázis-tranzakciók",
+          "description": "Mindent vagy semmit műveletcsoportok, valamint a helyesség és párhuzamosság közti isolation trade-offok.",
+          "studyNotes": "## Mi ez?\n\nAz adatbázis-tranzakció több olvasást és írást egyetlen logikai egységbe foglal. Az adatbázis vagy a teljes egységet commitolja, vagy rollbackeli, így a hívók nem látnak félig végrehajtott üzleti műveletet.\n\n## Milyen problémát old meg?\n\nTranzakció nélkül a kapcsolódó írások között bekövetkező hiba inkonzisztens adatot hagyhat. A párhuzamos kérések megfelelő isolation modell nélkül egymás módosításait is felülírhatják, vagy köztes állapotot láthatnak.\n\n## Hogyan működik\n\n- A tranzakció határát egy üzleti invariánshoz igazítjuk.\n- Az ACID az atomicity, consistency, isolation és durability tulajdonságokat írja le.\n- Az isolation levelek az erősebb garanciákat a párhuzamossággal cserélik el, és bizonyos anomáliákat továbbra is megengedhetnek.\n- A tranzakciókat röviden tartjuk, és nem hívunk hálózati szolgáltatást, miközben lockokat vagy verziókat foglalunk.\n\n## Gyakori hibák\n\n- A tranzakciót domain validation helyettesítőjének tekinteni.\n- Nyitva tartani egy tranzakciót másik service hívása alatt.\n- Azt feltételezni, hogy minden isolation level minden anomáliát kizár.\n\n## Kulcsfogalmak\n\n- atomicity — minden művelet commitolódik, vagy egyik sem\n- isolation — szabályozza, mit láthatnak a párhuzamos tranzakciók\n- commit — tartóssá teszi a tranzakció eredményét\n- rollback — elveti a tranzakció módosításait"
+        }
+      }
     },
     {
       "id": "sql_vs_nosql",
       "name": "SQL vs NoSQL",
-      "description": "Choosing a database by access pattern — relations and transactions vs flexible schema and scale.",
+      "description": "Choosing a database from relationships, transactions, access patterns, scale, and operational constraints.",
       "category": "database",
       "relatedTopicIds": [
-        "sql_performance",
-        "sharding",
-        "cap_theorem"
+        "sql",
+        "nosql",
+        "sharding"
       ],
-      "studyNotes": "## What is it?\n\nThe choice between relational databases (SQL — tables, joins, transactions, strict schema) and the NoSQL families (document, key-value, wide-column, graph — flexible schema, built to scale horizontally).\n\n## What problem does it solve?\n\nBoth store data; they make different promises. Choosing by fashion instead of by access pattern produces either a relational database melting under key-value load, or a document store painfully faking joins and transactions.\n\n## How it works\n\nDecide by ACCESS PATTERN — how the data is actually read and written:\n\n- Relations, joins, multi-row transactions, strong consistency → SQL. Customer / invoice / payment data is the canonical case: interrelated, transactional, shaped like tables.\n- Flexible or evolving schema, huge scale, document- or log-shaped data, simple key-based lookups → NoSQL is a candidate: audit event streams, product catalogs with varying attributes, session stores.\n\nThe honest defaults: a modern relational database (PostgreSQL) is the right FIRST choice for most applications — it now handles JSON columns, full-text search and serious scale. Reach for NoSQL when a concrete access pattern demands it, not preemptively. And the choice is per dataset, not per company: the same system can keep payments in SQL and audit events in a document store.\n\nCAP-theorem territory (its own topic) shows up here: distributed NoSQL stores often trade consistency for availability — know which trade the specific store makes.\n\n## Common mistakes\n\n- \"NoSQL because it's modern\" — with joins and transactions faked in app code\n- Ignoring that the choice is per dataset, not one global decision\n- Choosing a store without knowing which CAP trade it makes\n\n## Key terms\n\n- Access pattern — how data is read/written; the deciding factor\n- Document / key-value store — the common NoSQL shapes\n- Schema flexibility — documents evolve without migrations\n- Strong consistency — SQL's home turf; many NoSQL stores relax it"
+      "studyNotes": "## What is it?\n\nSQL databases use relational tables, explicit schemas, joins, and mature transactional guarantees. NoSQL is a family of models such as document, key-value, wide-column, and graph databases, each optimized for particular access patterns.\n\n## What problem does it solve?\n\nA database choice that ignores query patterns or consistency needs creates awkward data models, expensive joins or fan-out queries, and difficult correctness problems. The labels alone do not determine performance or scalability.\n\n## How it works\n\n- Start with the reads, writes, relationships, and invariants the application must support.\n- Prefer relational storage when joins, constraints, and multi-row transactions are central.\n- Consider a NoSQL model when its partitioning and access pattern fit the workload directly.\n- Evaluate operations, backup, migration, observability, and team knowledge as part of the decision.\n\n## Common mistakes\n\n- Saying NoSQL has no schema or no transactions.\n- Choosing by expected scale without defining the access pattern.\n- Treating one database type as universally faster.\n\n## Key terms\n\n- relational — Data modeled with tables and relationships.\n- document store — Stores aggregate-shaped documents.\n- access pattern — The concrete way data is read and written.\n- consistency — The guarantees clients receive about observed state.",
+      "i18n": {
+        "hu": {
+          "name": "SQL vagy NoSQL",
+          "description": "Adatbázis választása kapcsolatok, tranzakciók, access patternek, skála és üzemeltetési korlátok alapján.",
+          "studyNotes": "## Mi ez?\n\nAz SQL-adatbázisok relációs táblákat, explicit sémát, joinokat és kiforrott tranzakciós garanciákat használnak. A NoSQL több modell gyűjtőneve, például document, key-value, wide-column és graph adatbázisoké, amelyek eltérő hozzáférési mintákra optimalizálnak.\n\n## Milyen problémát old meg?\n\nA query patternöket vagy konzisztenciaigényt figyelmen kívül hagyó adatbázis-választás kényelmetlen adatmodellt, drága joinokat vagy fan-out queryket és nehezen kezelhető correctness problémákat okoz. Önmagában az SQL vagy NoSQL címke nem dönti el a teljesítményt vagy skálázhatóságot.\n\n## Hogyan működik\n\n- Az alkalmazás olvasásaiból, írásaiból, kapcsolataiból és invariánsaiból indulunk ki.\n- Relációs tárolást részesítünk előnyben, ha a joinok, constraint-ek és több soros tranzakciók központi jelentőségűek.\n- NoSQL modellt akkor választunk, ha annak partícionálása és access patternje közvetlenül illeszkedik a workloadhoz.\n- A döntés részének tekintjük az üzemeltetést, backupot, migrációt, observabilityt és a csapat tudását is.\n\n## Gyakori hibák\n\n- Azt állítani, hogy a NoSQL-nek nincs sémája vagy nincsenek tranzakciói.\n- Várható skála alapján választani az access pattern meghatározása nélkül.\n- Egyik adatbázistípusra úgy tekinteni, hogy minden esetben gyorsabb.\n\n## Kulcsfogalmak\n\n- relational — táblákkal és kapcsolatokkal modellezett adat\n- document store — aggregátum alakú dokumentumokat tároló adatbázis\n- access pattern — az adat olvasásának és írásának konkrét módja\n- consistency — garanciák arról, milyen állapotot látnak a kliensek"
+        }
+      }
     }
   ],
   "questions": [
     {
-      "id": "das_outbox_001",
+      "id": "hybrid_outbox_pattern_and_the_dual_write",
       "title": "Outbox pattern and the dual write",
       "prompt": "A service saves an order to its database and publishes an event to a queue. What can go wrong, and how does the outbox pattern fix it?",
       "roles": [
         "backend_developer",
-        "backend_architect"
-      ],
-      "modes": [
-        "concept_check",
-        "scenario_discussion"
-      ],
-      "topicIds": [
-        "outbox_pattern",
-        "message_queue",
-        "distributed_transactions"
-      ],
-      "expectedDurationSeconds": 240,
-      "thinkingTimeSeconds": 60,
-      "answerStructureHint": "Name the dual-write problem, write the event into an outbox table in the same transaction, relay it, and handle at-least-once on consumers.",
-      "expectedPoints": [
-        {
-          "id": "ob_dual_write",
-          "label": "Names the dual-write problem",
-          "description": "DB commit and publish are two systems — one can succeed while the other fails, losing or ghosting events.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5
-          },
-          "acceptedSignals": [
-            "dual write",
-            "two systems",
-            "commit succeeds but publish fails",
-            "lose the event",
-            "not atomic",
-            "inconsistent"
-          ]
-        },
-        {
-          "id": "ob_same_tx",
-          "label": "Outbox row in the same transaction",
-          "description": "The event is inserted into an outbox table atomically with the business change; a relay publishes it later.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5
-          },
-          "acceptedSignals": [
-            "outbox table",
-            "same transaction",
-            "atomically",
-            "relay",
-            "poller",
-            "cdc",
-            "debezium"
-          ]
-        },
-        {
-          "id": "ob_at_least_once",
-          "label": "Consumers handle at-least-once",
-          "description": "The relay may publish twice, so consumers deduplicate / are idempotent.",
-          "importance": "important",
-          "roleWeight": {
-            "backend_developer": 4,
-            "backend_architect": 5
-          },
-          "acceptedSignals": [
-            "at least once",
-            "duplicate delivery",
-            "idempotent consumer",
-            "deduplication",
-            "processed event table"
-          ]
-        }
-      ],
-      "followUps": [
-        {
-          "id": "das_ob_order_followup",
-          "trigger": {
-            "type": "always"
-          },
-          "prompt": "Does the outbox guarantee event ordering? What would you do if order matters?",
-          "expectedPoints": []
-        }
-      ]
-    },
-    {
-      "id": "das_sharding_001",
-      "title": "Sharding and hot partitions",
-      "prompt": "Your database no longer fits on one node, so you shard it. How do you pick the partition key, and what is a hot shard?",
-      "roles": [
         "backend_architect",
-        "backend_developer",
         "solution_architect"
       ],
       "modes": [
@@ -224,256 +184,341 @@
         "scenario_discussion"
       ],
       "topicIds": [
-        "sharding",
-        "scaling_fundamentals"
+        "outbox_pattern"
       ],
-      "expectedDurationSeconds": 240,
-      "thinkingTimeSeconds": 60,
-      "answerStructureHint": "Key must spread load evenly and match query patterns; hot shards come from skewed keys; mitigation via key salting or splitting.",
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Name the dual-write problem, write the event into an outbox table in the same transaction, relay it, and handle at-least-once on consumers.",
       "expectedPoints": [
         {
-          "id": "sh_key_choice",
-          "label": "Partition key drives distribution and queries",
-          "description": "Pick a high-cardinality key that spreads writes and keeps common queries on one shard.",
+          "id": "hybrid_outbox_pattern_and_the_dual_write_point_1",
+          "label": "Names the dual-write problem",
+          "description": "DB commit and publish are two systems — one can succeed while the other fails, losing or ghosting events.",
           "importance": "critical",
           "roleWeight": {
+            "backend_developer": 5,
             "backend_architect": 5,
-            "backend_developer": 4,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "partition key",
-            "shard key",
-            "even distribution",
-            "high cardinality",
-            "query pattern",
-            "avoid cross shard queries"
+            "names the dual-write problem",
+            "dual-write problem",
+            "db commit and publish",
+            "succeed while the other",
+            "while the other fails",
+            "losing or ghosting events",
+            "dual-write"
           ]
         },
         {
-          "id": "sh_hot_shard",
-          "label": "Explains hot shards",
-          "description": "Skewed access (one big tenant, celebrity user, time-ordered keys) overloads one shard while others idle.",
+          "id": "hybrid_outbox_pattern_and_the_dual_write_point_2",
+          "label": "Outbox row in the same transaction",
+          "description": "The event is inserted into an outbox table atomically with the business change; a relay publishes it later.",
           "importance": "critical",
           "roleWeight": {
+            "backend_developer": 5,
             "backend_architect": 5,
-            "backend_developer": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "hot shard",
-            "hot partition",
-            "skew",
-            "one big tenant",
-            "celebrity",
-            "uneven load",
-            "sequential keys"
+            "outbox table",
+            "outbox row same transaction",
+            "event is inserted into",
+            "with the business change",
+            "relay publishes it later",
+            "outbox"
           ]
         },
         {
-          "id": "sh_mitigation",
-          "label": "Knows mitigations and costs",
-          "description": "Salting/composite keys, splitting shards, caching hot data; cross-shard transactions and rebalancing get hard.",
+          "id": "hybrid_outbox_pattern_and_the_dual_write_point_3",
+          "label": "Consumers handle at-least-once",
+          "description": "The relay may publish twice, so consumers deduplicate / are idempotent.",
           "importance": "important",
           "roleWeight": {
-            "backend_architect": 5,
+            "backend_developer": 4,
+            "backend_architect": 4,
             "solution_architect": 4
           },
           "acceptedSignals": [
-            "salting",
-            "composite key",
-            "split the shard",
-            "rebalance",
-            "resharding",
-            "cache the hot key",
-            "cross shard transaction"
+            "consumers handle at-least once",
+            "consumers at-least once",
+            "relay may publish twice",
+            "consumers deduplicate",
+            "idempotent",
+            "consumers"
           ]
         }
       ],
       "followUps": [
         {
-          "id": "das_sh_rebalance_followup",
+          "id": "hybrid_outbox_pattern_and_the_dual_write_followup_1",
           "trigger": {
             "type": "always"
           },
-          "prompt": "You need to double the shard count on a live system. How do you migrate without downtime?",
+          "prompt": "Does the outbox guarantee event ordering? What would you do if order matters?",
           "expectedPoints": []
         }
-      ]
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Outbox minta és a dual write",
+          "prompt": "Egy service elment egy rendelést az adatbázisába, majd eseményt publikál egy queue-ba. Mi romolhat el, és hogyan oldja ezt meg az outbox minta?",
+          "answerStructureHint": "Nevezd meg a dual-write problémát, írd az eseményt ugyanabban a tranzakcióban egy outbox táblába, továbbítsd később, és kezeld az at-least-once kézbesítést a consumereknél.",
+          "expectedPoints": {
+            "hybrid_outbox_pattern_and_the_dual_write_point_1": {
+              "label": "Megnevezi a dual-write problémát",
+              "description": "Az adatbázis-commit és a publikálás két külön rendszerben történik; az egyik sikerülhet, miközben a másik elbukik, így elveszett vagy „szellem” esemény keletkezhet."
+            },
+            "hybrid_outbox_pattern_and_the_dual_write_point_2": {
+              "label": "Az outbox rekord ugyanabban a tranzakcióban készül",
+              "description": "Az esemény az üzleti módosítással atomikusan kerül az outbox táblába, majd egy relay később publikálja."
+            },
+            "hybrid_outbox_pattern_and_the_dual_write_point_3": {
+              "label": "A consumerek kezelik az at-least-once kézbesítést",
+              "description": "A relay többször is publikálhat, ezért a consumerek deduplikálnak vagy idempotensek."
+            }
+          },
+          "followUps": {
+            "hybrid_outbox_pattern_and_the_dual_write_followup_1": "Garantálja az outbox az események sorrendjét? Mit tennél, ha a sorrend számít?"
+          }
+        }
+      }
     },
     {
-      "id": "das_replication_001",
+      "id": "hybrid_read_replicas_and_replication_lag",
       "title": "Read replicas and replication lag",
       "prompt": "You add read replicas to take load off the primary database. What new problems did you just introduce?",
       "roles": [
         "backend_developer",
-        "backend_architect"
+        "backend_architect",
+        "solution_architect"
       ],
       "modes": [
         "scenario_discussion",
         "tradeoff_decision"
       ],
       "topicIds": [
-        "replication",
-        "scaling_fundamentals"
+        "replication"
       ],
-      "expectedDurationSeconds": 210,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
-      "answerStructureHint": "Replication lag → stale reads and read-your-own-writes; routing decisions; failover consistency.",
+      "answerStructureHint": "Replication lag stale reads and read-your-own-writes; routing decisions; failover consistency.",
       "expectedPoints": [
         {
-          "id": "rl_lag_stale",
+          "id": "hybrid_read_replicas_and_replication_lag_point_1",
           "label": "Replication lag causes stale reads",
           "description": "Replicas apply changes asynchronously, so reads can return old data.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
-            "backend_architect": 5
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
             "replication lag",
-            "stale read",
-            "asynchronous replication",
-            "old data",
-            "eventually consistent read"
+            "replica",
+            "replication and read replicas",
+            "replication",
+            "replicas apply changes asynchronously",
+            "reads can return old",
+            "can return old data"
           ]
         },
         {
-          "id": "rl_read_own_writes",
+          "id": "hybrid_read_replicas_and_replication_lag_point_2",
           "label": "Read-your-own-writes problem",
           "description": "A user updates then reads a replica and sees the old value; route their reads to the primary or use session stickiness.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
-            "backend_architect": 4
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "read your own writes",
-            "sees the old value after saving",
-            "route to primary",
-            "read from the leader after write",
-            "session consistency",
-            "sticky"
+            "primary",
+            "read-your own-writes problem",
+            "user updates then reads",
+            "sees the old value",
+            "route their reads to",
+            "or use session stickiness",
+            "read-your"
           ]
         },
         {
-          "id": "rl_failover",
+          "id": "hybrid_read_replicas_and_replication_lag_point_3",
           "label": "Failover and lost writes",
           "description": "Promoting a lagging replica on failover can lose recent writes; sync vs async is a durability/latency trade-off.",
-          "importance": "nice_to_have",
+          "importance": "important",
           "roleWeight": {
-            "backend_architect": 5
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
           },
           "acceptedSignals": [
-            "failover",
-            "promote a replica",
-            "lose writes",
-            "synchronous replication",
-            "durability",
-            "semi-sync"
+            "failover and lost writes",
+            "failover lost writes",
+            "promoting a lagging replica",
+            "can lose recent writes",
+            "sync vs async is",
+            "async is a durability",
+            "latency trade-off"
           ]
         }
       ],
       "followUps": [
         {
-          "id": "das_rl_route_followup",
+          "id": "hybrid_read_replicas_and_replication_lag_followup_1",
           "trigger": {
-            "type": "rubric_missing",
-            "rubricItemId": "rl_read_own_writes"
+            "type": "always"
           },
           "prompt": "A user saves their profile and immediately sees the old name. What happened and how do you fix it?",
           "expectedPoints": []
         }
-      ]
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Read replicák és replication lag",
+          "prompt": "Read replicákat adsz hozzá, hogy csökkentsd a primary adatbázis terhelését. Milyen új problémákat vezettél be?",
+          "answerStructureHint": "Replication lag és stale read, read-your-own-writes, routingdöntések és failover-konzisztencia.",
+          "expectedPoints": {
+            "hybrid_read_replicas_and_replication_lag_point_1": {
+              "label": "A replication lag elavult olvasást okoz",
+              "description": "A replicák aszinkron alkalmazzák a változásokat, ezért régi adatot adhatnak vissza."
+            },
+            "hybrid_read_replicas_and_replication_lag_point_2": {
+              "label": "Read-your-own-writes probléma",
+              "description": "A felhasználó frissít, majd egy replicáról a régi értéket olvassa; az olvasását a primaryra kell irányítani vagy session stickinesst használni."
+            },
+            "hybrid_read_replicas_and_replication_lag_point_3": {
+              "label": "Failover és elveszett írások",
+              "description": "Egy lemaradó replica előléptetésekor a legfrissebb írások elveszhetnek; a szinkron és aszinkron replikáció tartósság–latency trade-off."
+            }
+          },
+          "followUps": {
+            "hybrid_read_replicas_and_replication_lag_followup_1": "A felhasználó elmenti a profilját, majd azonnal a régi nevet látja. Mi történt, és hogyan javítanád?"
+          }
+        }
+      }
     },
     {
-      "id": "das_optimistic_lock_001",
+      "id": "hybrid_optimistic_locking_and_n_1",
       "title": "Optimistic locking and N+1",
       "prompt": "Two users edit the same record at once. How does optimistic locking handle it — and separately, what is the N+1 query problem?",
       "roles": [
         "backend_developer",
-        "fullstack_developer"
+        "backend_architect",
+        "solution_architect"
       ],
       "modes": [
         "concept_check"
       ],
       "topicIds": [
         "optimistic_locking",
-        "sql"
+        "sql_performance"
       ],
-      "expectedDurationSeconds": 210,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
-      "answerStructureHint": "Version column checked on update, conflict → retry/merge; N+1: one query per row from lazy loading, fixed with joins/batching.",
+      "answerStructureHint": "Version column checked on update, conflict retry/merge; N+1: one query per row from lazy loading, fixed with joins/batching.",
       "expectedPoints": [
         {
-          "id": "ol_version",
+          "id": "hybrid_optimistic_locking_and_n_1_point_1",
           "label": "Version check on update",
           "description": "Update carries the version it read; if the row changed meanwhile, the update fails instead of silently overwriting.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
-            "fullstack_developer": 4
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "version column",
-            "version number",
-            "compare the version",
-            "update fails",
-            "conflict detected",
-            "no locks held",
-            "lost update"
+            "version check on update",
+            "version check update",
+            "update carries the version",
+            "the version it read",
+            "row changed meanwhile",
+            "update fails instead of",
+            "instead of silently overwriting",
+            "version"
           ]
         },
         {
-          "id": "ol_conflict_handling",
+          "id": "hybrid_optimistic_locking_and_n_1_point_2",
           "label": "Handles the conflict",
           "description": "On conflict: reload and retry, merge, or surface to the user — better than blocking for rare conflicts.",
           "importance": "important",
           "roleWeight": {
             "backend_developer": 4,
-            "fullstack_developer": 4
+            "backend_architect": 4,
+            "solution_architect": 4
           },
           "acceptedSignals": [
-            "retry",
-            "reload and reapply",
-            "tell the user",
+            "the conflict",
+            "conflict",
+            "reload and retry",
             "merge",
-            "rare conflicts",
-            "pessimistic when contention is high"
+            "surface to the user",
+            "better than blocking for",
+            "blocking for rare conflicts"
           ]
         },
         {
-          "id": "ol_n_plus_one",
+          "id": "hybrid_optimistic_locking_and_n_1_point_3",
           "label": "Explains N+1 and the fix",
           "description": "One query for the list plus one per item (lazy loading); fix with joins, eager loading or batching.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
-            "fullstack_developer": 4
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "n plus one",
-            "one query per row",
+            "n+1 query",
+            "n 1 fix",
+            "query for the list",
+            "plus one per item",
             "lazy loading",
-            "join",
-            "eager loading",
-            "batch the queries",
-            "dataloader"
+            "fix with joins",
+            "eager loading or batching"
           ]
         }
       ],
       "followUps": [
         {
-          "id": "das_ol_detect_followup",
+          "id": "hybrid_optimistic_locking_and_n_1_followup_1",
           "trigger": {
             "type": "always"
           },
           "prompt": "How would you notice an N+1 problem in production rather than in code review?",
           "expectedPoints": []
         }
-      ]
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Optimista zárolás és N+1",
+          "prompt": "Két felhasználó egyszerre szerkeszti ugyanazt a rekordot. Hogyan kezeli ezt az optimista zárolás, és külön: mi az N+1 query probléma?",
+          "answerStructureHint": "Az update ellenőrzi a version columnt, konfliktusnál retry vagy merge; N+1 esetén a lista minden sorához külön query fut lazy loading miatt, amit joinnal vagy batchinggel javítunk.",
+          "expectedPoints": {
+            "hybrid_optimistic_locking_and_n_1_point_1": {
+              "label": "Verzióellenőrzés frissítéskor",
+              "description": "Az update elküldi a beolvasott verziót; ha a sor közben megváltozott, a művelet elbukik a csendes felülírás helyett."
+            },
+            "hybrid_optimistic_locking_and_n_1_point_2": {
+              "label": "Kezeli a konfliktust",
+              "description": "Konfliktusnál újratölt, újrapróbál, merge-el vagy jelzi a felhasználónak; ritka ütközésnél ez jobb, mint blokkolni."
+            },
+            "hybrid_optimistic_locking_and_n_1_point_3": {
+              "label": "Elmagyarázza az N+1-et és a javítást",
+              "description": "Egy query a listához, majd elemenként egy további lazy-loading query; joinnal, eager loadinggal vagy batchinggel javítható."
+            }
+          },
+          "followUps": {
+            "hybrid_optimistic_locking_and_n_1_followup_1": "Hogyan vennéd észre productionben az N+1 problémát, nem pedig code review során?"
+          }
+        }
+      }
     },
     {
-      "id": "das_sqlperf_001",
+      "id": "hybrid_diagnosing_a_slow_list_endpoint",
       "title": "Diagnosing a slow list endpoint",
       "prompt": "A list endpoint backed by SQL got slow as data grew. Walk me through your diagnosis and the usual culprits.",
       "roles": [
@@ -485,90 +530,267 @@
         "troubleshooting"
       ],
       "topicIds": [
-        "sql_performance",
-        "connection_pooling"
+        "sql_performance"
       ],
-      "expectedDurationSeconds": 200,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "sp_index",
+          "id": "hybrid_diagnosing_a_slow_list_endpoint_point_1",
           "label": "Index analysis first",
-          "description": "Check the query plan; index the filtered/sorted/joined columns; know indexes slow writes.",
+          "description": "Check the query plan; index the filtered/sorted/ joined columns; know indexes slow writes.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
             "backend_architect": 5,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "index",
             "query plan",
-            "explain",
-            "table scan",
-            "filtered columns",
-            "slows writes"
+            "index analysis first",
+            "check the query plan",
+            "index the filtered",
+            "sorted",
+            "joined columns",
+            "know indexes slow writes",
+            "index"
           ]
         },
         {
-          "id": "sp_nplus1",
+          "id": "hybrid_diagnosing_a_slow_list_endpoint_point_2",
           "label": "Spots N+1",
-          "description": "One list query then per-row queries; fix with join/eager/batch loading.",
+          "description": "One list query then per-row queries; fix with join/eager/ batch loading.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
             "backend_architect": 5,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "n+1",
-            "n plus one",
-            "query per row",
-            "join",
-            "eager loading",
-            "batch"
+            "n+1 query",
+            "spots n 1",
+            "list query then per-row",
+            "query then per-row queries",
+            "fix with join",
+            "eager",
+            "batch loading",
+            "spots"
           ]
         },
         {
-          "id": "sp_pool",
+          "id": "hybrid_diagnosing_a_slow_list_endpoint_point_3",
           "label": "Connection pool math",
           "description": "Pool too small queues requests; pools multiply across pods against one DB.",
           "importance": "important",
           "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5,
+            "backend_developer": 4,
+            "backend_architect": 4,
             "solution_architect": 4
           },
           "acceptedSignals": [
             "connection pool",
-            "pods multiply",
-            "pool size",
-            "too many connections"
+            "connection pool math",
+            "pool too small queues",
+            "too small queues requests",
+            "pools multiply across pods",
+            "pods against one db",
+            "connection"
           ]
         },
         {
-          "id": "sp_measure",
+          "id": "hybrid_diagnosing_a_slow_list_endpoint_point_4",
           "label": "Measures before scaling",
           "description": "DB time, external calls, locks — find the bottleneck before adding servers.",
-          "importance": "important",
+          "importance": "nice_to_have",
           "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5,
-            "solution_architect": 4
+            "backend_developer": 3,
+            "backend_architect": 3,
+            "solution_architect": 3
           },
           "acceptedSignals": [
-            "measure",
-            "bottleneck",
-            "before scaling",
-            "lock contention",
-            "profiling"
+            "measures before scaling",
+            "measures scaling",
+            "db time",
+            "external calls",
+            "locks",
+            "find the bottleneck before",
+            "bottleneck before adding servers",
+            "measures"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_diagnosing_a_slow_list_endpoint_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which metric or observation would confirm the root cause in this Diagnosing a slow list endpoint scenario?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Lassú listázó endpoint diagnosztikája",
+          "prompt": "Egy SQL-re épülő listázó endpoint az adatmennyiség növekedésével lelassult. Vezess végig a diagnosztikán és a gyakori okokon.",
+          "answerStructureHint": "Először mérj és vizsgáld a query plant, majd térj ki az indexekre, N+1-re, poolokra, lockokra és külső függőségekre.",
+          "expectedPoints": {
+            "hybrid_diagnosing_a_slow_list_endpoint_point_1": {
+              "label": "Először index- és query-plan elemzés",
+              "description": "Megnézi a query plant; indexeli a filterelt, rendezett és joinolt oszlopokat; tudja, hogy az indexek lassítják az írást."
+            },
+            "hybrid_diagnosing_a_slow_list_endpoint_point_2": {
+              "label": "Felismeri az N+1-et",
+              "description": "Egy listaquery után soronként új query fut; joinnal, eager loadinggal vagy batch betöltéssel javítja."
+            },
+            "hybrid_diagnosing_a_slow_list_endpoint_point_3": {
+              "label": "Érti a connection pool matematikáját",
+              "description": "A túl kicsi pool sorba állítja a kéréseket, a podonkénti poolok pedig összeadódnak ugyanazon adatbázis felé."
+            },
+            "hybrid_diagnosing_a_slow_list_endpoint_point_4": {
+              "label": "Skálázás előtt mér",
+              "description": "Adatbázis-idő, külső hívások és lockok alapján keresi meg a bottlenecket, mielőtt szervereket adna hozzá."
+            }
+          },
+          "followUps": {
+            "hybrid_diagnosing_a_slow_list_endpoint_followup_1": "Melyik metrika vagy megfigyelés igazolná a lassulás valódi okát?"
+          }
+        }
+      }
     },
     {
-      "id": "das_caching_001",
+      "id": "manual_connection_pools_exhausting_the_database",
+      "title": "Connection pools exhausting the database",
+      "prompt": "A service scales from 5 to 50 instances and the database suddenly runs out of connections. What is happening, and how would you size and protect the pools?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "system_design"
+      ],
+      "topicIds": [
+        "connection_pooling"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Calculate total possible connections, bound each pool, queue callers, and monitor both application and database saturation.",
+      "expectedPoints": [
+        {
+          "id": "manual_connection_pools_exhausting_the_database_point_1",
+          "label": "Calculates the fleet-wide connection limit",
+          "description": "Recognizes that pool size is per process or instance, so horizontal scaling multiplies the database demand.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "pool per instance",
+            "total connections",
+            "horizontal scaling",
+            "database limit"
+          ]
+        },
+        {
+          "id": "manual_connection_pools_exhausting_the_database_point_2",
+          "label": "Bounds and queues work",
+          "description": "Sets realistic pool limits, acquisition timeouts, and backpressure instead of opening unlimited connections.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "bounded pool",
+            "acquisition timeout",
+            "queue requests",
+            "backpressure"
+          ]
+        },
+        {
+          "id": "manual_connection_pools_exhausting_the_database_point_3",
+          "label": "Sizes from workload and database capacity",
+          "description": "Uses query duration, concurrency, database limits, and headroom rather than a magic default.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "query duration",
+            "concurrency",
+            "capacity planning",
+            "connection headroom",
+            "sizes workload database capacity"
+          ]
+        },
+        {
+          "id": "manual_connection_pools_exhausting_the_database_point_4",
+          "label": "Observes saturation and considers a proxy",
+          "description": "Monitors wait time and utilization and may use a connection proxy for bursty or serverless workloads.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "pool wait time",
+            "pool utilization",
+            "connection proxy",
+            "database saturation",
+            "observes saturation considers proxy"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "manual_connection_pools_exhausting_the_database_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can increasing the pool size make latency and database health worse?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "A connection poolok kimerítik az adatbázist",
+          "prompt": "Egy service 5-ről 50 instance-ra skálázódik, és az adatbázis hirtelen kifogy a kapcsolatokból. Mi történik, és hogyan méreteznéd, illetve védenéd a poolokat?",
+          "answerStructureHint": "Számold ki a teljes lehetséges kapcsolatszámot, korlátozd a poolokat, állítsd sorba a hívókat, és figyeld az alkalmazás és az adatbázis telítettségét.",
+          "expectedPoints": {
+            "manual_connection_pools_exhausting_the_database_point_1": {
+              "label": "Kiszámolja a teljes fleet connection limitjét",
+              "description": "Felismeri, hogy a poolméret process- vagy instance-szintű, ezért a horizontális skálázás megszorozza az adatbázis igényét."
+            },
+            "manual_connection_pools_exhausting_the_database_point_2": {
+              "label": "Korlátozza és sorba állítja a munkát",
+              "description": "Reális poollimitet, acquisition timeoutot és backpressure-t használ korlátlan kapcsolatok helyett."
+            },
+            "manual_connection_pools_exhausting_the_database_point_3": {
+              "label": "Workload és adatbázis-kapacitás alapján méretez",
+              "description": "A queryidőt, concurrencyt, adatbázislimitet és headroomot veszi alapul, nem egy mágikus defaultot."
+            },
+            "manual_connection_pools_exhausting_the_database_point_4": {
+              "label": "Figyeli a telítettséget és proxyt is mérlegel",
+              "description": "Méri a várakozási időt és kihasználtságot; bursty vagy serverless workloadnál connection proxyt is használhat."
+            }
+          },
+          "followUps": {
+            "manual_connection_pools_exhausting_the_database_followup_1": "Miért ronthatja a latencyt és az adatbázis állapotát a poolméret emelése?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_introducing_a_cache_without_lying_to_users",
       "title": "Introducing a cache without lying to users",
       "prompt": "A dashboard aggregate is expensive and read constantly. How do you cache it, and how do you keep users from seeing wrong data?",
       "roles": [
@@ -577,76 +799,504 @@
         "solution_architect"
       ],
       "modes": [
-        "tradeoff_decision",
-        "scenario_discussion"
+        "scenario_discussion",
+        "tradeoff_decision"
       ],
       "topicIds": [
         "caching_strategies"
       ],
-      "expectedDurationSeconds": 200,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "ca_fit",
+          "id": "hybrid_introducing_a_cache_without_lying_to_users_point_1",
           "label": "Cache-fit judgment",
           "description": "Read pattern + consistency need decide; summaries cacheable, payment status fresh.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
             "backend_architect": 5,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "read pattern",
-            "consistency",
-            "how stale",
-            "not everything",
-            "payment fresh"
+            "cache-fit judgment",
+            "read pattern consistency need",
+            "pattern consistency need decide",
+            "summaries cacheable",
+            "payment status fresh",
+            "cache-fit"
           ]
         },
         {
-          "id": "ca_invalidation",
+          "id": "hybrid_introducing_a_cache_without_lying_to_users_point_2",
           "label": "Invalidation strategy",
-          "description": "TTL vs explicit delete on update vs write-through vs background refresh.",
+          "description": "TTL vs explicit delete on update vs write- through vs background refresh.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
             "backend_architect": 5,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
             "ttl",
-            "invalidate on update",
-            "write-through",
-            "delete the key",
-            "background refresh"
+            "invalidation",
+            "invalidation strategy",
+            "ttl vs explicit delete",
+            "through vs background refresh",
+            "strategy"
           ]
         },
         {
-          "id": "ca_stampede",
+          "id": "hybrid_introducing_a_cache_without_lying_to_users_point_3",
           "label": "Stampede awareness",
-          "description": "Hot key expiry → thundering herd; stagger TTLs or coalesce requests.",
-          "importance": "nice_to_have",
+          "description": "Hot key expiry thundering herd; stagger TTLs or coalesce requests.",
+          "importance": "important",
           "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5,
+            "backend_developer": 4,
+            "backend_architect": 4,
             "solution_architect": 4
           },
           "acceptedSignals": [
-            "stampede",
-            "thundering herd",
-            "same time",
-            "staggered",
-            "coalesc"
+            "stampede awareness",
+            "hot key expiry thundering",
+            "key expiry thundering herd",
+            "stagger ttls or coalesce",
+            "ttls or coalesce requests",
+            "stampede"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_introducing_a_cache_without_lying_to_users_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you monitor during rollout, and what would trigger rollback for this Introducing a cache without lying to users change?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Cache bevezetése félrevezető adatok nélkül",
+          "prompt": "Egy dashboard aggregáció drága, mégis folyamatosan olvassák. Hogyan cache-elnéd, és hogyan kerülnéd el, hogy a felhasználók hibás adatot lássanak?",
+          "answerStructureHint": "A read pattern és freshness igény alapján válassz stratégiát; tervezd meg az invalidálást, stampede-védelmet és rollbacket.",
+          "expectedPoints": {
+            "hybrid_introducing_a_cache_without_lying_to_users_point_1": {
+              "label": "Megítéli, alkalmas-e cache-elésre",
+              "description": "A read pattern és konzisztenciaigény dönt: összesítések cache-elhetők, a fizetés állapota friss maradjon."
+            },
+            "hybrid_introducing_a_cache_without_lying_to_users_point_2": {
+              "label": "Invalidálási stratégiát választ",
+              "description": "Összeveti a TTL-t, update utáni explicit törlést, write-through-t és background refresht."
+            },
+            "hybrid_introducing_a_cache_without_lying_to_users_point_3": {
+              "label": "Számol a cache stampede-del",
+              "description": "Egy hot key lejáratakor thundering herd indulhat; jitterelt TTL-lel vagy request coalescinggal védi."
+            }
+          },
+          "followUps": {
+            "hybrid_introducing_a_cache_without_lying_to_users_followup_1": "Mit figyelnél a rollout alatt, és mi váltaná ki a rollbacket?"
+          }
+        }
+      }
     },
     {
-      "id": "das_scaling_001",
+      "id": "hybrid_100m_requests_a_month_now_what",
+      "title": "100M requests a month — now what?",
+      "prompt": "A service is expected to take 100 million requests a month. Walk me through the back-of-envelope sizing and the questions you would ask.",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "system_design"
+      ],
+      "topicIds": [
+        "scaling_fundamentals"
+      ],
+      "expectedDurationSeconds": 420,
+      "thinkingTimeSeconds": 90,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_100m_requests_a_month_now_what_point_1",
+          "label": "Does the arithmetic",
+          "description": "≈39 rps average; states the formula and computes.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "does the arithmetic",
+            "arithmetic",
+            "39 rps average",
+            "formula and computes",
+            "average",
+            "formula"
+          ]
+        },
+        {
+          "id": "hybrid_100m_requests_a_month_now_what_point_2",
+          "label": "Average vs peak + request cost",
+          "description": "Peak can be many times average; cache hit vs heavy query; downstream/DB limits bound the system.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "peak can be many",
+            "be many times average",
+            "cache hit vs heavy",
+            "hit vs heavy query",
+            "downstream",
+            "db limits bound"
+          ]
+        },
+        {
+          "id": "hybrid_100m_requests_a_month_now_what_point_3",
+          "label": "Concurrency formula",
+          "description": "In-flight ≈ rps × latency seconds; slow downstream multiplies concurrency and eats pools.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "concurrency formula",
+            "in-flight rps latency seconds",
+            "slow downstream multiplies concurrency",
+            "concurrency and eats pools",
+            "concurrency"
+          ]
+        },
+        {
+          "id": "hybrid_100m_requests_a_month_now_what_point_4",
+          "label": "Sizes on percentiles",
+          "description": "p95/p99 over averages for sizing and alerting.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 3,
+            "backend_architect": 3,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "sizes on percentiles",
+            "sizes percentiles",
+            "p95",
+            "p99 over averages for",
+            "for sizing and alerting",
+            "sizes"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_100m_requests_a_month_now_what_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give one production example of 100M requests a month — now what? and one common misuse.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "100 millió kérés havonta – és most?",
+          "prompt": "Egy service várhatóan havi 100 millió kérést kap. Mutasd be a gyors kapacitásbecslést és a kérdéseket, amelyeket feltennél.",
+          "answerStructureHint": "Számold ki az átlagos RPS-t, becsüld a csúcsot és a kérés költségét, majd a latencyből a concurrencyt és percentilisekből a szükséges kapacitást.",
+          "expectedPoints": {
+            "hybrid_100m_requests_a_month_now_what_point_1": {
+              "label": "Elvégzi a számítást",
+              "description": "Az átlag körülbelül 39 RPS; megadja a képletet és kiszámolja."
+            },
+            "hybrid_100m_requests_a_month_now_what_point_2": {
+              "label": "Külön kezeli az átlagot, csúcsot és kérésköltséget",
+              "description": "A csúcs többszöröse lehet az átlagnak; cache hit és nehéz query eltérő, a downstream és DB limitek korlátozzák a rendszert."
+            },
+            "hybrid_100m_requests_a_month_now_what_point_3": {
+              "label": "Használja a concurrency képletét",
+              "description": "In-flight kérés nagyjából RPS × latency másodpercben; a lassú downstream megsokszorozza a concurrencyt és kimeríti a poolokat."
+            },
+            "hybrid_100m_requests_a_month_now_what_point_4": {
+              "label": "Percentilisek alapján méretez",
+              "description": "Átlag helyett p95/p99 értéket használ kapacitástervezéshez és riasztáshoz."
+            }
+          },
+          "followUps": {
+            "hybrid_100m_requests_a_month_now_what_followup_1": "Adj egy production példát, ahol ez a becslés hasznos, és egy gyakori félrehasználását."
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_scale_out_or_scale_up",
       "title": "Scale out or scale up?",
       "prompt": "Traffic is growing. How do you decide between scaling vertically and horizontally, and what has to be true about the service for horizontal scaling to work?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "scaling_fundamentals"
+      ],
+      "expectedDurationSeconds": 420,
+      "thinkingTimeSeconds": 90,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_scale_out_or_scale_up_point_1",
+          "label": "Horizontal vs vertical trade-off",
+          "description": "Bigger machine vs more pods; horizontal is the cloud default but has preconditions.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "horizontal vs vertical trade-off",
+            "bigger machine vs more",
+            "machine vs more pods",
+            "horizontal is the cloud",
+            "default but has preconditions",
+            "horizontal"
+          ]
+        },
+        {
+          "id": "hybrid_scale_out_or_scale_up_point_2",
+          "label": "Statelessness precondition",
+          "description": "Any pod must serve any request; state externalized (JWT, Redis); sticky state blocks scaling.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "statelessness precondition",
+            "any pod must serve",
+            "must serve any request",
+            "state externalized",
+            "jwt",
+            "redis",
+            "sticky state blocks scaling",
+            "statelessness"
+          ]
+        },
+        {
+          "id": "hybrid_scale_out_or_scale_up_point_3",
+          "label": "Bottleneck first",
+          "description": "If the DB is the constraint, more pods make it worse; measure before scaling.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "bottleneck first",
+            "db is the constraint",
+            "pods make it worse",
+            "measure before scaling",
+            "bottleneck",
+            "first"
+          ]
+        },
+        {
+          "id": "hybrid_scale_out_or_scale_up_point_4",
+          "label": "Tail latency literacy",
+          "description": "p95/p99 over averages; throughput ≠ good latency.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 3,
+            "backend_architect": 3,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "throughput",
+            "tail latency",
+            "tail latency literacy",
+            "p95",
+            "p99 over averages",
+            "throughput good latency",
+            "tail"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_scale_out_or_scale_up_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where would this Scale out or scale up? design fail first as traffic, data, or team size grows?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Scale out vagy scale up?",
+          "prompt": "Növekszik a forgalom. Hogyan döntesz a vertikális és horizontális skálázás között, és minek kell igaznak lennie a servicenél, hogy a horizontális skálázás működjön?",
+          "answerStructureHint": "Hasonlítsd össze a nagyobb gépet és a több példányt; beszélj stateless működésről, bottleneckről és tail latencyről.",
+          "expectedPoints": {
+            "hybrid_scale_out_or_scale_up_point_1": {
+              "label": "Horizontális és vertikális trade-off",
+              "description": "Nagyobb gép vagy több pod; cloudban a horizontális gyakori alapértelmezés, de előfeltételei vannak."
+            },
+            "hybrid_scale_out_or_scale_up_point_2": {
+              "label": "A stateless működés előfeltétel",
+              "description": "Bármelyik podnak ki kell tudnia szolgálni bármelyik kérést; az állapot külső helyre kerül, például JWT-be vagy Redisbe, a sticky state akadályozza a skálázást."
+            },
+            "hybrid_scale_out_or_scale_up_point_3": {
+              "label": "Először a bottlenecket keresi",
+              "description": "Ha az adatbázis a korlát, több pod csak ront a helyzeten; skálázás előtt mér."
+            },
+            "hybrid_scale_out_or_scale_up_point_4": {
+              "label": "Érti a tail latencyt",
+              "description": "Átlag helyett p95/p99 értéket néz; a nagy throughput nem jelent automatikusan jó latencyt."
+            }
+          },
+          "followUps": {
+            "hybrid_scale_out_or_scale_up_followup_1": "Hol bukna el először ez a design, ahogy nő a forgalom, az adat vagy a csapat?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_sharding_and_hot_partitions",
+      "title": "Sharding and hot partitions",
+      "prompt": "Your database no longer fits on one node, so you shard it. How do you pick the partition key, and what is a hot shard?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "sharding"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Key must spread load evenly and match query patterns; hot shards come from skewed keys; mitigation via key salting or splitting.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_sharding_and_hot_partitions_point_1",
+          "label": "Partition key drives distribution and queries",
+          "description": "Pick a high-cardinality key that spreads writes and keeps common queries on one shard.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "shard key",
+            "pick a high-cardinality key",
+            "queries on one shard",
+            "partition",
+            "drives",
+            "distribution"
+          ]
+        },
+        {
+          "id": "hybrid_sharding_and_hot_partitions_point_2",
+          "label": "Explains hot shards",
+          "description": "Skewed access (one big tenant, celebrity user, time-ordered keys) overloads one shard while others idle.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "skew",
+            "hot shard",
+            "hot shards",
+            "skewed access",
+            "big tenant",
+            "celebrity user",
+            "time-ordered keys",
+            "overloads one shard while"
+          ]
+        },
+        {
+          "id": "hybrid_sharding_and_hot_partitions_point_3",
+          "label": "Knows mitigations and costs",
+          "description": "Salting/composite keys, splitting shards, caching hot data; cross-shard transactions and rebalancing get hard.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "rebalancing",
+            "knows mitigations and costs",
+            "knows mitigations costs",
+            "salting",
+            "composite keys",
+            "splitting shards",
+            "caching hot data",
+            "cross-shard transactions and rebalancing"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_sharding_and_hot_partitions_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "You need to double the shard count on a live system. How do you migrate without downtime?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Sharding és hot partíciók",
+          "prompt": "Az adatbázis már nem fér el egy node-on, ezért shardolod. Hogyan választasz partition keyt, és mi az a hot shard?",
+          "answerStructureHint": "A kulcs egyenletesen ossza el a terhelést és illeszkedjen a query patternhöz; a hot shard skew-ból ered, és saltinggal vagy splittinggel enyhíthető.",
+          "expectedPoints": {
+            "hybrid_sharding_and_hot_partitions_point_1": {
+              "label": "A partition key meghatározza az eloszlást és a queryket",
+              "description": "Nagy kardinalitású kulcsot választ, amely elosztja az írásokat, és a gyakori queryket lehetőleg egy shardon tartja."
+            },
+            "hybrid_sharding_and_hot_partitions_point_2": {
+              "label": "Elmagyarázza a hot shardot",
+              "description": "Skewed access – például egy nagy tenant, híres felhasználó vagy időrendben növekvő kulcs – egy shardot túlterhel, miközben a többi tétlen."
+            },
+            "hybrid_sharding_and_hot_partitions_point_3": {
+              "label": "Ismeri a megoldásokat és azok költségét",
+              "description": "Salting, composite key, shard splitting vagy hot data cache; közben a cross-shard tranzakció és rebalancing bonyolultabbá válik."
+            }
+          },
+          "followUps": {
+            "hybrid_sharding_and_hot_partitions_followup_1": "Egy élő rendszerben meg kell dupláznod a shardok számát. Hogyan migrálnál downtime nélkül?"
+          }
+        }
+      }
+    },
+    {
+      "id": "manual_choosing_a_transaction_boundary",
+      "title": "Choosing a transaction boundary",
+      "prompt": "Creating an order updates inventory, payment state, and the order record. What belongs in one database transaction, and when would you use an outbox or saga instead?",
       "roles": [
         "backend_developer",
         "backend_architect",
@@ -657,84 +1307,231 @@
         "system_design"
       ],
       "topicIds": [
-        "scaling_fundamentals"
+        "db_transactions"
       ],
-      "expectedDurationSeconds": 200,
-      "thinkingTimeSeconds": 45,
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Define the invariant, keep local atomic changes together, then handle cross-service work explicitly.",
       "expectedPoints": [
         {
-          "id": "sc_hv",
-          "label": "Horizontal vs vertical trade-off",
-          "description": "Bigger machine vs more pods; horizontal is the cloud default but has preconditions.",
+          "id": "manual_choosing_a_transaction_boundary_point_1",
+          "label": "Starts from the business invariant",
+          "description": "Defines which state changes must succeed or fail together to keep the local data valid.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
             "backend_architect": 5,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "horizontal",
-            "vertical",
-            "more instances",
-            "bigger machine",
-            "more pods"
+            "business invariant",
+            "atomic change",
+            "all or nothing",
+            "consistent state",
+            "aria"
           ]
         },
         {
-          "id": "sc_stateless",
-          "label": "Statelessness precondition",
-          "description": "Any pod must serve any request; state externalized (JWT, Redis); sticky state blocks scaling.",
+          "id": "manual_choosing_a_transaction_boundary_point_2",
+          "label": "Keeps transactions local and short",
+          "description": "Avoids network calls inside a database transaction and minimizes lock duration and contention.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
             "backend_architect": 5,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "stateless",
-            "any pod",
-            "externalize state",
-            "sticky",
-            "websocket is stateful"
+            "short transaction",
+            "no network call",
+            "lock duration",
+            "database contention",
+            "transactions local short"
           ]
         },
         {
-          "id": "sc_bottleneck",
-          "label": "Bottleneck first",
-          "description": "If the DB is the constraint, more pods make it worse; measure before scaling.",
-          "importance": "critical",
+          "id": "manual_choosing_a_transaction_boundary_point_3",
+          "label": "Chooses isolation deliberately",
+          "description": "Mentions lost updates, deadlocks, or isolation level based on the concurrency problem.",
+          "importance": "important",
           "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5,
+            "backend_developer": 4,
+            "backend_architect": 4,
             "solution_architect": 4
           },
           "acceptedSignals": [
-            "bottleneck",
-            "database is the limit",
-            "more pods won't help",
-            "measure first"
+            "isolation level",
+            "lost update",
+            "deadlock",
+            "concurrency control"
           ]
         },
         {
-          "id": "sc_percentiles",
-          "label": "Tail latency literacy",
-          "description": "p95/p99 over averages; throughput ≠ good latency.",
-          "importance": "nice_to_have",
+          "id": "manual_choosing_a_transaction_boundary_point_4",
+          "label": "Uses distributed patterns across boundaries",
+          "description": "Uses an outbox for reliable events and a saga or compensation when several services own the state.",
+          "importance": "important",
           "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5,
+            "backend_developer": 4,
+            "backend_architect": 4,
             "solution_architect": 4
           },
           "acceptedSignals": [
-            "p95",
-            "p99",
-            "percentile",
-            "tail latency",
-            "average is misleading"
+            "outbox pattern",
+            "saga",
+            "compensation",
+            "service boundary",
+            "distributed patterns across boundaries"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "manual_choosing_a_transaction_boundary_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you recover if payment succeeds but the order service crashes before recording the result?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Tranzakcióhatár megválasztása",
+          "prompt": "Egy rendelés létrehozása módosítja a készletet, a fizetés állapotát és a rendelés rekordját. Mi tartozzon egy adatbázis-tranzakcióba, és mikor használnál inkább outboxot vagy sagát?",
+          "answerStructureHint": "Határozd meg az invariánst, tartsd együtt a helyi atomi módosításokat, majd kezeld explicit módon a service-határokon átívelő munkát.",
+          "expectedPoints": {
+            "manual_choosing_a_transaction_boundary_point_1": {
+              "label": "Az üzleti invariánsból indul ki",
+              "description": "Meghatározza, mely állapotváltozásoknak kell együtt sikerülniük vagy elbukniuk ahhoz, hogy a helyi adat érvényes maradjon."
+            },
+            "manual_choosing_a_transaction_boundary_point_2": {
+              "label": "A tranzakciókat helyinek és rövidnek tartja",
+              "description": "Nem végez hálózati hívást adatbázis-tranzakción belül, és minimalizálja a lockidőt és contentiont."
+            },
+            "manual_choosing_a_transaction_boundary_point_3": {
+              "label": "Tudatosan választ isolationt",
+              "description": "A concurrency problémától függően beszél lost update-ről, deadlockról vagy isolation levelről."
+            },
+            "manual_choosing_a_transaction_boundary_point_4": {
+              "label": "Elosztott mintákat használ a határokon túl",
+              "description": "Outboxot használ megbízható eseményekhez, sagát vagy kompenzációt, ha több service birtokolja az állapotot."
+            }
+          },
+          "followUps": {
+            "manual_choosing_a_transaction_boundary_followup_1": "Hogyan állítanád helyre a folyamatot, ha a fizetés sikerül, de az order service összeomlik az eredmény rögzítése előtt?"
+          }
+        }
+      }
+    },
+    {
+      "id": "das_sql_vs_nosql_001",
+      "title": "Choosing SQL or NoSQL",
+      "prompt": "How would you choose between a relational database and a NoSQL database for a new service?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "sql_vs_nosql"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition or decision -> mechanism -> trade-off -> concrete example.",
+      "expectedPoints": [
+        {
+          "id": "das_sql_vs_nosql_001_1",
+          "label": "Starts from requirements",
+          "description": "Uses relationships, invariants, transaction needs, and access patterns as decision inputs.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "access patterns",
+            "data relationships",
+            "transaction needs",
+            "business invariants",
+            "aria"
+          ]
+        },
+        {
+          "id": "das_sql_vs_nosql_001_2",
+          "label": "Compares strengths",
+          "description": "Explains relational constraints and joins versus model-specific NoSQL scaling and flexibility.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "joins",
+            "constraints",
+            "document model",
+            "partition key",
+            "strengths"
+          ]
+        },
+        {
+          "id": "das_sql_vs_nosql_001_3",
+          "label": "Includes operational trade-offs",
+          "description": "Considers migrations, backups, consistency, observability, and team experience.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "data migration",
+            "backup restore",
+            "consistency model",
+            "team experience",
+            "operational trade-offs"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "das_sql_vs_nosql_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would a requirement for multi-row transactions or flexible horizontal partitioning change your choice?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "SQL vagy NoSQL választása",
+          "prompt": "Hogyan választanál relációs és NoSQL adatbázis között egy új service számára?",
+          "answerStructureHint": "Követelmények és invariánsok → hozzáférési minta → trade-offok → konkrét példa.",
+          "expectedPoints": {
+            "das_sql_vs_nosql_001_1": {
+              "label": "A követelményekből indul ki",
+              "description": "A kapcsolatok, invariánsok, tranzakcióigények és access patternek alapján dönt."
+            },
+            "das_sql_vs_nosql_001_2": {
+              "label": "Összehasonlítja az erősségeket",
+              "description": "Elmagyarázza a relációs constraint-eket és joinokat, illetve az adott NoSQL modell skálázását és rugalmasságát."
+            },
+            "das_sql_vs_nosql_001_3": {
+              "label": "Üzemeltetési trade-offokat is figyelembe vesz",
+              "description": "Számol migrációval, backuppal, konzisztenciával, observabilityvel és a csapat tapasztalatával."
+            }
+          },
+          "followUps": {
+            "das_sql_vs_nosql_001_followup_1": "Hogyan változtatná meg a döntést a több soros tranzakciók vagy a rugalmas horizontális partícionálás követelménye?"
+          }
+        }
+      }
     }
   ]
 }

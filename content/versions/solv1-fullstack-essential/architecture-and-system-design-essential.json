@@ -1,0 +1,620 @@
+{
+  "id": "architecture_system_design_essential",
+  "name": "Architecture and System Design — Essential",
+  "description": "Curated full-stack essentials selected from the complete pack. Use this as a lighter replacement for the full version.",
+  "sources": [
+    "system_design",
+    "dennemeyer_system_design_100_tema_peldakkal_mobile_hu",
+    "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu",
+    "Luxair_interju_QA_gyujtemeny",
+    "Luxair_Interview_Terms_Glossary_HU"
+  ],
+  "topics": [
+    {
+      "id": "arch_system_design_process",
+      "name": "System Design Process",
+      "description": "A repeatable way to move from an unclear problem to a justified and operable design.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "arch_requirements_nfrs",
+        "arch_quality_attributes"
+      ],
+      "studyNotes": "## What is it?\n\nSystem design is not choosing a database and drawing boxes as quickly as possible. It is a decision process: clarify what the system must do, identify the important constraints, estimate the difficult parts, choose a design, and explain why its trade-offs fit the requirement.\n\n## What problem does it solve?\n\nVague prompts hide the decisions that actually shape the architecture. A notification system for ten thousand internal users is a different problem from one for hundreds of millions of mobile devices. Starting with technology often produces a detailed answer to the wrong question.\n\n## How it works\n\n- Clarify users, core use cases, scope, and what is explicitly out of scope.\n- Ask for traffic, data size, latency, availability, consistency, security, and compliance needs.\n- Estimate peak load and identify likely bottlenecks.\n- Define APIs, data ownership, main components, and the critical request or event flows.\n- Discuss failure modes, observability, deployment, and data migration.\n- State alternatives and why the chosen design is sufficient without unnecessary complexity.\n\n## Common mistakes\n\n- Drawing an architecture before clarifying the requirement.\n- Optimizing every dimension even when the business does not need it.\n- Listing technologies without explaining responsibilities or data flow.\n- Ignoring operation, failure handling, and migration.\n\n## Key terms\n\n- scope — What the design includes and excludes.\n- constraint — A condition that limits possible solutions.\n- critical path — The operations that must complete before the user receives the required result.\n- trade-off — A benefit gained by accepting a cost or limitation.",
+      "i18n": {
+        "hu": {
+          "name": "System Design Folyamat",
+          "description": "Egy követhető módszer, amely a homályos feladatból indokolt és üzemeltethető architecture-t készít.",
+          "studyNotes": "## Mi ez?\n\nA system design nem azzal kezdődik, hogy gyorsan kiválasztunk egy database-t és rajzolunk néhány boxot. Először azt kell tisztázni, mit kell a rendszernek megoldania, mekkora terhelésre készül, mi kritikus a business számára, és milyen hibákat kell kibírnia. Csak ezután érdemes technológiáról dönteni.\n\n## Milyen problémát old meg?\n\nEgy rövid interjúfeladat sok fontos részletet nem mond ki. Teljesen más architecture kell tízezer belső userhez, mint több százmillió mobil klienshez. Ha rögtön technológiából indulunk ki, könnyen egy részletes, de rossz problémára adott megoldás születik.\n\n## Hogyan működik?\n\n- Tisztázd a usereket, a core use case-eket, a scope-ot és azt is, mi nem része a feladatnak.\n- Kérdezz rá a trafficra, data volume-ra, latencyre, availabilityre, consistencyre, securityre és compliance-re.\n- Becsüld meg a peak loadot, és keresd meg a várható bottleneckeket.\n- Határozd meg az API-kat, data ownershipöt, fő komponenseket és a kritikus request vagy event flow-kat.\n- Mondd el, mi történik failure, deployment és data migration közben.\n- Mutass alternatívát, és indokold, miért elég a választott megoldás fölösleges complexity nélkül.\n\n## Gyakori hibák\n\n- A requirement tisztázása előtt architecture-t rajzolni.\n- Minden dimenziót maximálisan optimalizálni business indok nélkül.\n- Technológiákat felsorolni felelősségek és data flow nélkül.\n- Az operationt, failure handlinget és migrationt kihagyni.\n\n## Kulcsfogalmak\n\n- scope — Amit a design lefed, illetve tudatosan nem fed le.\n- constraint — Olyan feltétel, amely korlátozza a lehetséges megoldásokat.\n- critical path — Azok a lépések, amelyeknek a szükséges user response előtt be kell fejeződniük.\n- trade-off — Előny, amelyért valamilyen költséget vagy korlátozást elfogadunk."
+        }
+      }
+    },
+    {
+      "id": "arch_requirements_nfrs",
+      "name": "Functional and Non-Functional Requirements",
+      "description": "Separating system behaviour from the quality constraints that shape its architecture.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "arch_system_design_process",
+        "arch_quality_attributes"
+      ],
+      "studyNotes": "## What is it?\n\nFunctional requirements describe what users or other systems must be able to do. Non-functional requirements, or NFRs, describe the qualities and constraints under which that behaviour must work, such as latency, availability, throughput, security, auditability, and recovery time.\n\n## What problem does it solve?\n\nA requirement such as 'build a renewal API' is not enough to choose an architecture. The same API may be a low-traffic internal tool or a legally critical external platform. The NFRs determine whether simple synchronous processing is enough or whether the design needs queues, replication, strict audit, multi-region recovery, or stronger isolation.\n\n## How it works\n\n- Turn vague quality words into measurable targets and time windows.\n- Ask which user journeys are critical and which may degrade.\n- Separate average traffic from peaks and growth expectations.\n- Clarify consistency, retention, privacy, audit, and regulatory needs.\n- Identify recovery objectives such as RTO and RPO.\n- Resolve conflicts explicitly because stronger availability, consistency, or security usually increases cost and complexity.\n\n## Common mistakes\n\n- Treating NFRs as documentation added after the design.\n- Accepting words such as fast or highly available without numbers.\n- Giving every feature the same availability and consistency target.\n- Ignoring data retention, audit, and recovery requirements.\n\n## Key terms\n\n- functional requirement — A behaviour or capability the system must provide.\n- NFR — A quality attribute or operating constraint.\n- RTO — Maximum acceptable recovery time after disruption.\n- RPO — Maximum acceptable amount of data loss measured in time.",
+      "i18n": {
+        "hu": {
+          "name": "Functional és Non-Functional Requirements",
+          "description": "Különválasztja, mit kell tudnia a rendszernek, és milyen quality constraint mellett kell működnie.",
+          "studyNotes": "## Mi ez?\n\nA functional requirement azt mondja meg, mit tudjon a rendszer: például lehessen renewal requestet indítani és lekérdezni a státuszát. A non-functional requirement, vagy NFR azt mondja meg, milyen minőségben működjön: mennyi legyen a latency, mekkora availability kell, mennyi trafficot bírjon, hogyan auditálható, és mennyi data loss fogadható el.\n\n## Milyen problémát old meg?\n\nA „kell egy renewal API” mondatból még nem lehet architecture-t választani. Lehet egy ritkán használt belső tool, de lehet jogilag kritikus external platform is. Az NFR dönti el, hogy elég-e egy egyszerű synchronous flow, vagy kell queue, replication, szigorú audit, multi-region recovery vagy erősebb isolation.\n\n## Hogyan működik?\n\n- A homályos quality szavakból készíts mérhető targetet és időablakot.\n- Tisztázd, mely user journey kritikus, és melyik működhet degraded mode-ban.\n- Különítsd el az average trafficot a peaktől és a várható növekedéstől.\n- Kérdezz rá consistencyre, retentionre, privacyra, auditra és regulationre.\n- Határozd meg a recovery targeteket, például RTO-t és RPO-t.\n- Mondd ki a konfliktusokat: a magasabb availability, consistency vagy security általában több költséget és complexityt jelent.\n\n## Gyakori hibák\n\n- Az NFR-t utólagos dokumentációnak tekinteni.\n- A „fast” vagy „highly available” szót számok nélkül elfogadni.\n- Minden feature-höz ugyanazt az availability és consistency targetet adni.\n- A retention, audit és recovery követelményeket kihagyni.\n\n## Kulcsfogalmak\n\n- functional requirement — A rendszer által nyújtandó viselkedés vagy capability.\n- NFR — Quality attribute vagy operating constraint.\n- RTO — A disruption után elfogadható maximális recovery time.\n- RPO — Időben kifejezett maximális elfogadható data loss."
+        }
+      }
+    },
+    {
+      "id": "arch_quality_attributes",
+      "name": "Architecture Quality Attributes and Trade-offs",
+      "description": "Using measurable qualities to compare designs instead of searching for one universally best architecture.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "arch_requirements_nfrs",
+        "arch_coupling_cohesion"
+      ],
+      "studyNotes": "## What is it?\n\nArchitecture quality attributes are properties such as performance, scalability, availability, security, maintainability, testability, deployability, and cost. A design is good when it balances the attributes that matter for the actual product, not when it maximizes all of them.\n\n## What problem does it solve?\n\nArchitecture decisions move pressure from one dimension to another. Synchronous replication may improve consistency but increase latency. Microservices may improve team autonomy but increase operational work. Caching may improve reads but create invalidation and staleness problems. Without explicit priorities, teams debate preferences instead of requirements.\n\n## How it works\n\n- Rank quality attributes by business importance.\n- Attach scenarios and measurable targets to them.\n- Compare alternatives against the same scenarios.\n- Identify who pays each cost: users, developers, operators, or the business.\n- Prefer the simplest option that satisfies the most important targets.\n- Revisit the decision when traffic, team structure, or business risk changes.\n\n## Common mistakes\n\n- Calling a technology scalable or secure without a scenario.\n- Presenting a design as having only benefits.\n- Optimizing rare failure cases while hurting normal operation.\n- Ignoring organisational and operational costs.\n\n## Key terms\n\n- quality attribute — A measurable property of system behaviour.\n- fitness function — An automated or reviewable check that an architectural property still holds.\n- scenario — A concrete condition used to evaluate a quality attribute.\n- operational cost — Ongoing work required to run and support a design.",
+      "i18n": {
+        "hu": {
+          "name": "Architecture Quality Attributes és Trade-offok",
+          "description": "Mérhető quality szempontok alapján hasonlítja össze a designokat, nem egy univerzálisan legjobb megoldást keres.",
+          "studyNotes": "## Mi ez?\n\nAz architecture quality attribute olyan tulajdonság, mint performance, scalability, availability, security, maintainability, testability, deployability vagy cost. Egy design nem attól jó, hogy mindegyiket maximalizálja, hanem attól, hogy az adott product számára fontos szempontokat megfelelően egyensúlyozza.\n\n## Milyen problémát old meg?\n\nMinden architecture döntés valahol előnyt, máshol költséget hoz. A synchronous replication javíthatja a consistencyt, de növeli a latencyt. A microservices növelheti a team autonomy-t, de több operational munkát kér. A cache gyorsíthatja a readet, de staleness és invalidation problémát hoz. Prioritás nélkül a team követelmények helyett preferenciákról vitázik.\n\n## Hogyan működik?\n\n- Rangsorold a quality attribute-okat business fontosság szerint.\n- Adj hozzájuk konkrét scenario-t és mérhető targetet.\n- Ugyanazon scenario-k alapján hasonlítsd össze az alternatívákat.\n- Mondd ki, ki fizeti a költséget: user, developer, operator vagy a business.\n- A legegyszerűbb olyan megoldást válaszd, amely teljesíti a fontos targeteket.\n- Traffic, team structure vagy business risk változásakor vizsgáld felül a döntést.\n\n## Gyakori hibák\n\n- Egy technológiát scenario nélkül scalable-nek vagy secure-nek nevezni.\n- Csak előnyöket felsorolni, költségeket nem.\n- Ritka failure case-re optimalizálni a normál működés rovására.\n- Az organisational és operational costot kihagyni.\n\n## Kulcsfogalmak\n\n- quality attribute — A rendszer viselkedésének mérhető tulajdonsága.\n- fitness function — Automatikus vagy review-alapú ellenőrzés, hogy egy architecture property továbbra is teljesül-e.\n- scenario — Konkrét helyzet, amelyben egy quality attribute értékelhető.\n- operational cost — A design futtatásához és támogatásához szükséges folyamatos munka."
+        }
+      }
+    },
+    {
+      "id": "arch_coupling_cohesion",
+      "name": "Coupling and Cohesion",
+      "description": "Designing components that depend on each other as little as practical while keeping related behaviour together.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "arch_modular_monolith",
+        "arch_microservices"
+      ],
+      "studyNotes": "## What is it?\n\nCoupling describes how strongly components depend on each other. Cohesion describes how closely the responsibilities inside one component belong together. Good boundaries aim for low coupling between components and high cohesion inside them.\n\n## What problem does it solve?\n\nA change in one service should not require coordinated changes in five others. Tight coupling appears through shared databases, leaked internal schemas, synchronous call chains, shared release cycles, or knowledge of another component's workflow. Low cohesion creates large modules that change for unrelated reasons.\n\n## How it works\n\n- Communicate through explicit APIs or event contracts.\n- Hide implementation and storage details behind the boundary.\n- Keep data ownership clear and avoid cross-service table access.\n- Group behaviour that changes for the same business reason.\n- Minimize chatty communication and temporal coupling.\n- Measure coupling through coordinated deployments, shared ownership, and change blast radius, not only imports.\n\n## Common mistakes\n\n- Calling asynchronous communication automatically loosely coupled.\n- Sharing a database while claiming independent services.\n- Splitting cohesive business behaviour into many tiny network calls.\n- Reducing code-level coupling while retaining organisational release coupling.\n\n## Key terms\n\n- coupling — The degree of dependency between components.\n- cohesion — How strongly responsibilities inside a component belong together.\n- temporal coupling — Components must be available or act at the same time.\n- blast radius — How widely a change or failure can spread.",
+      "i18n": {
+        "hu": {
+          "name": "Coupling és Cohesion",
+          "description": "A kapcsolódó behavior együtt marad, miközben a komponensek közötti szükségtelen dependency csökken.",
+          "studyNotes": "## Mi ez?\n\nA coupling azt mutatja meg, mennyire függ két komponens egymástól. A cohesion azt, hogy egy komponensen belül mennyire tartoznak össze a felelősségek. Jó boundary esetén a komponensek között alacsony a coupling, egy komponensen belül pedig magas a cohesion.\n\n## Milyen problémát old meg?\n\nEgy service módosítása ne követelje meg további öt service összehangolt release-ét. Tight coupling lehet shared database, kiszivárgó belső schema, hosszú synchronous call chain, közös release cycle vagy a másik service belső workflow-jának ismerete. Low cohesion esetén egy nagy module teljesen eltérő okokból változik.\n\n## Hogyan működik?\n\n- Explicit API vagy event contracton keresztül kommunikálj.\n- A boundary mögött rejtsd el az implementation és storage detailt.\n- Legyen egyértelmű data ownership; más service ne olvassa közvetlenül a táblákat.\n- Az ugyanazon business okból változó behavior kerüljön egy helyre.\n- Csökkentsd a chatty kommunikációt és temporal couplingot.\n- A couplingot coordinated deployment, shared ownership és change blast radius alapján is nézd, ne csak importok alapján.\n\n## Gyakori hibák\n\n- Az async kommunikációt automatikusan loose couplingnak tekinteni.\n- Shared database mellett independent service-ekről beszélni.\n- Egy összetartozó business behavior-t sok apró network callra bontani.\n- Csak code-level couplingot csökkenteni, miközben a release coupling megmarad.\n\n## Kulcsfogalmak\n\n- coupling — A komponensek közötti dependency erőssége.\n- cohesion — Mennyire tartoznak össze egy komponens felelősségei.\n- temporal coupling — A komponenseknek ugyanabban az időben kell elérhetőnek vagy aktívnak lenniük.\n- blast radius — Milyen messzire terjedhet egy change vagy failure hatása."
+        }
+      }
+    },
+    {
+      "id": "arch_modular_monolith",
+      "name": "Monolith and Modular Monolith",
+      "description": "A single deployable application with deliberate internal boundaries and lower distributed-system cost.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "arch_microservices",
+        "arch_coupling_cohesion"
+      ],
+      "studyNotes": "## What is it?\n\nA monolith is deployed as one application. A modular monolith keeps that operational simplicity while organizing the code into explicit business modules with controlled dependencies and ownership. It is not the same as an unstructured codebase.\n\n## What problem does it solve?\n\nSmall teams and changing domains often pay the costs of microservices before they receive the benefits. Network failure, distributed data consistency, many pipelines, and cross-service debugging may slow delivery more than a shared deployment does.\n\n## How it works\n\n- Define modules around business capabilities, not technical folders.\n- Give each module a public interface and hide internal data and implementation.\n- Enforce dependency direction with tooling or tests.\n- Keep module-owned tables or schemas even inside one database where practical.\n- Use in-process calls or local events while keeping boundaries explicit.\n- Extract a service later only when independent scaling, ownership, risk, or deployment creates real value.\n\n## Common mistakes\n\n- Calling any single deployment a badly designed monolith.\n- Creating modules that freely access each other’s tables.\n- Using an internal event bus to hide uncontrolled dependencies.\n- Splitting into services before the domain boundaries are understood.\n\n## Key terms\n\n- monolith — One deployable application unit.\n- modular monolith — One deployment with enforced internal business boundaries.\n- module API — The supported entry points exposed by one module.\n- service extraction — Moving a module into an independently deployed service.",
+      "i18n": {
+        "hu": {
+          "name": "Monolith és Modular Monolith",
+          "description": "Egyetlen deployable application, tudatos belső boundarykkel és alacsonyabb distributed-system költséggel.",
+          "studyNotes": "## Mi ez?\n\nA monolith egyetlen applicationként deployolható. A modular monolith megtartja ezt az operational egyszerűséget, de a code-ot explicit business module-okra bontja, kontrollált dependencykkel és ownershippel. Nem ugyanaz, mint egy rendezetlen codebase.\n\n## Milyen problémát old meg?\n\nKis team és még változó domain esetén a microservices költsége gyakran hamarabb jelenik meg, mint az előnye. Network failure, distributed consistency, sok pipeline és cross-service debugging lassíthatja a deliveryt, miközben az egyetlen deployment még nem valódi bottleneck.\n\n## Hogyan működik?\n\n- Business capability köré szervezd a module-okat, ne technikai foldertípusok köré.\n- Minden module-nak legyen public interface-e, belső data és implementation detailje rejtett maradjon.\n- Toolinggal vagy testtel enforce-old a dependency directiont.\n- Egy database-en belül is legyen egyértelmű module-owned table vagy schema.\n- Használhatsz in-process callt vagy local eventet, de a boundary maradjon explicit.\n- Csak akkor extractálj service-t, ha independent scaling, ownership, risk vagy deployment valódi értéket ad.\n\n## Gyakori hibák\n\n- Minden single deploymentet rossz monolithnak nevezni.\n- Olyan module-okat létrehozni, amelyek szabadon olvassák egymás tábláit.\n- Internal event busszal elrejteni a kontrollálatlan dependencyket.\n- A domain boundary megértése előtt service-ekre bontani.\n\n## Kulcsfogalmak\n\n- monolith — Egy deployable application unit.\n- modular monolith — Egy deployment enforce-olt belső business boundarykkel.\n- module API — Egy module támogatott entry pointjai.\n- service extraction — Egy module külön deployolható service-szé alakítása."
+        }
+      }
+    },
+    {
+      "id": "arch_microservices",
+      "name": "Microservices Architecture",
+      "description": "Independently deployable services aligned with business capabilities and team ownership.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "arch_modular_monolith"
+      ],
+      "studyNotes": "## What is it?\n\nMicroservices architecture splits a system into independently deployable services aligned with business capabilities. Each service has clear ownership, a stable contract, and authority over its data. The point is independent change and operation, not making every service small.\n\n## What problem does it solve?\n\nA large shared codebase and release train can block teams when unrelated changes must be coordinated and components need different scaling or reliability policies. Microservices can reduce that coordination, but they replace in-process complexity with network, data, deployment, and observability complexity.\n\n## How it works\n\n- Draw boundaries around cohesive business capabilities.\n- Give one team end-to-end ownership of each service.\n- Keep the service independently deployable and observable.\n- Let it own its data rather than sharing tables.\n- Use contracts that allow internal implementation to change.\n- Accept distributed failure, eventual consistency, and operational automation as part of the architecture.\n- Split only when the independence is valuable enough to pay these costs.\n\n## Common mistakes\n\n- Defining a microservice by line count.\n- Creating many services with one shared database and release process.\n- Ignoring the platform and observability investment.\n- Splitting a small team across more services than it can own.\n\n## Key terms\n\n- independent deployment — A service can be released without coordinated releases of unrelated services.\n- data ownership — One service controls writes and schema for its data.\n- service autonomy — A service can evolve and operate within its contract.\n- distributed monolith — Many deployed services that still require coordinated change.",
+      "i18n": {
+        "hu": {
+          "name": "Microservices Architecture",
+          "description": "Business capability és team ownership köré szervezett, independently deployable service-ek.",
+          "studyNotes": "## Mi ez?\n\nA microservices architecture a rendszert independently deployable service-ekre bontja, business capabilityk mentén. Minden service-nek egyértelmű ownerje, stabil contractja és saját data authorityje van. A cél az independent change és operation, nem az, hogy minden service apró legyen.\n\n## Milyen problémát old meg?\n\nEgy nagy közös codebase és release train blokkolhatja a teameket, ha független változtatásokat is össze kell hangolni, vagy eltérő scaling és reliability policy kell. A microservices csökkentheti ezt a koordinációt, de az in-process complexity helyére network, data, deployment és observability complexity kerül.\n\n## Hogyan működik?\n\n- Cohesive business capability köré húzd a boundaryket.\n- Egy team kapjon end-to-end ownershipöt egy service fölött.\n- A service legyen independently deployable és observable.\n- Saját data felett rendelkezzen, ne shared table-t használjon.\n- A contract engedje meg a belső implementation változását.\n- A distributed failure, eventual consistency és operational automation a design része.\n- Csak akkor bonts, ha az independence elég értékes ahhoz, hogy megérje ezeket a költségeket.\n\n## Gyakori hibák\n\n- Line count alapján definiálni a microservice-t.\n- Sok service-t létrehozni shared database-szel és közös release process-szel.\n- Kihagyni a platform és observability befektetést.\n- Egy kis teamre több service-t osztani, mint amennyit valóban tud ownolni.\n\n## Kulcsfogalmak\n\n- independent deployment — Egy service unrelated service-ek coordinated release-e nélkül deployolható.\n- data ownership — Egy service irányítja a saját data write-ját és schemáját.\n- service autonomy — A service a contractján belül önállóan fejlődhet és működhet.\n- distributed monolith — Sok külön deployolt service, amelyek továbbra is coordinated change-et igényelnek."
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "arch_design_renewal_platform_001",
+      "title": "Designing a renewal platform from an unclear prompt",
+      "prompt": "You are asked to design a platform where customers submit trademark renewals, pay fees, receive documents, and track status. The prompt contains no scale or reliability numbers. How do you start?",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "arch_system_design_process",
+        "arch_requirements_nfrs",
+        "arch_quality_attributes"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Clarify scope and critical journeys, make NFRs measurable, estimate load, then propose components and failure handling.",
+      "expectedPoints": [
+        {
+          "id": "arch_renewal_scope",
+          "label": "Clarifies the functional scope",
+          "description": "Identifies actors, renewal lifecycle, payment, documents, status, notifications, and what is outside the first design.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "clarify actors",
+            "renewal lifecycle",
+            "payment flow",
+            "status tracking",
+            "out of scope"
+          ]
+        },
+        {
+          "id": "arch_renewal_nfr",
+          "label": "Makes NFRs explicit",
+          "description": "Asks for traffic, peak load, latency, availability, consistency, audit, retention, and regulatory needs.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "peak traffic",
+            "latency target",
+            "availability target",
+            "audit requirement",
+            "retention requirement",
+            "consistency requirement"
+          ]
+        },
+        {
+          "id": "arch_renewal_critical",
+          "label": "Separates critical and optional paths",
+          "description": "Keeps payment and renewal correctness explicit while allowing notifications or reporting to be asynchronous.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "critical path",
+            "payment correctness",
+            "notifications async",
+            "reporting async",
+            "pending state"
+          ]
+        },
+        {
+          "id": "arch_renewal_design",
+          "label": "Builds a justified high-level design",
+          "description": "Defines APIs, ownership, data, workflow, integrations, and observability only after the requirements.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "api contract",
+            "data ownership",
+            "workflow state",
+            "integration boundaries",
+            "observability"
+          ]
+        },
+        {
+          "id": "arch_renewal_risk",
+          "label": "Names failure and migration risks",
+          "description": "Covers retries, idempotency, external provider failure, reconciliation, rollout, and recovery.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "idempotency",
+            "provider failure",
+            "reconciliation",
+            "rollback plan",
+            "recovery objective"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_renewal_followup_payment",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you keep payment inside the synchronous request path? What information determines that decision?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Renewal platform tervezése homályos feladatból",
+          "prompt": "Egy platformot kell tervezned, ahol az ügyfelek trademark renewal requestet küldenek, díjat fizetnek, dokumentumot kapnak és státuszt követnek. A feladat nem ad scale vagy reliability számokat. Hogyan kezdesz?",
+          "answerStructureHint": "Először scope és critical journey, utána mérhető NFR, load estimate, majd komponensek és failure handling.",
+          "expectedPoints": {
+            "arch_renewal_scope": {
+              "label": "Tisztázza a functional scope-ot",
+              "description": "Azonosítja az actorokat, renewal lifecycle-t, paymentet, documentet, statust, notificationt és az első designon kívüli részeket."
+            },
+            "arch_renewal_nfr": {
+              "label": "Explicit NFR-eket kér",
+              "description": "Trafficra, peak loadra, latencyre, availabilityre, consistencyre, auditra, retentionre és regulationre kérdez rá."
+            },
+            "arch_renewal_critical": {
+              "label": "Elkülöníti a critical és optional pathot",
+              "description": "A payment és renewal correctness explicit marad, notification és reporting mehet async módon."
+            },
+            "arch_renewal_design": {
+              "label": "Indokolt high-level designt épít",
+              "description": "Requirement után definiál API-t, ownershipöt, data-t, workflow-t, integrationt és observabilityt."
+            },
+            "arch_renewal_risk": {
+              "label": "Failure és migration risket nevez meg",
+              "description": "Retry, idempotency, external provider failure, reconciliation, rollout és recovery szerepel."
+            }
+          },
+          "followUps": {
+            "arch_renewal_followup_payment": "A paymentet a synchronous request pathban tartanád? Milyen információ dönti ezt el?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_nfr_tradeoff_001",
+      "title": "Choosing an availability target",
+      "prompt": "A product manager asks for 99.99% availability for every feature of an internal application. How would you challenge and refine that requirement?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "arch_requirements_nfrs",
+        "arch_quality_attributes"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Turn the request into user journeys and measurable targets, explain cost, differentiate criticality, and document the decision.",
+      "expectedPoints": [
+        {
+          "id": "arch_nfr_journeys",
+          "label": "Breaks the system into user journeys",
+          "description": "Separates critical operations from optional or recoverable features instead of assigning one target to everything.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "critical user journey",
+            "feature criticality",
+            "optional feature",
+            "different availability targets"
+          ]
+        },
+        {
+          "id": "arch_nfr_measure",
+          "label": "Makes the target measurable",
+          "description": "Defines success, measurement point, time window, planned maintenance, and dependency treatment.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "define success",
+            "measurement window",
+            "planned maintenance",
+            "dependency failures",
+            "service level indicator"
+          ]
+        },
+        {
+          "id": "arch_nfr_cost",
+          "label": "Explains the cost curve",
+          "description": "Connects a stricter target to redundancy, operational staffing, testing, and recovery investment.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "redundancy cost",
+            "on call coverage",
+            "multi region cost",
+            "recovery investment",
+            "testing cost"
+          ]
+        },
+        {
+          "id": "arch_nfr_alternative",
+          "label": "Proposes a proportionate alternative",
+          "description": "Uses a lower target or graceful degradation for non-critical paths while protecting the core flow.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "graceful degradation",
+            "tiered slo",
+            "core flow",
+            "proportionate target"
+          ]
+        },
+        {
+          "id": "arch_nfr_record",
+          "label": "Records ownership and review",
+          "description": "Documents the accepted target, rationale, owner, and conditions for revisiting it.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "document decision",
+            "decision owner",
+            "review trigger",
+            "adr"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_nfr_followup_math",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Roughly how much monthly downtime is allowed by 99.9% and 99.99% availability?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Availability target megválasztása",
+          "prompt": "A product manager 99.99% availabilityt kér egy belső application minden feature-éhez. Hogyan kérdőjeleznéd meg és pontosítanád ezt a requirementet?",
+          "answerStructureHint": "Bontsd user journeykre, tedd mérhetővé, mutasd meg a costot, különítsd el a criticalityt, majd dokumentáld a döntést.",
+          "expectedPoints": {
+            "arch_nfr_journeys": {
+              "label": "User journeykre bontja a rendszert",
+              "description": "A critical operationt elkülöníti az optional vagy recoverable feature-től, nem ad mindennek egy targetet."
+            },
+            "arch_nfr_measure": {
+              "label": "Mérhetővé teszi a targetet",
+              "description": "Definiálja a success-t, measurement pointot, time window-t, planned maintenance-t és dependency treatmentet."
+            },
+            "arch_nfr_cost": {
+              "label": "Elmagyarázza a cost növekedését",
+              "description": "A szigorúbb targetet redundancyhoz, operational staffinghez, testinghez és recovery investmenthez köti."
+            },
+            "arch_nfr_alternative": {
+              "label": "Arányos alternatívát javasol",
+              "description": "Non-critical pathhoz alacsonyabb targetet vagy graceful degradationt használ, miközben a core flow védett."
+            },
+            "arch_nfr_record": {
+              "label": "Rögzíti az ownershipöt és review-t",
+              "description": "Dokumentálja a targetet, rationale-t, ownert és a felülvizsgálat feltételeit."
+            }
+          },
+          "followUps": {
+            "arch_nfr_followup_math": "Körülbelül mennyi havi downtime fér bele 99.9% és 99.99% availability mellett?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_monolith_microservices_001",
+      "title": "Modular monolith or microservices?",
+      "prompt": "A six-person team is building a new business application whose domain is still changing. Some stakeholders want microservices from day one. What would you recommend and why?",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "design_review"
+      ],
+      "topicIds": [
+        "arch_modular_monolith",
+        "arch_microservices",
+        "arch_coupling_cohesion"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Compare the independence benefit with team size, domain uncertainty, operational cost, and an extraction path.",
+      "expectedPoints": [
+        {
+          "id": "arch_mm_context",
+          "label": "Uses team and domain context",
+          "description": "Recognizes that a small team and unstable boundaries reduce the immediate value of independent services.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "six person team",
+            "domain still changing",
+            "uncertain boundaries",
+            "small team"
+          ]
+        },
+        {
+          "id": "arch_mm_modular",
+          "label": "Recommends enforced modularity",
+          "description": "Proposes a modular monolith with business modules, public interfaces, controlled dependencies, and data ownership.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "modular monolith",
+            "business modules",
+            "module api",
+            "controlled dependencies",
+            "data ownership"
+          ]
+        },
+        {
+          "id": "arch_mm_costs",
+          "label": "Names microservice costs",
+          "description": "Covers distributed failure, pipelines, observability, data consistency, network latency, and ownership overhead.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "distributed failure",
+            "many pipelines",
+            "observability cost",
+            "data consistency",
+            "network latency"
+          ]
+        },
+        {
+          "id": "arch_mm_extract",
+          "label": "Keeps a future extraction path",
+          "description": "Defines criteria such as independent scaling, ownership, risk, or release pressure for later extraction.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "extract later",
+            "independent scaling",
+            "ownership boundary",
+            "deployment pressure",
+            "clear criteria"
+          ]
+        },
+        {
+          "id": "arch_mm_counter",
+          "label": "Acknowledges exceptions",
+          "description": "States conditions where early microservices may still be justified, such as strict isolation or established platform capability.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "strict isolation",
+            "existing platform",
+            "independent teams",
+            "regulatory boundary"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_mm_followup_enforce",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you enforce module boundaries so the modular monolith does not become a big ball of mud?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Modular monolith vagy microservices?",
+          "prompt": "Egy hatfős team új business applicationt épít, miközben a domain boundaryk még változnak. Néhány stakeholder az első naptól microservices-t akar. Mit javasolnál, és miért?",
+          "answerStructureHint": "Hasonlítsd össze az independence értékét a team size-zal, domain uncertaintyvel, operational costtal és extraction pathszal.",
+          "expectedPoints": {
+            "arch_mm_context": {
+              "label": "Figyelembe veszi a team és domain contextet",
+              "description": "Felismeri, hogy kis team és instabil boundary mellett az independent service azonnali értéke alacsonyabb."
+            },
+            "arch_mm_modular": {
+              "label": "Enforce-olt modularityt javasol",
+              "description": "Business module-okkal, public interface-szel, kontrollált dependencyvel és data ownershippel modular monolithot javasol."
+            },
+            "arch_mm_costs": {
+              "label": "Megnevezi a microservices költségeit",
+              "description": "Distributed failure, pipeline, observability, data consistency, network latency és ownership overhead szerepel."
+            },
+            "arch_mm_extract": {
+              "label": "Fenntartja a későbbi extraction lehetőségét",
+              "description": "Independent scaling, ownership, risk vagy release pressure alapján későbbi extraction criteriát ad."
+            },
+            "arch_mm_counter": {
+              "label": "Elismeri a kivételeket",
+              "description": "Megnevez olyan feltételt, ahol early microservices indokolt lehet, például strict isolation vagy meglévő platform capability."
+            }
+          },
+          "followUps": {
+            "arch_mm_followup_enforce": "Hogyan enforce-olnád a module boundaryket, hogy a modular monolith ne váljon big ball of muddá?"
+          }
+        }
+      }
+    }
+  ]
+}

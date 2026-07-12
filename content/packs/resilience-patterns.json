@@ -1,7 +1,7 @@
 {
   "id": "resilience_patterns",
-  "name": "Resilience & production readiness",
-  "description": "Reliability patterns from the Dennemeyer 100: circuit breakers and cascading failure, backpressure and rate limiting, SLO/SLA/error budgets, production readiness (health checks, graceful shutdown, deploy strategies, observability), idempotent retries, and the resilience toolkit.",
+  "name": "Resilience and Production Readiness",
+  "description": "Circuit breakers, backpressure, SLOs, idempotency, retries, bulkheads, graceful degradation, and production operations.",
   "sources": [
     "dennemeyer_system_design_100_tema_peldakkal_mobile_hu",
     "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu"
@@ -9,99 +9,263 @@
   "topics": [
     {
       "id": "circuit_breaker",
-      "name": "Circuit breaker",
-      "description": "Stops calling a failing dependency to prevent cascading failure; closed/open/half-open states.",
+      "name": "Circuit Breaker",
+      "description": "Failing fast when a dependency repeatedly fails.",
       "category": "architecture",
       "relatedTopicIds": [
-        "reliability",
-        "idempotency_retries"
+        "backpressure"
       ],
-      "studyNotes": "## What is it?\n\nA circuit breaker is a protective wrapper around calls to another service: when that service keeps failing, the breaker \"opens\" and stops calling it for a while — like the electrical fuse it is named after.\n\n## What problem does it solve?\n\nCascading failure — the way one slow component takes down a whole system. The chain: the payment service slows down → your API's requests pile up waiting for it → your thread/connection pools fill → your API stops answering → users retry → even MORE load. Each retry into the struggling service makes it worse.\n\n## How it works\n\nThe breaker has three states:\n- Closed (normal): calls pass through; failures are counted.\n- Open: when failures cross a threshold (say 50% of calls), the breaker trips. Calls now fail IMMEDIATELY or use a fallback, without touching the sick service — it gets breathing room, your threads stay free.\n- Half-open: after a cooldown, a few trial calls go through. Success → close; failure → open again.\n\nThe breaker works as a pair with timeouts: every network call needs an explicit timeout (e.g. 3 seconds), because waiting forever is how pools fill up. The timeout caps ONE call; the breaker recognizes the PATTERN of failures. The full defense stack against cascades: timeouts + circuit breakers + queues + backoff + rate limits.\n\n## Common mistakes\n\n- Retrying into a failing dependency without a breaker — finishing it off\n- Network calls without explicit timeouts; pools fill while everyone waits\n- A breaker with no half-open probing — it never recovers on its own\n\n## Key terms\n\n- Cascading failure — one component's failure toppling the rest\n- Closed / open / half-open — the breaker's three states\n- Fail fast — an immediate error beats a slow one\n- Timeout — the per-call cap that pairs with the breaker\n- Fallback — what you answer while the breaker is open"
-    },
-    {
-      "id": "backpressure",
-      "name": "Backpressure",
-      "description": "Slowing intake deliberately instead of accepting everything and collapsing.",
-      "category": "architecture",
-      "relatedTopicIds": [
-        "reliability",
-        "message_queue"
-      ],
-      "studyNotes": "## What is it?\n\nBackpressure is a system saying \"I cannot take more work right now\" — and slowing intake deliberately instead of accepting everything and collapsing.\n\n## What problem does it solve?\n\nWhen work arrives faster than it can be processed, queues grow without bound, memory fills, latency explodes, and eventually everything crashes at once. Controlled slowdown beats uncontrolled collapse.\n\n## How it works\n\nThe mechanisms, from simple to sophisticated:\n- Bounded queues: a queue with a maximum size that rejects when full — the most basic pressure valve.\n- HTTP 429 \"Too Many Requests\": telling the client to slow down and retry later.\n- Rate limiting: a fixed cap per user/API key (e.g. 1000 requests/minute) — protects against overload, abuse and runaway costs.\n- Throttling: adaptive slowing under load — e.g. during a traffic spike, deprioritize non-critical endpoints (reporting) so the core flow stays alive.\n- Going async: accept the request, queue the work, answer 202 + \"pending\".\n- Autoscaling: add capacity — with limits, because scaling is not instant and not free.\n\nA concrete picture: the job queue's age starts climbing → the API stops accepting new heavy jobs synchronously and answers 202/pending, or throttles the reporting endpoints. Users see slightly slower non-critical features instead of a dead product.\n\n## Common mistakes\n\n- Unbounded queues \"so nothing is lost\" — until memory is\n- Autoscaling as the only answer (it is slow and has limits; shed load too)\n- Returning 500 instead of 429 — the client cannot tell overload from a bug\n\n## Key terms\n\n- Bounded queue — a queue that says no when full\n- 429 Too Many Requests — the HTTP \"slow down\" signal\n- Rate limiting vs throttling — fixed rule vs adaptive slowdown\n- Load shedding — deliberately dropping/deferring non-critical work"
-    },
-    {
-      "id": "slo_sla",
-      "name": "SLO / SLA / SLI & error budget",
-      "description": "Service level indicators, objectives, agreements, and error budgets driving release pace.",
-      "category": "observability",
-      "relatedTopicIds": [
-        "observability",
-        "reliability"
-      ],
-      "studyNotes": "## What is it?\n\nThree related but different letters: SLI (an indicator you MEASURE — latency, error rate), SLO (your internal TARGET on that indicator — \"99.9% of requests succeed\"), and SLA (the contractual PROMISE to a customer, often with money attached).\n\n## What problem does it solve?\n\n\"The system should be reliable\" is not actionable. These three make reliability a number you measure, a target you manage to, and a promise you can safely sign.\n\n## How it works\n\nThe hierarchy: SLI is the measurement (p95 latency, error rate, availability). SLO is your internal goal on it (\"p95 under 500ms, 99% of the month\"). SLA is what you promise customers in a contract — always LOOSER than your SLO, so you breach your internal target long before you owe anyone compensation.\n\nThe error budget is what makes SLOs useful day-to-day: a 99.9% SLO allows ~43 minutes of downtime per month — that is a budget you may SPEND. Budget left → ship features, take deploy risks. Budget exhausted → feature work pauses, reliability work takes over. It turns \"should we slow down and stabilize?\" from an argument into arithmetic.\n\nTwo habits that belong here:\n- Set targets on PERCENTILES (p95/p99), not averages — average 80ms with p99 at 3 seconds means your slowest users suffer invisibly.\n- Alert on actionable, SLO-relevant conditions (\"error rate above 5% for 10 minutes\"), not noise (\"CPU touched 80% once\"). An alert nobody acts on trains people to ignore alerts.\n\n## Common mistakes\n\n- Signing an SLA stricter than the internal SLO — breach by design\n- Targets on averages while p99 burns\n- 100% availability as a goal — it forbids all change and ignores cost\n- An exhausted error budget changing nothing about priorities\n\n## Key terms\n\n- SLI / SLO / SLA — measure / internal target / customer contract\n- Error budget — allowed unreliability, spendable on release risk\n- Tail latency — p95/p99; where the real user pain lives\n- Actionable alert — fires only when someone should do something"
+      "studyNotes": "## What is it?\n\nA circuit breaker wraps calls to a dependency and temporarily stops sending requests after failures cross a threshold. It moves through closed, open, and half-open states.\n\n## What problem does it solve?\n\nA slow dependency can exhaust threads and connections in its callers, creating cascading failure. Fast rejection protects the caller and gives the dependency time to recover.\n\n## How it works\n\n- Closed allows calls and records outcomes.\n- Open rejects immediately or uses a defined fallback.\n- Half-open permits a limited number of probes after a cooldown.\n- Pair the breaker with explicit timeouts, useful metrics, and an appropriate fallback.\n\n## Common mistakes\n\n- Retrying aggressively while the breaker is open.\n- Using a breaker without timeouts.\n- Hiding critical failures behind a misleading successful fallback.\n\n## Key terms\n\n- closed — Normal calls pass through.\n- open — Calls fail fast.\n- half-open — Limited recovery probes.\n- fallback — Defined degraded response.",
+      "i18n": {
+        "hu": {
+          "name": "Circuit Breaker",
+          "description": "Gyors hibázás, amikor egy függőség ismételten meghibásodik.",
+          "studyNotes": "## Mi ez?\n\nA circuit breaker egy függőséghez indított hívásokat vesz körül, és ideiglenesen leállítja az új kéréseket, ha a hibák száma átlép egy küszöböt. Három állapota van: closed, open és half-open.\n\n## Milyen problémát old meg?\n\nEgy lassú függőség kimerítheti a hívó szálait és kapcsolatait, így láncreakciós hibát okozhat. A gyors elutasítás védi a hívót, és időt ad a függőségnek a helyreállásra.\n\n## Hogyan működik\n\n- Closed állapotban a hívások továbbmennek, az eredményeket pedig a breaker rögzíti.\n- Open állapotban azonnal elutasít, vagy előre meghatározott fallbacket használ.\n- Half-open állapotban a lehűlési idő után korlátozott számú próbahívást enged.\n- A breakert explicit timeoutokkal, hasznos metrikákkal és megfelelő fallbackkel együtt használd.\n\n## Gyakori hibák\n\n- A breaker open állapotában agresszívan újrapróbálkozni.\n- Timeout nélkül circuit breakert használni.\n- Kritikus hibát félrevezető sikeres fallback mögé rejteni.\n\n## Kulcsfogalmak\n\n- closed — a normál hívások továbbmennek\n- open — a hívások gyorsan hibáznak\n- half-open — korlátozott helyreállási próbák\n- fallback — előre meghatározott csökkentett viselkedés"
+        }
+      }
     },
     {
       "id": "production_readiness",
-      "name": "Production readiness",
-      "description": "Health checks, graceful shutdown, correlation IDs, alerting — what a service needs before go-live.",
+      "name": "Production Readiness",
+      "description": "Health, shutdown, observability, deployment, and operational ownership.",
       "category": "devops",
-      "relatedTopicIds": [
-        "observability",
-        "deployment"
-      ],
-      "studyNotes": "## What is it?\n\nThe checklist of what must be true before (and while) a service takes real traffic: health checks, graceful shutdown, a deployment strategy, and observability.\n\n## What problem does it solve?\n\n\"It works on staging\" is not the same as \"it can be deployed at noon without anyone noticing\". These mechanisms are the difference.\n\n## How it works\n\nHealth checks come in two kinds, and the difference matters:\n- Liveness: is the process alive at all? If not, Kubernetes restarts it.\n- Readiness: can it take traffic RIGHT NOW? A new pod may be alive but still connecting to the database — readiness stays false, and no traffic arrives until it is ready. This gate is what makes zero-downtime rollouts real.\n\nGraceful shutdown is the other half: on termination, the pod first flips readiness to false (no NEW requests), finishes the requests in flight, closes its DB/Redis connections, and only then exits. Without it, every deploy drops whatever was mid-flight.\n\nDeployment strategies, by blast radius:\n- Rolling update: replace pods gradually (the Kubernetes default).\n- Blue-green: two full environments; switch traffic instantly, switch back instantly.\n- Canary: the new version gets 5% of traffic; error rates rise → rollback before most users saw it.\n- Feature flags: deploy the code dark, enable the feature separately.\n\nObservability is the third leg — logs, metrics and traces, not just logging. A correlation ID generated at the edge travels through every service, so one customer's failed request can be traced end to end. Structured logs (JSON fields: event, customerId, requestId, reason) make searching possible; alerts fire on actionable conditions.\n\n## Common mistakes\n\n- Liveness and readiness conflated — restarts instead of traffic gating\n- Canary with no metrics watched — 5% of users become the alerting system\n- Logs without correlation ids: one request untraceable across services\n- Alerts on unactionable noise (a CPU spike) training everyone to ignore them\n\n## Key terms\n\n- Liveness vs readiness — \"alive\" vs \"ready for traffic\"\n- Graceful shutdown — drain in-flight work before exiting\n- Canary release — a small slice of traffic tests the new version\n- Correlation ID — one id following a request across services\n- Structured logging — fields, not prose; searchable"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nProduction readiness means a service can be deployed, observed, operated, and recovered under real traffic. Functional correctness is only one part of readiness.\n\n## What problem does it solve?\n\nA service that works in staging can still drop requests during deployment, fail silently, overload dependencies, or leave responders without diagnostic information.\n\n## How it works\n\n- Provide liveness and readiness checks with different purposes.\n- Drain traffic and finish in-flight work during graceful shutdown.\n- Emit structured logs, metrics, traces, and actionable alerts tied to user impact.\n- Use a gradual or reversible deployment path and document operational ownership.\n\n## Common mistakes\n\n- Making readiness depend on every optional downstream service.\n- Logging without correlation identifiers.\n- Deploying a canary without watching comparison metrics.\n\n## Key terms\n\n- liveness — Whether the process should be restarted.\n- readiness — Whether the instance should receive traffic.\n- graceful shutdown — Stop new work and finish active work.\n- rollback — Return quickly to a known good version.",
+      "i18n": {
+        "hu": {
+          "name": "Éles üzemre való felkészültség",
+          "description": "Állapotellenőrzés, leállítás, megfigyelhetőség, telepítés és üzemeltetési felelősség.",
+          "studyNotes": "## Mi ez?\n\nAz éles üzemre való felkészültség azt jelenti, hogy egy szolgáltatás valós forgalom mellett telepíthető, megfigyelhető, üzemeltethető és helyreállítható. A funkcionális helyesség csak az egyik része ennek.\n\n## Milyen problémát old meg?\n\nEgy stagingben jól működő szolgáltatás telepítés közben még elveszíthet kéréseket, csendben meghibásodhat, túlterhelheti a függőségeit, vagy használható diagnosztikai információ nélkül hagyhatja az ügyeletest.\n\n## Hogyan működik\n\n- Biztosíts külön célt szolgáló liveness és readiness ellenőrzéseket.\n- Graceful shutdown alatt tereld el az új forgalmat, és fejezd be a már folyamatban lévő munkát.\n- Adj strukturált logokat, metrikákat, trace-eket és a felhasználói hatáshoz kötött, cselekvést kiváltó riasztásokat.\n- Használj fokozatos vagy könnyen visszafordítható telepítést, és dokumentáld az üzemeltetési felelőst.\n\n## Gyakori hibák\n\n- A readinesst minden opcionális downstream szolgáltatástól függővé tenni.\n- Korrelációs azonosító nélkül logolni.\n- Canary telepítést összehasonlító metrikák figyelése nélkül végezni.\n\n## Kulcsfogalmak\n\n- liveness — újra kell-e indítani a folyamatot\n- readiness — kaphat-e forgalmat az adott példány\n- graceful shutdown — nem vesz fel új munkát, a folyamatban lévőt pedig befejezi\n- rollback — gyors visszatérés egy ismerten jó verzióhoz"
+        }
+      }
     },
     {
       "id": "idempotency_retries",
       "name": "Idempotency",
-      "description": "Operations safe to run twice: idempotency keys, unique constraints, and at-least-once delivery.",
+      "description": "Making repeated operations produce one effective result.",
       "category": "backend",
-      "relatedTopicIds": [
-        "message_queue",
-        "outbox_pattern"
-      ],
-      "studyNotes": "## What is it?\n\nIdempotency means an operation can run TWICE with the effect of running once. A payment request processed twice must not charge the customer twice.\n\n## What problem does it solve?\n\nDuplicates are a fact of distributed life: a client times out and re-sends; a message broker delivers the same event twice (most brokers guarantee at-least-once delivery, which means duplicates BY DESIGN). Without idempotency, every duplicate is a double charge, a second email, a duplicated record.\n\n## How it works\n\nThe standard mechanisms:\n\n- Idempotency key: the client sends a unique key with the request; the server remembers processed keys and returns the SAME response for a repeat instead of acting again.\n- Unique constraints: the database itself refuses the duplicate row.\n- Processed-events table: consumers record each handled eventId; a duplicate is recognized and skipped.\n\nThe summary line worth memorizing: exactly-once processing in practice = at-least-once delivery + idempotent consumers. Brokers cannot promise exactly-once across systems; your consumer's idempotency is what makes duplicates harmless.\n\nRetries (their own topic) are the main SOURCE of duplicates — the two topics work as a pair: retries make the system persistent, idempotency makes that persistence safe.\n\n## Common mistakes\n\n- Consumers without an eventId dedupe under at-least-once delivery\n- Assuming the broker guarantees exactly-once (it cannot, across systems)\n- Idempotency keys generated per attempt instead of per operation — defeats the purpose\n\n## Key terms\n\n- Idempotency key — same key, same result, no double effect\n- At-least-once — duplicates arrive by design; plan for them\n- Processed-events table — the consumer's memory of what it handled\n- Exactly-once (effective) — at-least-once delivery + idempotent consumer"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nAn idempotent operation can be repeated without creating additional side effects after the first successful application. It is essential for payments, message consumers, and retried writes.\n\n## What problem does it solve?\n\nNetworks can lose responses and brokers commonly redeliver messages. The caller cannot always know whether the first attempt completed.\n\n## How it works\n\n- Use an idempotency key representing the business operation, not the individual attempt.\n- Store the result or enforce a unique constraint atomically with the side effect.\n- Make message consumers record processed event identifiers.\n- Define the retention window and behavior for a repeated key with different request data.\n\n## Common mistakes\n\n- Generating a new idempotency key for every retry.\n- Checking for duplicates in memory before a non-atomic write.\n- Claiming a broker removes the need for idempotent consumers.\n\n## Key terms\n\n- idempotency key — Stable identifier for one logical operation.\n- deduplication — Recognizing repeated delivery.\n- at-least-once — Delivery guarantee that permits duplicates.\n- unique constraint — Database rule preventing duplicate state.",
+      "i18n": {
+        "hu": {
+          "name": "Idempotencia",
+          "description": "Ismételt műveletek egyetlen tényleges eredményre korlátozása.",
+          "studyNotes": "## Mi ez?\n\nEgy idempotens művelet többször megismételhető anélkül, hogy az első sikeres végrehajtás után további mellékhatásokat hozna létre. Ez különösen fontos fizetéseknél, üzenetfogyasztóknál és újrapróbált írásoknál.\n\n## Milyen problémát old meg?\n\nA hálózat elveszítheti a választ, az üzenetbrókerek pedig gyakran újrakézbesítenek. A hívó ezért nem mindig tudja, hogy az első próbálkozás valójában befejeződött-e.\n\n## Hogyan működik\n\n- Használj az üzleti műveletet, nem az egyes próbálkozást azonosító idempotenciakulcsot.\n- A mellékhatással egy tranzakcióban tárold el az eredményt, vagy kényszeríts ki egyedi korlátozást.\n- Az üzenetfogyasztó rögzítse a már feldolgozott eseményazonosítókat.\n- Határozd meg a megőrzési időt és azt is, mi történjen, ha ugyanazzal a kulccsal eltérő kérésadat érkezik.\n\n## Gyakori hibák\n\n- Minden retryhoz új idempotenciakulcsot generálni.\n- Nem atomi írás előtt csak memóriában ellenőrizni a duplikációt.\n- Azt állítani, hogy a bróker miatt nincs szükség idempotens fogyasztóra.\n\n## Kulcsfogalmak\n\n- idempotenciakulcs — egy logikai művelet stabil azonosítója\n- deduplikáció — az ismételt kézbesítés felismerése\n- at-least-once — olyan kézbesítési garancia, amely megengedi a duplikációt\n- egyedi korlátozás — a duplikált állapotot megakadályozó adatbázisszabály"
+        }
+      }
     },
     {
       "id": "resilience_toolkit",
       "name": "Graceful Degradation",
-      "description": "Keeping a system partially working when parts of it fail: fallbacks and honest degraded states.",
+      "description": "Keeping core value available when optional capabilities fail.",
       "category": "architecture",
       "relatedTopicIds": [
-        "circuit_breaker",
-        "backpressure",
-        "reliability"
+        "circuit_breaker"
       ],
-      "studyNotes": "## What is it?\n\nGraceful degradation means a system loses SOME functionality when a part of it fails, instead of collapsing entirely. Resilience is the umbrella word for this ability; fault tolerance is the narrower \"a specific component died and we absorbed it\" (a pod dies, Kubernetes restarts it; an instance goes unhealthy, the load balancer routes around it).\n\n## What problem does it solve?\n\nIn a system of many parts, something is always failing. The goal is not preventing all failure — impossible — but making sure a failing notification service does not take the payment flow down with it.\n\n## How it works\n\nThe core tool is the fallback: a DEFINED degraded behavior for when a dependency fails — serve slightly stale data from cache, show a \"pending\" state, postpone the email to a queue. The key word is defined: decided and built in advance, not improvised during the incident.\n\nThe honesty rule: for critical business operations, never fake success. If the payment's outcome is unknown, show pending or failed — an explicit uncertain state beats a cheerful lie that unwinds later. If a non-critical dependency (reporting, recommendations) is down, the core flow proceeds and the auxiliary data shows as unavailable.\n\nGraceful degradation composes with the other resilience patterns — timeouts, circuit breakers, backpressure, and bulkhead isolation (each its own topic). In an interview, pick the failure scenario first, then name which tool breaks which link of the failure chain.\n\n## Common mistakes\n\n- Faking success when a critical dependency failed (show pending/failed instead)\n- Fallbacks improvised during the incident instead of designed before it\n- Treating \"resilient\" as \"never fails\" instead of \"fails partially and recovers\"\n\n## Key terms\n\n- Fallback — pre-defined degraded behavior for a failed dependency\n- Fault tolerance — surviving a specific component failure\n- Graceful degradation — less service, not no service\n- Never fake success — explicit pending/failed for critical operations"
+      "studyNotes": "## What is it?\n\nGraceful degradation provides a defined reduced service when part of the system is unavailable. It preserves core functions without pretending that every operation succeeded.\n\n## What problem does it solve?\n\nDistributed systems experience partial failure. Without deliberate degraded states, an optional recommendation, reporting, or notification dependency can take down a critical flow.\n\n## How it works\n\n- Classify dependencies and features by business criticality.\n- Use cached data, pending states, asynchronous work, or omitted optional content as explicit fallbacks.\n- Communicate uncertainty honestly for payments and other critical operations.\n- Combine fallbacks with timeouts, circuit breakers, bulkheads, and observability.\n\n## Common mistakes\n\n- Returning success when the critical outcome is unknown.\n- Inventing fallback behavior during an incident.\n- Serving stale data without indicating where freshness matters.\n\n## Key terms\n\n- fallback — Predefined reduced behavior.\n- partial failure — Some components fail while others work.\n- degraded state — Limited but usable product behavior.\n- critical path — Operations required for core business value.",
+      "i18n": {
+        "hu": {
+          "name": "Graceful Degradation",
+          "description": "Az alapvető érték fenntartása opcionális képességek hibája esetén.",
+          "studyNotes": "## Mi ez?\n\nA graceful degradation előre meghatározott, csökkentett szolgáltatást biztosít, amikor a rendszer egy része nem érhető el. Megőrzi az alapfunkciókat anélkül, hogy úgy tenne, mintha minden művelet sikeres lett volna.\n\n## Milyen problémát old meg?\n\nAz elosztott rendszerekben részleges hibák történnek. Tudatosan megtervezett csökkentett állapotok nélkül egy opcionális ajánló-, riport- vagy értesítési függőség is leállíthatja a kritikus folyamatot.\n\n## Hogyan működik\n\n- Osztályozd a függőségeket és funkciókat üzleti kritikusság szerint.\n- Használj cache-elt adatot, függő állapotot, aszinkron munkát vagy elhagyott opcionális tartalmat explicit fallbackként.\n- Fizetésnél és más kritikus műveleteknél őszintén jelezd a bizonytalanságot.\n- A fallbacket timeouttal, circuit breakerrel, bulkheaddel és megfigyelhetőséggel együtt alkalmazd.\n\n## Gyakori hibák\n\n- Sikert visszaadni, amikor a kritikus művelet kimenetele ismeretlen.\n- Incidens közben rögtönözni a fallback-viselkedést.\n- Elavult adatot szolgáltatni anélkül, hogy jeleznénk, hol számít a frissesség.\n\n## Kulcsfogalmak\n\n- fallback — előre meghatározott csökkentett működés\n- részleges hiba — egyes komponensek hibásak, míg mások működnek\n- csökkentett állapot — korlátozott, de használható termékviselkedés\n- kritikus útvonal — az alapvető üzleti értékhez szükséges műveletek"
+        }
+      }
     },
     {
       "id": "bulkhead_isolation",
       "name": "Bulkhead Isolation",
-      "description": "Separate resource pools so one failing area cannot drag down the rest.",
+      "description": "Separating bounded resource pools to limit failure spread.",
       "category": "architecture",
       "relatedTopicIds": [
-        "resilience_toolkit",
-        "circuit_breaker",
-        "backpressure"
+        "backpressure",
+        "circuit_breaker"
       ],
-      "studyNotes": "## What is it?\n\nBulkhead isolation means splitting a system's resources into separate compartments — a dedicated worker pool for document processing, a separate connection pool for payment calls — so that one overwhelmed or failing area cannot exhaust the resources everything else needs. The name comes from ship hulls: one flooded compartment must not sink the ship.\n\n## What problem does it solve?\n\nShared resources spread failure. If document processing and the public API share one thread pool, a flood of slow document jobs eats every thread — and the API dies with it, though nothing is wrong with it.\n\n## How it works\n\nIdentify the resources that can be exhausted — threads, connections, queue capacity, memory — and give each risky workload its own bounded share:\n\n- A separate worker pool per job type: document processing melting down leaves API request handling untouched.\n- A separate connection pool per downstream: the slow payment provider fills ITS pool, not the shared one.\n- Bounded queues per consumer, so one slow consumer's backlog does not starve the others.\n\nSizing is the design work: each bulkhead gets enough for its normal load plus headroom, and its limit becomes a natural backpressure point — when the compartment is full, that workload waits or degrades, alone.\n\n## Common mistakes\n\n- One shared pool for everything — the default, and the failure multiplier\n- Bulkheads without limits — an unbounded compartment protects nothing\n- Isolating compute but sharing the one database connection pool anyway\n\n## Key terms\n\n- Bulkhead — an isolated, bounded resource compartment\n- Worker pool / connection pool — the resources usually partitioned\n- Blast radius — how far one failure spreads; bulkheads shrink it"
+      "studyNotes": "## What is it?\n\nBulkhead isolation divides resources such as threads, connections, queues, or workers between workloads. One overloaded compartment cannot consume everything.\n\n## What problem does it solve?\n\nA single slow dependency or background job can exhaust a shared pool and make unrelated endpoints fail. Isolation reduces the blast radius.\n\n## How it works\n\n- Identify resources that can saturate and the workloads competing for them.\n- Create separate bounded pools or queues for important dependency or workload classes.\n- Set limits and backpressure behavior for each compartment.\n- Monitor saturation and adjust sizes based on demand and business priority.\n\n## Common mistakes\n\n- Creating separate pools with no maximum size.\n- Isolating workers while sharing one exhausted database pool.\n- Allocating fixed capacity without observing real load.\n\n## Key terms\n\n- bulkhead — Bounded isolated resource compartment.\n- blast radius — Scope affected by a failure.\n- saturation — Resource demand reaching capacity.\n- resource pool — Reusable bounded set of connections or workers.",
+      "i18n": {
+        "hu": {
+          "name": "Bulkhead Isolation",
+          "description": "Korlátozott erőforráskészletek szétválasztása a hibaterjedés csökkentésére.",
+          "studyNotes": "## Mi ez?\n\nA bulkhead isolation a szálakat, kapcsolatokat, queue-kat vagy workereket elkülönített készletekre osztja a különböző terhelések között. Egy túlterhelt rekesz így nem fogyaszthatja el az összes erőforrást.\n\n## Milyen problémát old meg?\n\nEgyetlen lassú függőség vagy háttérfeladat kimeríthet egy közös poolt, és egymástól független endpointokat is leállíthat. Az izoláció csökkenti a hiba hatókörét.\n\n## Hogyan működik\n\n- Azonosítsd a telíthető erőforrásokat és az értük versengő munkatípusokat.\n- Hozz létre külön, korlátozott poolokat vagy queue-kat a fontos függőség- és terhelési osztályokhoz.\n- Minden rekeszhez határozz meg limitet és backpressure-viselkedést.\n- Figyeld a telítettséget, és a valós igény, illetve az üzleti prioritás alapján módosítsd a méreteket.\n\n## Gyakori hibák\n\n- Felső korlát nélküli külön poolokat létrehozni.\n- A workereket elkülöníteni, miközben továbbra is ugyanazt a kimerült adatbázis-kapcsolatpoolt használják.\n- Fix kapacitást kiosztani a valós terhelés megfigyelése nélkül.\n\n## Kulcsfogalmak\n\n- bulkhead — korlátozott, elkülönített erőforrásrekesz\n- blast radius — a hiba által érintett terület\n- telítettség — amikor az erőforrásigény eléri a kapacitást\n- erőforráspool — kapcsolatok vagy workerek korlátozott, újrafelhasználható készlete"
+        }
+      }
     },
     {
       "id": "retry_strategies",
       "name": "Retry Strategies",
-      "description": "Backoff, failure classification, and dead-letter queues — retrying without making things worse.",
+      "description": "Failure classification, exponential backoff, jitter, and DLQs.",
       "category": "backend",
       "relatedTopicIds": [
         "idempotency_retries",
-        "circuit_breaker",
-        "backpressure"
+        "circuit_breaker"
       ],
-      "studyNotes": "## What is it?\n\nThe discipline of retrying failed operations: which failures to retry, how long to wait between attempts (backoff), and where messages go when retrying stops making sense (the dead-letter queue).\n\n## What problem does it solve?\n\nTransient failures — a timeout, a 503, a dropped connection — heal themselves; giving up on the first try loses work unnecessarily. But retrying WRONG is worse than not retrying: instant, aggressive retries onto a struggling service are how outages amplify themselves.\n\n## How it works\n\nFirst, classify the failure — this is the skill being tested:\n\n- TRANSIENT (timeout, 503, connection reset): retry with exponential backoff — wait 1s, then 2s, then 4s — often with a little randomness (jitter) so a thousand clients do not retry in lockstep.\n- PERMANENT (validation error, 404, a malformed request): do NOT retry. No amount of retrying fixes bad input; fail fast and visibly.\n\nCap the attempts. After N failures, the message moves to a DLQ — a dead-letter queue — a parking lot for messages that could not be processed, kept for inspection instead of blocking the queue or vanishing. Alert when the DLQ grows: it is a symptom feed.\n\nRetries create duplicates by design, which is why this topic pairs with idempotency: retries make the system persistent, idempotent consumers make that persistence safe. And a circuit breaker caps the pattern from above: when failures cross a threshold, stop retrying entirely for a while.\n\n## Common mistakes\n\n- Instant, aggressive retries that finish off a struggling dependency\n- Retrying validation/business errors — no retry fixes a malformed request\n- No retry cap and no DLQ — poison messages loop forever\n- Synchronized retries without jitter — the thundering herd, scheduled\n\n## Key terms\n\n- Exponential backoff — growing delays: 1s, 2s, 4s…\n- Jitter — randomness that de-synchronizes mass retries\n- Transient vs permanent failure — retry vs fail fast\n- DLQ (dead-letter queue) — parking lot for terminally failed messages"
+      "studyNotes": "## What is it?\n\nA retry strategy decides which failed operations should be attempted again, how many times, and after what delay. It distinguishes transient failures from permanent ones.\n\n## What problem does it solve?\n\nImmediate synchronized retries can multiply load during an outage, while never retrying loses work after short network or service interruptions.\n\n## How it works\n\n- Retry only failures that may recover, such as timeouts or selected 5xx responses.\n- Use exponential backoff with jitter and a maximum attempt or deadline budget.\n- Require idempotency before retrying operations with side effects.\n- Move terminally failed asynchronous messages to a dead-letter queue and alert for investigation.\n\n## Common mistakes\n\n- Retrying validation or authorization failures.\n- Using unbounded retries.\n- Applying retries at several layers and multiplying total attempts.\n\n## Key terms\n\n- transient failure — Failure likely to recover.\n- backoff — Increasing delay between attempts.\n- jitter — Randomness preventing synchronized retry waves.\n- DLQ — Queue for terminally failed messages.",
+      "i18n": {
+        "hu": {
+          "name": "Retry-stratégiák",
+          "description": "Hibaosztályozás, exponenciális backoff, jitter és dead-letter queue-k.",
+          "studyNotes": "## Mi ez?\n\nA retry-stratégia eldönti, melyik sikertelen műveletet kell újra megpróbálni, hányszor és milyen késleltetéssel. Megkülönbözteti az átmeneti hibákat a tartósaktól.\n\n## Milyen problémát old meg?\n\nAz azonnali, szinkronizált újrapróbálkozások megsokszorozhatják a terhelést egy kiesés alatt, míg a retry teljes hiánya rövid hálózati vagy szolgáltatási zavar után is elveszítheti a munkát.\n\n## Hogyan működik\n\n- Csak olyan hibát próbálj újra, amely várhatóan megszűnhet, például timeoutot vagy kiválasztott 5xx választ.\n- Használj exponenciális backoffot jitterrel, valamint maximális próbálkozásszámmal vagy teljes határidővel.\n- Mellékhatással járó műveletet csak idempotencia mellett próbálj újra.\n- A végleg sikertelen aszinkron üzenetet tedd dead-letter queue-ba, és riassz a kivizsgáláshoz.\n\n## Gyakori hibák\n\n- Validációs vagy jogosultsági hibát újrapróbálni.\n- Korlátlan retryt használni.\n- Több rétegben is retryt alkalmazni, és ezzel megsokszorozni a próbálkozások teljes számát.\n\n## Kulcsfogalmak\n\n- átmeneti hiba — várhatóan helyreálló hiba\n- backoff — növekvő késleltetés a próbálkozások között\n- jitter — véletlenszerűség, amely megakadályozza a szinkron retryhullámot\n- DLQ — végleg sikertelen üzenetek queue-ja"
+        }
+      }
+    },
+    {
+      "id": "backpressure",
+      "name": "Backpressure",
+      "description": "How a slower consumer signals or enforces a limit on a faster producer.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "message_queue",
+        "rate_limiting",
+        "scalability"
+      ],
+      "studyNotes": "## What is it?\n\nBackpressure is a control mechanism used when a producer can create work faster than a consumer can safely process it. The consumer, queue, or protocol limits the rate or amount of outstanding work instead of accepting an unbounded backlog.\n\n## What problem does it solve?\n\nWithout a limit, queues grow, memory fills, latency becomes unpredictable, retries multiply, and the whole system may fail. Backpressure keeps overload visible and bounded so the system can recover or reject work deliberately.\n\n## How it works\n\n- A bounded queue stops accepting or delays new work when capacity is reached.\n- Pull-based consumers request only the amount they can process.\n- Streaming protocols may expose demand, credits, window sizes, or paused reads.\n- Producers can slow down, retry later with jitter, aggregate work, or receive an explicit rejection.\n- Load shedding is related but different: it deliberately drops or rejects lower-priority work when capacity is exhausted.\n- Autoscaling may add capacity, but it reacts later and does not replace an immediate bound.\n- Monitor queue depth, age of oldest work, processing rate, rejection rate, and end-to-end latency.\n\n## Common mistakes\n\n- Calling any rate limit backpressure without a producer-consumer relationship\n- Using an unbounded queue as the overload strategy\n- Relying only on autoscaling while queues and latency grow\n- Retrying rejected work immediately and creating a retry storm\n\n## Key terms\n\n- bounded queue — queue with a maximum capacity\n- demand signal — amount a consumer is ready to receive\n- load shedding — intentional rejection under overload\n- queue age — waiting time of the oldest pending item",
+      "i18n": {
+        "hu": {
+          "name": "Backpressure",
+          "description": "Hogyan jelez vagy kényszerít ki korlátot egy lassabb fogyasztó a gyorsabb termelő felé.",
+          "studyNotes": "## Mi ez?\n\nA backpressure olyan szabályozási mechanizmus, amelyet akkor használunk, amikor a producer gyorsabban képes munkát előállítani, mint ahogy a consumer azt biztonságosan feldolgozza. A consumer, a queue vagy a protokoll korlátozza a sebességet vagy a folyamatban lévő munka mennyiségét a korlátlan backlog elfogadása helyett.\n\n## Milyen problémát old meg?\n\nKorlát nélkül a queue nő, a memória megtelik, a késleltetés kiszámíthatatlanná válik, a retryok megsokszorozódnak, végül pedig az egész rendszer összeomolhat. A backpressure láthatóvá és korlátozottá teszi a túlterhelést, így a rendszer helyreállhat vagy tudatosan elutasíthat munkát.\n\n## Hogyan működik\n\n- A korlátozott queue a kapacitás elérésekor nem fogad új munkát, vagy késlelteti azt.\n- A pull-alapú consumerek csak annyi elemet kérnek, amennyit fel tudnak dolgozni.\n- A streaming protokollok demandet, kreditet, ablakméretet vagy szüneteltetett olvasást tehetnek elérhetővé.\n- A producer lassíthat, később jitterrel újrapróbálhat, összevonhat munkát vagy explicit elutasítást kaphat.\n- A load shedding kapcsolódó, de eltérő fogalom: kapacitáshiány esetén szándékosan eldob vagy elutasít alacsonyabb prioritású munkát.\n- Az autoscaling növelheti a kapacitást, de később reagál, és nem helyettesít azonnali korlátot.\n- Figyeld a queue mélységét, a legrégebbi munka korát, a feldolgozási sebességet, az elutasítási arányt és az end-to-end késleltetést.\n\n## Gyakori hibák\n\n- Minden rate limitet backpressure-nek nevezni producer–consumer kapcsolat nélkül\n- Korlátlan queue-t használni túlterhelési stratégiaként\n- Csak autoscalingra hagyatkozni, miközben a queue és a késleltetés nő\n- Az elutasított munkát azonnal újrapróbálni, és retryvihart létrehozni\n\n## Kulcsfogalmak\n\n- korlátozott queue — maximális kapacitással rendelkező queue\n- demand signal — a consumer által fogadható mennyiség\n- load shedding — szándékos elutasítás túlterhelés alatt\n- queue age — a legrégebbi függő elem várakozási ideje"
+        }
+      }
+    },
+    {
+      "id": "slo_sla",
+      "name": "SLI/SLO/SLA Model",
+      "description": "Measurements, internal reliability targets, and external commitments.",
+      "category": "observability",
+      "relatedTopicIds": [
+        "reliability",
+        "observability"
+      ],
+      "studyNotes": "## What is it?\n\nAn SLI is a measured indicator of service behaviour, such as successful-request ratio or latency below a threshold. An SLO is a target for an SLI over a time window. An SLA is an agreement with consequences when stated service commitments are not met.\n\n## What problem does it solve?\n\nTeams need a shared definition of reliability that connects engineering decisions with user experience. Without measurable targets, “high availability” can mean something different to every stakeholder and teams cannot reason about acceptable risk.\n\n## How it works\n\n- Choose SLIs that reflect user-visible outcomes.\n- Define the SLO with a threshold and window, such as 99.9% successful requests over 30 days.\n- The difference between perfect reliability and the SLO forms an error budget.\n- Use the budget to balance feature delivery and reliability work.\n- An SLA may use a different measurement method or target from an internal SLO. Organizations often choose a safer internal SLO, but that relationship is a policy choice, not the definition.\n- Document exclusions, data sources, and aggregation so the metric cannot be interpreted several ways.\n\n## Common mistakes\n\n- Calling a dashboard metric an SLO without a target and time window\n- Saying an SLA is always looser than an SLO\n- Choosing infrastructure metrics that do not represent user experience\n- Treating an error budget as permission to ignore incidents\n\n## Key terms\n\n- SLI — measured reliability indicator\n- SLO — target for an SLI over a window\n- SLA — agreement with stated consequences\n- error budget — allowed unreliability implied by an SLO",
+      "i18n": {
+        "hu": {
+          "name": "SLI/SLO/SLA modell",
+          "description": "Mérések, belső megbízhatósági célok és külső vállalások.",
+          "studyNotes": "## Mi ez?\n\nAz SLI a szolgáltatás viselkedésének mért mutatója, például a sikeres kérések aránya vagy egy küszöb alatti késleltetés. Az SLO egy SLI-re meghatározott cél egy időablakon belül. Az SLA olyan megállapodás, amely következményeket rendel a vállalt szolgáltatási szint elmaradásához.\n\n## Milyen problémát old meg?\n\nA csapatoknak közös megbízhatósági definícióra van szükségük, amely összeköti a mérnöki döntéseket a felhasználói élménnyel. Mérhető célok nélkül a „magas rendelkezésre állás” minden érintettnek mást jelenthet, és nem lehet érdemben dönteni az elfogadható kockázatról.\n\n## Hogyan működik\n\n- Olyan SLI-ket válassz, amelyek a felhasználó számára látható eredményt tükrözik.\n- Az SLO-t küszöbbel és időablakkal add meg, például 99,9% sikeres kérés 30 nap alatt.\n- A tökéletes megbízhatóság és az SLO közötti különbség az error budget.\n- A budget segítségével egyensúlyozd a funkciószállítást és a megbízhatósági munkát.\n- Egy SLA mérési módszere vagy célja eltérhet a belső SLO-tól. A szervezetek gyakran szigorúbb belső SLO-t választanak, de ez szabályozási döntés, nem definíció.\n- Dokumentáld a kivételeket, az adatforrásokat és az aggregációt, hogy a metrika ne legyen többféleképpen értelmezhető.\n\n## Gyakori hibák\n\n- Egy dashboardmetrikát célszint és időablak nélkül SLO-nak nevezni\n- Azt állítani, hogy az SLA mindig lazább az SLO-nál\n- Olyan infrastruktúra-metrikát választani, amely nem tükrözi a felhasználói élményt\n- Az error budgetet az incidensek figyelmen kívül hagyására adott engedélynek tekinteni\n\n## Kulcsfogalmak\n\n- SLI — mért megbízhatósági mutató\n- SLO — egy SLI célértéke egy időablakon belül\n- SLA — meghatározott következményekkel járó megállapodás\n- error budget — az SLO-ból következő megengedett megbízhatatlanság"
+        }
+      }
     }
   ],
   "questions": [
     {
-      "id": "res_circuit_breaker_001",
+      "id": "hybrid_bulkhead_and_backpressure",
+      "title": "Bulkhead and backpressure",
+      "prompt": "One slow downstream dependency keeps taking down your whole API. What patterns limit the blast radius?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "backpressure",
+        "bulkhead_isolation",
+        "circuit_breaker"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Isolate resources per dependency (bulkhead), push back on producers (backpressure), plus circuit breaking and load shedding.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_bulkhead_and_backpressure_point_1",
+          "label": "Bulkhead: isolate resource pools",
+          "description": "Separate connection/thread pools per dependency so one slow call can't exhaust everything.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "thread pool",
+            "bulkhead",
+            "resource pool",
+            "bulkhead isolate resource pools",
+            "isolate resource pools",
+            "separate connection",
+            "thread pools per dependency",
+            "call can't exhaust everything"
+          ]
+        },
+        {
+          "id": "hybrid_bulkhead_and_backpressure_point_2",
+          "label": "Backpressure: push back on load",
+          "description": "Bounded queues and rejecting/ slowing producers instead of buffering unboundedly.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "bounded queue",
+            "backpressure",
+            "push back load",
+            "bounded queues and rejecting",
+            "slowing producers instead of",
+            "instead of buffering unboundedly"
+          ]
+        },
+        {
+          "id": "hybrid_bulkhead_and_backpressure_point_3",
+          "label": "Detects it with saturation signals",
+          "description": "Watches pool saturation, queue depth and latency percentiles to see it coming.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "queue depth",
+            "saturation",
+            "detects saturation signals",
+            "watches pool saturation",
+            "queue depth and latency",
+            "to see it coming",
+            "detects"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_bulkhead_and_backpressure_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "If you must shed load, how do you decide which requests to drop first?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Bulkhead és backpressure",
+          "prompt": "Egy lassú downstream függőség rendszeresen leállítja az egész API-t. Milyen patternökkel korlátoznád a hiba hatókörét?",
+          "answerStructureHint": "Függőségenként különítsd el az erőforrásokat bulkheaddel, backpressure-rel fogd vissza a producereket, és egészítsd ki circuit breakerrel, illetve load sheddinggel.",
+          "expectedPoints": {
+            "hybrid_bulkhead_and_backpressure_point_1": {
+              "label": "Bulkhead: erőforráspoolok elkülönítése",
+              "description": "Függőségenként külön kapcsolat- vagy threadpool, hogy egy lassú hívás ne meríthessen ki mindent."
+            },
+            "hybrid_bulkhead_and_backpressure_point_2": {
+              "label": "Backpressure: a terhelés visszanyomása",
+              "description": "Korlátozott queue-k, valamint a producerek elutasítása vagy lassítása korlátlan bufferelés helyett."
+            },
+            "hybrid_bulkhead_and_backpressure_point_3": {
+              "label": "Telítettségi jelekből észleli",
+              "description": "Figyeli a pool telítettségét, a queue mélységét és a késleltetési percentiliseket, hogy időben észrevegye a problémát."
+            }
+          },
+          "followUps": {
+            "hybrid_bulkhead_and_backpressure_followup_1": "Ha terhelést kell eldobnod, hogyan döntöd el, melyik kérések essenek ki először?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_circuit_breaker",
       "title": "Circuit breaker",
       "prompt": "What problem does a circuit breaker solve, and how does it work?",
       "roles": [
@@ -113,352 +277,115 @@
         "concept_check"
       ],
       "topicIds": [
-        "circuit_breaker",
-        "reliability"
+        "circuit_breaker"
       ],
       "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
       "answerStructureHint": "The cascading-failure problem, the three states, and what happens to callers while it is open.",
       "expectedPoints": [
         {
-          "id": "cb_cascading",
+          "id": "hybrid_circuit_breaker_point_1",
           "label": "Prevents cascading failure",
           "description": "Stops hammering a failing dependency so threads/connections don't pile up and take the caller down too.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
             "backend_architect": 5,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "cascading failure",
-            "stop calling the failing service",
-            "fail fast",
-            "protect the caller",
-            "threads pile up",
-            "exhaust resources"
+            "prevents cascading failure",
+            "stops hammering a failing",
+            "failing dependency so threads",
+            "connections don't pile up",
+            "the caller down too",
+            "prevents"
           ]
         },
         {
-          "id": "cb_states",
+          "id": "hybrid_circuit_breaker_point_2",
           "label": "Knows the states",
           "description": "Closed (normal), open (reject immediately after error threshold), half-open (probe recovery).",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
-            "backend_architect": 4
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
-            "open",
             "closed",
-            "half open",
+            "open",
             "half-open",
-            "error threshold",
-            "probe",
-            "trial request"
+            "knows the states",
+            "knows",
+            "normal",
+            "reject immediately after error",
+            "immediately after error threshold"
           ]
         },
         {
-          "id": "cb_fallback",
+          "id": "hybrid_circuit_breaker_point_3",
           "label": "Callers need a fallback",
           "description": "While open, callers degrade gracefully: cached data, default value, or a clear error.",
           "importance": "important",
           "roleWeight": {
-            "backend_architect": 5,
-            "solution_architect": 4,
-            "backend_developer": 4
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
           },
           "acceptedSignals": [
             "fallback",
-            "degrade gracefully",
-            "cached response",
-            "default value",
-            "graceful degradation"
+            "callers need a fallback",
+            "callers need fallback",
+            "while open",
+            "callers degrade gracefully",
+            "cached data",
+            "default value"
           ]
         }
       ],
       "followUps": [
         {
-          "id": "res_cb_retry_followup",
+          "id": "hybrid_circuit_breaker_followup_1",
           "trigger": {
             "type": "always"
           },
           "prompt": "How do circuit breakers and retries interact? When does retrying make an outage worse?",
           "expectedPoints": []
         }
-      ]
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Circuit breaker",
+          "prompt": "Milyen problémát old meg a circuit breaker, és hogyan működik?",
+          "answerStructureHint": "A láncreakciós hiba problémája, a három állapot és az, mi történik a hívókkal open állapotban.",
+          "expectedPoints": {
+            "hybrid_circuit_breaker_point_1": {
+              "label": "Megakadályozza a láncreakciós hibát",
+              "description": "Nem terheli tovább a hibás függőséget, így a threadek és kapcsolatok nem torlódnak fel, és a hívó sem áll le."
+            },
+            "hybrid_circuit_breaker_point_2": {
+              "label": "Ismeri az állapotokat",
+              "description": "Closed a normál működés, open a küszöb után azonnal elutasít, half-open pedig helyreállási próbákat enged."
+            },
+            "hybrid_circuit_breaker_point_3": {
+              "label": "A hívóknak fallbackre van szükségük",
+              "description": "Open állapotban a hívó graceful módon csökkenti a szolgáltatást, például cache-elt adattal, alapértékkel vagy egyértelmű hibával."
+            }
+          },
+          "followUps": {
+            "hybrid_circuit_breaker_followup_1": "Hogyan hat egymásra a circuit breaker és a retry? Mikor rontja tovább a kiesést az újrapróbálkozás?"
+          }
+        }
+      }
     },
     {
-      "id": "res_timeout_retry_001",
-      "title": "Timeouts, retries and backoff",
-      "prompt": "How do you configure timeouts and retries between services so they help instead of causing a retry storm?",
-      "roles": [
-        "backend_developer",
-        "backend_architect"
-      ],
-      "modes": [
-        "scenario_discussion",
-        "concept_check"
-      ],
-      "topicIds": [
-        "idempotency_retries",
-        "circuit_breaker",
-        "reliability"
-      ],
-      "expectedDurationSeconds": 210,
-      "thinkingTimeSeconds": 45,
-      "answerStructureHint": "Every call needs a timeout; retry only transient errors with exponential backoff + jitter; mind the overall budget and idempotency.",
-      "expectedPoints": [
-        {
-          "id": "tr_backoff_jitter",
-          "label": "Exponential backoff with jitter",
-          "description": "Growing delays between retries, randomized so clients don't retry in sync.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5
-          },
-          "acceptedSignals": [
-            "exponential backoff",
-            "backoff",
-            "jitter",
-            "increasing delay",
-            "randomized delay",
-            "retry storm",
-            "thundering herd"
-          ]
-        },
-        {
-          "id": "tr_transient_only",
-          "label": "Retries only transient failures, safely",
-          "description": "Retry 5xx/timeouts a limited number of times, not validation errors; writes must be idempotent to retry.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 4
-          },
-          "acceptedSignals": [
-            "transient error",
-            "don't retry 4xx",
-            "limited retries",
-            "max attempts",
-            "idempotent",
-            "safe to retry"
-          ]
-        },
-        {
-          "id": "tr_timeout_budget",
-          "label": "Timeout budgets across hops",
-          "description": "Downstream timeouts must fit inside upstream ones or callers give up while work continues.",
-          "importance": "important",
-          "roleWeight": {
-            "backend_architect": 5,
-            "backend_developer": 4
-          },
-          "acceptedSignals": [
-            "timeout budget",
-            "shorter than the caller",
-            "deadline propagation",
-            "every call needs a timeout",
-            "nested timeouts"
-          ]
-        }
-      ],
-      "followUps": [
-        {
-          "id": "res_tr_dlq_followup",
-          "trigger": {
-            "type": "topic_mentioned",
-            "topicId": "message_queue"
-          },
-          "prompt": "And when retries are exhausted on a queue consumer — what happens to the message?",
-          "expectedPoints": []
-        }
-      ]
-    },
-    {
-      "id": "res_bulkhead_backpressure_001",
-      "title": "Bulkhead and backpressure",
-      "prompt": "One slow downstream dependency keeps taking down your whole API. What patterns limit the blast radius?",
-      "roles": [
-        "backend_architect",
-        "backend_developer",
-        "solution_architect"
-      ],
-      "modes": [
-        "scenario_discussion",
-        "troubleshooting"
-      ],
-      "topicIds": [
-        "backpressure",
-        "reliability"
-      ],
-      "expectedDurationSeconds": 240,
-      "thinkingTimeSeconds": 60,
-      "answerStructureHint": "Isolate resources per dependency (bulkhead), push back on producers (backpressure), plus circuit breaking and load shedding.",
-      "expectedPoints": [
-        {
-          "id": "bb_bulkhead",
-          "label": "Bulkhead: isolate resource pools",
-          "description": "Separate connection/thread pools per dependency so one slow call can't exhaust everything.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_architect": 5,
-            "backend_developer": 4,
-            "solution_architect": 4
-          },
-          "acceptedSignals": [
-            "bulkhead",
-            "separate pool",
-            "isolate resources",
-            "dedicated connection pool",
-            "one dependency can't exhaust",
-            "blast radius"
-          ]
-        },
-        {
-          "id": "bb_backpressure",
-          "label": "Backpressure: push back on load",
-          "description": "Bounded queues and rejecting/slowing producers instead of buffering unboundedly.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_architect": 5,
-            "backend_developer": 4
-          },
-          "acceptedSignals": [
-            "backpressure",
-            "bounded queue",
-            "reject requests",
-            "slow down the producer",
-            "load shedding",
-            "shed load",
-            "queue limit"
-          ]
-        },
-        {
-          "id": "bb_observe",
-          "label": "Detects it with saturation signals",
-          "description": "Watches pool saturation, queue depth and latency percentiles to see it coming.",
-          "importance": "nice_to_have",
-          "roleWeight": {
-            "backend_architect": 4
-          },
-          "acceptedSignals": [
-            "saturation",
-            "queue depth",
-            "pool usage",
-            "p99",
-            "latency percentiles",
-            "monitor the pools"
-          ]
-        }
-      ],
-      "followUps": [
-        {
-          "id": "res_bb_priority_followup",
-          "trigger": {
-            "type": "always"
-          },
-          "prompt": "If you must shed load, how do you decide which requests to drop first?",
-          "expectedPoints": []
-        }
-      ]
-    },
-    {
-      "id": "res_slo_001",
-      "title": "SLI, SLO, SLA and error budgets",
-      "prompt": "Explain SLI, SLO and SLA — and what an error budget is actually for.",
-      "roles": [
-        "backend_architect",
-        "solution_architect"
-      ],
-      "modes": [
-        "concept_check"
-      ],
-      "topicIds": [
-        "slo_sla",
-        "observability"
-      ],
-      "expectedDurationSeconds": 210,
-      "thinkingTimeSeconds": 45,
-      "answerStructureHint": "Indicator = measurement, objective = internal target, agreement = contract with consequences; error budget balances reliability vs release speed.",
-      "expectedPoints": [
-        {
-          "id": "slo_definitions",
-          "label": "Distinguishes SLI / SLO / SLA",
-          "description": "SLI is the measured signal (e.g. success rate), SLO the internal target (99.9%), SLA the external contract with penalties.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_architect": 5,
-            "solution_architect": 5
-          },
-          "acceptedSignals": [
-            "indicator",
-            "objective",
-            "agreement",
-            "measured",
-            "internal target",
-            "contract",
-            "penalties",
-            "99.9"
-          ]
-        },
-        {
-          "id": "slo_error_budget",
-          "label": "Error budget drives decisions",
-          "description": "The allowed unreliability; when it burns down, you slow releases and invest in stability.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_architect": 5,
-            "solution_architect": 5
-          },
-          "acceptedSignals": [
-            "error budget",
-            "allowed downtime",
-            "budget is spent",
-            "slow down releases",
-            "stop shipping features",
-            "invest in reliability",
-            "burn rate"
-          ]
-        },
-        {
-          "id": "slo_user_centric",
-          "label": "SLIs should reflect user experience",
-          "description": "Measure what users feel (latency, success rate at the edge), not server CPU.",
-          "importance": "nice_to_have",
-          "roleWeight": {
-            "backend_architect": 4,
-            "solution_architect": 4
-          },
-          "acceptedSignals": [
-            "user experience",
-            "what the user sees",
-            "success rate",
-            "latency percentile",
-            "not cpu",
-            "customer facing"
-          ]
-        }
-      ],
-      "followUps": [
-        {
-          "id": "res_slo_100_followup",
-          "trigger": {
-            "type": "always"
-          },
-          "prompt": "Why is targeting 100% availability usually the wrong goal?",
-          "expectedPoints": []
-        }
-      ]
-    },
-    {
-      "id": "res_prod_ready_001",
+      "id": "hybrid_production_readiness_checklist",
       "title": "Production readiness checklist",
       "prompt": "A new service is about to go live. What must be in place before you'd call it production-ready?",
       "roles": [
-        "backend_architect",
         "backend_developer",
+        "backend_architect",
         "solution_architect"
       ],
       "modes": [
@@ -466,84 +393,122 @@
         "design_review"
       ],
       "topicIds": [
-        "production_readiness",
-        "observability",
-        "deployment"
+        "production_readiness"
       ],
-      "expectedDurationSeconds": 240,
-      "thinkingTimeSeconds": 60,
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
       "answerStructureHint": "Observability (metrics/logs/alerts with correlation IDs), health checks + graceful shutdown, rollback path, and failure-mode thinking.",
       "expectedPoints": [
         {
-          "id": "pr_observability",
+          "id": "hybrid_production_readiness_checklist_point_1",
           "label": "Observability with alerting",
           "description": "Metrics, structured logs with correlation IDs, and alerts tied to user-facing symptoms.",
           "importance": "critical",
           "roleWeight": {
+            "backend_developer": 5,
             "backend_architect": 5,
-            "backend_developer": 4,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
+            "observability with alerting",
+            "observability alerting",
             "metrics",
-            "alerting",
-            "structured logging",
-            "correlation id",
-            "tracing",
-            "dashboards"
+            "structured logs with correlation",
+            "logs with correlation ids",
+            "alerts tied to user-facing",
+            "tied to user-facing symptoms",
+            "observability"
           ]
         },
         {
-          "id": "pr_health_shutdown",
+          "id": "hybrid_production_readiness_checklist_point_2",
           "label": "Health checks and graceful shutdown",
           "description": "Liveness/readiness probes and draining in-flight requests on shutdown so deploys don't drop traffic.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
-            "backend_architect": 4
+            "backend_architect": 5,
+            "solution_architect": 5
           },
           "acceptedSignals": [
             "health check",
-            "readiness",
             "liveness",
+            "readiness",
             "graceful shutdown",
-            "drain requests",
-            "finish in flight"
+            "health checks graceful shutdown",
+            "readiness probes and draining",
+            "deploys don't drop traffic",
+            "health"
           ]
         },
         {
-          "id": "pr_rollback",
+          "id": "hybrid_production_readiness_checklist_point_3",
           "label": "Safe deploy and rollback path",
           "description": "A tested way to roll back fast, ideally gradual rollout (canary/blue-green).",
           "importance": "important",
           "roleWeight": {
-            "backend_architect": 5,
+            "backend_developer": 4,
+            "backend_architect": 4,
             "solution_architect": 4
           },
           "acceptedSignals": [
             "rollback",
+            "safe deploy rollback path",
+            "tested way to roll",
+            "to roll back fast",
+            "ideally gradual rollout",
             "canary",
-            "blue green",
-            "gradual rollout",
-            "feature flag",
-            "revert quickly"
+            "blue-green",
+            "safe"
           ]
         }
       ],
       "followUps": [
         {
-          "id": "res_pr_oncall_followup",
+          "id": "hybrid_production_readiness_checklist_followup_1",
           "trigger": {
-            "type": "rubric_missing",
-            "rubricItemId": "pr_rollback"
+            "type": "always"
           },
           "prompt": "It's 3 AM and the service is down. What did you prepare in advance to make that call short?",
           "expectedPoints": []
+        },
+        {
+          "id": "hybrid_production_readiness_checklist_followup_2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Frontend",
+          "expectedPoints": []
         }
-      ]
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Éles üzemre való felkészültségi ellenőrzőlista",
+          "prompt": "Egy új szolgáltatás élesítés előtt áll. Minek kell rendelkezésre állnia ahhoz, hogy production-readynek nevezd?",
+          "answerStructureHint": "Megfigyelhetőség metrikákkal, logokkal, riasztásokkal és korrelációs azonosítóval; health check és graceful shutdown; rollback útvonal; hibamódok átgondolása.",
+          "expectedPoints": {
+            "hybrid_production_readiness_checklist_point_1": {
+              "label": "Megfigyelhetőség riasztásokkal",
+              "description": "Metrikák, strukturált logok korrelációs azonosítóval, valamint felhasználói tünethez kötött riasztások."
+            },
+            "hybrid_production_readiness_checklist_point_2": {
+              "label": "Health checkek és graceful shutdown",
+              "description": "Liveness és readiness probe, valamint leállításkor a folyamatban lévő kérések befejezése, hogy a telepítés ne veszítsen forgalmat."
+            },
+            "hybrid_production_readiness_checklist_point_3": {
+              "label": "Biztonságos telepítés és rollback útvonal",
+              "description": "Tesztelt, gyors visszaállítási lehetőség, lehetőleg fokozatos rollouttal, például canary vagy blue-green módszerrel."
+            }
+          },
+          "followUps": {
+            "hybrid_production_readiness_checklist_followup_1": "Hajnali háromkor leáll a szolgáltatás. Mit készítettél elő korábban, hogy rövid legyen az ügyeleti hívás?",
+            "hybrid_production_readiness_checklist_followup_2": "Frontend"
+          }
+        }
+      }
     },
     {
-      "id": "res_idempotency_001",
+      "id": "hybrid_retries_without_double_effects",
       "title": "Retries without double effects",
       "prompt": "A client times out and re-sends a payment request; a queue redelivers an event. How do you make sure nothing happens twice?",
       "roles": [
@@ -552,93 +517,256 @@
         "solution_architect"
       ],
       "modes": [
-        "scenario_discussion",
-        "concept_check"
+        "concept_check",
+        "scenario_discussion"
       ],
       "topicIds": [
         "idempotency_retries",
         "retry_strategies"
       ],
-      "expectedDurationSeconds": 200,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "ir_key",
+          "id": "hybrid_retries_without_double_effects_point_1",
           "label": "Idempotency mechanism",
           "description": "Idempotency key / unique constraint / processed-event table — same request, one effect.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
             "backend_architect": 5,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
             "idempotency key",
             "unique constraint",
-            "processed",
-            "eventid",
-            "one side effect",
-            "no duplicate"
+            "idempotency",
+            "idempotency mechanism",
+            "processed-event table",
+            "same request",
+            "effect"
           ]
         },
         {
-          "id": "ir_backoff",
+          "id": "hybrid_retries_without_double_effects_point_2",
           "label": "Backoff + failure classing",
           "description": "Exponential backoff for transient errors; invalid business data fails fast, no retry.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
             "backend_architect": 5,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
+            "exponential backoff",
+            "transient failure",
             "backoff",
-            "exponential",
-            "transient",
-            "fail fast",
-            "don't retry business errors"
+            "backoff failure classing",
+            "exponential backoff for transient",
+            "backoff for transient errors",
+            "invalid business data fails",
+            "business data fails fast"
           ]
         },
         {
-          "id": "ir_dlq",
+          "id": "hybrid_retries_without_double_effects_point_3",
           "label": "DLQ for terminal failures",
           "description": "Dead-letter queue for inspection; alert on its depth.",
           "importance": "important",
           "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5,
+            "backend_developer": 4,
+            "backend_architect": 4,
             "solution_architect": 4
           },
           "acceptedSignals": [
-            "dead letter",
             "dlq",
-            "poison message",
-            "inspect later"
+            "dlq for terminal failures",
+            "dlq terminal failures",
+            "dead-letter queue for inspection",
+            "alert on its depth",
+            "terminal"
           ]
         },
         {
-          "id": "ir_alo",
+          "id": "hybrid_retries_without_double_effects_point_4",
           "label": "At-least-once literacy",
-          "description": "Brokers duplicate by design; exactly-once ≈ at-least-once + idempotent consumer.",
-          "importance": "important",
+          "description": "Brokers duplicate by design; exactly-once ≈ at- least-once + idempotent consumer.",
+          "importance": "nice_to_have",
           "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5,
-            "solution_architect": 4
+            "backend_developer": 3,
+            "backend_architect": 3,
+            "solution_architect": 3
           },
           "acceptedSignals": [
-            "at least once",
-            "duplicates",
-            "redeliver",
-            "idempotent consumer",
-            "exactly once"
+            "at-least-once",
+            "at-least once literacy",
+            "brokers duplicate by design",
+            "exactly-once at least-once idempotent",
+            "at least-once idempotent consumer",
+            "at-least"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_retries_without_double_effects_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give one production example of Retries without double effects and one common misuse.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Retry kettős mellékhatás nélkül",
+          "prompt": "Egy kliens timeout után újraküld egy fizetési kérést, egy queue pedig újrakézbesít egy eseményt. Hogyan biztosítod, hogy semmi ne történjen meg kétszer?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_retries_without_double_effects_point_1": {
+              "label": "Idempotenciamechanizmus",
+              "description": "Idempotenciakulcs, egyedi korlátozás vagy feldolgozottesemény-tábla: ugyanaz a kérés csak egy hatást okoz."
+            },
+            "hybrid_retries_without_double_effects_point_2": {
+              "label": "Backoff és hibaosztályozás",
+              "description": "Exponenciális backoff átmeneti hibákhoz; érvénytelen üzleti adat gyorsan hibázik, retry nélkül."
+            },
+            "hybrid_retries_without_double_effects_point_3": {
+              "label": "DLQ a végleges hibákhoz",
+              "description": "Dead-letter queue a kivizsgáláshoz, és riasztás a mélységére."
+            },
+            "hybrid_retries_without_double_effects_point_4": {
+              "label": "Érti az at-least-once kézbesítést",
+              "description": "A brókerek szándékosan duplikálhatnak; az exactly-once gyakorlatban gyakran at-least-once és idempotens consumer együtt."
+            }
+          },
+          "followUps": {
+            "hybrid_retries_without_double_effects_followup_1": "Mondj egy éles rendszerből származó példát retryra kettős mellékhatás nélkül, valamint egy gyakori hibás megoldást."
+          }
+        }
+      }
     },
     {
-      "id": "res_toolkit_001",
+      "id": "hybrid_timeouts_retries_and_backoff",
+      "title": "Timeouts, retries and backoff",
+      "prompt": "How do you configure timeouts and retries between services so they help instead of causing a retry storm?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "retry_strategies",
+        "idempotency_retries"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Every call needs a timeout; retry only transient errors with exponential backoff + jitter; mind the overall budget and idempotency.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_timeouts_retries_and_backoff_point_1",
+          "label": "Exponential backoff with jitter",
+          "description": "Growing delays between retries, randomized so clients don't retry in sync.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "exponential backoff",
+            "backoff",
+            "jitter",
+            "exponential backoff with jitter",
+            "exponential backoff jitter",
+            "growing delays between retries",
+            "randomized so clients don't",
+            "don't retry in sync"
+          ]
+        },
+        {
+          "id": "hybrid_timeouts_retries_and_backoff_point_2",
+          "label": "Retries only transient failures, safely",
+          "description": "Retry 5xx/timeouts a limited number of times, not validation errors; writes must be idempotent to retry.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "transient failure",
+            "retries transient failures safely",
+            "retry 5xx",
+            "timeouts a limited number",
+            "limited number of times",
+            "validation errors",
+            "writes must be idempotent",
+            "be idempotent to retry"
+          ]
+        },
+        {
+          "id": "hybrid_timeouts_retries_and_backoff_point_3",
+          "label": "Timeout budgets across hops",
+          "description": "Downstream timeouts must fit inside upstream ones or callers give up while work continues.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "timeout budgets across hops",
+            "downstream timeouts must fit",
+            "up while work continues",
+            "timeout",
+            "budgets",
+            "across"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_timeouts_retries_and_backoff_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "And when retries are exhausted on a queue consumer — what happens to the message?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Timeout, retry és backoff",
+          "prompt": "Hogyan állítod be a szolgáltatások közötti timeoutokat és retryokat úgy, hogy segítsenek, ne pedig retryvihart okozzanak?",
+          "answerStructureHint": "Minden híváshoz timeout kell; csak átmeneti hibát próbálj újra exponenciális backoffal és jitterrel; figyeld a teljes időkeretet és az idempotenciát.",
+          "expectedPoints": {
+            "hybrid_timeouts_retries_and_backoff_point_1": {
+              "label": "Exponenciális backoff jitterrel",
+              "description": "A retryok közötti késleltetés növekszik és véletlenszerű, ezért a kliensek nem egyszerre próbálkoznak újra."
+            },
+            "hybrid_timeouts_retries_and_backoff_point_2": {
+              "label": "Csak átmeneti hibát próbál újra, biztonságosan",
+              "description": "Korlátozott alkalommal 5xx választ és timeoutot próbál újra, validációs hibát nem; írást csak idempotensen."
+            },
+            "hybrid_timeouts_retries_and_backoff_point_3": {
+              "label": "Timeoutkeret a hívási láncban",
+              "description": "A downstream timeoutnak bele kell férnie az upstream timeoutba, különben a hívó már feladja, miközben a munka tovább fut."
+            }
+          },
+          "followUps": {
+            "hybrid_timeouts_retries_and_backoff_followup_1": "Mi történik az üzenettel, ha egy queue consumer minden retrylehetőséget kimerített?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_degrading_without_collapsing",
       "title": "Degrading without collapsing",
       "prompt": "A non-critical dependency (notifications/reporting) starts failing under load. How do you keep the core flow alive, and what does honest degradation look like?",
       "roles": [
@@ -651,85 +779,250 @@
         "tradeoff_decision"
       ],
       "topicIds": [
-        "resilience_toolkit",
-        "bulkhead_isolation"
+        "resilience_toolkit"
       ],
-      "expectedDurationSeconds": 200,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "rt_isolation",
+          "id": "hybrid_degrading_without_collapsing_point_1",
           "label": "Bulkhead isolation",
           "description": "Separate pools/queues so the failing area cannot exhaust shared resources.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
             "backend_architect": 5,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
+            "bulkhead isolation",
+            "separate pools",
+            "queues so the failing",
+            "cannot exhaust shared resources",
             "bulkhead",
-            "separate pool",
-            "isolated",
-            "own queue",
-            "cannot drag down"
+            "isolation"
           ]
         },
         {
-          "id": "rt_fallback",
+          "id": "hybrid_degrading_without_collapsing_point_2",
           "label": "Fallback behaviour",
           "description": "Stale-from-cache / pending / deferred work — defined, not improvised.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 5,
             "backend_architect": 5,
-            "solution_architect": 4
+            "solution_architect": 5
           },
           "acceptedSignals": [
             "fallback",
-            "stale from cache",
+            "fallback behaviour",
+            "stale-from cache",
             "pending",
-            "defer",
-            "degraded"
+            "deferred work",
+            "defined",
+            "improvised"
           ]
         },
         {
-          "id": "rt_honest",
+          "id": "hybrid_degrading_without_collapsing_point_3",
           "label": "Never fake success",
-          "description": "Critical operations show explicit pending/failed, not fabricated OK.",
-          "importance": "critical",
+          "description": "Critical operations show explicit pending/ failed, not fabricated OK.",
+          "importance": "important",
           "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5,
+            "backend_developer": 4,
+            "backend_architect": 4,
             "solution_architect": 4
           },
           "acceptedSignals": [
-            "don't fake",
-            "explicit pending",
-            "honest",
-            "not pretend success",
-            "failed state"
+            "never fake success",
+            "critical operations show explicit",
+            "operations show explicit pending",
+            "failed",
+            "fabricated ok",
+            "never"
           ]
         },
         {
-          "id": "rt_terms",
+          "id": "hybrid_degrading_without_collapsing_point_4",
           "label": "Resilience vs fault tolerance",
           "description": "Partial degradation/recovery vs surviving specific component failures.",
           "importance": "nice_to_have",
           "roleWeight": {
-            "backend_developer": 5,
-            "backend_architect": 5,
-            "solution_architect": 4
+            "backend_developer": 3,
+            "backend_architect": 3,
+            "solution_architect": 3
           },
           "acceptedSignals": [
+            "resilience vs fault tolerance",
+            "partial degradation",
+            "recovery vs surviving specific",
+            "surviving specific component failures",
             "resilience",
-            "fault tolerance",
-            "pod restarts",
-            "routes around"
+            "fault"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_degrading_without_collapsing_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you monitor during rollout, and what would trigger rollback for this Degrading without collapsing change?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Csökkentett működés összeomlás nélkül",
+          "prompt": "Egy nem kritikus függőség, például értesítés vagy riport, terhelés alatt hibázni kezd. Hogyan tartod életben az alapfolyamatot, és milyen az őszinte csökkentett működés?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_degrading_without_collapsing_point_1": {
+              "label": "Bulkhead izoláció",
+              "description": "Külön poolok vagy queue-k, hogy a hibás terület ne meríthesse ki a közös erőforrásokat."
+            },
+            "hybrid_degrading_without_collapsing_point_2": {
+              "label": "Fallback-viselkedés",
+              "description": "Cache-ből származó elavult adat, pending állapot vagy elhalasztott munka; előre definiálva, nem rögtönözve."
+            },
+            "hybrid_degrading_without_collapsing_point_3": {
+              "label": "Soha nem hamisít sikert",
+              "description": "A kritikus művelet explicit pending vagy failed állapotot mutat, nem kitalált OK választ."
+            },
+            "hybrid_degrading_without_collapsing_point_4": {
+              "label": "Resilience és fault tolerance különbsége",
+              "description": "Részleges csökkentés és helyreállás, szemben egy konkrét komponenshiba túlélésével."
+            }
+          },
+          "followUps": {
+            "hybrid_degrading_without_collapsing_followup_1": "Mit figyelnél a bevezetés alatt, és mi váltana ki rollbacket ennél a csökkentett működési változtatásnál?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_sli_slo_sla_and_error_budgets",
+      "title": "SLI, SLO, SLA and error budgets",
+      "prompt": "Explain SLI, SLO and SLA — and what an error budget is actually for.",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "slo_sla"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Indicator = measurement, objective = internal target, agreement = contract with consequences; error budget balances reliability vs release speed.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_sli_slo_sla_and_error_budgets_point_1",
+          "label": "Distinguishes SLI, SLO, and SLA",
+          "description": "An SLI is a measured reliability signal, an SLO is a target for that signal, and an SLA is an external agreement that may include remedies.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "sli",
+            "slo",
+            "sla",
+            "sli/slo/sla model",
+            "slo sla",
+            "distinguishes sli slo sla",
+            "sli is a measured",
+            "a measured reliability signal"
+          ]
+        },
+        {
+          "id": "hybrid_sli_slo_sla_and_error_budgets_point_2",
+          "label": "Uses the error budget for decisions",
+          "description": "The allowed unreliability helps balance feature delivery against reliability work and can slow risky releases when it is exhausted.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "error budget",
+            "error budget decisions",
+            "allowed unreliability helps balance",
+            "when it is exhausted",
+            "error"
+          ]
+        },
+        {
+          "id": "hybrid_sli_slo_sla_and_error_budgets_point_3",
+          "label": "Chooses user-centred indicators",
+          "description": "Measures latency, availability, or correctness where users experience the service rather than relying only on internal resource metrics.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "user-centred indicators",
+            "measures latency",
+            "availability",
+            "correctness where users experience",
+            "on internal resource metrics",
+            "user-centred"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_sli_slo_sla_and_error_budgets_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why is targeting 100% availability usually the wrong goal?",
+          "expectedPoints": []
+        },
+        {
+          "id": "hybrid_sli_slo_sla_and_error_budgets_followup_2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Security",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "SLI, SLO, SLA és error budget",
+          "prompt": "Magyarázd el az SLI, SLO és SLA fogalmát, valamint azt, valójában mire való az error budget.",
+          "answerStructureHint": "Indicator: mérés; objective: belső cél; agreement: következményekkel járó szerződés; az error budget a megbízhatóság és a kiadási sebesség egyensúlyát segíti.",
+          "expectedPoints": {
+            "hybrid_sli_slo_sla_and_error_budgets_point_1": {
+              "label": "Megkülönbözteti az SLI-t, az SLO-t és az SLA-t",
+              "description": "Az SLI mért megbízhatósági jel, az SLO célérték erre a jelre, az SLA pedig külső megállapodás, amely jóvátételt is tartalmazhat."
+            },
+            "hybrid_sli_slo_sla_and_error_budgets_point_2": {
+              "label": "Döntésekhez használja az error budgetet",
+              "description": "A megengedett megbízhatatlanság segít egyensúlyozni a funkciószállítás és a stabilitási munka között; kimerülése lassíthatja a kockázatos release-eket."
+            },
+            "hybrid_sli_slo_sla_and_error_budgets_point_3": {
+              "label": "Felhasználó-központú mutatókat választ",
+              "description": "Ott méri a késleltetést, rendelkezésre állást vagy helyességet, ahol a felhasználó tapasztalja, nem csak belső erőforrás-metrikákra hagyatkozik."
+            }
+          },
+          "followUps": {
+            "hybrid_sli_slo_sla_and_error_budgets_followup_1": "Miért rossz cél általában a 100%-os rendelkezésre állás?",
+            "hybrid_sli_slo_sla_and_error_budgets_followup_2": "Biztonság"
+          }
+        }
+      }
     }
   ]
 }

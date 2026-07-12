@@ -1,0 +1,639 @@
+{
+  "id": "agile_engineering_practices_essential",
+  "name": "Agile and Engineering Practices — Essential",
+  "description": "Curated full-stack essentials selected from the complete pack. Use this as a lighter replacement for the full version.",
+  "sources": [
+    "agile",
+    "modszertanok",
+    "interview-trainer-study-all-phone-original",
+    "interview-trainer-study-all-phone-chatgpt",
+    "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu",
+    "artec_frontend_interju_felkeszules"
+  ],
+  "topics": [
+    {
+      "id": "agile_user_stories",
+      "name": "User Stories and Acceptance Criteria",
+      "description": "A valuable need made observable and testable",
+      "category": "soft_technical",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nA user story starts a conversation about who needs what and why. Acceptance criteria define observable behaviour.\n\n## What problem does it solve?\n\nA vague ticket leaves scope, errors and success conditions open to interpretation.\n\n## How it works\n\n- Use INVEST as a quality check.\n- Cover normal, error, permission and boundary cases.\n- Use Given/When/Then where helpful.\n- Split large stories by user value.\n\n## Common mistakes\n\n- Treating one sentence as the full requirement.\n- Writing implementation steps as acceptance criteria.\n- Splitting only by technical layer.\n\n## Key terms\n\n- INVEST — story quality checklist\n- acceptance criterion — observable condition\n- vertical slice — small end-to-end capability",
+      "i18n": {
+        "hu": {
+          "name": "User Stories és Acceptance Criteria",
+          "description": "Valuable need observable és testable formában",
+          "studyNotes": "## Mi ez?\n\nA user story conversation starter arról, kinek, mire és miért van szüksége. Az acceptance criteria observable behaviourt definiál.\n\n## Milyen problémát old meg?\n\nA vague ticket nyitva hagyja a scope-ot, errort és success conditiont.\n\n## Hogyan működik?\n\n- Használd az INVEST-et quality checkként.\n- Normal, error, permission és boundary case is legyen.\n- Given/When/Then használható.\n- Nagy storyt user value alapján splitelj.\n\n## Gyakori hibák\n\n- Egy mondatot teljes requirementnek tekinteni.\n- Implementation stepet acceptance criteriának írni.\n- Csak technical layer szerint splitelni.\n\n## Kulcsfogalmak\n\n- INVEST — story quality checklist\n- acceptance criterion — observable condition\n- vertical slice — kis end-to-end capability"
+        }
+      }
+    },
+    {
+      "id": "agile_work_slicing",
+      "name": "Work Breakdown and Vertical Slicing",
+      "description": "Small reviewable end-to-end deliverables",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "agile_user_stories"
+      ],
+      "studyNotes": "## What is it?\n\nWork breakdown turns a large outcome into manageable deliverables. Vertical slicing creates a thin end-to-end capability rather than isolated technical layers.\n\n## What problem does it solve?\n\nLarge tickets delay feedback, increase review risk and hide progress.\n\n## How it works\n\n- Start from a user or business outcome.\n- Pull major risk forward.\n- Create narrow end-to-end slices.\n- Include tests, observability, rollout and rollback.\n- Keep changes reviewable and deployable where possible.\n\n## Common mistakes\n\n- One ticket for the entire feature.\n- Frontend/backend/database stories with no standalone value.\n- Ignoring rollout work.\n\n## Key terms\n\n- deliverable — concrete verifiable result\n- vertical slice — thin end-to-end capability\n- work breakdown — decomposition into units",
+      "i18n": {
+        "hu": {
+          "name": "Work Breakdown és Vertical Slicing",
+          "description": "Kis reviewable end-to-end deliverable-ök",
+          "studyNotes": "## Mi ez?\n\nA work breakdown nagy outcome-ot manageable deliverable-ökre bont. A vertical slicing vékony end-to-end capabilityt készít isolated technical layer helyett.\n\n## Milyen problémát old meg?\n\nA nagy ticket késlelteti a feedbacket, növeli a review risket és elrejti a progresst.\n\n## Hogyan működik?\n\n- User vagy business outcome-ból indulj.\n- A major risket hozd előre.\n- Narrow end-to-end slice-ot készíts.\n- Test, observability, rollout és rollback is legyen benne.\n- A change lehetőleg reviewable és deployable legyen.\n\n## Gyakori hibák\n\n- Egy ticketbe tenni az egész feature-t.\n- Standalone value nélküli frontend/backend/database story.\n- Rollout work kihagyása.\n\n## Kulcsfogalmak\n\n- deliverable — konkrét verifikálható result\n- vertical slice — vékony end-to-end capability\n- work breakdown — unitokra bontás"
+        }
+      }
+    },
+    {
+      "id": "agile_testing_strategy",
+      "name": "Testing Strategy",
+      "description": "Matching risks to unit, integration, contract and E2E tests",
+      "category": "soft_technical",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nA testing strategy assigns risks to appropriate layers: unit, integration, contract and a small number of end-to-end tests.\n\n## What problem does it solve?\n\nOne test type cannot provide fast feedback, realistic boundaries and broad confidence at equal cost.\n\n## How it works\n\n- Unit test deterministic logic.\n- Integration test real boundaries.\n- Contract test independently deployed interfaces.\n- E2E test only critical journeys.\n- Track flakiness and feedback time.\n\n## Common mistakes\n\n- Testing implementation details.\n- Replacing all tests with E2E.\n- Mocking every real boundary.\n- Ignoring flaky tests.\n\n## Key terms\n\n- unit test — isolated logic\n- integration test — real components together\n- contract test — interface agreement\n- E2E — complete journey",
+      "i18n": {
+        "hu": {
+          "name": "Testing Strategy",
+          "description": "Risk hozzárendelése unit, integration, contract és E2E testhez",
+          "studyNotes": "## Mi ez?\n\nA testing strategy a riskeket megfelelő layerhez rendeli: unit, integration, contract és kevés end-to-end test.\n\n## Milyen problémát old meg?\n\nEgy test type nem ad azonos cost mellett fast feedbacket, realistic boundaryt és broad confidence-t.\n\n## Hogyan működik?\n\n- Deterministic logichoz unit test.\n- Real boundaryhoz integration test.\n- Independently deployed interface-hez contract test.\n- E2E csak critical journeyre.\n- Flakiness és feedback time legyen követve.\n\n## Gyakori hibák\n\n- Implementation detailt tesztelni.\n- Minden testet E2E-re cserélni.\n- Minden real boundaryt mockolni.\n- Flaky testet ignorálni.\n\n## Kulcsfogalmak\n\n- unit test — isolated logic\n- integration test — real componentek együtt\n- contract test — interface agreement\n- E2E — complete journey"
+        }
+      }
+    },
+    {
+      "id": "agile_technical_debt",
+      "name": "Technical Debt and Refactoring",
+      "description": "Managing future change cost and risk",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "agile_work_slicing"
+      ],
+      "studyNotes": "## What is it?\n\nTechnical debt is future cost or risk created by a compromise. Refactoring improves internal design without observable behaviour change.\n\n## What problem does it solve?\n\nInvisible debt slows delivery and increases defects, but calling every disliked design debt destroys prioritization.\n\n## How it works\n\n- Describe business impact.\n- Record affected areas and triggers.\n- Fix small debt continuously.\n- Create explicit work for larger risk.\n- Measure improvement.\n\n## Common mistakes\n\n- Giant rewrite called debt removal.\n- Refactoring stable code for style.\n- Vague debt with no impact.\n\n## Key terms\n\n- debt interest — recurring cost\n- refactoring — internal improvement without behaviour change\n- rewrite — replacement",
+      "i18n": {
+        "hu": {
+          "name": "Technical Debt és Refactoring",
+          "description": "Future change cost és risk kezelése",
+          "studyNotes": "## Mi ez?\n\nA technical debt compromise által létrehozott future cost vagy risk. A refactoring observable behaviour change nélkül javítja az internal designt.\n\n## Milyen problémát old meg?\n\nInvisible debt lassít és defectet növel, de ha minden nem kedvelt design debt, nincs prioritization.\n\n## Hogyan működik?\n\n- Business impacttal írd le.\n- Affected area és trigger legyen rögzítve.\n- Kis debtet folyamatosan javíts.\n- Nagy riskhez explicit work kell.\n- Mérd az improvementet.\n\n## Gyakori hibák\n\n- Giant rewrite debt removal néven.\n- Stable code refactor style miatt.\n- Impact nélküli vague debt.\n\n## Kulcsfogalmak\n\n- debt interest — recurring cost\n- refactoring — internal improvement behaviour change nélkül\n- rewrite — replacement"
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "agile_refine_story_001",
+      "title": "Refining an unclear story",
+      "prompt": "The backlog contains Improve account security with no acceptance criteria. How would you refine it?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_user_stories"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify outcome, scope and risks; create observable criteria; split valuable work; separate story criteria from the general quality bar.",
+      "expectedPoints": [
+        {
+          "id": "ars_outcome",
+          "label": "Clarifies the outcome",
+          "description": "Identifies user, problem, desired result and success evidence.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "user outcome",
+            "security problem",
+            "success measure",
+            "why"
+          ]
+        },
+        {
+          "id": "ars_scope",
+          "label": "Clarifies constraints",
+          "description": "Surfaces permissions, compliance, migration, threats and operations as relevant.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "permissions",
+            "compliance",
+            "migration",
+            "threat",
+            "scope"
+          ]
+        },
+        {
+          "id": "ars_criteria",
+          "label": "Creates observable criteria",
+          "description": "Covers normal, error and boundary behaviour rather than implementation steps.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "acceptance criteria",
+            "given when then",
+            "error cases",
+            "observable behavior"
+          ]
+        },
+        {
+          "id": "ars_split",
+          "label": "Splits valuable work",
+          "description": "Creates small end-to-end deliverables or a spike for genuine unknowns.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "vertical slice",
+            "small story",
+            "spike",
+            "end to end"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ars_follow_done",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which requirements belong in the story and which belong in the Definition of Done?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy tisztázatlan story refinementje",
+          "prompt": "A backlogban csak Improve account security szerepel acceptance criteria nélkül. Hogyan refinementelnéd?",
+          "answerStructureHint": "Outcome, scope és risk, observable criteria, valuable split és story criteria vs quality bar.",
+          "expectedPoints": {
+            "ars_outcome": {
+              "label": "Tisztázza az outcome-ot",
+              "description": "User, problem, desired result és success evidence szerepel."
+            },
+            "ars_scope": {
+              "label": "Tisztázza a constraintet",
+              "description": "Permission, compliance, migration, threat és operations szükség szerint előkerül."
+            },
+            "ars_criteria": {
+              "label": "Observable criteriát készít",
+              "description": "Normal, error és boundary behaviour szerepel implementation step helyett."
+            },
+            "ars_split": {
+              "label": "Valuable workre bont",
+              "description": "Small end-to-end deliverable vagy genuine unknown esetén spike készül."
+            }
+          },
+          "followUps": {
+            "ars_follow_done": "Mi tartozik a storyba, és mi a Definition of Done-ba?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_slice_feature_001",
+      "title": "Breaking down a large platform feature",
+      "prompt": "An integration feature includes API contract, database migration, mapping, authentication, tests, monitoring and rollout. How would you split it?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_work_slicing",
+        "agile_user_stories"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Start from a usable outcome, create thin end-to-end slices, pull risk forward and include operational completion.",
+      "expectedPoints": [
+        {
+          "id": "asf_outcome",
+          "label": "Starts with a usable outcome",
+          "description": "Finds the smallest demonstrable customer or operational capability.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "usable outcome",
+            "customer value",
+            "demonstrable",
+            "smallest capability"
+          ]
+        },
+        {
+          "id": "asf_vertical",
+          "label": "Creates vertical slices",
+          "description": "Combines enough layers for meaningful validation instead of layer-only tickets.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "vertical slice",
+            "end to end",
+            "not frontend backend split",
+            "meaningful validation"
+          ]
+        },
+        {
+          "id": "asf_risk",
+          "label": "Pulls risk forward",
+          "description": "Uses contract-first work, spikes or compatibility steps to test assumptions early.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "contract first",
+            "spike",
+            "risk first",
+            "compatibility",
+            "assumption"
+          ]
+        },
+        {
+          "id": "asf_ops",
+          "label": "Includes operational work",
+          "description": "Includes tests, observability, migration, rollout and rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "monitoring",
+            "rollout",
+            "rollback",
+            "migration",
+            "tests"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "asf_follow_flag",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where could a feature flag help, and where would it not solve the migration problem?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy nagy platform feature lebontása",
+          "prompt": "Egy integration feature API contractot, database migrationt, mappinget, authenticationt, testet, monitoringot és rolloutot tartalmaz. Hogyan splitelnéd?",
+          "answerStructureHint": "Usable outcome, thin end-to-end slice, early risk és operational completion.",
+          "expectedPoints": {
+            "asf_outcome": {
+              "label": "Usable outcome-ból indul",
+              "description": "A legkisebb demonstrálható customer vagy operational capabilityt keresi."
+            },
+            "asf_vertical": {
+              "label": "Vertical slice-ot készít",
+              "description": "Meaningful validationt ad technical-layer ticket helyett."
+            },
+            "asf_risk": {
+              "label": "Előrehozza a risket",
+              "description": "Contract-first work, spike vagy compatibility step teszteli az assumptiont."
+            },
+            "asf_ops": {
+              "label": "Operational worköt is beépít",
+              "description": "Test, observability, migration, rollout és rollback része a worknek."
+            }
+          },
+          "followUps": {
+            "asf_follow_flag": "Hol segíthet feature flag, és hol nem oldja meg a migration problémát?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_test_strategy_001",
+      "title": "Designing a test strategy",
+      "prompt": "Design a test strategy for a service with business rules, a database, a public API and three critical user journeys.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_testing_strategy"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Map risks to unit, integration, contract and focused E2E layers.",
+      "expectedPoints": [
+        {
+          "id": "ats_unit",
+          "label": "Uses unit tests for rules",
+          "description": "Tests deterministic logic and edge cases cheaply.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "unit tests",
+            "business rules",
+            "edge cases",
+            "fast feedback"
+          ]
+        },
+        {
+          "id": "ats_integration",
+          "label": "Tests real boundaries",
+          "description": "Covers database, framework and API serialization behaviour.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "integration tests",
+            "database",
+            "api boundary",
+            "real components"
+          ]
+        },
+        {
+          "id": "ats_contract",
+          "label": "Protects the contract",
+          "description": "Uses contract or schema tests for public API compatibility.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "contract tests",
+            "schema",
+            "public api",
+            "backward compatibility"
+          ]
+        },
+        {
+          "id": "ats_e2e",
+          "label": "Keeps focused E2E coverage",
+          "description": "Automates a few critical journeys without making the whole suite slow E2E.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "critical journeys",
+            "end to end",
+            "small e2e suite",
+            "avoid too many"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ats_follow_flaky",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you do when the E2E suite becomes flaky and teams stop trusting it?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Testing strategy tervezése",
+          "prompt": "Tervezz testing strategyt business rule-t, database-t, public API-t és három critical user journeyt tartalmazó service-hez.",
+          "answerStructureHint": "Risket rendelj unit, integration, contract és focused E2E layerhez.",
+          "expectedPoints": {
+            "ats_unit": {
+              "label": "Unit testet használ rule-höz",
+              "description": "Deterministic logic és edge case olcsón tesztelt."
+            },
+            "ats_integration": {
+              "label": "Real boundaryt tesztel",
+              "description": "Database, framework és API serialization behaviour szerepel."
+            },
+            "ats_contract": {
+              "label": "Védi a contractot",
+              "description": "Public API compatibility contract vagy schema testtel védett."
+            },
+            "ats_e2e": {
+              "label": "Focused E2E coverage-et tart",
+              "description": "Kevés critical journey automated, a teljes suite nem slow E2E."
+            }
+          },
+          "followUps": {
+            "ats_follow_flaky": "Mit tennél, ha az E2E suite flaky lenne, és a team nem bízna benne?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_debt_rewrite_001",
+      "title": "Prioritizing technical debt",
+      "prompt": "The team requests a six-month rewrite while product wants features. How would you evaluate the debt?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_technical_debt",
+        "agile_work_slicing"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Replace the vague rewrite with concrete impact, compare options and create incremental measurable work.",
+      "expectedPoints": [
+        {
+          "id": "adr_impact",
+          "label": "Makes debt concrete",
+          "description": "Connects affected areas to delay, defects, incidents, security or operating cost.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "business impact",
+            "delivery delay",
+            "incidents",
+            "security risk",
+            "change cost"
+          ]
+        },
+        {
+          "id": "adr_options",
+          "label": "Compares alternatives",
+          "description": "Considers targeted refactoring, strangler replacement, testing or no change.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "targeted refactoring",
+            "strangler",
+            "alternatives",
+            "avoid rewrite"
+          ]
+        },
+        {
+          "id": "adr_slice",
+          "label": "Creates incremental work",
+          "description": "Uses small owned backlog items or nearby refactoring.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "incremental",
+            "backlog item",
+            "small steps",
+            "nearby code"
+          ]
+        },
+        {
+          "id": "adr_measure",
+          "label": "Defines evidence",
+          "description": "Measures lead time, defects, incidents or risk after changes.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "lead time",
+            "defect rate",
+            "incident reduction",
+            "measure improvement"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "adr_follow_full",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What evidence could justify a full rewrite?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Technical debt priorizálása",
+          "prompt": "A team hat hónapos rewrite-ot kér, a product pedig feature-öket akar. Hogyan értékelnéd a debtet?",
+          "answerStructureHint": "Vague rewrite helyett concrete impact, option comparison és incremental measurable work.",
+          "expectedPoints": {
+            "adr_impact": {
+              "label": "Concrete-tá teszi a debtet",
+              "description": "Delay, defect, incident, security vagy operating cost kapcsolat szerepel."
+            },
+            "adr_options": {
+              "label": "Alternative-okat hasonlít",
+              "description": "Targeted refactoring, strangler, testing vagy no change kerül elő."
+            },
+            "adr_slice": {
+              "label": "Incremental worköt készít",
+              "description": "Small owned backlog item vagy nearby refactoring történik."
+            },
+            "adr_measure": {
+              "label": "Evidence-et definiál",
+              "description": "Lead time, defect, incident vagy risk változása mérhető."
+            }
+          },
+          "followUps": {
+            "adr_follow_full": "Milyen evidence indokolhatna teljes rewrite-ot?"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,104 +1,281 @@
 {
   "id": "react_deep_dive",
-  "name": "React deep dive (Artec)",
-  "description": "The Artec frontend prep doc in depth: rendering model, re-render optimization, state strategy, SSR vs CSR, app structure, legacy migration, quality gates, API contracts, and AI-assisted development.",
+  "name": "React Deep Dive",
+  "description": "React rendering, memoization, state ownership, SSR, component structure, legacy migration, quality gates, and AI-assisted development.",
   "sources": [
     "artec_frontend_interju_felkeszules"
   ],
   "topics": [
     {
       "id": "react_rendering_model",
-      "name": "React rendering model",
-      "description": "Render vs commit, reconciliation, keys, and what actually triggers a re-render.",
+      "name": "React Rendering Model",
+      "description": "Render, reconciliation, commit, keys, and re-render triggers.",
       "category": "frontend",
-      "relatedTopicIds": [
-        "react",
-        "frontend_performance"
-      ],
-      "studyNotes": "## What is it?\n\nHow React actually gets your components onto the screen: it re-runs component functions, compares the result with the previous one, and applies only the real differences to the page.\n\n## What problem does it solve?\n\nUpdating the real DOM is slow, and doing it by hand is error-prone. React lets you describe what the UI should look like for the current data, and it figures out the minimal changes itself.\n\n## How it works\n\nRendering happens in two phases:\n- Render phase: React calls your component functions and builds a lightweight description of the UI (the \"virtual DOM\"), then compares it with the previous description. This comparison is called reconciliation. The render phase must be PURE — no side effects — because React may run it several times or throw the result away.\n- Commit phase: React applies only the actual differences to the real DOM, then runs your effects.\n\nWhat triggers a re-render:\n- The component's own state changes (a useState setter, a useReducer dispatch).\n- The PARENT re-renders — children re-run by default, even if their props did not change.\n- A context value the component reads changes.\n\nWhat does NOT trigger one: mutating an object or array in place. React compares by reference — if you push into the same array, the reference is unchanged and React sees nothing. This is the classic \"why doesn't my UI update\" bug, and the reason state updates must create new objects.\n\nImportant distinction: a re-render is NOT a DOM update. Component functions re-running is cheap; the browser DOM only changes where reconciliation found a real difference.\n\nFor lists, the key prop tells React which item is which across renders. Using the array index as key breaks when the list reorders — state and focus stick to the position instead of the item.\n\n## Common mistakes\n\n- Mutating state in place and wondering why nothing updates (reference equality)\n- Using array indexes as keys on a reorderable list\n- Treating every re-render as a performance problem — the DOM only changes where the diff says so\n\n## Key terms\n\n- Virtual DOM — React's in-memory description of the UI\n- Reconciliation — diffing the new description against the old\n- Render vs commit — compute the changes vs apply them\n- key — stable identity for list items (never the index for dynamic lists)\n- Reference equality — why mutation is invisible to React"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nReact renders by calling component functions to produce a description of the UI, reconciling it with the previous result, and committing necessary host changes. Rendering and changing the DOM are not the same event.\n\n## What problem does it solve?\n\nThe model lets developers describe UI from state while React coordinates updates. Misunderstanding it leads to mutation bugs, unstable keys, and premature optimization.\n\n## How it works\n\n- State, parent rendering, and consumed context can cause a component to render again.\n- The render phase must remain pure because React may restart or discard it.\n- The commit phase changes the DOM and runs layout-sensitive work and effects in their defined order.\n- Stable keys preserve item identity across insertion, deletion, and reordering.\n\n## Common mistakes\n\n- Mutating state and expecting React to detect it.\n- Using array indexes as keys in reorderable lists.\n- Assuming every render causes a DOM update.\n\n## Key terms\n\n- render phase — Computes the next UI description.\n- reconciliation — Matches new elements with previous ones.\n- commit phase — Applies host changes.\n- key — Stable identity among siblings.",
+      "i18n": {
+        "hu": {
+          "name": "A React renderelési modellje",
+          "description": "Render, reconciliation, commit, kulcsok és az újrarenderelés kiváltó okai.",
+          "studyNotes": "## Mi ez?\n\nA React úgy renderel, hogy meghívja a komponensfüggvényeket, ezekből előállítja a UI leírását, összeveti az előző eredménnyel, majd alkalmazza a szükséges változtatásokat a host környezeten. A renderelés és a DOM módosítása nem ugyanaz az esemény.\n\n## Milyen problémát old meg?\n\nA modell lehetővé teszi, hogy a fejlesztő state-ből írja le a felületet, miközben a React koordinálja a frissítéseket. Félreértése state-mutációs hibákhoz, instabil kulcsokhoz és túl korai optimalizáláshoz vezet.\n\n## Hogyan működik\n\n- State-változás, a szülő renderelése és egy fogyasztott context változása új renderelést válthat ki.\n- A render fázisnak tisztának kell maradnia, mert a React újraindíthatja vagy eldobhatja.\n- A commit fázis módosítja a DOM-ot, majd a meghatározott sorrendben futtatja a layoutérzékeny munkát és az effecteket.\n- A stabil kulcsok megőrzik az elemek identitását beszúrás, törlés és átrendezés közben.\n\n## Gyakori hibák\n\n- State-et mutálni, és azt várni, hogy a React észrevegye.\n- Átrendezhető listában tömbindexet használni kulcsként.\n- Azt feltételezni, hogy minden render DOM-módosítást okoz.\n\n## Kulcsfogalmak\n\n- render fázis — kiszámítja a következő UI-leírást\n- reconciliation — az új elemeket a korábbiakkal párosítja\n- commit fázis — alkalmazza a host környezet változtatásait\n- key — stabil identitás a testvérelemek között"
+        }
+      }
     },
     {
       "id": "ssr_csr",
       "name": "SSR vs CSR",
-      "description": "Server-side vs client-side rendering, hydration, and when a framework like Next.js earns its complexity.",
+      "description": "Server rendering, client rendering, static generation, and hydration.",
       "category": "frontend",
-      "relatedTopicIds": [
-        "react",
-        "frontend_performance",
-        "core_web_vitals"
-      ],
-      "studyNotes": "## What is it?\n\nTwo strategies for producing a web page. CSR (client-side rendering): the server sends an almost empty HTML file plus JavaScript, and the browser builds the page. SSR (server-side rendering): the server builds the finished HTML and sends that. Frameworks like Next.js exist mainly to make SSR practical with React.\n\n## What problem does it solve?\n\nWith CSR, the user stares at a blank page until the JavaScript downloads and runs, and search engines may see nothing to index. SSR fixes both: real HTML arrives immediately.\n\n## How it works\n\nThe decision comes down to who visits the page:\n- Public, content-heavy pages (shops, blogs, marketing) → SSR or SSG (static generation: the HTML is built once at build time). Crawlers get indexable HTML; users see content fast.\n- Apps behind a login (dashboards, admin tools) → CSR is fine. There is nothing to index, and SSR would add servers, complexity and cost for no visible benefit.\n\nThe catch in SSR is hydration: the server sends finished HTML, then React loads in the browser, builds the same component tree, and ATTACHES event handlers to the existing HTML. Until hydration finishes, the page LOOKS interactive but does not respond. And if the server's HTML differs from what the client would render (dates, random values, browser-only APIs used during render), you get hydration mismatch errors.\n\nReact vs Next.js in one sentence: React is a UI library (components); Next.js is a framework on top of it that adds routing, SSR/SSG, image optimization and production structure. The honest question before adopting it: \"is anything here public and SEO- or first-paint-critical?\" If not, plain React as a SPA is the simpler system.\n\n## Common mistakes\n\n- Recommending Next.js for an internal dashboard behind a login \"for SEO\"\n- Rendering dates/random values during SSR → hydration mismatch\n- Assuming a server-rendered page is interactive before hydration finishes\n\n## Key terms\n\n- CSR / SSR / SSG — browser-built, server-built per request, server-built at build time\n- Hydration — attaching React behavior to server-sent HTML\n- Hydration mismatch — server and client HTML disagree\n- SEO / first paint — the two reasons SSR earns its complexity"
-    },
-    {
-      "id": "react_memoization",
-      "name": "Re-render Optimization & Memoization",
-      "description": "Measure first; React.memo/useMemo/useCallback, stable references, and rendering huge lists.",
-      "category": "frontend",
-      "relatedTopicIds": [
-        "react_rendering_model",
-        "react",
-        "frontend_performance"
-      ],
-      "studyNotes": "## What is it?\n\nReact's three memoization tools — React.memo, useMemo, useCallback — which let components and computations skip re-running when their inputs have not changed.\n\n## What problem does it solve?\n\nWhen a parent re-renders, all its children re-run by default. Usually that is cheap and fine. But when a child subtree is big or a computation is heavy, re-running it on every keystroke makes the UI lag.\n\n## How it works\n\nFirst, the senior rule: MEASURE before optimizing. The usual real causes of slowness are state living too high in the tree (so everything under it re-renders), props whose references change every render, giant lists, and oversized context values. Fix the structure first: move state closer to where it is used, split big components.\n\nThen the tools:\n- React.memo(Child) — skip re-rendering the child if its props are unchanged.\n- useMemo(fn, deps) — cache a computed VALUE between renders.\n- useCallback(fn, deps) — cache a FUNCTION reference between renders.\n\nThe trap that connects them: comparison is BY REFERENCE. If the parent creates a fresh object or an inline arrow function on every render and passes it as a prop, the memoized child sees a \"new\" prop every time and re-renders anyway — the memo is defeated. That is exactly what useMemo/useCallback are for: keeping those references stable.\n\nThe huge-list question (\"render a million rows\"): don't. Paginate on the backend, and on the client use virtualization/windowing (react-window) — only the ~20 visible rows exist in the DOM, swapped as you scroll.\n\nRelated JS patterns: debounce (run after the input goes quiet — search fields) and throttle (run at most every N ms — scroll handlers).\n\n## Common mistakes\n\n- Memoizing everything preemptively instead of measuring first\n- React.memo on the child while passing a fresh inline object/function from the parent\n- Rendering huge lists fully instead of virtualizing (react-window)\n\n## Key terms\n\n- React.memo / useMemo / useCallback — skip child / cache value / cache function\n- Stable reference — what memoization needs to work\n- Virtualization — render only the visible rows of a huge list\n- Debounce / throttle — taming high-frequency events"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nClient-side rendering builds the interface in the browser after JavaScript loads. Server-side rendering produces HTML on the server for each request, while static generation produces it ahead of time.\n\n## What problem does it solve?\n\nPublic content may need fast first content and search indexing. Internal applications may gain little from server rendering while paying more operational and architectural complexity.\n\n## How it works\n\n- Choose based on public discoverability, personalization, update frequency, performance, and infrastructure constraints.\n- Hydration attaches client behavior to server-generated HTML and requires matching server and client output.\n- Static generation fits content that can be rebuilt rather than rendered per request.\n- Use browser-only APIs after hydration and avoid non-deterministic values during server rendering.\n\n## Common mistakes\n\n- Recommending SSR for every React application.\n- Rendering random or locale-dependent values differently on server and client.\n- Assuming visible server HTML is interactive before hydration.\n\n## Key terms\n\n- CSR — Browser creates the initial interface.\n- SSR — Server creates HTML per request.\n- SSG — HTML created during a build.\n- hydration — Attaching client behavior to existing HTML.",
+      "i18n": {
+        "hu": {
+          "name": "SSR és CSR összehasonlítása",
+          "description": "Szerveroldali renderelés, kliensoldali renderelés, statikus generálás és hydration.",
+          "studyNotes": "## Mi ez?\n\nKliensoldali renderelésnél a felület a böngészőben épül fel a JavaScript betöltése után. Szerveroldali renderelésnél a szerver minden kéréshez HTML-t készít, míg statikus generálásnál ez előre, build során történik.\n\n## Milyen problémát old meg?\n\nA nyilvános tartalomnál fontos lehet a gyors első megjelenés és a keresőmotoros indexelés. Belső alkalmazások viszont keveset nyerhetnek a szerveroldali rendereléssel, miközben több üzemeltetési és architekturális összetettséget vállalnak.\n\n## Hogyan működik\n\n- A nyilvános felfedezhetőség, személyre szabás, frissítési gyakoriság, teljesítmény és infrastruktúra-korlátok alapján válassz.\n- A hydration kliensoldali viselkedést kapcsol a szerver által generált HTML-hez; a szerver és kliens kimenetének egyeznie kell.\n- A statikus generálás olyan tartalomhoz illik, amely kérésenkénti renderelés helyett újrabuildelhető.\n- Böngészőspecifikus API-kat hydration után használj, és kerüld a nem determinisztikus értékeket szerveroldali renderelés közben.\n\n## Gyakori hibák\n\n- Minden React-alkalmazáshoz SSR-t ajánlani.\n- Véletlen vagy locale-függő értékeket eltérően renderelni a szerveren és a kliensen.\n- Azt feltételezni, hogy a látható szerveroldali HTML már hydration előtt interaktív.\n\n## Kulcsfogalmak\n\n- CSR — a böngésző hozza létre a kezdeti felületet\n- SSR — a szerver kérésenként hoz létre HTML-t\n- SSG — a HTML build során készül\n- hydration — kliensoldali viselkedés kapcsolása a meglévő HTML-hez"
+        }
+      }
     },
     {
       "id": "react_state_strategies",
-      "name": "Choosing a State Strategy",
-      "description": "Local vs shared vs server vs navigation state; prop drilling, Context+useReducer, and when Redux earns its place.",
+      "name": "React State Strategy",
+      "description": "Choosing local, shared, server, URL, and derived state.",
       "category": "frontend",
-      "relatedTopicIds": [
-        "react",
-        "redux_toolkit"
-      ],
-      "studyNotes": "## What is it?\n\nA decision guide for WHERE state should live in a React app — because \"put everything in one global store\" and \"pass everything through props\" are both wrong.\n\n## What problem does it solve?\n\nDifferent kinds of state have different needs. Treating them all the same leads either to a bloated global store or to props threaded through ten components.\n\n## How it works\n\nSort the state by type first:\n- Local UI state (is the modal open, which tab is selected) → useState/useReducer in the component.\n- Simple shared state (theme, language, current user) → React Context.\n- Complex app state (many modules reacting to the same events) → Redux or similar.\n- Server data (API results) → React Query / SWR — this is a CACHE, not app state; it needs refetching and invalidation, which a store does not give you.\n- Navigation state (filters, page number) → the URL, so it survives refresh and can be shared.\n\nProp drilling: passing state down one or two levels is completely fine. It becomes a problem when unrelated middle components forward props they never use — then reach for Context or composition.\n\nContext + useReducer works as a lightweight Redux: Context delivers the value to the subtree, useReducer gives predictable updates. Its limits: no devtools/time-travel, no middleware, and every consumer re-renders when the value changes — so split contexts by domain (AuthContext, ThemeContext) instead of one giant one.\n\nWhen Redux genuinely earns its place: multiple independent modules reacting to the same app-level events, predictable/debuggable updates, and a selector layer that hides the store's shape from components. A senior touch: expose domain actions (login(), updateFilter()) rather than raw setters.\n\n## Common mistakes\n\n- Server data in a global store instead of a query cache (React Query/SWR)\n- One giant context whose every change re-renders every consumer\n- Filters/pagination in component state — put them in the URL so refresh and sharing work\n\n## Key terms\n\n- State types — local / shared / server / navigation, each with its home\n- Prop drilling — props passing through components that don't use them\n- Server state — API data belongs in a query cache, not a store\n- Selector — a function hiding the store's shape from components"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nA React state strategy places each value in the smallest ownership boundary that needs it. Local interaction state, shared client state, server cache, and navigation state have different lifecycles.\n\n## What problem does it solve?\n\nPutting everything in a global store creates coupling, while excessive prop drilling makes unrelated components relay data. Duplicating server data also creates synchronization bugs.\n\n## How it works\n\n- Keep ephemeral UI state local and lift it only to the nearest common owner.\n- Use URL state for shareable navigation and filters.\n- Use a server-state library for cached remote data, revalidation, and mutation synchronization.\n- Use Context or a state store for genuinely shared client state, splitting domains to limit updates.\n\n## Common mistakes\n\n- Copying derived values into state.\n- Using global state for every form field.\n- Treating server cache as ordinary client-owned state.\n\n## Key terms\n\n- local state — Value owned by one component area.\n- server state — Remote data with cache and freshness concerns.\n- derived state — Value computed from existing sources.\n- URL state — Navigation state encoded in the address.",
+      "i18n": {
+        "hu": {
+          "name": "State-stratégia Reactben",
+          "description": "Lokális, megosztott, szerver-, URL- és származtatott állapot megfelelő elhelyezése.",
+          "studyNotes": "## Mi ez?\n\nA React state-stratégia minden értéket abba a legkisebb tulajdonlási határba helyez, ahol valóban szükség van rá. A helyi interakciós state, a megosztott kliensállapot, a szervercache és a navigációs állapot eltérő életciklussal rendelkezik.\n\n## Milyen problémát old meg?\n\nHa minden globális store-ba kerül, az erős csatolást okoz; a túl sok prop drilling pedig arra kényszerít független komponenseket, hogy adatot továbbítsanak. A szerveradat duplikálása szinkronizációs hibákat is létrehoz.\n\n## Hogyan működik\n\n- Az átmeneti UI-state-et tartsd lokálisan, és csak a legközelebbi közös tulajdonosig emeld fel.\n- Megosztható navigációhoz és szűrőkhöz használj URL-state-et.\n- Távoli adatok cache-eléséhez, újraérvényesítéséhez és mutációinak szinkronizálásához használj szerverstate-könyvtárat.\n- Valóban közös kliensstate-hez használj Contextet vagy state store-t, és domainek szerint bontsd szét, hogy korlátozd a frissítéseket.\n\n## Gyakori hibák\n\n- Származtatott értékeket state-be másolni.\n- Minden formmezőhöz globális state-et használni.\n- A szervercache-t közönséges, kliens tulajdonában lévő state-ként kezelni.\n\n## Kulcsfogalmak\n\n- lokális state — egy komponensrész által birtokolt érték\n- szerverstate — távoli adat cache- és frissességi kérdésekkel\n- származtatott state — meglévő forrásokból kiszámított érték\n- URL-state — a címbe kódolt navigációs állapot"
+        }
+      }
     },
     {
       "id": "frontend_app_structure",
-      "name": "App Structure & Reusable Components",
-      "description": "Feature-based boundaries, when a component deserves to be reusable, and working from Figma designs.",
+      "name": "App Structure and Reusable Components",
+      "description": "Feature boundaries, reusable UI, and design-system decisions.",
       "category": "frontend",
-      "relatedTopicIds": [
-        "react",
-        "web_accessibility"
-      ],
-      "studyNotes": "## What is it?\n\nHow to organize a large React codebase — and when to make a component reusable versus keeping it specific.\n\n## What problem does it solve?\n\nOrganizing by file type (all components in one folder, all hooks in another) or purely by route stops working as an app grows: related code ends up scattered, and every feature touches five folders.\n\n## How it works\n\nOrganize by FEATURE: everything belonging to \"payments\" — its components, hooks, API calls, state — lives together in features/payments. Routes become thin entry points that compose features. A typical layout:\n\n- app/ — providers, store, routing setup\n- pages/ — route entry points\n- features/ — user, payments, dashboard… (each self-contained)\n- shared/ — genuinely generic UI, utils, hooks, types\n\nOnly promote code to shared/ when it is actually generic — not \"might be reused someday\".\n\nReusable components: the senior stance is restraint. Make a component reusable when the same pattern actually appears in multiple places, not preemptively. A good reusable component has a small clear API, sensible defaults, and no product-specific logic. Warning sign: a dozen configuration props usually means it should be split.\n\nWorking from Figma designs, the value is spotting what is MISSING: loading/error/empty/disabled states, responsive behavior, long translated texts, hover/focus/keyboard interactions. Ask the designer early — not at sprint end.\n\n## Common mistakes\n\n- Folders by file type (components/, hooks/) that scatter every feature\n- Generalizing a component before a second real use exists\n- Building only the happy path from a Figma design — the missing states are the work\n\n## Key terms\n\n- Feature-based structure — code grouped by domain, not by file type\n- Entry point — a route that composes features, holding no logic itself\n- Premature abstraction — generalizing before a real second use exists\n- Missing states — loading/error/empty/disabled that designs often omit"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nFrontend application structure organizes code around stable product or feature boundaries while reusable components capture repeated behavior and visual rules.\n\n## What problem does it solve?\n\nFolders organized only by file type scatter a feature across the project. Over-generalized components become hard to understand, while copied UI drifts.\n\n## How it works\n\n- Keep feature-specific components, hooks, tests, and API adapters close together.\n- Extract a reusable component after a stable pattern appears, not from one speculative example.\n- Separate low-level design-system primitives from product components that know business meaning.\n- Define clear props and composition points instead of adding many Boolean configuration switches.\n\n## Common mistakes\n\n- Building a universal component with dozens of modes.\n- Putting all business components into a global shared folder.\n- Copying a Figma frame without defining responsive and state behavior.\n\n## Key terms\n\n- feature boundary — Code grouped around one product capability.\n- design system — Shared visual rules and primitives.\n- composition — Combining focused components.\n- prop API — Public contract of a component.",
+      "i18n": {
+        "hu": {
+          "name": "Alkalmazásstruktúra és újrafelhasználható komponensek",
+          "description": "Feature-határok, újrafelhasználható UI és design system döntések.",
+          "studyNotes": "## Mi ez?\n\nA frontend alkalmazásstruktúra stabil termék- vagy feature-határok köré rendezi a kódot, az újrafelhasználható komponensek pedig az ismétlődő viselkedést és vizuális szabályokat foglalják össze.\n\n## Milyen problémát old meg?\n\nA kizárólag fájltípus szerint rendezett mappák szétszórják egy feature részeit a projektben. A túl általános komponenseket nehéz megérteni, a másolt UI pedig idővel eltér egymástól.\n\n## Hogyan működik\n\n- Tartsd egymás mellett az adott feature komponenseit, hookjait, tesztjeit és API-adaptereit.\n- Újrafelhasználható komponenst akkor emelj ki, amikor már stabilan ismétlődik egy minta, ne egyetlen feltételezett jövőbeli példából.\n- Válaszd külön az alacsony szintű design system primitíveket az üzleti jelentést ismerő termékkomponensektől.\n- Sok Boolean kapcsoló helyett határozz meg világos prop API-t és kompozíciós pontokat.\n\n## Gyakori hibák\n\n- Több tucat móddal rendelkező univerzális komponenst építeni.\n- Minden üzleti komponenst egy globális shared mappába tenni.\n- Figma-frame-et lemásolni reszponzív és állapotbeli viselkedés meghatározása nélkül.\n\n## Kulcsfogalmak\n\n- feature-határ — egy termékképesség köré csoportosított kód\n- design system — közös vizuális szabályok és primitívek\n- kompozíció — fókuszált komponensek összeépítése\n- prop API — egy komponens nyilvános szerződése"
+        }
+      }
     },
     {
       "id": "react_legacy_migration",
       "name": "Legacy Frontend Migration",
-      "description": "jQuery/Rails templates to React without a big bang, and modernizing an outdated React codebase.",
+      "description": "Incremental replacement without a big-bang rewrite.",
       "category": "frontend",
-      "relatedTopicIds": [
-        "migration_strategy",
-        "react",
-        "frontend_quality_gates"
-      ],
-      "studyNotes": "## What is it?\n\nThe strategy for moving an old frontend (jQuery, server templates, or outdated React) to modern React without stopping feature work or breaking the product.\n\n## What problem does it solve?\n\nThe tempting \"big rewrite\" — freeze everything, rebuild from scratch — historically fails: it takes twice as long as planned, the old system keeps changing underneath it, and the business gets nothing until the very end.\n\n## How it works\n\nMigrate incrementally (the \"strangler\" approach):\n- Understand the existing behavior first; add tests around the critical flows BEFORE touching them — they are your safety net.\n- Find isolated areas where React can be introduced safely; replace them one at a time in small, reviewable steps.\n- Keep behavior stable at each step; build NEW functionality in React so the legacy surface shrinks naturally.\n\nChoose what to refactor by RISK and VALUE, not by taste: prioritize code that changes often, blocks new work, or is genuinely fragile. Leave stable legacy code alone — rewriting working code \"because it's old\" is cost without benefit.\n\nFor an outdated React codebase specifically: audit dependencies first (React, router, build tools, test libs); hunt deprecated APIs (legacy lifecycles, ReactDOM.render → createRoot); update in small steps — dependencies, then build, then tests green, then pattern cleanup. Do NOT mass-rewrite class components to hooks; convert only the ones you actively work on.\n\n## Common mistakes\n\n- The big-bang rewrite — twice the estimate, business value only at the end\n- Refactoring stable legacy code for style points\n- Mass-converting class components to hooks with no concrete reason\n- Touching risky flows without tests around them first\n\n## Key terms\n\n- Big-bang rewrite — the anti-pattern: all-at-once replacement\n- Strangler pattern — new code gradually surrounds and replaces old\n- Safety net — tests around critical flows before changing them\n- createRoot — the React 18+ entry point replacing ReactDOM.render"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nLegacy frontend migration replaces outdated pages, frameworks, or patterns in controlled slices while the existing product remains available.\n\n## What problem does it solve?\n\nA complete rewrite delays value and must rediscover years of hidden behavior. Incremental migration reduces risk and gives teams feedback earlier.\n\n## How it works\n\n- Define a boundary where old and new code can coexist, such as routes, widgets, or page regions.\n- Create shared contracts for navigation, authentication, events, and styling.\n- Migrate valuable or risky slices first and measure behavior parity.\n- Remove old code and bridge layers as each slice completes so temporary architecture does not become permanent.\n\n## Common mistakes\n\n- Starting with a multi-year rewrite and no intermediate releases.\n- Sharing mutable internals between old and new systems.\n- Keeping two implementations indefinitely without an exit plan.\n\n## Key terms\n\n- strangler pattern — Replace a legacy system one boundary at a time.\n- coexistence — Old and new implementations run together temporarily.\n- behavior parity — New implementation preserves required behavior.\n- migration seam — Controlled boundary between systems.",
+      "i18n": {
+        "hu": {
+          "name": "Legacy frontend migráció",
+          "description": "Fokozatos lecserélés big-bang újraírás nélkül.",
+          "studyNotes": "## Mi ez?\n\nA legacy frontend migráció elavult oldalakat, frameworköket vagy mintákat cserél le ellenőrzött szeletekben, miközben a meglévő termék továbbra is elérhető marad.\n\n## Milyen problémát old meg?\n\nA teljes újraírás hosszú ideig nem ad értéket, és újra fel kell fedeznie évek rejtett viselkedését. A fokozatos migráció csökkenti a kockázatot, és korábban ad visszajelzést a csapatnak.\n\n## Hogyan működik\n\n- Határozz meg olyan pontot, ahol a régi és új kód együtt élhet, például route, widget vagy oldalrész szintjén.\n- Hozz létre közös szerződéseket a navigációhoz, autentikációhoz, eseményekhez és stílusokhoz.\n- Először az értékes vagy kockázatos szeleteket migráld, és mérd a viselkedési egyezést.\n- Minden elkészült szelet után távolítsd el a régi kódot és a bridge réteget, hogy az átmeneti architektúra ne váljon állandóvá.\n\n## Gyakori hibák\n\n- Többéves újraírással indulni köztes release-ek nélkül.\n- Mutálható belső részleteket megosztani a régi és az új rendszer között.\n- Kilépési terv nélkül határozatlan ideig fenntartani két implementációt.\n\n## Kulcsfogalmak\n\n- strangler pattern — a legacy rendszer határonkénti fokozatos lecserélése\n- együttélés — a régi és új implementáció ideiglenesen párhuzamosan fut\n- viselkedési egyezés — az új implementáció megőrzi a szükséges működést\n- migrációs seam — ellenőrzött határ a rendszerek között"
+        }
+      }
     },
     {
       "id": "frontend_quality_gates",
-      "name": "Code Quality, Testing & Release Safety",
-      "description": "The quality tool layers, regression and visual regression testing, and feature flags.",
+      "name": "Frontend Quality Gates",
+      "description": "Automated checks, test layers, visual regression, and release safety.",
       "category": "frontend",
-      "relatedTopicIds": [
-        "react_legacy_migration"
-      ],
-      "studyNotes": "## What is it?\n\nThe layers of tooling and process that catch mistakes before users see them — from type checking to feature flags.\n\n## What problem does it solve?\n\nHumans make mistakes at a steady rate. Each layer catches a class of mistakes as early — and therefore as cheaply — as possible.\n\n## How it works\n\nThe layers, from fastest feedback to slowest:\n- TypeScript — type errors while you type.\n- ESLint — suspicious patterns, broken hooks rules, unused code.\n- Prettier — formatting handled by a tool, so reviews discuss substance.\n- Unit/component tests — Jest/Vitest + React Testing Library for logic and component behavior.\n- E2E tests — Playwright/Cypress driving a real browser through the few critical user flows (login, purchase). Expensive, so reserve them for what must never break.\n- Visual regression — screenshot comparison (Chromatic/Loki) catching unintended look changes.\n- CI gates — all of the above must pass before merge.\n- Code review and dependency audits (npm audit, Dependabot) — the human and supply-chain layers.\n\nRegression testing just means verifying that new changes did not break what already worked — most of the layers above are automated regression tests.\n\nRelease safety: feature flags separate DEPLOYING code from ENABLING it. Ship the code dark, turn it on for staff → 5% of users → everyone; if metrics go bad, turn it OFF with a switch instead of an emergency rollback deploy. The cost to manage: old flags pile up as debt — cleanup must be routine.\n\n## Common mistakes\n\n- E2E tests for everything — slow, flaky, expensive; reserve them for critical flows\n- Feature flags that never get cleaned up (flag debt)\n- A green pipeline with no visual regression — the UI can still silently break\n\n## Key terms\n\n- Quality gates — checks that must pass before merge/release\n- E2E test — a scripted browser walking a real user flow\n- Visual regression — screenshot diffs against approved baselines\n- Feature flag — deploy ≠ enable; gradual rollout + kill switch\n- Flag debt — stale flags that must be cleaned up"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nFrontend quality gates are automated and review practices that prevent known classes of defects from reaching users. They include type checks, linting, tests, accessibility checks, bundle budgets, and controlled rollout.\n\n## What problem does it solve?\n\nBrowsers, layouts, and user interactions create many regression paths. Manual testing alone is slow and inconsistent.\n\n## How it works\n\n- Run formatting, linting, type checking, and fast tests on every change.\n- Use component and integration tests for behavior, with a small number of end-to-end journeys.\n- Use visual regression where layout changes are business-critical and review intentional changes.\n- Use feature flags, monitoring, and rollback so deployment is not the only safety boundary.\n\n## Common mistakes\n\n- Adding slow flaky gates that teams learn to ignore.\n- Relying only on snapshots with no behavior assertions.\n- Treating a passing pipeline as proof that production is safe.\n\n## Key terms\n\n- quality gate — Check that must pass before progression.\n- visual regression — Image comparison detecting unintended UI change.\n- feature flag — Separates deployment from activation.\n- performance budget — Automated limit on resource or metric regression.",
+      "i18n": {
+        "hu": {
+          "name": "Frontend minőségi kapuk",
+          "description": "Automatikus ellenőrzések, tesztrétegek, vizuális regresszió és biztonságos release.",
+          "studyNotes": "## Mi ez?\n\nA frontend minőségi kapuk automatikus és review-folyamatok, amelyek ismert hibakategóriákat akadályoznak meg abban, hogy eljussanak a felhasználókhoz. Ide tartozik a típusellenőrzés, lint, tesztelés, akadálymentességi ellenőrzés, bundle budget és kontrollált rollout.\n\n## Milyen problémát old meg?\n\nA böngészők, layoutelemek és felhasználói interakciók sokféle regressziós útvonalat hoznak létre. A kizárólag manuális tesztelés lassú és következetlen.\n\n## Hogyan működik\n\n- Minden változtatásnál futtass formázást, lintet, típusellenőrzést és gyors teszteket.\n- Viselkedéshez használj komponens- és integrációs teszteket, kiegészítve kevés, kritikus end-to-end folyamattal.\n- Üzletileg fontos layoutnál használj vizuális regressziót, és review-zd a szándékos változásokat.\n- Feature flaggel, monitorozással és rollbackkel biztosítsd, hogy ne a deployment legyen az egyetlen védelmi határ.\n\n## Gyakori hibák\n\n- Lassú, flaky kapukat hozzáadni, amelyeket a csapat megtanul figyelmen kívül hagyni.\n- Csak snapshotokra támaszkodni viselkedési assertion nélkül.\n- A sikeres pipeline-t bizonyítéknak tekinteni arra, hogy az éles rendszer biztonságos.\n\n## Kulcsfogalmak\n\n- minőségi kapu — továbblépés előtt kötelezően teljesítendő ellenőrzés\n- vizuális regresszió — képek összehasonlítása nem szándékos UI-változás keresésére\n- feature flag — szétválasztja a telepítést az aktiválástól\n- performance budget — automatizált korlát erőforrás- vagy metrikaromlásra"
+        }
+      }
     },
     {
       "id": "ai_assisted_development",
       "name": "AI-Assisted Development",
-      "description": "Using AI as an accelerator while keeping engineering responsibility.",
+      "description": "Using coding AI with verification and engineering ownership.",
       "category": "soft_technical",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nAI-assisted development uses language models to explore, generate, review, or transform code and documentation. The developer remains responsible for requirements, correctness, security, and maintainability.\n\n## What problem does it solve?\n\nAI can reduce routine effort and broaden exploration, but it can also produce plausible incorrect code, outdated APIs, hidden security issues, and unnecessary complexity.\n\n## How it works\n\n- Give the tool clear context, constraints, examples, and an explicit definition of done.\n- Review generated changes as untrusted contributions and verify them with tests, types, documentation, and execution.\n- Use AI for bounded tasks where output can be checked, and keep sensitive data out of unauthorized services.\n- Measure whether it improves lead time or quality instead of assuming more generated code is better.\n\n## Common mistakes\n\n- Merging code because it looks convincing.\n- Sending secrets or private source to an unapproved service.\n- Using AI to avoid understanding a critical design decision.\n\n## Key terms\n\n- verification — Independent evidence that output is correct.\n- prompt context — Relevant requirements and code supplied to the model.\n- hallucination — Confident but incorrect generated content.\n- human ownership — Developer remains accountable for the result.",
+      "i18n": {
+        "hu": {
+          "name": "AI-val támogatott fejlesztés",
+          "description": "Kódoló AI használata ellenőrzéssel és mérnöki felelősségvállalással.",
+          "studyNotes": "## Mi ez?\n\nAz AI-val támogatott fejlesztés nyelvi modelleket használ kód és dokumentáció feltárására, generálására, review-jára vagy átalakítására. A követelményekért, helyességért, biztonságért és karbantarthatóságért továbbra is a fejlesztő felel.\n\n## Milyen problémát old meg?\n\nAz AI csökkentheti a rutinfeladatokat és több alternatíva feltárását segítheti, de hihetően hibás kódot, elavult API-kat, rejtett biztonsági problémát és szükségtelen összetettséget is létrehozhat.\n\n## Hogyan működik\n\n- Adj világos kontextust, korlátokat, példákat és egyértelmű definition of done-t.\n- A generált változtatást nem megbízható hozzájárulásként review-zd, majd tesztekkel, típusokkal, dokumentációval és futtatással ellenőrizd.\n- Olyan körülhatárolt feladatokhoz használd, amelyek eredménye ellenőrizhető, és érzékeny adatot ne küldj nem engedélyezett szolgáltatásba.\n- Mérd, hogy javítja-e a lead time-ot vagy a minőséget, ne feltételezd, hogy a több generált kód önmagában jobb.\n\n## Gyakori hibák\n\n- Kódot merge-elni csak azért, mert meggyőzőnek tűnik.\n- Titkot vagy privát forráskódot nem jóváhagyott szolgáltatásnak elküldeni.\n- AI-val elkerülni egy kritikus tervezési döntés megértését.\n\n## Kulcsfogalmak\n\n- ellenőrzés — független bizonyíték arra, hogy az eredmény helyes\n- promptkontextus — a modellnek adott releváns követelmények és kód\n- hallucináció — magabiztosan előadott, de hibás generált tartalom\n- emberi felelősség — a fejlesztő elszámoltatható marad az eredményért"
+        }
+      }
+    },
+    {
+      "id": "react_memoization",
+      "name": "React Memoization",
+      "description": "Using memo, useMemo, and useCallback as measured performance optimizations rather than correctness guarantees.",
+      "category": "frontend",
       "relatedTopicIds": [
-        "frontend_quality_gates"
+        "react",
+        "frontend_performance",
+        "react_concurrent_hooks"
       ],
-      "studyNotes": "## What is it?\n\nUsing AI tools (Copilot, Claude, ChatGPT) as part of the daily development workflow — and the professional judgment about where their output can be trusted.\n\n## What problem does it solve?\n\nA large share of coding time goes to boilerplate, repetitive refactors, test scaffolding and documentation. AI accelerates exactly those — freeing time for the parts that need human judgment.\n\n## How it works\n\nWhere it genuinely helps: generating boilerplate, suggesting refactorings, drafting tests and docs, and quickly exploring \"what are three ways to do X\".\n\nWhat does not change: generated code is NOT automatically correct. It still gets reviewed for edge cases, types, security, performance, accessibility and maintainability — the same bar as human code. The engineer remains responsible for what ships.\n\nThe guardrails that make AI-generated code safe are the ordinary ones, which become MORE important, not less: strong tests, type checking, code review, and clear architectural ownership.\n\nThe failure mode to name: shipping code you cannot explain. Code you don't understand, you cannot debug, secure, or evolve — no matter who or what wrote it. If asked \"we barely write code by hand anymore\", the mature response is curiosity about their workflow plus the same principle: generation speeds up implementation; it does not remove the need for engineering judgment.\n\n## Common mistakes\n\n- Shipping generated code nobody on the team can explain\n- Treating AI output as reviewed-by-default instead of held to the same bar\n- Letting tests and types erode exactly when generation makes them more critical\n\n## Key terms\n\n- Accelerator, not replacement — the healthy framing\n- Review bar — generated code meets the same standard as human code\n- Guardrails — tests, types, review, ownership\n- Explainability — never ship what you cannot explain"
+      "studyNotes": "## What is it?\n\nMemoization reuses a previous result when its relevant inputs have not changed. In React, memo can skip some child renders when props compare equal, useMemo can reuse a calculated value, and useCallback can reuse a function reference. These APIs are performance optimizations, not semantic guarantees.\n\n## What problem does it solve?\n\nA component tree may repeat expensive rendering or calculations even when the inputs are unchanged. Stable references can also help a memoized child avoid unnecessary work. Memoization itself has costs: dependency tracking, comparisons, retained values, and more complex code.\n\n## How it works\n\n- Measure with React DevTools Profiler or browser performance tools before optimizing.\n- Use memo around a component when repeated renders are expensive and props often remain equal.\n- Use useMemo for an expensive calculation or a stable object needed by another optimization.\n- Use useCallback when stable function identity matters, usually for a memoized child or Hook dependency.\n- Dependencies must include every reactive value used by the calculation or callback.\n- React may discard cached values, so code must remain correct if the calculation runs again.\n- For large lists, virtualization or reducing state scope often matters more than adding memoization everywhere.\n\n## Common mistakes\n\n- Using memoization to fix incorrect state or effect logic\n- Adding useMemo and useCallback to every value and function\n- Leaving dependencies out to keep a reference stable\n- Assuming memo prevents every render or useMemo runs exactly once\n\n## Key terms\n\n- referential equality — whether two references point to the same value\n- memo — component render optimization based on props\n- useMemo — cached calculation result\n- useCallback — cached function reference\n- profiling — measurement used to locate expensive work",
+      "i18n": {
+        "hu": {
+          "name": "Memoizáció Reactben",
+          "description": "A memo, useMemo és useCallback mért teljesítményoptimalizációként, nem helyességi garanciaként való használata.",
+          "studyNotes": "## Mi ez?\n\nA memoizáció újra felhasznál egy korábbi eredményt, ha a releváns bemenetek nem változtak. Reactben a memo kihagyhat bizonyos gyermekrendereléseket azonos propoknál, a useMemo újra felhasználhat egy kiszámított értéket, a useCallback pedig egy függvényreferenciát. Ezek teljesítményoptimalizációk, nem szemantikai garanciák.\n\n## Milyen problémát old meg?\n\nEgy komponensfa változatlan bemenetek mellett is ismételhet drága renderelést vagy számítást. A stabil referenciák abban is segíthetnek, hogy egy memoizált gyermek kihagyja a szükségtelen munkát. A memoizációnak ugyanakkor költsége van: dependencykövetés, összehasonlítás, megtartott értékek és összetettebb kód.\n\n## Hogyan működik\n\n- Optimalizálás előtt mérj React DevTools Profilerrel vagy böngészős performance eszközzel.\n- Akkor használj memo-t komponens körül, ha az ismételt render drága, és a propok gyakran változatlanok.\n- A useMemo-t drága számításhoz vagy más optimalizáció által igényelt stabil objektumhoz használd.\n- A useCallback akkor hasznos, ha a stabil függvényidentitás számít, jellemzően memoizált gyermek vagy Hook dependency miatt.\n- A dependencylistának minden, a számítás vagy callback által használt reaktív értéket tartalmaznia kell.\n- A React eldobhatja a cache-elt értéket, ezért a kódnak újraszámítás esetén is helyesnek kell maradnia.\n- Nagy listánál a virtualizáció vagy a state hatókörének csökkentése gyakran többet ér, mint mindenhová memoizációt tenni.\n\n## Gyakori hibák\n\n- Memoizációval javítani hibás state- vagy effectlogikát\n- Minden értékhez és függvényhez useMemo-t vagy useCallbackot adni\n- Dependencyket kihagyni csak azért, hogy stabil maradjon a referencia\n- Azt feltételezni, hogy a memo minden rendert megakadályoz, vagy a useMemo pontosan egyszer fut\n\n## Kulcsfogalmak\n\n- referenciaegyenlőség — két referencia ugyanarra az értékre mutat-e\n- memo — propalapú komponens-renderoptimalizáció\n- useMemo — cache-elt számítási eredmény\n- useCallback — cache-elt függvényreferencia\n- profilozás — a drága munka helyét feltáró mérés"
+        }
+      }
     }
   ],
   "questions": [
     {
-      "id": "rdd_rendering_001",
+      "id": "hybrid_optimizing_unnecessary_re_renders",
+      "title": "Optimizing unnecessary re-renders",
+      "prompt": "A React page re-renders too much and feels slow. Walk me through how you approach optimizing it — and how you would render a list of one million items.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "react_memoization",
+        "react_rendering_model"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_optimizing_unnecessary_re_renders_point_1",
+          "label": "Measure first, structural fixes before memo",
+          "description": "Profile; keep state local, split components, trim props — memoization is not the first move.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "memoization",
+            "memo",
+            "profile",
+            "keep state local",
+            "split components",
+            "trim props",
+            "memoization is not the",
+            "not the first move"
+          ]
+        },
+        {
+          "id": "hybrid_optimizing_unnecessary_re_renders_point_2",
+          "label": "React.memo / useMemo / useCallback",
+          "description": "Component skip, cached value, cached function — each defeats a specific re-render cause.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "usememo",
+            "usecallback",
+            "react memo usememo usecallback",
+            "react memo",
+            "component skip",
+            "cached value",
+            "cached function"
+          ]
+        },
+        {
+          "id": "hybrid_optimizing_unnecessary_re_renders_point_3",
+          "label": "Stable references or memo is defeated",
+          "description": "Fresh object/array/inline function props defeat React.memo.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4
+          },
+          "acceptedSignals": [
+            "stable references memo defeated",
+            "fresh object",
+            "array",
+            "inline function props defeat",
+            "function props defeat react",
+            "stable"
+          ]
+        },
+        {
+          "id": "hybrid_optimizing_unnecessary_re_renders_point_4",
+          "label": "Virtualization for huge lists",
+          "description": "Pagination/infinite scroll/windowing — only visible rows mounted (react-window).",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 3,
+            "fullstack_developer": 3,
+            "frontend_architect": 3
+          },
+          "acceptedSignals": [
+            "virtualization for huge lists",
+            "virtualization huge lists",
+            "pagination",
+            "infinite scroll",
+            "windowing",
+            "visible rows mounted",
+            "react-window",
+            "virtualization"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_optimizing_unnecessary_re_renders_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you monitor during rollout, and what would trigger rollback for this Optimizing unnecessary re-renders change?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Szükségtelen újrarenderelések optimalizálása",
+          "prompt": "Egy React-oldal túl sokszor renderel újra és lassúnak érződik. Hogyan közelíted meg az optimalizálását, és hogyan renderelnél egymillió elemből álló listát?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_optimizing_unnecessary_re_renders_point_1": {
+              "label": "Először mér, memo előtt strukturális javításokat végez",
+              "description": "Profiloz; lokálisan tartja a state-et, bontja a komponenseket és csökkenti a propokat; a memoizáció nem az első lépés."
+            },
+            "hybrid_optimizing_unnecessary_re_renders_point_2": {
+              "label": "React.memo, useMemo és useCallback",
+              "description": "Komponensrender kihagyása, cache-elt érték és cache-elt függvény; mindegyik más konkrét okot kezel."
+            },
+            "hybrid_optimizing_unnecessary_re_renders_point_3": {
+              "label": "Stabil referenciák nélkül a memo hatástalan",
+              "description": "Minden rendernél új objektum-, tömb- vagy inline függvényprop megakadályozhatja a React.memo kihagyását."
+            },
+            "hybrid_optimizing_unnecessary_re_renders_point_4": {
+              "label": "Virtualizáció óriási listákhoz",
+              "description": "Lapozás, végtelen görgetés vagy windowing; csak a látható sorok legyenek mountolva, például react-window használatával."
+            }
+          },
+          "followUps": {
+            "hybrid_optimizing_unnecessary_re_renders_followup_1": "Mit figyelnél a bevezetés alatt, és mi váltana ki rollbacket ennél az újrarenderelési optimalizációnál?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_what_triggers_a_react_re_render",
       "title": "What triggers a React re-render",
       "prompt": "Walk me through React's rendering model: what triggers a re-render, and what happens between a state change and the DOM update?",
       "roles": [
@@ -110,80 +287,226 @@
         "concept_check"
       ],
       "topicIds": [
-        "react_rendering_model",
-        "react"
+        "react_rendering_model"
       ],
-      "expectedDurationSeconds": 240,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
-      "answerStructureHint": "State/prop/context change → render phase (reconciliation, diffing) → commit phase (DOM mutations); children re-render with parents by default.",
+      "answerStructureHint": "State/prop/context change render phase (reconciliation, diffing) commit phase (DOM mutations); children re-render with parents by default.",
       "expectedPoints": [
         {
-          "id": "rr_triggers",
+          "id": "hybrid_what_triggers_a_react_re_render_point_1",
           "label": "Knows what triggers renders",
           "description": "setState, parent re-render, and context value change — not prop mutation by itself.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
-            "fullstack_developer": 4,
+            "fullstack_developer": 5,
             "frontend_architect": 5
           },
           "acceptedSignals": [
-            "state change",
+            "knows what triggers renders",
+            "knows triggers renders",
             "setstate",
-            "parent re-renders",
-            "context change",
-            "children re-render by default"
+            "parent re-render",
+            "context value change",
+            "prop mutation by itself",
+            "knows"
           ]
         },
         {
-          "id": "rr_reconciliation",
+          "id": "hybrid_what_triggers_a_react_re_render_point_2",
           "label": "Render vs commit, reconciliation",
           "description": "Render phase builds the new virtual tree and diffs it; commit applies minimal DOM changes; keys drive list diffing.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
-            "frontend_architect": 4
+            "fullstack_developer": 5,
+            "frontend_architect": 5
           },
           "acceptedSignals": [
-            "reconciliation",
-            "virtual dom",
-            "diff",
-            "commit phase",
             "render phase",
-            "keys",
-            "minimal dom updates"
+            "reconciliation",
+            "commit phase",
+            "key",
+            "render vs commit reconciliation",
+            "render phase builds the",
+            "virtual tree and diffs",
+            "commit applies minimal dom"
           ]
         },
         {
-          "id": "rr_pure_render",
+          "id": "hybrid_what_triggers_a_react_re_render_point_3",
           "label": "Render must be pure",
           "description": "Render can run many times without side effects; effects run after commit.",
-          "importance": "nice_to_have",
+          "importance": "important",
           "roleWeight": {
-            "frontend_developer": 4
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4
           },
           "acceptedSignals": [
-            "pure",
-            "no side effects in render",
-            "effects run after",
-            "useeffect after commit",
-            "render can run twice"
+            "render must be pure",
+            "render pure",
+            "render can run many",
+            "times without side effects",
+            "effects run after commit",
+            "render"
           ]
         }
       ],
       "followUps": [
         {
-          "id": "rdd_rr_keys_followup",
+          "id": "hybrid_what_triggers_a_react_re_render_followup_1",
           "trigger": {
             "type": "always"
           },
           "prompt": "Why is using an array index as a key a problem in a reorderable list?",
           "expectedPoints": []
         }
-      ]
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mi vált ki újrarenderelést Reactben?",
+          "prompt": "Mutasd be a React renderelési modelljét: mi indít új rendert, és mi történik a state változása és a DOM frissítése között?",
+          "answerStructureHint": "State-, prop- vagy contextváltozás; render fázis reconciliationnel és diffeléssel; commit fázis DOM-módosításokkal; a gyermekek alapértelmezetten újrarenderelnek a szülővel.",
+          "expectedPoints": {
+            "hybrid_what_triggers_a_react_re_render_point_1": {
+              "label": "Ismeri a rendert kiváltó okokat",
+              "description": "setState, szülő újrarenderelése és contextérték változása; egy prop objektum puszta mutálása önmagában nem."
+            },
+            "hybrid_what_triggers_a_react_re_render_point_2": {
+              "label": "Render és commit, reconciliation",
+              "description": "A render fázis új virtuális fát épít és összeveti a régivel; a commit minimális DOM-változtatást alkalmaz; a kulcsok vezérlik a listadiffet."
+            },
+            "hybrid_what_triggers_a_react_re_render_point_3": {
+              "label": "A rendernek tisztának kell lennie",
+              "description": "A render mellékhatás nélkül többször is lefuthat; az effectek commit után futnak."
+            }
+          },
+          "followUps": {
+            "hybrid_what_triggers_a_react_re_render_followup_1": "Miért problémás tömbindexet kulcsként használni egy átrendezhető listában?"
+          }
+        }
+      }
     },
     {
-      "id": "rdd_state_mgmt_001",
+      "id": "hybrid_ssr_vs_csr_do_you_need_next_js",
+      "title": "SSR vs CSR — do you need Next.js?",
+      "prompt": "When would you choose server-side rendering over a plain client-side React app? What does hydration mean in this picture?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "ssr_csr"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "SEO and first-paint needs vs infra complexity; hydration attaches interactivity to server HTML; CSR is fine behind login.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_ssr_vs_csr_do_you_need_next_js_point_1",
+          "label": "SSR for SEO and first paint",
+          "description": "Public, content-heavy pages need indexable HTML and fast first contentful paint; SSR/SSG delivers that.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "ssr",
+            "ssg",
+            "ssr seo first paint",
+            "public",
+            "content-heavy pages need indexable",
+            "fast first contentful paint",
+            "ssg delivers",
+            "first"
+          ]
+        },
+        {
+          "id": "hybrid_ssr_vs_csr_do_you_need_next_js_point_2",
+          "label": "Explains hydration",
+          "description": "Server HTML becomes interactive when React attaches listeners client-side; mismatch and cost are the catch.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "hydration",
+            "server html becomes interactive",
+            "react attaches listeners client-side",
+            "mismatch and cost are",
+            "cost are the catch",
+            "server"
+          ]
+        },
+        {
+          "id": "hybrid_ssr_vs_csr_do_you_need_next_js_point_3",
+          "label": "CSR is fine for app-like UIs",
+          "description": "Dashboards behind login don't need SSR; SSR adds server infra, complexity and cost.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4
+          },
+          "acceptedSignals": [
+            "csr",
+            "ssr vs csr",
+            "ssr csr",
+            "csr fine app-like uis",
+            "dashboards behind login don't",
+            "login don't need ssr",
+            "ssr adds server infra"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_ssr_vs_csr_do_you_need_next_js_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How do React Server Components change this trade-off?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "SSR vagy CSR — szükség van Next.js-re?",
+          "prompt": "Mikor választanál szerveroldali renderelést egy egyszerű kliensoldali React-alkalmazás helyett? Mit jelent ebben a képben a hydration?",
+          "answerStructureHint": "SEO- és első megjelenési igény az infrastruktúra összetettségével szemben; a hydration interaktivitást kapcsol a szerver HTML-jéhez; belépés mögött a CSR gyakran elegendő.",
+          "expectedPoints": {
+            "hybrid_ssr_vs_csr_do_you_need_next_js_point_1": {
+              "label": "SSR SEO-hoz és gyors első megjelenéshez",
+              "description": "Nyilvános, tartalomintenzív oldalak indexelhető HTML-t és gyors first contentful paintet igényelnek; ezt SSR vagy SSG biztosíthatja."
+            },
+            "hybrid_ssr_vs_csr_do_you_need_next_js_point_2": {
+              "label": "Elmagyarázza a hydrationt",
+              "description": "A szerver HTML-je akkor válik interaktívvá, amikor a React kliensoldalon event listenereket kapcsol hozzá; a mismatch és a költség a hátránya."
+            },
+            "hybrid_ssr_vs_csr_do_you_need_next_js_point_3": {
+              "label": "A CSR megfelelő alkalmazásszerű UI-hoz",
+              "description": "A belépés mögötti dashboardnak nincs feltétlenül szüksége SSR-re; az SSR több szerverinfrastruktúrát, összetettséget és költséget ad."
+            }
+          },
+          "followUps": {
+            "hybrid_ssr_vs_csr_do_you_need_next_js_followup_1": "Hogyan módosítják ezt a kompromisszumot a React Server Components komponensek?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_state_management_without_redux",
       "title": "State management without Redux",
       "prompt": "When do you actually need a state management library in React? How far do you get without one?",
       "roles": [
@@ -192,267 +515,116 @@
         "frontend_architect"
       ],
       "modes": [
-        "tradeoff_decision",
-        "scenario_discussion"
+        "scenario_discussion",
+        "tradeoff_decision"
       ],
       "topicIds": [
         "react_state_strategies",
-        "react"
+        "react_data_flow"
       ],
-      "expectedDurationSeconds": 240,
-      "thinkingTimeSeconds": 60,
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
       "answerStructureHint": "Local state first, lift when shared, context for stable app-wide values, server-cache libraries for API data; a store only for complex shared client state.",
       "expectedPoints": [
         {
-          "id": "sm_local_first",
+          "id": "hybrid_state_management_without_redux_point_1",
           "label": "Local state first, lift when needed",
           "description": "Keep state in the component that uses it; lift to the nearest common ancestor only when shared.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
-            "fullstack_developer": 4,
+            "fullstack_developer": 5,
             "frontend_architect": 5
           },
           "acceptedSignals": [
             "local state",
-            "usestate",
-            "lift state up",
-            "colocate",
-            "nearest common ancestor",
-            "keep it close to where it's used"
+            "shared state",
+            "keep state in the",
+            "state in the component",
+            "lift to the nearest",
+            "ancestor only when shared",
+            "local"
           ]
         },
         {
-          "id": "sm_server_state",
+          "id": "hybrid_state_management_without_redux_point_2",
           "label": "Server data is not client state",
           "description": "API data belongs in a server-cache tool (React Query/SWR) with caching and invalidation, not in a global store.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
             "fullstack_developer": 5,
-            "frontend_architect": 4
+            "frontend_architect": 5
           },
           "acceptedSignals": [
-            "react query",
-            "swr",
             "server state",
-            "server cache",
-            "caching and invalidation",
-            "don't put api data in redux"
+            "react state strategy",
+            "react state strategies",
+            "cache",
+            "server data client state",
+            "api data belongs in",
+            "in a server-cache tool",
+            "react query"
           ]
         },
         {
-          "id": "sm_when_store",
+          "id": "hybrid_state_management_without_redux_point_3",
           "label": "Knows when a store earns its place",
           "description": "Complex, widely shared, frequently changing client state (or context re-render limits) justifies Redux/Zustand.",
           "importance": "important",
           "roleWeight": {
             "frontend_developer": 4,
-            "frontend_architect": 5
+            "fullstack_developer": 4,
+            "frontend_architect": 4
           },
           "acceptedSignals": [
-            "context re-renders everything",
-            "complex shared state",
-            "many components need it",
+            "context",
             "redux",
-            "zustand",
-            "devtools",
-            "middleware"
+            "knows store earns place",
+            "complex",
+            "widely shared",
+            "frequently changing client state",
+            "context re-render limits"
           ]
         }
       ],
       "followUps": [
         {
-          "id": "rdd_sm_context_followup",
+          "id": "hybrid_state_management_without_redux_followup_1",
           "trigger": {
             "type": "always"
           },
           "prompt": "What is the performance pitfall of putting a frequently-changing value into React context?",
           "expectedPoints": []
         }
-      ]
+      ],
+      "i18n": {
+        "hu": {
+          "title": "State management Redux nélkül",
+          "prompt": "Mikor van valóban szükség state management könyvtárra Reactben? Meddig lehet eljutni nélküle?",
+          "answerStructureHint": "Először lokális state; megosztáskor state lifting; stabil alkalmazásszintű értékhez context; API-adathoz szervercache-könyvtár; store csak összetett megosztott kliensstate-hez.",
+          "expectedPoints": {
+            "hybrid_state_management_without_redux_point_1": {
+              "label": "Lokális state először, szükség esetén lifting",
+              "description": "A state az azt használó komponensben marad, és csak megosztási igénynél kerül a legközelebbi közös ősbe."
+            },
+            "hybrid_state_management_without_redux_point_2": {
+              "label": "A szerveradat nem kliensstate",
+              "description": "Az API-adat cache-eléssel és invalidálással rendelkező szervercache-eszközbe, például React Querybe vagy SWR-be való, nem globális store-ba."
+            },
+            "hybrid_state_management_without_redux_point_3": {
+              "label": "Tudja, mikor indokolt egy store",
+              "description": "Összetett, széles körben megosztott és gyakran változó kliensstate, illetve a context újrarenderelési korlátai indokolhatják a Reduxot vagy Zustandot."
+            }
+          },
+          "followUps": {
+            "hybrid_state_management_without_redux_followup_1": "Mi a teljesítménybeli veszélye annak, ha gyakran változó értéket teszel React contextbe?"
+          }
+        }
+      }
     },
     {
-      "id": "rdd_ssr_csr_001",
-      "title": "SSR vs CSR — do you need Next.js?",
-      "prompt": "When would you choose server-side rendering over a plain client-side React app? What does hydration mean in this picture?",
-      "roles": [
-        "frontend_developer",
-        "frontend_architect",
-        "fullstack_developer"
-      ],
-      "modes": [
-        "tradeoff_decision",
-        "concept_check"
-      ],
-      "topicIds": [
-        "ssr_csr",
-        "frontend_performance"
-      ],
-      "expectedDurationSeconds": 240,
-      "thinkingTimeSeconds": 60,
-      "answerStructureHint": "SEO and first-paint needs vs infra complexity; hydration attaches interactivity to server HTML; CSR is fine behind login.",
-      "expectedPoints": [
-        {
-          "id": "sc_when_ssr",
-          "label": "SSR for SEO and first paint",
-          "description": "Public, content-heavy pages need indexable HTML and fast first contentful paint; SSR/SSG delivers that.",
-          "importance": "critical",
-          "roleWeight": {
-            "frontend_developer": 5,
-            "frontend_architect": 5,
-            "fullstack_developer": 4
-          },
-          "acceptedSignals": [
-            "seo",
-            "first paint",
-            "indexable",
-            "content heavy",
-            "public pages",
-            "static generation",
-            "faster initial load"
-          ]
-        },
-        {
-          "id": "sc_hydration",
-          "label": "Explains hydration",
-          "description": "Server HTML becomes interactive when React attaches listeners client-side; mismatch and cost are the catch.",
-          "importance": "critical",
-          "roleWeight": {
-            "frontend_developer": 5,
-            "frontend_architect": 4
-          },
-          "acceptedSignals": [
-            "hydration",
-            "attach event listeners",
-            "server html becomes interactive",
-            "hydration mismatch",
-            "javascript still loads"
-          ]
-        },
-        {
-          "id": "sc_csr_fine",
-          "label": "CSR is fine for app-like UIs",
-          "description": "Dashboards behind login don't need SSR; SSR adds server infra, complexity and cost.",
-          "importance": "important",
-          "roleWeight": {
-            "frontend_architect": 5,
-            "frontend_developer": 4
-          },
-          "acceptedSignals": [
-            "behind login",
-            "dashboard",
-            "no seo need",
-            "server infrastructure",
-            "added complexity",
-            "spa is enough"
-          ]
-        }
-      ],
-      "followUps": [
-        {
-          "id": "rdd_sc_rsc_followup",
-          "trigger": {
-            "type": "always"
-          },
-          "prompt": "How do React Server Components change this trade-off?",
-          "expectedPoints": []
-        }
-      ]
-    },
-    {
-      "id": "rdd_memoization",
-      "title": "Optimizing unnecessary re-renders",
-      "prompt": "A React page re-renders too much and feels slow. Walk me through how you approach optimizing it — and how you would render a list of one million items.",
-      "roles": [
-        "frontend_developer",
-        "fullstack_developer",
-        "frontend_architect"
-      ],
-      "modes": [
-        "troubleshooting",
-        "scenario_discussion"
-      ],
-      "topicIds": [
-        "react_memoization"
-      ],
-      "expectedDurationSeconds": 200,
-      "thinkingTimeSeconds": 45,
-      "expectedPoints": [
-        {
-          "id": "rm_measure",
-          "label": "Measure first, structural fixes before memo",
-          "description": "Profile; keep state local, split components, trim props — memoization is not the first move.",
-          "importance": "critical",
-          "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
-          },
-          "acceptedSignals": [
-            "measure first",
-            "profile",
-            "state as local",
-            "split components",
-            "not memoize everything"
-          ]
-        },
-        {
-          "id": "rm_tools",
-          "label": "React.memo / useMemo / useCallback",
-          "description": "Component skip, cached value, cached function — each defeats a specific re-render cause.",
-          "importance": "critical",
-          "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
-          },
-          "acceptedSignals": [
-            "react.memo",
-            "usememo",
-            "usecallback",
-            "memoized child",
-            "cache the value"
-          ]
-        },
-        {
-          "id": "rm_references",
-          "label": "Stable references or memo is defeated",
-          "description": "Fresh object/array/inline function props defeat React.memo.",
-          "importance": "critical",
-          "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
-          },
-          "acceptedSignals": [
-            "new reference",
-            "inline function",
-            "stable props",
-            "reference changes",
-            "defeats memo"
-          ]
-        },
-        {
-          "id": "rm_virtualization",
-          "label": "Virtualization for huge lists",
-          "description": "Pagination/infinite scroll/windowing — only visible rows mounted (react-window).",
-          "importance": "critical",
-          "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
-          },
-          "acceptedSignals": [
-            "virtualization",
-            "windowing",
-            "react-window",
-            "only visible rows",
-            "pagination",
-            "infinite scroll"
-          ]
-        }
-      ],
-      "followUps": []
-    },
-    {
-      "id": "rdd_state_strategy",
+      "id": "hybrid_which_state_goes_where",
       "title": "Which state goes where?",
       "prompt": "You join a React project where everything lives in one global store. How do you think about what state belongs where?",
       "roles": [
@@ -465,84 +637,134 @@
         "tradeoff_decision"
       ],
       "topicIds": [
-        "react_state_strategies"
+        "react_state_strategies",
+        "react_data_flow"
       ],
-      "expectedDurationSeconds": 200,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "ss_types",
-          "label": "State types → different tools",
+          "id": "hybrid_which_state_goes_where_point_1",
+          "label": "State types different tools",
           "description": "Local UI / shared / complex app / server / navigation state each has a right home.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
-            "fullstack_developer": 4
+            "fullstack_developer": 5,
+            "frontend_architect": 5
           },
           "acceptedSignals": [
             "local state",
             "server state",
-            "react query",
-            "url state",
-            "different kinds of state",
-            "not everything global"
+            "shared state",
+            "navigation state",
+            "types different tools",
+            "local ui",
+            "shared",
+            "complex app"
           ]
         },
         {
-          "id": "ss_drilling",
+          "id": "hybrid_which_state_goes_where_point_2",
           "label": "Prop drilling threshold",
-          "description": "1–2 levels of props is fine; many unrelated intermediaries → Context or store.",
+          "description": "1–2 levels of props is fine; many unrelated intermediaries Context or store.",
           "importance": "important",
           "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4
           },
           "acceptedSignals": [
-            "prop drilling",
-            "few levels is fine",
-            "intermediate components",
-            "context api"
+            "context",
+            "prop drilling threshold",
+            "1 2 levels of",
+            "of props is fine",
+            "many unrelated intermediaries context",
+            "intermediaries context or store",
+            "prop"
           ]
         },
         {
-          "id": "ss_context_limits",
+          "id": "hybrid_which_state_goes_where_point_3",
           "label": "Context+useReducer and its limits",
           "description": "Lightweight Redux alternative; split by domain; no devtools/middleware/selectors.",
           "importance": "important",
           "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4
           },
           "acceptedSignals": [
-            "usereducer",
-            "split contexts",
-            "every consumer re-renders",
-            "no middleware",
-            "no devtools"
+            "redux",
+            "devtools",
+            "context usereducer limits",
+            "lightweight redux alternative",
+            "split by domain",
+            "no devtools",
+            "middleware"
           ]
         },
         {
-          "id": "ss_redux_when",
+          "id": "hybrid_which_state_goes_where_point_4",
           "label": "When Redux earns its place",
           "description": "Cross-module events + predictable updates; selectors decouple store shape.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
-            "fullstack_developer": 4
+            "fullstack_developer": 5,
+            "frontend_architect": 5
           },
           "acceptedSignals": [
-            "cross-module",
-            "application-level events",
-            "predictable updates",
-            "selectors",
-            "not by default"
+            "redux earns place",
+            "cross-module events predictable updates",
+            "selectors decouple store shape",
+            "earns",
+            "place"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_which_state_goes_where_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you monitor during rollout, and what would trigger rollback for this Which state goes where? change?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Melyik state hová kerüljön?",
+          "prompt": "Egy olyan React-projekthez csatlakozol, ahol minden egyetlen globális store-ban él. Hogyan döntöd el, melyik state hová tartozik?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_which_state_goes_where_point_1": {
+              "label": "Külön state-típusokhoz külön eszközök",
+              "description": "A lokális UI-, megosztott, összetett alkalmazás-, szerver- és navigációs state mind más helyre illik."
+            },
+            "hybrid_which_state_goes_where_point_2": {
+              "label": "Prop drilling küszöb",
+              "description": "Egy-két propszint rendben van; sok, az adattól független köztes komponens esetén Context vagy store indokolt."
+            },
+            "hybrid_which_state_goes_where_point_3": {
+              "label": "Context plus useReducer és korlátai",
+              "description": "Könnyű Redux-alternatíva, domainek szerint bontva; nincs beépített devtools, middleware vagy selector."
+            },
+            "hybrid_which_state_goes_where_point_4": {
+              "label": "Mikor indokolt a Redux",
+              "description": "Modulok közötti események és kiszámítható frissítések; a selectorok leválasztják a fogyasztókat a store alakjáról."
+            }
+          },
+          "followUps": {
+            "hybrid_which_state_goes_where_followup_1": "Mit figyelnél a bevezetés alatt, és mi váltana ki rollbacket ennél a state-átszervezésnél?"
+          }
+        }
+      }
     },
     {
-      "id": "rdd_app_structure",
+      "id": "hybrid_structuring_a_large_react_app",
       "title": "Structuring a large React app",
       "prompt": "How would you structure a large React application, and when do you decide a component should become reusable?",
       "roles": [
@@ -557,67 +779,110 @@
       "topicIds": [
         "frontend_app_structure"
       ],
-      "expectedDurationSeconds": 200,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "as_features",
+          "id": "hybrid_structuring_a_large_react_app_point_1",
           "label": "Feature-based boundaries",
-          "description": "Routes are entry points; components/hooks/API/state live inside their feature; shared layer for generic UI.",
+          "description": "Routes are entry points; components/ hooks/API/state live inside their feature; shared layer for generic UI.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
-            "fullstack_developer": 4
+            "fullstack_developer": 5,
+            "frontend_architect": 5
           },
           "acceptedSignals": [
-            "feature-based",
-            "feature folders",
-            "route is an entry point",
-            "close to the feature",
-            "shared layer"
+            "feature-based boundaries",
+            "routes are entry points",
+            "components",
+            "hooks",
+            "api",
+            "state live inside their",
+            "live inside their feature",
+            "shared layer for generic"
           ]
         },
         {
-          "id": "as_reuse",
+          "id": "hybrid_structuring_a_large_react_app_point_2",
           "label": "Reuse on repetition, not prediction",
-          "description": "Generalize when the pattern repeats; clear API, sensible defaults, no product logic; too many props → split.",
+          "description": "Generalize when the pattern repeats; clear API, sensible defaults, no product logic; too many props split.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
-            "fullstack_developer": 4
+            "fullstack_developer": 5,
+            "frontend_architect": 5
           },
           "acceptedSignals": [
-            "when it repeats",
-            "not too early",
-            "over-generalize",
-            "clear api",
-            "too configurable",
-            "premature abstraction"
+            "reuse repetition prediction",
+            "generalize when the pattern",
+            "when the pattern repeats",
+            "sensible defaults",
+            "no product logic",
+            "too many props split",
+            "reuse"
           ]
         },
         {
-          "id": "as_figma",
+          "id": "hybrid_structuring_a_large_react_app_point_3",
           "label": "Designs: hunt the missing states",
-          "description": "Loading/error/empty/disabled/permissions, responsiveness, long localized text; clarify early.",
+          "description": "Loading/error/empty/disabled/ permissions, responsiveness, long localized text; clarify early.",
           "importance": "important",
           "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4
           },
           "acceptedSignals": [
-            "missing states",
-            "loading error empty",
-            "edge cases",
-            "localization",
-            "ask the designer",
-            "keyboard"
+            "designs",
+            "hunt missing",
+            "loading",
+            "error",
+            "empty",
+            "disabled",
+            "permissions",
+            "responsiveness"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_structuring_a_large_react_app_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you monitor during rollout, and what would trigger rollback for this Structuring a large React app change?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Nagy React-alkalmazás strukturálása",
+          "prompt": "Hogyan strukturálnál egy nagy React-alkalmazást, és mikor döntöd el, hogy egy komponens legyen újrafelhasználható?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_structuring_a_large_react_app_point_1": {
+              "label": "Feature-alapú határok",
+              "description": "A route-ok belépési pontok; a komponensek, hookok, API és state a feature-en belül maradnak; a shared réteg csak generikus UI-t tartalmaz."
+            },
+            "hybrid_structuring_a_large_react_app_point_2": {
+              "label": "Ismétlődéskor használ újra, nem előrejelzésből",
+              "description": "A mintát akkor általánosítja, amikor ismétlődik; világos API, ésszerű alapértékek, üzleti logika nélkül; túl sok prop esetén bont."
+            },
+            "hybrid_structuring_a_large_react_app_point_3": {
+              "label": "Megkeresi a hiányzó állapotokat a designban",
+              "description": "Betöltés, hiba, üres, disabled és jogosultsági állapotok, reszponzivitás és hosszú lokalizált szöveg; ezeket korán tisztázza."
+            }
+          },
+          "followUps": {
+            "hybrid_structuring_a_large_react_app_followup_1": "Mit figyelnél a bevezetés alatt, és mi váltana ki rollbacket ennél a nagy React-alkalmazásstruktúra-változtatásnál?"
+          }
+        }
+      }
     },
     {
-      "id": "rdd_legacy_migration",
+      "id": "hybrid_migrating_a_jquery_ui_to_react",
       "title": "Migrating a jQuery UI to React",
       "prompt": "The product has a large jQuery/server-template UI and the team wants React. How do you run that migration?",
       "roles": [
@@ -632,81 +897,129 @@
       "topicIds": [
         "react_legacy_migration"
       ],
-      "expectedDurationSeconds": 200,
-      "thinkingTimeSeconds": 45,
+      "expectedDurationSeconds": 420,
+      "thinkingTimeSeconds": 90,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "lm_incremental",
+          "id": "hybrid_migrating_a_jquery_ui_to_react_point_1",
           "label": "Incremental, no big bang",
           "description": "Isolated areas first, small reviewable steps, behaviour kept stable, strangler-style shrinking of legacy.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
-            "fullstack_developer": 4
+            "fullstack_developer": 5,
+            "frontend_architect": 5
           },
           "acceptedSignals": [
-            "incremental",
-            "no big bang",
-            "no full rewrite",
-            "small steps",
-            "strangler",
-            "isolated areas"
+            "incremental no big bang",
+            "isolated areas first",
+            "small reviewable steps",
+            "behaviour kept stable",
+            "strangler-style shrinking of legacy",
+            "incremental"
           ]
         },
         {
-          "id": "lm_tests",
+          "id": "hybrid_migrating_a_jquery_ui_to_react_point_2",
           "label": "Tests around critical flows first",
           "description": "Safety net before touching risky paths; verify before and after.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
-            "fullstack_developer": 4
+            "fullstack_developer": 5,
+            "frontend_architect": 5
           },
           "acceptedSignals": [
-            "tests around",
-            "safety net",
-            "critical flows",
-            "before and after"
+            "safety net before touching",
+            "before touching risky paths",
+            "verify",
+            "tests",
+            "around",
+            "critical"
           ]
         },
         {
-          "id": "lm_prioritize",
+          "id": "hybrid_migrating_a_jquery_ui_to_react_point_3",
           "label": "Refactor by risk/value, not style",
           "description": "Actively changing or blocking code first; leave stable legacy alone.",
           "importance": "important",
           "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4
           },
           "acceptedSignals": [
-            "actively changing",
-            "leave stable code",
-            "not for style",
-            "reduce risk",
-            "product goals"
+            "refactor risk",
+            "value style",
+            "actively changing or blocking",
+            "or blocking code first",
+            "leave stable legacy alone",
+            "refactor"
           ]
         },
         {
-          "id": "lm_react_modern",
+          "id": "hybrid_migrating_a_jquery_ui_to_react_point_4",
           "label": "Old-React modernization details",
           "description": "Dependency audit, deprecated APIs, createRoot; class components only as needed.",
           "importance": "nice_to_have",
           "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
+            "frontend_developer": 3,
+            "fullstack_developer": 3,
+            "frontend_architect": 3
           },
           "acceptedSignals": [
+            "old-react modernization details",
             "dependency audit",
-            "deprecated",
+            "deprecated apis",
             "createroot",
-            "not rewrite class components"
+            "class components only as",
+            "components only as needed",
+            "old-react"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_migrating_a_jquery_ui_to_react_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you monitor during rollout, and what would trigger rollback for this Migrating a jQuery UI to React change?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "jQuery UI migrálása Reactre",
+          "prompt": "A termék nagy jQuery- és szervertemplate-alapú UI-val rendelkezik, a csapat pedig Reactet szeretne. Hogyan hajtanád végre a migrációt?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_migrating_a_jquery_ui_to_react_point_1": {
+              "label": "Fokozatos, big bang nélkül",
+              "description": "Először izolált területek, kis és review-zható lépések, stabil viselkedés, strangler jellegű legacy-csökkentés."
+            },
+            "hybrid_migrating_a_jquery_ui_to_react_point_2": {
+              "label": "Először tesztek a kritikus folyamatok köré",
+              "description": "Biztonsági hálót készít a kockázatos útvonalak módosítása előtt, majd előtte és utána is ellenőriz."
+            },
+            "hybrid_migrating_a_jquery_ui_to_react_point_3": {
+              "label": "Kockázat és érték alapján refaktorál, nem stílus szerint",
+              "description": "Először az aktívan változó vagy akadályozó kódot kezeli; a stabil legacy részt békén hagyja."
+            },
+            "hybrid_migrating_a_jquery_ui_to_react_point_4": {
+              "label": "Régi React modernizálásának részletei",
+              "description": "Dependency-audit, elavult API-k, createRoot; class komponenseket csak szükség szerint alakít át."
+            }
+          },
+          "followUps": {
+            "hybrid_migrating_a_jquery_ui_to_react_followup_1": "Mit figyelnél a bevezetés alatt, és mi váltana ki rollbacket ennél a jQuery–React migrációnál?"
+          }
+        }
+      }
     },
     {
-      "id": "rdd_quality_gates",
+      "id": "hybrid_frontend_quality_and_safe_releases",
       "title": "Frontend quality and safe releases",
       "prompt": "What does your quality toolchain look like on a frontend project, and how do you reduce the risk of a release going wrong?",
       "roles": [
@@ -715,237 +1028,337 @@
         "frontend_architect"
       ],
       "modes": [
-        "scenario_discussion",
-        "concept_check"
+        "concept_check",
+        "scenario_discussion"
       ],
       "topicIds": [
-        "frontend_quality_gates"
+        "frontend_quality_gates",
+        "testing_strategy"
       ],
-      "expectedDurationSeconds": 200,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "qg_layers",
+          "id": "hybrid_frontend_quality_and_safe_releases_point_1",
           "label": "Layered quality tools",
-          "description": "Typecheck → lint/format → unit/component → E2E on critical flows → CI gates before merge.",
+          "description": "Typecheck lint/format unit/component E2E on critical flows CI gates before merge.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
-            "fullstack_developer": 4
+            "fullstack_developer": 5,
+            "frontend_architect": 5
           },
           "acceptedSignals": [
-            "typescript",
-            "eslint",
-            "unit tests",
-            "e2e",
-            "ci checks",
-            "layers",
-            "testing library"
+            "frontend quality gates",
+            "layered quality tools",
+            "typecheck lint",
+            "format unit",
+            "component e2e on critical",
+            "ci gates before merge",
+            "layered"
           ]
         },
         {
-          "id": "qg_regression",
+          "id": "hybrid_frontend_quality_and_safe_releases_point_2",
           "label": "Regression + visual regression",
           "description": "New changes must not break existing behaviour; screenshot comparison for the UI.",
           "importance": "important",
           "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4
           },
           "acceptedSignals": [
-            "regression",
             "visual regression",
-            "screenshot comparison",
-            "didn't break existing"
+            "regression visual regression",
+            "new changes must not",
+            "not break existing behaviour",
+            "screenshot comparison for the",
+            "comparison for the ui",
+            "regression"
           ]
         },
         {
-          "id": "qg_flags",
+          "id": "hybrid_frontend_quality_and_safe_releases_point_3",
           "label": "Feature flags for release safety",
           "description": "Deploy ≠ enable; gradual rollout; kill switch; watch for flag debt.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
-            "fullstack_developer": 4
+            "fullstack_developer": 5,
+            "frontend_architect": 5
           },
           "acceptedSignals": [
             "feature flag",
+            "feature flags release safety",
+            "deploy enable",
             "gradual rollout",
             "kill switch",
-            "deploy separately",
-            "turn it off",
-            "flag debt"
+            "watch for flag debt",
+            "feature"
           ]
         }
       ],
-      "followUps": []
-    },
-    {
-      "id": "rdd_api_contract",
-      "title": "Agreeing an API contract with the backend",
-      "prompt": "A new feature needs new endpoints. What do you clarify with the backend team before you start building the UI?",
-      "roles": [
-        "frontend_developer",
-        "fullstack_developer",
-        "backend_developer"
-      ],
-      "modes": [
-        "scenario_discussion",
-        "tradeoff_decision"
-      ],
-      "topicIds": [
-        "api_contract_design"
-      ],
-      "expectedDurationSeconds": 200,
-      "thinkingTimeSeconds": 45,
-      "expectedPoints": [
+      "followUps": [
         {
-          "id": "ac_shapes",
-          "label": "Shapes and error format",
-          "description": "Request/response shapes plus error codes and error body — validation errors included.",
-          "importance": "critical",
-          "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
+          "id": "hybrid_frontend_quality_and_safe_releases_followup_1",
+          "trigger": {
+            "type": "always"
           },
-          "acceptedSignals": [
-            "request and response",
-            "shape",
-            "error format",
-            "error codes",
-            "validation errors"
-          ]
-        },
-        {
-          "id": "ac_states",
-          "label": "UI states and pagination",
-          "description": "Loading/empty/error states; offset vs cursor pagination.",
-          "importance": "important",
-          "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
-          },
-          "acceptedSignals": [
-            "loading",
-            "empty state",
-            "pagination",
-            "cursor",
-            "offset"
-          ]
-        },
-        {
-          "id": "ac_auth_compat",
-          "label": "Auth semantics and compatibility",
-          "description": "401 vs 403 handling; backward compatibility during migration.",
-          "importance": "important",
-          "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
-          },
-          "acceptedSignals": [
-            "401",
-            "403",
-            "unauthorized",
-            "forbidden",
-            "backward compatibility"
-          ]
-        },
-        {
-          "id": "ac_rest_graphql",
-          "label": "REST vs GraphQL judgment",
-          "description": "REST for resource CRUD; GraphQL when the client must control data shape / avoid over-fetching.",
-          "importance": "important",
-          "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
-          },
-          "acceptedSignals": [
-            "over-fetching",
-            "under-fetching",
-            "data shape",
-            "rest is simpler",
-            "payload size"
-          ]
+          "prompt": "Give one production example of Frontend quality and safe releases and one common misuse.",
+          "expectedPoints": []
         }
       ],
-      "followUps": []
+      "i18n": {
+        "hu": {
+          "title": "Frontendminőség és biztonságos release-ek",
+          "prompt": "Milyen minőségi eszközláncot használsz egy frontendprojektben, és hogyan csökkented egy hibás release kockázatát?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_frontend_quality_and_safe_releases_point_1": {
+              "label": "Réteges minőségi eszközök",
+              "description": "Typecheck, lint és format; unit- és komponenstesztek; E2E a kritikus folyamatokon; merge előtti CI-kapuk."
+            },
+            "hybrid_frontend_quality_and_safe_releases_point_2": {
+              "label": "Regresszió és vizuális regresszió",
+              "description": "Az új változás nem törheti el a meglévő viselkedést; a UI-hoz screenshot-összehasonlítást is használ."
+            },
+            "hybrid_frontend_quality_and_safe_releases_point_3": {
+              "label": "Feature flagek a release biztonságához",
+              "description": "A deploy nem egyenlő az engedélyezéssel; fokozatos rollout, kill switch és a flagadósság figyelése."
+            }
+          },
+          "followUps": {
+            "hybrid_frontend_quality_and_safe_releases_followup_1": "Mondj egy éles rendszerből származó példát frontendminőségre és biztonságos release-re, valamint egy gyakori hibás használatra."
+          }
+        }
+      }
     },
     {
-      "id": "rdd_ai_dev",
+      "id": "hybrid_how_do_you_use_ai_in_development",
       "title": "How do you use AI in development?",
       "prompt": "How do you use AI tools in your development workflow, and where do you draw the line?",
       "roles": [
         "frontend_developer",
-        "backend_developer",
         "fullstack_developer",
-        "solution_architect"
+        "frontend_architect"
       ],
       "modes": [
-        "experience_deep_dive",
-        "concept_check"
+        "concept_check",
+        "experience_deep_dive"
       ],
       "topicIds": [
         "ai_assisted_development"
       ],
-      "expectedDurationSeconds": 200,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "ai_accelerator",
+          "id": "hybrid_how_do_you_use_ai_in_development_point_1",
           "label": "Accelerator use cases",
           "description": "Boilerplate, refactoring, test generation, docs, exploring options.",
           "importance": "important",
           "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4
           },
           "acceptedSignals": [
+            "accelerator use cases",
             "boilerplate",
-            "test generation",
             "refactoring",
-            "documentation",
-            "explore options",
-            "faster"
+            "test generation",
+            "docs",
+            "exploring options",
+            "accelerator"
           ]
         },
         {
-          "id": "ai_responsibility",
+          "id": "hybrid_how_do_you_use_ai_in_development_point_2",
           "label": "Engineer keeps responsibility",
           "description": "Generated code is reviewed for edge cases, types, security, performance, maintainability.",
           "importance": "critical",
           "roleWeight": {
             "frontend_developer": 5,
-            "fullstack_developer": 4
+            "fullstack_developer": 5,
+            "frontend_architect": 5
           },
           "acceptedSignals": [
-            "not automatically correct",
-            "review",
-            "responsibility",
-            "edge cases",
+            "engineer keeps responsibility",
+            "engineer responsibility",
+            "generated code is reviewed",
+            "reviewed for edge cases",
+            "types",
             "security",
-            "still verify"
+            "performance",
+            "maintainability"
           ]
         },
         {
-          "id": "ai_guardrails",
+          "id": "hybrid_how_do_you_use_ai_in_development_point_3",
           "label": "Guardrails named",
           "description": "Tests, type checking, code review, architectural ownership make generated code safe.",
           "importance": "important",
           "roleWeight": {
-            "frontend_developer": 5,
-            "fullstack_developer": 4
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4
           },
           "acceptedSignals": [
+            "guardrails named",
             "tests",
             "type checking",
             "code review",
-            "ownership",
-            "guardrails",
-            "judgment"
+            "architectural ownership make generated",
+            "make generated code safe",
+            "guardrails"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_how_do_you_use_ai_in_development_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give one production example of How do you use AI in development? and one common misuse.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hogyan használod az AI-t fejlesztés közben?",
+          "prompt": "Hogyan használod az AI-eszközöket a fejlesztési munkafolyamatodban, és hol húzod meg a határt?",
+          "answerStructureHint": "Mondd ki a döntést, indokold meg, majd térj ki a kompromisszumokra és a hibalehetőségekre.",
+          "expectedPoints": {
+            "hybrid_how_do_you_use_ai_in_development_point_1": {
+              "label": "Gyorsító felhasználási esetek",
+              "description": "Boilerplate, refaktorálás, tesztgenerálás, dokumentáció és alternatívák feltárása."
+            },
+            "hybrid_how_do_you_use_ai_in_development_point_2": {
+              "label": "A mérnök megtartja a felelősséget",
+              "description": "A generált kódot edge case, típus, biztonság, teljesítmény és karbantarthatóság szempontjából review-zza."
+            },
+            "hybrid_how_do_you_use_ai_in_development_point_3": {
+              "label": "Megnevezi a védőkorlátokat",
+              "description": "Tesztek, típusellenőrzés, code review és architekturális felelősség teszi biztonságossá a generált kódot."
+            }
+          },
+          "followUps": {
+            "hybrid_how_do_you_use_ai_in_development_followup_1": "Mondj egy éles rendszerből származó példát AI-val támogatott fejlesztésre, valamint egy gyakori hibás használatra."
+          }
+        }
+      }
+    },
+    {
+      "id": "rdd_api_contract",
+      "title": "Agreeing an API contract with the backend",
+      "prompt": "Before implementing a frontend feature, how would you agree and protect the API contract with the backend?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "api_contract_design"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition or decision -> mechanism -> trade-off -> concrete example.",
+      "expectedPoints": [
+        {
+          "id": "rdd_api_contract_1",
+          "label": "Defines the contract",
+          "description": "Agrees request and response shapes, validation, errors, pagination, and versioning.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "request shape",
+            "response shape",
+            "error contract",
+            "pagination",
+            "the contract"
+          ]
+        },
+        {
+          "id": "rdd_api_contract_2",
+          "label": "Uses shared evidence",
+          "description": "Uses OpenAPI, examples, schemas, mocks, or generated types instead of verbal assumptions.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 5,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "openapi",
+            "json schema",
+            "mock server",
+            "generated types",
+            "shared evidence"
+          ]
+        },
+        {
+          "id": "rdd_api_contract_3",
+          "label": "Protects changes",
+          "description": "Uses contract tests, additive evolution, deprecation, and coordinated rollout.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4
+          },
+          "acceptedSignals": [
+            "contract test",
+            "additive change",
+            "deprecation",
+            "coordinated rollout"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rdd_api_contract_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you evolve the contract when old and new frontend versions may run at the same time?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "API-szerződés egyeztetése a backenddel",
+          "prompt": "Egy frontendfunkció implementálása előtt hogyan egyeztetnéd és védenéd az API-szerződést a backenddel?",
+          "answerStructureHint": "Definíció vagy döntés → mechanizmus → kompromisszum → konkrét példa.",
+          "expectedPoints": {
+            "rdd_api_contract_1": {
+              "label": "Definiálja a szerződést",
+              "description": "Egyezteti a kérés- és válaszstruktúrákat, validációt, hibákat, lapozást és verziózást."
+            },
+            "rdd_api_contract_2": {
+              "label": "Közös bizonyítékot használ",
+              "description": "Szóbeli feltételezések helyett OpenAPI-t, példákat, sémákat, mockokat vagy generált típusokat használ."
+            },
+            "rdd_api_contract_3": {
+              "label": "Védi a változtatásokat",
+              "description": "Contract teszteket, additív evolúciót, deprecációt és koordinált rolloutot használ."
+            }
+          },
+          "followUps": {
+            "rdd_api_contract_followup_1": "Hogyan fejlesztenéd tovább a szerződést, ha a frontend régi és új verziói egyszerre futhatnak?"
+          }
+        }
+      }
     }
   ]
 }

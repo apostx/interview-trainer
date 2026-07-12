@@ -1,197 +1,243 @@
 {
   "id": "architecture_foundations",
-  "name": "Architecture Foundations (Dennemeyer)",
-  "description": "Microservices boundaries, DDD/CQRS, SOLID and layered/clean architecture, containers and the Kubernetes runtime, and the architect's working practice (design docs, NFRs, testing strategy, safe DB migration, technical leadership).",
+  "name": "Architecture Foundations",
+  "description": "Service boundaries, DDD, CQRS, Conway’s Law, SOLID, clean architecture, containers, orchestration, secrets, and architecture practice.",
   "sources": [
     "dennemeyer_system_design_100_tema_peldakkal_mobile_hu",
     "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu"
   ],
   "topics": [
     {
-      "id": "microservices_boundaries",
-      "name": "Microservices, DDD & Service Boundaries",
-      "description": "When services earn their independence: ownership, bounded contexts, CQRS, and Conway's Law.",
-      "category": "architecture",
-      "relatedTopicIds": [
-        "microservices",
-        "event_driven",
-        "modular_monolith"
-      ],
-      "studyNotes": "## What is it?\n\nMicroservices means splitting a system into separately deployable services, each owned by a team. The hard question is never \"should we use microservices\" but WHERE to draw the lines between them.\n\n## What problem does it solve?\n\nIn a monolith, many teams share one codebase and one release train — they block each other. Well-drawn services let teams build, deploy and scale independently.\n\n## How it works\n\nA service boundary is justified when it has: clear team ownership, its own API contract, its own data (no other service reaches into its tables), separate scaling needs, and its own monitoring and deploy pipeline. Payment, document generation and notifications make sense as separate services IF those things are true — not because \"small is good\". Too many services buy you network latency and painful debugging.\n\nWhere to find the lines: DDD (Domain-Driven Design) says organize around BUSINESS concepts. Learn the domain language first — trademark, renewal, portfolio — and notice where the meanings shift (a \"customer\" means different things to billing and to support): those shifts mark bounded contexts, which are natural service boundaries. A Renewal is not a database row; it is a business concept with rules — when it may start, who may trigger it, what states it has.\n\nConway's Law is the organizational reality check: systems end up mirroring the communication structure of the teams that build them. Badly drawn team boundaries produce badly drawn services — so boundary design is an ownership question, not only a technical one.\n\nCQRS (Command Query Responsibility Segregation) sometimes appears at these boundaries: separate models for WRITING (complex business rules) and READING (a fast, denormalized view for dashboards). Use it only where read and write needs genuinely diverge — it doubles your models and introduces eventual consistency between them.\n\n## Common mistakes\n\n- Splitting by team size or fashion instead of domain boundaries\n- Services sharing a database — coupled at the data layer, distributed everywhere else\n- CQRS by default, paying for two models nobody needed\n- Ignoring Conway's Law and drawing boundaries the org cannot own\n\n## Key terms\n\n- Bounded context — where a business term's meaning shifts; a natural boundary\n- Ownership — one team, one service, one deploy pipeline\n- Conway's Law — the system mirrors the org chart\n- CQRS — separate write and read models; not a default\n- Modular monolith — the honest alternative when teams are few"
-    },
-    {
       "id": "solid_layers",
       "name": "SOLID Principles",
-      "description": "Small responsibilities, loose coupling, testable modules — principles as means, not ends.",
+      "description": "Responsibility, substitutability, focused interfaces, and dependency direction.",
       "category": "architecture",
-      "relatedTopicIds": [
-        "microservices_boundaries"
-      ],
-      "studyNotes": "## What is it?\n\nSOLID is five object-oriented design principles with one shared goal: modules with small responsibilities, loose coupling, and easy testability. The letters: Single responsibility, Open/closed, Liskov substitution, Interface segregation, Dependency inversion.\n\n## What problem does it solve?\n\nCode where everything knows about everything becomes unchangeable — touch one thing, break three others. The principles exist to keep change cheap, not to be recited.\n\n## How it works\n\nThe one that carries most interviews is Single Responsibility: a module should have ONE reason to change. A RenewalService that also generates PDFs, sends emails and processes payments has four reasons to change — those belong in four places. At architecture level the same idea applies to whole services: clean responsibility, few hidden dependencies.\n\nDependency inversion is the second big one: depend on interfaces, not concrete implementations — the domain defines a repository interface, the database layer implements it. This is the principle layered/clean architecture (its own topic) is built on.\n\nDesign patterns (Strategy, Adapter, Repository…) live in the same spirit: named solutions to recurring problems, used when they SIMPLIFY — an Adapter converting each partner's format to your internal model genuinely clarifies. Patterns applied to look smart add indirection without value. The line worth saying: \"I use patterns when they simplify the code, not for the sake of patterns.\"\n\n## Common mistakes\n\n- Reciting the five definitions without a concrete example\n- One class doing validation + persistence + notification (\"it's related…\")\n- Patterns for pattern's sake — an Adapter wrapping nothing\n- Interfaces for everything, even things with one implementation forever\n\n## Key terms\n\n- Single responsibility — one reason to change per module\n- Dependency inversion — depend on interfaces, not implementations\n- Strategy / Adapter / Repository — the patterns worth knowing cold\n- Coupling — how hard one change tugs on everything else"
-    },
-    {
-      "id": "containers_runtime",
-      "name": "Containers & the Kubernetes Runtime",
-      "description": "Docker/K8s deployment safety, service discovery, gateway vs load balancer, ingress, reverse proxies.",
-      "category": "devops",
-      "relatedTopicIds": [
-        "production_readiness",
-        "scaling_fundamentals",
-        "deployment"
-      ],
-      "studyNotes": "## What is it?\n\nThe runtime infrastructure of modern backend systems: Docker packages an app into an image, Kubernetes runs and scales the containers, and a family of components (load balancer, API gateway, ingress, service discovery) routes traffic to them.\n\n## What problem does it solve?\n\n\"It works on my machine\" and hand-managed servers do not scale to dozens of services. Containers make the app portable and reproducible; Kubernetes automates running, restarting, scaling and rolling out.\n\n## How it works\n\nThe working vocabulary: a deployment describes what to run and how many copies; a service gives pods a stable internal address; configmaps and secrets hold configuration; probes check health; rolling updates and rollbacks manage releases.\n\nHow traffic finds your code, from outside in:\n- Ingress: the cluster's external HTTP routing — api.company.com/renewals → the renewal service.\n- Reverse proxy (NGINX or the ingress controller itself): terminates TLS, limits request sizes, compresses.\n- API gateway vs load balancer — the distinction interviews ask: a load balancer just DISTRIBUTES traffic across instances and skips unhealthy ones. An API gateway is a POLICY point: authentication, rate limiting, routing, versioning, monitoring. External customer APIs sit behind a gateway; internal traffic usually needs only load balancing.\n- Service discovery: pods have changing IPs, so services call each other by NAME (http://payment-service) and Kubernetes routes to the current pods.\n\nWhat makes a rollout zero-downtime: the new pod starts and its readiness probe stays false until it is truly ready (DB connected, config loaded) — no traffic until then. Old pods get a graceful shutdown: stop taking new requests, finish in-flight ones, close connections, exit. Combined with a rolling update, users never notice the deploy — and a rollback is one command.\n\n## Common mistakes\n\n- No readiness probe — traffic hits pods that aren't ready; deploys drop requests\n- SIGKILL-style shutdowns that abort in-flight requests (no graceful drain)\n- An API gateway bolted in front of internal traffic that needed only load balancing\n- Secrets baked into images\n\n## Key terms\n\n- Image / container — the packaged app and its running instance\n- Liveness / readiness probe — \"alive\" vs \"ready for traffic\"\n- Ingress — external HTTP routing into the cluster\n- Gateway = policy, load balancer = distribution\n- Service discovery — calling services by name, not IP"
-    },
-    {
-      "id": "architect_practice",
-      "name": "The Architect's Working Practice",
-      "description": "Design documents, NFRs first, testing strategy, safe schema migration, technical leadership.",
-      "category": "soft_technical",
-      "relatedTopicIds": [
-        "nfr",
-        "requirements_clarification",
-        "frontend_quality_gates"
-      ],
-      "studyNotes": "## What is it?\n\nThe working habits of the architect/tech-lead role: clarifying requirements before designing, writing short design documents, choosing a testing strategy, migrating databases safely, and leading without managing.\n\n## What problem does it solve?\n\nMost failed projects fail before the first line of code — unclear requirements, undebated designs, unsafe rollouts. These practices front-load the thinking.\n\n## How it works\n\nNon-functional requirements (NFRs) come BEFORE architecture. \"We need a renewals API\" is not a requirement; daily request volume, latency expectations, audit needs and tolerable downtime are. Availability is a business decision: 99.9% means ~43 minutes of downtime a month; 99.99% is ten times stricter and much more expensive — an internal admin tool does not need what the customer portal needs.\n\nThe system design document is short and decision-oriented: goal, scope, requirements, a diagram, the API contract, data model, risks, ALTERNATIVES CONSIDERED, and a rollout plan. Its purpose is to make the design debatable — writing \"why async document generation via a queue instead of a sync call\" forces the reasoning into the open.\n\nTesting strategy by layer: unit tests for logic, integration tests for DB/API edges, contract tests for API contracts (they catch the backend renaming a field before customers do), E2E for the few critical flows. TDD is a tool for clarifying expected behavior, not a religion.\n\nSafe database migration is a choreography: add the new column (nullable) → the app writes BOTH old and new → backfill existing rows → the app reads the new column → drop the old one later. Every step is backward compatible, so production never breaks mid-migration.\n\nTechnical leadership is not people management: clarify requirements, compare options in the open, name risks out loud, slice work into small deliverables, review code, unblock people, and keep product and infra in the loop.\n\n## Common mistakes\n\n- Architecture chosen before traffic/latency/audit requirements are known\n- Design docs without alternatives — decisions that cannot be debated\n- Schema migrations that break the old app version mid-deploy\n- Tech leadership reduced to people management (it is requirements, risks, unblocking)\n\n## Key terms\n\n- NFR — latency/availability/security/cost requirements, gathered first\n- Design doc — short, with alternatives and a rollout plan\n- Contract test — verifies the API contract both sides rely on\n- Expand-and-contract migration — write both, backfill, then retire\n- Error budget thinking — availability targets as business choices"
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nSOLID names five object-oriented design principles that aim to keep modules cohesive, loosely coupled, replaceable, and testable. They are heuristics for managing change, not laws requiring an interface for every class.\n\n## What problem does it solve?\n\nCode becomes expensive when one change crosses many unrelated responsibilities or high-level business rules depend directly on volatile frameworks and infrastructure.\n\n## How it works\n\n- Give a module one coherent reason to change rather than splitting by arbitrary method count.\n- Allow behavior to be extended through stable abstractions when real variation exists.\n- Ensure implementations can replace their abstraction without surprising callers.\n- Keep interfaces focused and make high-level policy depend on abstractions owned near the domain.\n\n## Common mistakes\n\n- Reciting the acronym without an example.\n- Creating an interface for every class before a second implementation exists.\n- Using inheritance that violates the behavior callers expect.\n\n## Key terms\n\n- SRP — One coherent reason for a module to change.\n- Liskov substitution — Implementations preserve the contract of their abstraction.\n- interface segregation — Clients depend only on operations they use.\n- dependency inversion — Policy depends on abstractions, not infrastructure details.",
+      "i18n": {
+        "hu": {
+          "name": "SOLID alapelvek",
+          "description": "Felelősség, helyettesíthetőség, célzott interface-ek és dependency direction.",
+          "studyNotes": "## Mi ez?\n\nA SOLID öt objektumorientált design alapelvet foglal össze, amelyek célja a koherens, lazán csatolt, cserélhető és tesztelhető modulok kialakítása. Ezek a változás kezelését segítő heuristikák, nem olyan törvények, amelyek minden classhoz interface-t követelnek.\n\n## Milyen problémát old meg?\n\nA kód akkor válik drágává, amikor egy változtatás sok, egymástól független felelősségen halad át, vagy a magas szintű üzleti szabályok közvetlenül változékony frameworköktől és infrastruktúrától függenek.\n\n## Hogyan működik\n\n- Egy modulnak egyetlen koherens oka legyen a változásra, ne pusztán a metódusok száma alapján daraboljuk fel.\n- Valós variáció esetén stabil absztrakciókon keresztül bővítsük a viselkedést.\n- Az implementációk meglepetés nélkül helyettesíthessék az absztrakciójukat.\n- Az interface-ek legyenek célzottak, a magas szintű policy pedig a domainhez közeli absztrakcióktól függjön.\n\n## Gyakori hibák\n\n- Példa nélkül felmondani a mozaikszót.\n- Minden classhoz interface-t készíteni még azelőtt, hogy lenne második implementáció.\n- Olyan inheritance-et használni, amely megsérti a hívók által elvárt viselkedést.\n\n## Kulcsfogalmak\n\n- SRP — egy koherens oka legyen a modul változásának\n- Liskov substitution — az implementáció megőrzi az absztrakció szerződését\n- interface segregation — a kliens csak az általa használt műveletektől függ\n- dependency inversion — a policy absztrakcióktól, nem infrastruktúra-részletektől függ"
+        }
+      }
     },
     {
       "id": "layered_clean_architecture",
-      "name": "Layered & Clean Architecture",
-      "description": "Controller/service/domain/infrastructure — and the rule that the domain depends on nothing.",
+      "name": "Layered and Clean Architecture",
+      "description": "Separating delivery, application, domain, and infrastructure concerns.",
       "category": "architecture",
       "relatedTopicIds": [
-        "solid_layers",
+        "solid_layers"
+      ],
+      "studyNotes": "## What is it?\n\nLayered architecture assigns responsibilities to boundaries such as API, application, domain, and infrastructure. Clean architecture adds a dependency rule: source-code dependencies point toward business policy.\n\n## What problem does it solve?\n\nBusiness rules mixed into controllers, ORM models, and external calls are hard to test and become tied to replaceable technology choices.\n\n## How it works\n\n- Controllers translate transport input and output; they should not own core business decisions.\n- Application services coordinate use cases, while domain objects or functions enforce business rules.\n- Infrastructure implements database, queue, and external-service interfaces defined inward.\n- Use the amount of layering justified by domain complexity; simple CRUD may need less ceremony.\n\n## Common mistakes\n\n- Importing ORM types throughout the domain.\n- Creating pass-through layers with no responsibility.\n- Treating a diagram as more important than dependency direction.\n\n## Key terms\n\n- dependency rule — Source dependencies point toward policy.\n- application service — Coordinates a use case.\n- domain — Business rules independent of delivery technology.\n- adapter — Translates between an external technology and an internal interface.",
+      "i18n": {
+        "hu": {
+          "name": "Réteges és Clean Architecture",
+          "description": "Delivery, application, domain és infrastructure felelősségek szétválasztása.",
+          "studyNotes": "## Mi ez?\n\nA layered architecture olyan határokhoz rendeli a felelősségeket, mint API, application, domain és infrastructure. A Clean Architecture ehhez hozzáadja a dependency rule-t: a forráskódbeli függőségek az üzleti policy felé mutatnak.\n\n## Milyen problémát old meg?\n\nA controllerekbe, ORM modellekbe és külső hívásokba kevert üzleti szabályok nehezen tesztelhetők, és cserélhető technológiai döntésekhez kötődnek.\n\n## Hogyan működik\n\n- A controller a transport inputot és outputot fordítja le; nem birtokolhat központi üzleti döntéseket.\n- Az application service-ek use case-eket koordinálnak, a domain objectek vagy functionök pedig üzleti szabályokat érvényesítenek.\n- Az infrastructure a belső rétegekben definiált database-, queue- és external-service interface-eket implementálja.\n- Csak annyi layeringet használunk, amennyit a domain komplexitása indokol; egyszerű CRUD-nál kevesebb ceremony is elég lehet.\n\n## Gyakori hibák\n\n- ORM típusokat importálni az egész domainben.\n- Felelősség nélküli pass-through layereket létrehozni.\n- A diagramot fontosabbnak tekinteni a dependency directionnél.\n\n## Kulcsfogalmak\n\n- dependency rule — a forrásfüggőségek a policy felé mutatnak\n- application service — egy use case koordinálása\n- domain — delivery technológiától független üzleti szabályok\n- adapter — fordítás külső technológia és belső interface között"
+        }
+      }
+    },
+    {
+      "id": "architect_practice",
+      "name": "Architecture Decision Practice",
+      "description": "Clarifying NFRs, documenting choices, and planning safe delivery.",
+      "category": "soft_technical",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nArchitecture practice is the discipline of turning uncertain requirements into explicit decisions, alternatives, risks, and a rollout plan. The architect or technical lead facilitates this work rather than producing diagrams in isolation.\n\n## What problem does it solve?\n\nMany failures begin with unstated latency, availability, security, migration, or ownership assumptions. A short decision process makes those assumptions reviewable before code makes them expensive.\n\n## How it works\n\n- Clarify functional scope and measurable non-functional requirements before selecting technology.\n- Write a concise design document containing context, options, decision, risks, data and API impact, and rollout or rollback.\n- Invite the people who build, operate, secure, and use the system to challenge assumptions.\n- Slice the design into reversible steps and verify it with tests, metrics, and migration checkpoints.\n\n## Common mistakes\n\n- Choosing technology before understanding the workload.\n- Writing a design document that presents one option and no trade-offs.\n- Treating architecture approval as a one-time gate rather than continuous learning.\n\n## Key terms\n\n- NFR — Measurable quality requirement such as latency or availability.\n- ADR — Short record of an architecture decision and its context.\n- reversibility — How easily a decision can be changed.\n- rollout plan — Controlled steps for introducing a change.",
+      "i18n": {
+        "hu": {
+          "name": "Architekturális döntési gyakorlat",
+          "description": "NFR-ek tisztázása, döntések dokumentálása és biztonságos delivery tervezése.",
+          "studyNotes": "## Mi ez?\n\nAz architecture practice annak fegyelmezett folyamata, ahogy a bizonytalan követelményekből explicit döntések, alternatívák, kockázatok és rollout terv lesz. Az architect vagy technical lead ezt a munkát facilitálja, nem elszigetelten rajzol diagramokat.\n\n## Milyen problémát old meg?\n\nSok hiba kimondatlan latency-, availability-, security-, migration- vagy ownership-feltételezésből indul. Egy rövid döntési folyamat review-zhatóvá teszi ezeket, mielőtt a kód drágává tenné a módosításukat.\n\n## Hogyan működik\n\n- Technológiaválasztás előtt tisztázzuk a funkcionális scope-ot és mérhető non-functional requirementeket.\n- Rövid design documentet írunk contexttel, opciókkal, döntéssel, kockázatokkal, data- és API-hatással, rollouttal és rollbackkel.\n- Meghívjuk a rendszer építőit, üzemeltetőit, security felelőseit és felhasználóit a feltételezések megkérdőjelezésére.\n- A designt visszafordítható lépésekre bontjuk, és testekkel, metrikákkal és migration checkpointokkal ellenőrizzük.\n\n## Gyakori hibák\n\n- A workload megértése előtt technológiát választani.\n- Olyan design documentet írni, amely egyetlen opciót és nulla trade-offot mutat.\n- Az architecture approvalt egyszeri gate-nek tekinteni folyamatos tanulás helyett.\n\n## Kulcsfogalmak\n\n- NFR — mérhető minőségi követelmény, például latency vagy availability\n- ADR — rövid feljegyzés egy architecture decisionről és contextjéről\n- reversibility — milyen könnyen változtatható meg egy döntés\n- rollout plan — változtatás kontrollált bevezetési lépései"
+        }
+      }
+    },
+    {
+      "id": "design_documentation",
+      "name": "Design Documents",
+      "description": "Making technical decisions reviewable and durable.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "architect_practice"
+      ],
+      "studyNotes": "## What is it?\n\nA design document is a concise proposal that explains the problem, requirements, alternatives, decision, risks, and delivery plan before or during implementation.\n\n## What problem does it solve?\n\nImportant reasoning otherwise remains in meetings or one person’s memory. Later teams see the result but not why rejected options were unsuitable.\n\n## How it works\n\n- State the goal, non-goals, constraints, and measurable requirements.\n- Show the main components, data ownership, interfaces, and failure paths at the level needed for the decision.\n- Compare realistic alternatives and explain why the chosen option fits better.\n- Record rollout, migration, observability, security, and rollback considerations.\n\n## Common mistakes\n\n- Writing a long implementation manual instead of a decision document.\n- Presenting only the preferred option.\n- Letting the document become stale without recording the final decision.\n\n## Key terms\n\n- context — Problem and constraints surrounding a decision.\n- alternative — A realistic option considered.\n- decision — Chosen approach and rationale.\n- consequence — Positive or negative result of the choice.",
+      "i18n": {
+        "hu": {
+          "name": "Design dokumentumok",
+          "description": "Technikai döntések review-zhatóvá és tartóssá tétele.",
+          "studyNotes": "## Mi ez?\n\nA design document tömör javaslat, amely implementáció előtt vagy közben bemutatja a problémát, követelményeket, alternatívákat, döntést, kockázatokat és delivery tervet.\n\n## Milyen problémát old meg?\n\nEnélkül a fontos érvelés meetingekben vagy egyetlen ember fejében marad. A későbbi csapatok látják az eredményt, de nem tudják, miért voltak alkalmatlanok az elvetett opciók.\n\n## Hogyan működik\n\n- Leírjuk a célt, non-goalokat, korlátokat és mérhető követelményeket.\n- A döntéshez szükséges részletességgel mutatjuk a fő komponenseket, data ownershipet, interface-eket és failure pathokat.\n- Reális alternatívákat hasonlítunk össze, és megindokoljuk, miért illik jobban a kiválasztott megoldás.\n- Rögzítjük a rollout, migration, observability, security és rollback szempontjait.\n\n## Gyakori hibák\n\n- Döntési dokumentum helyett hosszú implementation manualt írni.\n- Csak a preferált opciót bemutatni.\n- Hagyni elavulni a dokumentumot a végső döntés rögzítése nélkül.\n\n## Kulcsfogalmak\n\n- context — a döntést körülvevő probléma és korlátok\n- alternative — reálisan mérlegelt opció\n- decision — kiválasztott megközelítés és indoklás\n- consequence — a választás pozitív vagy negatív következménye"
+        }
+      }
+    },
+    {
+      "id": "safe_schema_migration",
+      "name": "Safe Database Migration",
+      "description": "Expand-and-contract changes compatible with old and new application versions.",
+      "category": "database",
+      "relatedTopicIds": [
+        "architect_practice"
+      ],
+      "studyNotes": "## What is it?\n\nA safe schema migration changes production data structures without requiring every application instance to switch at the same instant. Expand-and-contract keeps intermediate states backward compatible.\n\n## What problem does it solve?\n\nRolling deployments run old and new code together. A destructive rename or required column can break one version while another is still serving traffic.\n\n## How it works\n\n- Expand first by adding compatible columns, tables, or indexes.\n- Deploy code that can read old data and write both forms when necessary.\n- Backfill historical data with monitored, restartable batches.\n- Switch reads, verify behavior, then remove the old shape in a later release.\n\n## Common mistakes\n\n- Renaming or dropping a column in the same release that changes the code.\n- Running one huge blocking backfill.\n- Removing dual-write logic before every consumer has migrated.\n\n## Key terms\n\n- expand-and-contract — Add new shape, migrate, then remove old shape.\n- backfill — Populate new fields for existing records.\n- dual write — Temporarily writing old and new representations.\n- backward compatible — Old clients continue to work.",
+      "i18n": {
+        "hu": {
+          "name": "Biztonságos adatbázis-migráció",
+          "description": "Expand-and-contract változtatások, amelyek kompatibilisek a régi és új alkalmazásverziókkal.",
+          "studyNotes": "## Mi ez?\n\nA biztonságos schema migration production adatstruktúrát változtat anélkül, hogy minden application instance-nak ugyanabban a pillanatban kellene váltania. Az expand-and-contract köztes állapotai backward compatible-ek.\n\n## Milyen problémát old meg?\n\nRolling deployment közben régi és új kód fut együtt. Egy destruktív rename vagy kötelező új oszlop eltörheti az egyik verziót, miközben még forgalmat szolgál ki.\n\n## Hogyan működik\n\n- Először expandelünk: kompatibilis oszlopot, táblát vagy indexet adunk hozzá.\n- Olyan kódot deployolunk, amely képes a régi adatot olvasni, és szükség esetén mindkét formát írja.\n- A történeti adatot monitorozott, újraindítható batchekben backfilleljük.\n- Átváltjuk az olvasást, ellenőrizzük a működést, majd egy későbbi release-ben eltávolítjuk a régi formát.\n\n## Gyakori hibák\n\n- Ugyanabban a release-ben átnevezni vagy törölni az oszlopot, amelyikben a kódot is módosítjuk.\n- Egyetlen hatalmas, blokkoló backfillt futtatni.\n- A dual-write logikát azelőtt eltávolítani, hogy minden consumer migrált volna.\n\n## Kulcsfogalmak\n\n- expand-and-contract — új forma hozzáadása, migráció, majd a régi eltávolítása\n- backfill — meglévő rekordok új mezőinek feltöltése\n- dual write — a régi és új reprezentáció ideiglenes együttes írása\n- backward compatible — a régi kliensek továbbra is működnek"
+        }
+      }
+    },
+    {
+      "id": "testing_strategy",
+      "name": "Testing Strategy",
+      "description": "Choosing unit, integration, contract, and end-to-end tests by risk.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "architect_practice"
+      ],
+      "studyNotes": "## What is it?\n\nA testing strategy decides which behaviors need fast isolated tests, real integration checks, interface verification, and a small number of full-flow tests.\n\n## What problem does it solve?\n\nTesting everything through the browser is slow and fragile, while only unit testing misses database, serialization, and service-contract failures.\n\n## How it works\n\n- Use unit tests for deterministic business logic and edge cases.\n- Use integration tests for database, queue, framework, and external-adapter boundaries.\n- Use contract tests to detect incompatible API changes between independently deployed systems.\n- Keep end-to-end tests for critical user journeys and combine them with production monitoring.\n\n## Common mistakes\n\n- Following a test pyramid as a fixed quota.\n- Mocking the behavior being tested until the test proves nothing.\n- Using many slow E2E tests for logic that belongs in unit tests.\n\n## Key terms\n\n- unit test — Fast isolated behavior check.\n- integration test — Check involving real collaborating infrastructure.\n- contract test — Verification of an interface shared by systems.\n- E2E test — Test of a complete user or system flow.",
+      "i18n": {
+        "hu": {
+          "name": "Tesztelési stratégia",
+          "description": "Unit, integration, contract és end-to-end tesztek megválasztása kockázat alapján.",
+          "studyNotes": "## Mi ez?\n\nA testing strategy eldönti, mely viselkedésekhez kell gyors izolált teszt, valós integration check, interface-verifikáció és kevés teljes flow-t lefedő teszt.\n\n## Milyen problémát old meg?\n\nMindent böngészőn keresztül tesztelni lassú és törékeny, kizárólag unit testtel viszont kimaradnak az adatbázis-, serialization- és service-contract hibák.\n\n## Hogyan működik\n\n- Unit testet használunk determinisztikus business logicra és edge case-ekre.\n- Integration testet adatbázis-, queue-, framework- és external-adapter határokra.\n- Contract testtel észleljük a külön deployolt rendszerek inkompatibilis API-változásait.\n- E2E tesztet a kritikus user journeykre tartunk fenn, production monitoringgal kiegészítve.\n\n## Gyakori hibák\n\n- Fix kvótaként követni a test pyramidet.\n- Addig mockolni a tesztelt viselkedést, amíg a teszt már semmit sem bizonyít.\n- Sok lassú E2E tesztet írni olyan logikához, amely unit testbe tartozik.\n\n## Kulcsfogalmak\n\n- unit test — gyors, izolált viselkedés-ellenőrzés\n- integration test — valós együttműködő infrastruktúrát használó ellenőrzés\n- contract test — rendszerek közös interface-ének verifikációja\n- E2E test — teljes user- vagy system flow tesztje"
+        }
+      }
+    },
+    {
+      "id": "microservices_boundaries",
+      "name": "Microservice Boundaries",
+      "description": "Choosing service boundaries around cohesive business capabilities and independent change.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "microservices",
+        "bounded_context",
+        "conway_law"
+      ],
+      "studyNotes": "## What is it?\n\nA microservice boundary defines which business responsibility, data, and decisions belong inside one independently deployable service. A useful boundary has high cohesion inside and limited coupling outside. It is not simply one service per table, team member, or technical layer.\n\n## What problem does it solve?\n\nPoor boundaries create chatty calls, shared databases, coordinated releases, and changes that cross many repositories. A boundary aligned with a stable business capability lets a team change and deploy most behaviour without negotiating with several other services.\n\n## How it works\n\n- Start from business capabilities, workflows, ownership of rules, and language used by domain experts.\n- Keep data ownership explicit. Other services request behaviour or consume published events instead of writing the data directly.\n- Examine which concepts change together and which need different scaling, security, or availability.\n- Use synchronous calls for immediate answers and events when consumers can react independently.\n- Revisit boundaries when evidence shows constant cross-service coordination. A modular monolith is often a safer starting point when the domain is still unclear.\n\n## Common mistakes\n\n- Splitting by database table or controller\n- Sharing one schema and calling the result independent services\n- Creating a network call for every internal function boundary\n- Choosing microservices before team and domain needs justify the operational cost\n\n## Key terms\n\n- cohesion — related behaviour kept together\n- coupling — degree to which components depend on each other\n- data ownership — one service controls writes and rules for its data\n- business capability — outcome the organization needs to perform",
+      "i18n": {
+        "hu": {
+          "name": "Microservice-határok",
+          "description": "Service-határok megválasztása koherens business capability és független változás körül.",
+          "studyNotes": "## Mi ez?\n\nA microservice boundary meghatározza, mely üzleti felelősség, adat és döntés tartozik egy függetlenül deployolható service-be. Jó határnál belül magas a cohesion, kívül korlátozott a coupling. Nem egy service per tábla, fejlesztő vagy technikai layer.\n\n## Milyen problémát old meg?\n\nRossz határok chatty callokat, shared database-t, koordinált release-eket és sok repositoryt érintő változtatásokat okoznak. Stabil business capabilityhez igazított határ mellett a csapat a legtöbb viselkedést önállóan módosíthatja és deployolhatja.\n\n## Hogyan működik\n\n- Business capabilitykből, workflow-kból, rule ownershipből és domain expert language-ből indulunk ki.\n- Explicit data ownershipet tartunk; más service viselkedést kér vagy publikált eseményt fogyaszt, nem közvetlenül írja az adatot.\n- Megvizsgáljuk, mely fogalmak változnak együtt, és melyek igényelnek eltérő scalinget, securityt vagy availabilityt.\n- Immediate answerhez sync callt, független reakcióhoz eventet használunk.\n- Újragondoljuk a határt, ha állandó cross-service koordinációt látunk. Bizonytalan domainnél gyakran biztonságosabb a modular monolith.\n\n## Gyakori hibák\n\n- Database table vagy controller szerint szétvágni.\n- Egy közös sémát használni, majd independent service-nek nevezni az eredményt.\n- Minden belső function boundaryból network callt csinálni.\n- Microservice-t választani, mielőtt a csapat és domain indokolná az operational costot.\n\n## Kulcsfogalmak\n\n- cohesion — összetartozó viselkedés együtt tartása\n- coupling — komponensek egymástól való függésének mértéke\n- data ownership — egy service kontrollálja az adat írását és szabályait\n- business capability — a szervezet által végrehajtandó üzleti képesség"
+        }
+      }
+    },
+    {
+      "id": "bounded_context",
+      "name": "Bounded Context",
+      "description": "A domain boundary inside which a model and its language have one consistent meaning.",
+      "category": "architecture",
+      "relatedTopicIds": [
         "microservices_boundaries"
       ],
-      "studyNotes": "## What is it?\n\nLayered architecture assigns each layer of a backend one job: controller/API (receive and validate requests), application/service (orchestrate the use case), domain (the business rules), infrastructure (database, queues, external APIs). Clean architecture adds the dependency rule on top: dependencies point INWARD — the domain depends on nothing outside itself.\n\n## What problem does it solve?\n\nBusiness logic smeared across controllers and SQL queries cannot be tested without booting the whole stack, and cannot survive a framework or database change. Layering isolates the part that is actually valuable — the business rules — from the parts that are replaceable.\n\n## How it works\n\nThe layer contract: controllers hold NO business logic — they parse the request, call a service, shape the response. The service orchestrates; the domain decides; infrastructure executes.\n\nThe dependency rule makes it \"clean\": the domain never imports the ORM, the web framework, or anything infrastructural. Where the domain needs data, IT defines an interface (a repository); the infrastructure layer implements it. Consequences: business rules are unit-testable with no database, and swapping PostgreSQL or the framework touches only the outer ring.\n\nThe honest cost: ceremony. Interfaces, mapping between layer models, more files. For a complex, long-lived domain it pays for itself; for a thin CRUD service it is overkill — three layers of indirection wrapping a SELECT. Say the trade-off, not just the diagram.\n\n## Common mistakes\n\n- Business logic in controllers\n- The domain importing the ORM directly — the dependency rule inverted\n- Full clean-architecture ceremony on a thin CRUD service\n- Layer models blurred together until every change crosses all layers\n\n## Key terms\n\n- Dependency rule — dependencies point inward; the domain imports nothing\n- Repository interface — the domain's data contract, implemented outside\n- Controller — request handling only, never business rules\n- Ceremony — the cost side; justified by domain complexity"
+      "studyNotes": "## What is it?\n\nA bounded context is a boundary within which a domain model and its terms have a specific, consistent meaning. The same real-world word may represent different models in different contexts. For example, “customer” in billing may mean an account responsible for payment, while in support it may mean the person currently requesting help.\n\n## What problem does it solve?\n\nLarge domains become confusing when one universal model tries to satisfy every team and workflow. Fields accumulate unrelated meanings, rules conflict, and changes for one area break another. Bounded contexts allow several focused models and make translation between them explicit.\n\n## How it works\n\n- Identify groups of rules and language that change together.\n- Define which context owns each model and decision.\n- Describe relationships between contexts and translate data at the boundary.\n- A bounded context can be implemented as a module, service, or several deployable components; it is a modelling boundary, not automatically a microservice.\n- Context boundaries often provide useful candidates for service boundaries, but deployment decisions also depend on scale, ownership, and operational cost.\n\n## Common mistakes\n\n- Treating a bounded context as another name for a microservice\n- Forcing one shared domain object across unrelated business areas\n- Copying data without defining ownership and translation\n- Drawing boundaries only from the organization chart\n\n## Key terms\n\n- domain model — concepts and rules used to solve a business problem\n- ubiquitous language — shared terms used by developers and domain experts\n- context map — description of relationships between contexts\n- anti-corruption layer — translation that protects one model from another",
+      "i18n": {
+        "hu": {
+          "name": "Bounded context",
+          "description": "Domainhatár, amelyen belül egy modell és nyelv következetes jelentéssel bír.",
+          "studyNotes": "## Mi ez?\n\nA bounded context olyan határ, amelyen belül egy domain model és kifejezései konkrét, következetes jelentéssel bírnak. Ugyanaz a valós szó különböző contextben más modellt jelenthet: a „customer” billingben fizető account, supportban pedig segítséget kérő személy lehet.\n\n## Milyen problémát old meg?\n\nNagy domainben egy univerzális modell minden csapat és workflow igényeit próbálja kielégíteni. A mezők egymástól idegen jelentéseket gyűjtenek, a szabályok ütköznek, és egy terület változása eltör egy másikat. A bounded context több fókuszált modellt enged, és explicitté teszi a fordítást közöttük.\n\n## Hogyan működik\n\n- Megkeressük az együtt változó szabály- és nyelvcsoportokat.\n- Meghatározzuk, melyik context birtokolja az egyes modelleket és döntéseket.\n- Leírjuk a contextkapcsolatokat, és a határon lefordítjuk az adatot.\n- A bounded context lehet module, service vagy több deployolható komponens; modellezési határ, nem automatikusan microservice.\n- A context boundary jó service boundary-jelölt lehet, de deploymentnél a skála, ownership és operational cost is számít.\n\n## Gyakori hibák\n\n- A bounded contextet a microservice szinonimájának tekinteni.\n- Egy shared domain objectet erőltetni egymástól független üzleti területekre.\n- Adatot másolni ownership és translation szabályok nélkül.\n- Kizárólag az org chart alapján határokat rajzolni.\n\n## Kulcsfogalmak\n\n- domain model — üzleti probléma megoldására használt fogalmak és szabályok\n- ubiquitous language — fejlesztők és domain expertek közös nyelve\n- context map — contextkapcsolatok leírása\n- anti-corruption layer — egyik modellt a másiktól védő fordítási réteg"
+        }
+      }
+    },
+    {
+      "id": "cqrs_pattern",
+      "name": "CQRS",
+      "description": "Separating command and query models when read and write needs differ enough to justify it.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "bounded_context",
+        "event_driven",
+        "transactions"
+      ],
+      "studyNotes": "## What is it?\n\nCQRS means Command Query Responsibility Segregation. Commands request a state change. Queries return data without changing business state. The pattern can be as small as separate code paths in one application or as large as different read and write models with asynchronous projection.\n\n## What problem does it solve?\n\nA single model can become difficult when write rules are rich but reads need different shapes, indexes, or scale. CQRS lets each side use a model suited to its job. The benefit must justify added consistency, synchronization, and operational complexity.\n\n## How it works\n\n- A command is validated and handled by the write side.\n- The write side stores authoritative state and may publish events.\n- Read models are built for specific queries and can be denormalized.\n- If updates are asynchronous, read models may be temporarily stale.\n- CQRS does not require event sourcing, separate databases, or microservices.\n- Start with simple separation and add independent infrastructure only when measured needs demand it.\n\n## Common mistakes\n\n- Equating CQRS with event sourcing\n- Creating two databases for a simple CRUD system\n- Hiding eventual consistency from product requirements\n- Allowing queries to make business state changes\n\n## Key terms\n\n- command — request to change state\n- query — request to read data\n- read model — data shaped for a query\n- projection — process that updates a read model",
+      "i18n": {
+        "hu": {
+          "name": "CQRS",
+          "description": "Command és query modellek szétválasztása, amikor az olvasási és írási igények ezt indokolják.",
+          "studyNotes": "## Mi ez?\n\nA CQRS jelentése Command Query Responsibility Segregation. A command állapotváltozást kér, a query pedig üzleti állapot módosítása nélkül ad vissza adatot. A minta lehet két code path egy alkalmazásban, vagy külön read és write model aszinkron projectionnel.\n\n## Milyen problémát old meg?\n\nEgyetlen modell nehézkessé válhat, ha az írási szabályok összetettek, az olvasás pedig eltérő alakot, indexet vagy skálát igényel. A CQRS mindkét oldalt a saját feladatához igazíthatja, de a haszonnak indokolnia kell az új consistency-, synchronization- és operational complexityt.\n\n## Hogyan működik\n\n- A commandot a write side validálja és kezeli.\n- A write side tárolja az authoritative state-et, és eventet publikálhat.\n- A read modeleket konkrét querykre építjük, és denormalizálhatjuk.\n- Aszinkron update esetén a read model ideiglenesen stale lehet.\n- A CQRS nem követel event sourcingot, külön adatbázist vagy microservice-t.\n- Egyszerű szeparációval indulunk, és csak mért igény esetén adunk külön infrastruktúrát.\n\n## Gyakori hibák\n\n- A CQRS-t event sourcinggal azonosítani.\n- Egyszerű CRUD rendszerhez két adatbázist létrehozni.\n- Elrejteni az eventual consistencyt a product requirementek elől.\n- Queryknek üzleti state-et módosítani engedni.\n\n## Kulcsfogalmak\n\n- command — állapotváltozást kérő művelet\n- query — adatot olvasó művelet\n- read model — konkrét queryhez formált adat\n- projection — read modelt frissítő folyamat"
+        }
+      }
+    },
+    {
+      "id": "conway_law",
+      "name": "Conway’s Law",
+      "description": "How communication structures influence the architecture organizations produce.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "microservices_boundaries"
+      ],
+      "studyNotes": "## What is it?\n\nConway’s Law is the observation that system structures tend to mirror the communication structures of the organizations that design them. If work requires constant coordination between teams, the software often develops matching boundaries and interfaces. The law is an influence, not a deterministic technical rule.\n\n## What problem does it solve?\n\nAn architecture may look modular on a diagram but remain difficult to change if ownership and communication do not match it. Shared components with unclear ownership, hand-offs between specialist silos, and services that need coordinated releases are often organizational as well as technical problems.\n\n## How it works\n\n- Observe which teams communicate for each change.\n- Give a team enough ownership to deliver and operate a meaningful capability.\n- Align interfaces and service boundaries with desired collaboration patterns.\n- The inverse Conway manoeuvre deliberately changes team structure to encourage a target architecture.\n- Keep necessary collaboration; the goal is not to eliminate communication but to avoid accidental coordination for routine changes.\n\n## Common mistakes\n\n- Using Conway’s Law as proof that the current organization is permanent\n- Redrawing service boundaries without changing ownership or incentives\n- Creating isolated teams that cannot share standards or learning\n- Assuming every team must own exactly one service\n\n## Key terms\n\n- communication path — route through which teams coordinate\n- ownership — responsibility for change and operation\n- inverse Conway manoeuvre — team design used to encourage an architecture\n- cognitive load — amount of system knowledge a team must hold",
+      "i18n": {
+        "hu": {
+          "name": "Conway törvénye",
+          "description": "Hogyan befolyásolja a kommunikációs struktúra a létrejövő architektúrát.",
+          "studyNotes": "## Mi ez?\n\nConway törvénye azt figyeli meg, hogy a rendszerek struktúrája hajlamos tükrözni az őket tervező szervezetek kommunikációs struktúráját. Ha a munka állandó csapatközi koordinációt igényel, a szoftverben is hasonló határok és interface-ek alakulnak ki. Ez befolyás, nem determinisztikus technikai szabály.\n\n## Milyen problémát old meg?\n\nEgy architecture diagramon modulárisnak tűnhet, mégis nehezen változtatható, ha az ownership és kommunikáció nem illeszkedik hozzá. Az unclear ownershipű shared componentek, specialist silo-k közti hand-offok és koordinált release-t igénylő service-ek szervezeti és technikai problémák is.\n\n## Hogyan működik\n\n- Megfigyeljük, mely csapatoknak kell kommunikálniuk egy-egy változtatáshoz.\n- A csapatnak elég ownershipet adunk egy értelmes capability deliveryjéhez és operationjéhez.\n- Az interface-eket és service boundarykat a kívánt collaboration patternhöz igazítjuk.\n- Az inverse Conway manoeuvre szándékosan változtatja a team structure-t egy target architecture elősegítésére.\n- Megtartjuk a szükséges együttműködést; nem a kommunikáció megszüntetése, hanem a routine change véletlen koordinációjának csökkentése a cél.\n\n## Gyakori hibák\n\n- Conway törvényével bizonyítani, hogy a jelenlegi szervezet örök.\n- Service boundarykat újrarajzolni ownership és incentive változtatása nélkül.\n- Olyan izolált csapatokat létrehozni, amelyek nem oszthatnak meg standardokat vagy tanulást.\n- Feltételezni, hogy minden csapat pontosan egy service-t birtokol.\n\n## Kulcsfogalmak\n\n- communication path — út, amelyen a csapatok koordinálnak\n- ownership — felelősség a változtatásért és működtetésért\n- inverse Conway manoeuvre — team design egy kívánt architecture ösztönzésére\n- cognitive load — a csapat által fejben tartandó rendszerismeret mennyisége"
+        }
+      }
+    },
+    {
+      "id": "containers_runtime",
+      "name": "Container Runtime Basics",
+      "description": "How container images become isolated processes and what isolation does and does not provide.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "container_orchestration",
+        "deployment",
+        "kubernetes_secrets"
+      ],
+      "studyNotes": "## What is it?\n\nA container is an isolated application process created from an image. The image packages the application, runtime files, and default configuration. Containers share the host operating-system kernel, so they are lighter than virtual machines but do not provide the same isolation boundary as a separate guest operating system.\n\n## What problem does it solve?\n\nApplications often behave differently across developer machines, test environments, and production hosts. A container image provides a repeatable package and a clear process boundary. It also makes dependencies and startup configuration explicit.\n\n## How it works\n\n- An image is built from read-only layers and identified by a tag or immutable digest.\n- A runtime creates a container process with namespaces, resource controls, a writable layer, and configured networking.\n- Environment variables, mounted files, or platform configuration provide deployment-specific values.\n- Container filesystems are disposable. Persistent data needs an external database, object store, or mounted volume.\n- CPU and memory limits reduce noisy-neighbour risk, but limits need monitoring and realistic sizing.\n- A small image, non-root user, limited Linux capabilities, and regular base-image updates reduce attack surface.\n\n## Common mistakes\n\n- Calling a container a virtual machine with its own kernel\n- Storing important data only in the writable container layer\n- Baking credentials and environment-specific settings into the image\n- Assuming process isolation removes the need for host and runtime security\n\n## Key terms\n\n- image — immutable package used to create containers\n- runtime — software that creates and manages container processes\n- namespace — kernel feature that isolates process views\n- resource limit — CPU or memory boundary applied to a container",
+      "i18n": {
+        "hu": {
+          "name": "Container runtime alapok",
+          "description": "Hogyan lesz az image-ből izolált process, és mire elég, illetve nem elég az izoláció.",
+          "studyNotes": "## Mi ez?\n\nA container egy image-ből létrehozott, izolált application process. Az image csomagolja az alkalmazást, runtime fájlokat és default configurationt. A containerek megosztják a host kernelét, ezért könnyebbek a virtual machine-eknél, de nem adnak ugyanolyan isolation boundaryt, mint egy külön guest OS.\n\n## Milyen problémát old meg?\n\nAz alkalmazások eltérően viselkedhetnek developer gépen, test environmentben és production hoston. A container image ismételhető csomagot és világos process boundaryt ad, valamint explicitté teszi a dependencyket és startup configurationt.\n\n## Hogyan működik\n\n- Az image read-only layerekből épül, és tag vagy immutable digest azonosítja.\n- A runtime namespace-ekkel, resource controlokkal, writable layerrel és networkinggel indít process-t.\n- Environment variable, mounted file vagy platform configuration ad deployment-specifikus értéket.\n- A container filesystem eldobható; persistent data külső database-t, object store-t vagy volume-ot igényel.\n- CPU- és memory limit csökkenti a noisy-neighbour kockázatot, de monitorozni és reálisan méretezni kell.\n- Kis image, non-root user, korlátozott Linux capability és rendszeres base-image update csökkenti az attack surface-t.\n\n## Gyakori hibák\n\n- A containert saját kernelű virtual machine-nek nevezni.\n- Fontos adatot csak a writable container layerben tárolni.\n- Credentialt és environment-specific settinget az image-be sütni.\n- A process isolationt a host- és runtime-security helyettesítőjének tekinteni.\n\n## Kulcsfogalmak\n\n- image — immutable csomag containerek létrehozásához\n- runtime — container processeket létrehozó és kezelő szoftver\n- namespace — processnézeteket izoláló kernelfeature\n- resource limit — containerre alkalmazott CPU- vagy memoryhatár"
+        }
+      }
+    },
+    {
+      "id": "kubernetes_secrets",
+      "name": "Kubernetes Secret Security",
+      "description": "Using Kubernetes Secrets with encryption, least privilege, rotation, and external secret systems.",
+      "category": "security",
+      "relatedTopicIds": [
+        "containers_runtime",
+        "security_basics"
+      ],
+      "studyNotes": "## What is it?\n\nA Kubernetes Secret is an API object for values such as credentials, tokens, and keys. It separates sensitive configuration from normal application configuration and can be mounted as files or exposed to a container. The stored values are commonly Base64 encoded, which is not encryption.\n\n## What problem does it solve?\n\nPutting a password directly in an image or source repository spreads it into logs, caches, and build artifacts. Secrets provide controlled distribution, but default storage and broad permissions can still expose the data. Security depends on the cluster configuration and access model.\n\n## How it works\n\n- Enable encryption at rest for Secret data stored in the cluster data store.\n- Use least-privilege RBAC so only required workloads and operators can read a Secret.\n- Avoid granting list or watch permissions broadly because they can reveal many values.\n- Restrict which pods may run under powerful service accounts.\n- Rotate credentials and design applications to reload or restart safely.\n- Consider an external secret manager and short-lived workload identity for stronger lifecycle control.\n- Do not commit Secret manifests containing real values to source control.\n\n## Common mistakes\n\n- Treating Base64 as encryption\n- Assuming the Secret object is secure with default cluster settings\n- Giving a namespace-wide service account access to every Secret\n- Rotating a value without checking how running workloads receive it\n\n## Key terms\n\n- Secret — Kubernetes object for sensitive configuration\n- encryption at rest — encryption of stored cluster data\n- RBAC — role-based access control for API permissions\n- workload identity — short-lived identity assigned to a running workload",
+      "i18n": {
+        "hu": {
+          "name": "Kubernetes Secret biztonság",
+          "description": "Kubernetes Secretek használata encryptionnel, least privilege-dzsel, rotationnel és external secret systemmel.",
+          "studyNotes": "## Mi ez?\n\nA Kubernetes Secret credential, token és key tárolására szolgáló API object. Elkülöníti a sensitive configurationt a normál application configurationtől, és file-ként mountolható vagy containernek adható. Az értékeket gyakran Base64 kódolja, ami nem encryption.\n\n## Milyen problémát old meg?\n\nSource repositoryba vagy image-be írt password logokba, cache-ekbe és build artifactokba kerülhet. A Secret kontrollált distributiont ad, de a default storage és túl tág permission továbbra is felfedheti. A biztonság cluster configurationtől és access modeltől függ.\n\n## Hogyan működik\n\n- Encryption at restet engedélyezünk a cluster data store-ban tárolt Secret adatra.\n- Least-privilege RBAC-kal csak szükséges workload és operator olvashatja a Secretet.\n- Nem adunk széles list vagy watch permissiont, mert sok értéket felfedhet.\n- Korlátozzuk, mely pod futtatható erős service accounttal.\n- Credentialt rotálunk, az alkalmazást pedig biztonságos reloadra vagy restartra tervezzük.\n- Erősebb lifecycle controlhoz external secret managert és short-lived workload identityt mérlegelünk.\n- Valós értéket tartalmazó Secret manifestet nem commitolunk.\n\n## Gyakori hibák\n\n- A Base64-et encryptionnek tekinteni.\n- A Secret objectet default cluster setting mellett automatikusan biztonságosnak gondolni.\n- Namespace-wide service accountnak minden Secrethez hozzáférést adni.\n- Értéket rotálni anélkül, hogy ellenőriznénk, hogyan kapja meg a futó workload.\n\n## Kulcsfogalmak\n\n- Secret — sensitive configuration Kubernetes objectje\n- encryption at rest — tárolt clusteradat titkosítása\n- RBAC — szerepköralapú API permission control\n- workload identity — futó workloadhoz rendelt rövid élettartamú identity"
+        }
+      }
+    },
+    {
+      "id": "container_orchestration",
+      "name": "Container Orchestration",
+      "description": "Managing desired state, scheduling, health, networking, scaling, and rollout for container workloads.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "containers_runtime",
+        "deployment",
+        "scalability",
+        "kubernetes_secrets"
+      ],
+      "studyNotes": "## What is it?\n\nContainer orchestration coordinates container workloads across a group of machines. A platform such as Kubernetes accepts a desired state, schedules processes, provides stable networking, replaces failed instances, and manages controlled rollouts. It manages workload lifecycle; it does not make application code automatically reliable.\n\n## What problem does it solve?\n\nRunning one container manually is simple. Running many replicas across changing machines creates problems around placement, discovery, recovery, configuration, and deployment. Manual host-by-host operations become slow and inconsistent as the system grows.\n\n## How it works\n\n- A controller compares desired state with observed state and takes corrective action.\n- A scheduler chooses machines based on available resources and placement rules.\n- Readiness checks decide whether an instance may receive traffic; liveness checks can trigger restart after a genuine stuck condition.\n- A service or similar abstraction provides a stable endpoint for changing replicas.\n- Deployment controllers create replicas and perform rolling updates or rollback.\n- Autoscaling changes replica count from demand signals, but capacity limits and backpressure are still required.\n- Persistent workloads need explicit storage, backup, and failure-domain design.\n\n## Common mistakes\n\n- Using liveness restarts to hide slow dependencies or bad readiness logic\n- Treating replica count as proof of high availability\n- Deploying stateful software without backup and recovery design\n- Adopting an orchestrator before the operational need justifies its complexity\n\n## Key terms\n\n- desired state — declared target configuration for a workload\n- scheduler — component that chooses where a workload runs\n- readiness — signal that an instance can receive traffic\n- rolling update — gradual replacement of old replicas",
+      "i18n": {
+        "hu": {
+          "name": "Container orchestration",
+          "description": "Desired state, scheduling, health, networking, scaling és rollout kezelése container workloadoknál.",
+          "studyNotes": "## Mi ez?\n\nA container orchestration több gépen koordinálja a container workloadokat. A Kuberneteshez hasonló platform desired state-et fogad, processeket schedule-öl, stabil networkinget ad, lecseréli a hibás instance-okat és kontrollált rolloutot kezel. A workload lifecycle-t menedzseli, de az application code-ot nem teszi automatikusan reliable-lá.\n\n## Milyen problémát old meg?\n\nEgy containert kézzel futtatni egyszerű. Sok replica változó gépeken placement-, discovery-, recovery-, configuration- és deploymentproblémákat hoz. A hostonkénti kézi operation a rendszer növekedésével lassú és inkonzisztens.\n\n## Hogyan működik\n\n- A controller összehasonlítja a desired és observed state-et, majd corrective actiont végez.\n- A scheduler erőforrás és placement rule alapján választ gépet.\n- Readiness check dönti el, kaphat-e forgalmat az instance; liveness check valódi beragadásnál restartot válthat ki.\n- Service vagy hasonló abstraction stabil endpointot ad változó replicákhoz.\n- Deployment controller replicákat hoz létre, rolling update-et és rollbacket kezel.\n- Autoscaling demand signal alapján változtat replica countot, de capacity limit és backpressure továbbra is kell.\n- Persistent workload explicit storage-, backup- és failure-domain designt igényel.\n\n## Gyakori hibák\n\n- Liveness restarttal elfedni a lassú dependencyt vagy hibás readiness logicot.\n- A replica countot high availability bizonyítékának tekinteni.\n- Stateful software-t backup és recovery design nélkül deployolni.\n- Orchestratort választani az operational need által indokolt komplexitás előtt.\n\n## Kulcsfogalmak\n\n- desired state — workload deklarált target configurationje\n- scheduler — komponens, amely kiválasztja a workload futási helyét\n- readiness — jelzés, hogy az instance fogadhat forgalmat\n- rolling update — régi replicák fokozatos lecserélése"
+        }
+      }
     }
   ],
   "questions": [
     {
-      "id": "arch_boundaries_001",
-      "title": "Drawing service boundaries",
-      "prompt": "The team wants to split a monolith into microservices. How do you decide where the boundaries go — and when would you say no?",
-      "roles": [
-        "backend_developer",
-        "backend_architect",
-        "solution_architect"
-      ],
-      "modes": [
-        "system_design",
-        "tradeoff_decision"
-      ],
-      "topicIds": [
-        "microservices_boundaries"
-      ],
-      "expectedDurationSeconds": 240,
-      "thinkingTimeSeconds": 60,
-      "answerStructureHint": "Boundary criteria (ownership, data, contract) → domain language / bounded contexts → Conway's Law → costs of too many services.",
-      "expectedPoints": [
-        {
-          "id": "mb_criteria",
-          "label": "Boundary criteria",
-          "description": "Clean ownership, API contract, data boundary, separate scaling, monitoring + deploy pipeline.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 4,
-            "backend_architect": 5,
-            "solution_architect": 5
-          },
-          "acceptedSignals": [
-            "ownership",
-            "data boundary",
-            "api contract",
-            "scale separately",
-            "deployable"
-          ]
-        },
-        {
-          "id": "mb_ddd",
-          "label": "Domain-driven boundaries",
-          "description": "Bounded contexts around business concepts; domain language first.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 4,
-            "backend_architect": 5,
-            "solution_architect": 5
-          },
-          "acceptedSignals": [
-            "bounded context",
-            "domain",
-            "business concepts",
-            "ubiquitous language",
-            "aggregate"
-          ]
-        },
-        {
-          "id": "mb_conway",
-          "label": "Conway's Law",
-          "description": "Team communication shapes the system; boundaries are an org question too.",
-          "importance": "important",
-          "roleWeight": {
-            "backend_developer": 4,
-            "backend_architect": 5,
-            "solution_architect": 5
-          },
-          "acceptedSignals": [
-            "conway",
-            "team structure",
-            "communication",
-            "org",
-            "team boundaries"
-          ]
-        },
-        {
-          "id": "mb_costs",
-          "label": "Names the costs",
-          "description": "Too many services → latency, debugging pain; monolith/modular monolith can be right.",
-          "importance": "critical",
-          "roleWeight": {
-            "backend_developer": 4,
-            "backend_architect": 5,
-            "solution_architect": 5
-          },
-          "acceptedSignals": [
-            "too many services",
-            "latency",
-            "debugging",
-            "not everything small",
-            "modular monolith",
-            "say no"
-          ]
-        }
-      ],
-      "followUps": [
-        {
-          "id": "mb_cqrs_fu",
-          "trigger": {
-            "type": "always"
-          },
-          "prompt": "Where does CQRS fit into this picture, and when would you avoid it?",
-          "expectedPoints": [
-            {
-              "id": "mb_cqrs",
-              "label": "CQRS judgment",
-              "description": "Separate write/read models only when needs genuinely diverge; brings eventual consistency.",
-              "importance": "important",
-              "roleWeight": {
-                "backend_developer": 4,
-                "backend_architect": 5,
-                "solution_architect": 5
-              },
-              "acceptedSignals": [
-                "cqrs",
-                "read model",
-                "write model",
-                "not a default",
-                "eventual consistency"
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "arch_layers_001",
+      "id": "hybrid_where_does_the_business_logic_live",
       "title": "Where does the business logic live?",
       "prompt": "Describe how you layer a backend service and why the domain should not depend on the framework or database.",
       "roles": [
@@ -207,146 +253,241 @@
         "solid_layers",
         "layered_clean_architecture"
       ],
-      "expectedDurationSeconds": 200,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
       "expectedPoints": [
         {
-          "id": "sl_layers",
+          "id": "hybrid_where_does_the_business_logic_live_point_1",
           "label": "Layer responsibilities",
-          "description": "Controller handles requests only; service/application orchestrates; domain holds rules; infrastructure adapts.",
+          "description": "Controller handles requests only; service/ application orchestrates; domain holds rules; infrastructure adapts.",
           "importance": "critical",
           "roleWeight": {
-            "backend_developer": 4,
+            "backend_developer": 5,
             "backend_architect": 5,
             "solution_architect": 5
           },
           "acceptedSignals": [
-            "controller",
-            "no business logic in the controller",
-            "service layer",
-            "domain layer",
-            "infrastructure"
+            "application service",
+            "domain",
+            "layer responsibilities",
+            "controller handles requests",
+            "service",
+            "application orchestrates",
+            "domain holds rules",
+            "infrastructure adapts"
           ]
         },
         {
-          "id": "sl_dependency",
+          "id": "hybrid_where_does_the_business_logic_live_point_2",
           "label": "Dependency rule",
           "description": "Domain framework/DB/UI-independent; adapters + repository interfaces at the edges.",
           "importance": "critical",
           "roleWeight": {
-            "backend_developer": 4,
+            "backend_developer": 5,
             "backend_architect": 5,
             "solution_architect": 5
           },
           "acceptedSignals": [
-            "depends on nothing",
-            "framework independent",
-            "repository interface",
-            "adapters",
-            "dependency rule"
+            "dependency rule",
+            "adapter",
+            "domain framework",
+            "ui-independent",
+            "adapters repository interfaces at",
+            "interfaces at the edges",
+            "dependency"
           ]
         },
         {
-          "id": "sl_solid",
+          "id": "hybrid_where_does_the_business_logic_live_point_3",
           "label": "Principles as means",
           "description": "SOLID = small responsibility + loose coupling + testability; patterns only where they simplify.",
           "importance": "important",
           "roleWeight": {
             "backend_developer": 4,
-            "backend_architect": 5,
-            "solution_architect": 5
+            "backend_architect": 4,
+            "solution_architect": 4
           },
           "acceptedSignals": [
-            "single responsibility",
-            "loosely coupled",
-            "testable",
-            "patterns when they simplify",
-            "not for the sake"
+            "solid principles",
+            "principles as means",
+            "principles",
+            "solid small responsibility loose",
+            "responsibility loose coupling testability",
+            "patterns only where they",
+            "only where they simplify"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "hybrid_where_does_the_business_logic_live_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give one production example of Where does the business logic live? and one common misuse.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hol éljen az üzleti logika?",
+          "prompt": "Mutasd be, hogyan rétegeznél egy backend service-t, és miért ne függjön a domain a frameworktől vagy adatbázistól.",
+          "expectedPoints": {
+            "hybrid_where_does_the_business_logic_live_point_1": {
+              "label": "A layerek felelőssége",
+              "description": "A controller csak requestet kezel; az application service koordinál; a domain szabályt tart; az infrastructure adapterként működik."
+            },
+            "hybrid_where_does_the_business_logic_live_point_2": {
+              "label": "Dependency rule",
+              "description": "A domain független a frameworktől, adatbázistól és UI-tól; adapter és repository interface található a széleken."
+            },
+            "hybrid_where_does_the_business_logic_live_point_3": {
+              "label": "Az alapelveket eszközként használja",
+              "description": "A SOLID célja a fókuszált felelősség, loose coupling és testability; pattern csak ott kell, ahol egyszerűsít."
+            }
+          },
+          "followUps": {
+            "hybrid_where_does_the_business_logic_live_followup_1": "Adj egy production példát arra, hol éljen a business logic, és egy gyakori félrehasználást."
+          },
+          "answerStructureHint": "Felelősségek rétegenként, dependency rule, domain-owned interface-ek, majd a ceremony trade-offja."
+        }
+      }
     },
     {
-      "id": "arch_runtime_001",
-      "title": "Gateway, load balancer, ingress — who does what?",
-      "prompt": "In a Kubernetes deployment, explain the difference between an API gateway, a load balancer, an ingress, and service discovery — and what makes a rollout zero-downtime.",
+      "id": "manual_separating_business_logic_from_infrastructure",
+      "title": "Separating business logic from infrastructure",
+      "prompt": "A controller validates requests, applies pricing rules, and writes SQL directly. How would you reorganize it, and when would full Clean Architecture be too much?",
       "roles": [
         "backend_developer",
         "backend_architect",
         "solution_architect"
       ],
       "modes": [
-        "concept_check",
-        "system_design"
+        "design_review",
+        "tradeoff_decision"
       ],
       "topicIds": [
-        "containers_runtime"
+        "layered_clean_architecture"
       ],
-      "expectedDurationSeconds": 220,
+      "expectedDurationSeconds": 180,
       "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Identify responsibilities, move business rules inward, invert infrastructure dependencies, then discuss ceremony.",
       "expectedPoints": [
         {
-          "id": "cr_gateway_lb",
-          "label": "Gateway = policy, LB = distribution",
-          "description": "Gateway: auth/rate limit/routing/versioning for external APIs; LB spreads pods and drops unhealthy ones.",
+          "id": "manual_separating_business_logic_from_infrastructure_point_1",
+          "label": "Separates request handling from business rules",
+          "description": "Keeps controllers focused on transport concerns and moves use-case logic into application or domain code.",
           "importance": "critical",
           "roleWeight": {
-            "backend_developer": 4,
+            "backend_developer": 5,
             "backend_architect": 5,
             "solution_architect": 5
           },
           "acceptedSignals": [
-            "gateway",
-            "rate limit",
-            "auth",
-            "control point",
-            "load balancer distributes",
-            "unhealthy"
+            "thin controller",
+            "business rules",
+            "application service",
+            "domain logic",
+            "request handling business rules"
           ]
         },
         {
-          "id": "cr_discovery",
-          "label": "Discovery + ingress",
-          "description": "Call services by name (payment-service); Ingress routes external HTTP into the cluster.",
+          "id": "manual_separating_business_logic_from_infrastructure_point_2",
+          "label": "Keeps the domain independent",
+          "description": "The domain does not import the web framework, ORM, or database-specific types.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "domain independent",
+            "no orm dependency",
+            "framework independent",
+            "pure domain",
+            "keeps the domain independent"
+          ]
+        },
+        {
+          "id": "manual_separating_business_logic_from_infrastructure_point_3",
+          "label": "Uses inward-owned abstractions",
+          "description": "Defines repository or gateway interfaces near the use case and implements them in infrastructure.",
           "importance": "important",
           "roleWeight": {
             "backend_developer": 4,
-            "backend_architect": 5,
-            "solution_architect": 5
+            "backend_architect": 4,
+            "solution_architect": 4
           },
           "acceptedSignals": [
-            "service name",
-            "service discovery",
-            "ingress",
-            "external traffic",
-            "routes into the cluster"
+            "repository interface",
+            "dependency inversion",
+            "gateway interface",
+            "infrastructure adapter",
+            "inward-owned abstractions"
           ]
         },
         {
-          "id": "cr_zero_downtime",
-          "label": "Zero-downtime mechanics",
-          "description": "Readiness gates traffic to new pods; graceful shutdown drains old ones; rollback available.",
-          "importance": "critical",
+          "id": "manual_separating_business_logic_from_infrastructure_point_4",
+          "label": "Owns the ceremony trade-off",
+          "description": "Explains that a thin CRUD service may not justify every layer and mapping boundary.",
+          "importance": "important",
           "roleWeight": {
             "backend_developer": 4,
-            "backend_architect": 5,
-            "solution_architect": 5
+            "backend_architect": 4,
+            "solution_architect": 4
           },
           "acceptedSignals": [
-            "readiness",
-            "liveness",
-            "graceful shutdown",
-            "rolling update",
-            "drain",
-            "rollback"
+            "crud service",
+            "extra ceremony",
+            "over engineering",
+            "domain complexity",
+            "the ceremony trade-off"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "manual_separating_business_logic_from_infrastructure_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which change would this structure make easier to test or replace, and which layer would own it?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Business logic elválasztása az infrastruktúrától",
+          "prompt": "Egy controller requestet validál, pricing rule-t alkalmaz és közvetlenül SQL-t ír. Hogyan szerveznéd át, és mikor lenne túl sok a teljes Clean Architecture?",
+          "expectedPoints": {
+            "manual_separating_business_logic_from_infrastructure_point_1": {
+              "label": "Elválasztja a request handlinget az üzleti szabályoktól",
+              "description": "A controllert transport concernre korlátozza, a use-case logicot application vagy domain kódba viszi."
+            },
+            "manual_separating_business_logic_from_infrastructure_point_2": {
+              "label": "Függetlenül tartja a domaint",
+              "description": "A domain nem importál web frameworköt, ORM-et vagy database-specific típust."
+            },
+            "manual_separating_business_logic_from_infrastructure_point_3": {
+              "label": "Befelé birtokolt absztrakciókat használ",
+              "description": "Repository vagy gateway interface-t definiál a use case közelében, az infrastructure pedig implementálja."
+            },
+            "manual_separating_business_logic_from_infrastructure_point_4": {
+              "label": "Vállalja a ceremony trade-offot",
+              "description": "Elmagyarázza, hogy thin CRUD service nem feltétlenül indokol minden layert és mapping boundaryt."
+            }
+          },
+          "followUps": {
+            "manual_separating_business_logic_from_infrastructure_followup_1": "Mely változtatást tenné könnyebben tesztelhetővé vagy cserélhetővé ez a struktúra, és melyik layer birtokolná?"
+          },
+          "answerStructureHint": "Azonosítsd a felelősségeket, mozgasd befelé az üzleti szabályokat, invertáld az infrastructure dependencyket, majd beszélj a ceremony áráról."
+        }
+      }
     },
     {
-      "id": "arch_practice_001",
+      "id": "hybrid_from_feature_request_to_design",
       "title": "From feature request to design",
       "prompt": "Product asks for a new integration feature. Walk me through what you do before any code is written, as the technical lead.",
       "roles": [
@@ -359,35 +500,1376 @@
         "experience_deep_dive"
       ],
       "topicIds": [
-        "architect_practice"
+        "architect_practice",
+        "design_documentation"
       ],
-      "expectedDurationSeconds": 240,
-      "thinkingTimeSeconds": 60,
-      "answerStructureHint": "NFRs first → short design doc with alternatives → testing strategy → slicing into deliverables + rollout.",
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "NFRs first short design doc with alternatives testing strategy slicing into deliverables + rollout.",
       "expectedPoints": [
         {
-          "id": "ap_nfr",
+          "id": "hybrid_from_feature_request_to_design_point_1",
           "label": "NFRs before architecture",
           "description": "Traffic, latency, security, audit, availability clarified first; availability is a business call.",
           "importance": "critical",
           "roleWeight": {
-            "backend_developer": 4,
+            "backend_developer": 5,
             "backend_architect": 5,
             "solution_architect": 5
           },
           "acceptedSignals": [
-            "non-functional",
             "nfr",
-            "latency expectation",
-            "how many requests",
-            "availability",
-            "clarify first"
+            "nfrs before architecture",
+            "nfrs architecture",
+            "traffic",
+            "latency",
+            "security",
+            "audit",
+            "availability clarified first"
           ]
         },
         {
-          "id": "ap_doc",
+          "id": "hybrid_from_feature_request_to_design_point_2",
           "label": "Design doc with alternatives",
           "description": "Goal, scope, contract, data model, risks, alternatives, rollout — understandable and debatable.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "alternative",
+            "design doc with alternatives",
+            "design doc alternatives",
+            "goal",
+            "scope",
+            "contract",
+            "data model",
+            "risks"
+          ]
+        },
+        {
+          "id": "hybrid_from_feature_request_to_design_point_3",
+          "label": "Slicing + leadership",
+          "description": "Small deliverables (contract, mapping, validation, worker, monitoring); unblock, review, communicate.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "slicing leadership",
+            "small deliverables",
+            "mapping",
+            "validation",
+            "worker",
+            "monitoring",
+            "unblock"
+          ]
+        },
+        {
+          "id": "hybrid_from_feature_request_to_design_point_4",
+          "label": "Safe DB migration pattern",
+          "description": "Add nullable write both backfill read new retire old.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 3,
+            "backend_architect": 3,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "backfill",
+            "safe db migration pattern",
+            "add nullable write both",
+            "read new retire old",
+            "safe",
+            "migration"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_from_feature_request_to_design_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you monitor during rollout, and what would trigger rollback for this From feature request to design change?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Feature requesttől a designig",
+          "prompt": "A product új integration feature-t kér. Technical leadként vezesd végig, mit teszel, mielőtt bármilyen kód elkészül.",
+          "expectedPoints": {
+            "hybrid_from_feature_request_to_design_point_1": {
+              "label": "NFR az architecture előtt",
+              "description": "Először tisztázza a trafficet, latencyt, securityt, auditot és availabilityt; az availability üzleti döntés is."
+            },
+            "hybrid_from_feature_request_to_design_point_2": {
+              "label": "Design document alternatívákkal",
+              "description": "Goal, scope, contract, data model, risk, alternatívák és rollout érthető, vitatható formában."
+            },
+            "hybrid_from_feature_request_to_design_point_3": {
+              "label": "Slicing és leadership",
+              "description": "Kis deliverable-ökre bont: contract, mapping, validation, worker, monitoring; unblockol, review-zik és kommunikál."
+            },
+            "hybrid_from_feature_request_to_design_point_4": {
+              "label": "Biztonságos DB migration pattern",
+              "description": "Új nullable mező, mindkettő írása, backfill, új olvasás, régi forma kivezetése."
+            }
+          },
+          "followUps": {
+            "hybrid_from_feature_request_to_design_followup_1": "Mit monitoroznál rollout közben, és mi váltaná ki a rollbacket?"
+          },
+          "answerStructureHint": "NFR-ek, rövid design doc alternatívákkal, testing strategy, kis deliverable-ök és rollout."
+        }
+      }
+    },
+    {
+      "id": "manual_writing_a_useful_design_document",
+      "title": "Writing a useful design document",
+      "prompt": "You need review and approval for a risky platform change. What should a useful design document contain so reviewers can challenge it and engineers can implement it?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "design_documentation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Context and NFRs, options, decision, interfaces and data, risks, rollout and verification.",
+      "expectedPoints": [
+        {
+          "id": "manual_writing_a_useful_design_document_point_1",
+          "label": "Defines context and measurable requirements",
+          "description": "States the problem, scope, constraints, traffic, latency, availability, security, and cost targets.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "problem context",
+            "measurable nfr",
+            "latency target",
+            "availability target",
+            "scope constraint",
+            "context and measurable requirements"
+          ]
+        },
+        {
+          "id": "manual_writing_a_useful_design_document_point_2",
+          "label": "Compares real alternatives",
+          "description": "Shows at least two credible options and explains why the chosen one fits the constraints.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "design options",
+            "trade off",
+            "decision rationale",
+            "rejected alternatives",
+            "real alternatives"
+          ]
+        },
+        {
+          "id": "manual_writing_a_useful_design_document_point_3",
+          "label": "Makes contracts and ownership concrete",
+          "description": "Documents data flow, APIs, failure behavior, security boundaries, and who operates the result.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "data flow",
+            "api contract",
+            "failure behavior",
+            "service ownership",
+            "contracts ownership concrete"
+          ]
+        },
+        {
+          "id": "manual_writing_a_useful_design_document_point_4",
+          "label": "Includes rollout and rollback evidence",
+          "description": "Defines migration stages, observability, test strategy, success metrics, and a fast way back.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "rollout plan",
+            "rollback plan",
+            "success metric",
+            "migration stage",
+            "observability",
+            "rollback"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "manual_writing_a_useful_design_document_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which parts belong in a short ADR, and which require a longer design document?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hasznos design document írása",
+          "prompt": "Egy kockázatos platformváltozáshoz review és approval kell. Mit tartalmazzon a design document, hogy a reviewerek megkérdőjelezhessék, az engineerek pedig implementálhassák?",
+          "expectedPoints": {
+            "manual_writing_a_useful_design_document_point_1": {
+              "label": "Contextet és mérhető requirementeket ad",
+              "description": "Leírja a problémát, scope-ot, constraintet, trafficet, latencyt, availabilityt, securityt és cost targetet."
+            },
+            "manual_writing_a_useful_design_document_point_2": {
+              "label": "Valós alternatívákat hasonlít össze",
+              "description": "Legalább két hiteles opciót mutat, és megindokolja, miért illik a választott a constraint-ekhez."
+            },
+            "manual_writing_a_useful_design_document_point_3": {
+              "label": "Konkréttá teszi a contractot és ownershipet",
+              "description": "Dokumentálja a data flow-t, API-t, failure behaviort, security boundaryt és az operation felelősét."
+            },
+            "manual_writing_a_useful_design_document_point_4": {
+              "label": "Rollout- és rollbackbizonyítékot tartalmaz",
+              "description": "Migration stage-et, observabilityt, test strategyt, success metricet és gyors visszautat definiál."
+            }
+          },
+          "followUps": {
+            "manual_writing_a_useful_design_document_followup_1": "Mi fér el egy rövid ADR-ben, és mi igényel hosszabb design documentet?"
+          },
+          "answerStructureHint": "Context és NFR-ek, opciók, döntés, interface-ek és adat, kockázatok, rollout és verification."
+        }
+      }
+    },
+    {
+      "id": "manual_renaming_a_live_database_column_safely",
+      "title": "Renaming a live database column safely",
+      "prompt": "How would you rename a heavily used database column without breaking old and new application versions during a rolling deployment?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "system_design"
+      ],
+      "topicIds": [
+        "safe_schema_migration"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Expand first, make both versions compatible, migrate data, verify, then contract.",
+      "expectedPoints": [
+        {
+          "id": "manual_renaming_a_live_database_column_safely_point_1",
+          "label": "Uses expand-and-contract",
+          "description": "Adds the new schema before removing the old one so both application versions can run safely.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "expand contract",
+            "backward compatible",
+            "old and new versions",
+            "add before remove",
+            "expand-and contract"
+          ]
+        },
+        {
+          "id": "manual_renaming_a_live_database_column_safely_point_2",
+          "label": "Migrates reads and writes deliberately",
+          "description": "Uses dual-write or compatibility logic, backfills existing rows, and makes retries idempotent.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "dual write",
+            "backfill",
+            "compatibility read",
+            "idempotent migration"
+          ]
+        },
+        {
+          "id": "manual_renaming_a_live_database_column_safely_point_3",
+          "label": "Verifies before removal",
+          "description": "Measures missing or divergent values and switches reads only after data and traffic checks pass.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "data verification",
+            "divergence check",
+            "switch reads",
+            "migration metric",
+            "verifies before removal"
+          ]
+        },
+        {
+          "id": "manual_renaming_a_live_database_column_safely_point_4",
+          "label": "Keeps rollback possible",
+          "description": "Does not drop the old column until the new version is stable and rollback no longer needs it.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "rollback safe",
+            "delay column drop",
+            "reversible migration",
+            "cleanup later",
+            "rollback"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "manual_renaming_a_live_database_column_safely_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would your plan change for a table too large to backfill in one transaction?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Élő adatbázisoszlop biztonságos átnevezése",
+          "prompt": "Hogyan neveznél át egy erősen használt adatbázisoszlopot úgy, hogy rolling deployment közben se a régi, se az új application version ne törjön el?",
+          "expectedPoints": {
+            "manual_renaming_a_live_database_column_safely_point_1": {
+              "label": "Expand-and-contractot használ",
+              "description": "Az új sémát a régi eltávolítása előtt adja hozzá, így mindkét application version biztonságosan futhat."
+            },
+            "manual_renaming_a_live_database_column_safely_point_2": {
+              "label": "Tudatosan migrál olvasást és írást",
+              "description": "Dual-write vagy compatibility logic, meglévő sorok backfillje és idempotens retry."
+            },
+            "manual_renaming_a_live_database_column_safely_point_3": {
+              "label": "Eltávolítás előtt verifikál",
+              "description": "Méri a hiányzó vagy eltérő értékeket, és csak data- és traffic-check után váltja az olvasást."
+            },
+            "manual_renaming_a_live_database_column_safely_point_4": {
+              "label": "Fenntartja a rollback lehetőségét",
+              "description": "Nem törli a régi oszlopot, amíg az új verzió stabil és a rollbacknek már nincs rá szüksége."
+            }
+          },
+          "followUps": {
+            "manual_renaming_a_live_database_column_safely_followup_1": "Hogyan változna a terv egy olyan táblánál, amely túl nagy egyetlen tranzakciós backfillhez?"
+          },
+          "answerStructureHint": "Expand először, mindkét verzió kompatibilissé tétele, data migration, verification, majd contract."
+        }
+      }
+    },
+    {
+      "id": "manual_fixing_a_misleading_test_suite",
+      "title": "Fixing a misleading test suite",
+      "prompt": "A team has hundreds of fast unit tests, but releases still fail because services and schemas do not work together. How would you redesign the test strategy?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "testing_strategy"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Start from risks, keep unit feedback, add contract and integration coverage, and use a small number of critical end-to-end tests.",
+      "expectedPoints": [
+        {
+          "id": "manual_fixing_a_misleading_test_suite_point_1",
+          "label": "Designs tests from failure risk",
+          "description": "Chooses test types based on the failures that matter instead of chasing a unit-test percentage.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "risk based testing",
+            "failure risk",
+            "not coverage only",
+            "test strategy",
+            "designs tests failure risk"
+          ]
+        },
+        {
+          "id": "manual_fixing_a_misleading_test_suite_point_2",
+          "label": "Adds contract and integration tests",
+          "description": "Verifies API or event compatibility and real interaction with databases, queues, or dependencies.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "contract test",
+            "integration test",
+            "schema compatibility",
+            "real dependency"
+          ]
+        },
+        {
+          "id": "manual_fixing_a_misleading_test_suite_point_3",
+          "label": "Keeps end-to-end tests selective",
+          "description": "Covers critical user journeys without turning the whole suite into slow and flaky browser tests.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "critical journey",
+            "end to end",
+            "avoid flaky tests",
+            "selective e2e",
+            "end-to end tests selective"
+          ]
+        },
+        {
+          "id": "manual_fixing_a_misleading_test_suite_point_4",
+          "label": "Connects tests to release safety",
+          "description": "Uses production-like environments, canaries, observability, and rollback because tests cannot prove everything.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "canary release",
+            "production like",
+            "release metric",
+            "rollback plan",
+            "rollback"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "manual_fixing_a_misleading_test_suite_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which failure should be caught by a contract test rather than a unit or end-to-end test?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Félrevezető test suite javítása",
+          "prompt": "A csapatnak több száz gyors unit testje van, mégis elbuknak a release-ek, mert a service-ek és sémák nem működnek együtt. Hogyan terveznéd újra a testing strategyt?",
+          "expectedPoints": {
+            "manual_fixing_a_misleading_test_suite_point_1": {
+              "label": "Failure risk alapján tervez tesztet",
+              "description": "A fontos hibák szerint választ test typet unit-test százalék hajszolása helyett."
+            },
+            "manual_fixing_a_misleading_test_suite_point_2": {
+              "label": "Contract és integration testet ad hozzá",
+              "description": "Verifikálja az API- vagy eventkompatibilitást és a valós database-, queue- vagy dependency-interakciót."
+            },
+            "manual_fixing_a_misleading_test_suite_point_3": {
+              "label": "Szelektíven használ E2E tesztet",
+              "description": "Kritikus user journeyt fed le anélkül, hogy az egész suite lassú, flaky browser testté válna."
+            },
+            "manual_fixing_a_misleading_test_suite_point_4": {
+              "label": "Összeköti a tesztet a release safetyvel",
+              "description": "Production-like environmentet, canaryt, observabilityt és rollbacket használ, mert a teszt nem bizonyíthat mindent."
+            }
+          },
+          "followUps": {
+            "manual_fixing_a_misleading_test_suite_followup_1": "Mely hibát kell contract testnek elkapnia unit vagy end-to-end teszt helyett?"
+          },
+          "answerStructureHint": "Kockázatokból indulj ki, tartsd meg a unit feedbacket, adj contract és integration coverage-et, valamint kevés kritikus E2E tesztet."
+        }
+      }
+    },
+    {
+      "id": "arch_conway_001",
+      "title": "Architecture and team structure",
+      "prompt": "Several services are technically separate, but every release requires three teams. How would Conway’s Law influence your diagnosis and redesign?",
+      "roles": [
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "design_review"
+      ],
+      "topicIds": [
+        "conway_law",
+        "microservices_boundaries"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 60,
+      "expectedPoints": [
+        {
+          "id": "conway_mirror",
+          "label": "Connects architecture and communication",
+          "description": "Explains that recurring coordination can be reflected in system boundaries and ownership.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "communication structure",
+            "mirrors the organization",
+            "team boundaries",
+            "coordination path",
+            "architecture and communication"
+          ]
+        },
+        {
+          "id": "conway_measure",
+          "label": "Looks at change flow",
+          "description": "Examines which teams and components are touched by normal changes and releases.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "change flow",
+            "release dependency",
+            "handoffs",
+            "who must coordinate",
+            "looks at change flow"
+          ]
+        },
+        {
+          "id": "conway_align",
+          "label": "Aligns ownership and capability",
+          "description": "Moves toward end-to-end ownership of a cohesive capability, not only redrawn services.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "end-to-end ownership",
+            "business capability",
+            "change team structure",
+            "inverse conway",
+            "aligns ownership and capability"
+          ]
+        },
+        {
+          "id": "conway_nuance",
+          "label": "Avoids a deterministic reading",
+          "description": "Treats the law as an influence and preserves useful cross-team collaboration.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_architect": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "not deterministic",
+            "useful collaboration",
+            "organizational influence",
+            "not one service each",
+            "a deterministic reading"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_conway_metric_fu",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which delivery metrics or dependency signals would show whether the redesign reduced coordination cost?",
+          "expectedPoints": []
+        }
+      ],
+      "answerStructureHint": "",
+      "i18n": {
+        "hu": {
+          "title": "Architecture és csapatstruktúra",
+          "prompt": "A service-ek technikailag különállók, de minden release három csapatot igényel. Hogyan befolyásolná Conway törvénye a diagnózist és redesign-t?",
+          "expectedPoints": {
+            "conway_mirror": {
+              "label": "Összeköti az architecture-t és kommunikációt",
+              "description": "Elmagyarázza, hogy az ismétlődő koordináció tükröződhet a system boundarykban és ownershipben."
+            },
+            "conway_measure": {
+              "label": "Megvizsgálja a change flow-t",
+              "description": "Megnézi, mely csapatokat és komponenseket érinti egy normál változtatás és release."
+            },
+            "conway_align": {
+              "label": "Összehangolja az ownershipet és capabilityt",
+              "description": "End-to-end ownership felé mozdul egy koherens capabilitynél, nem csak újrarajzolja a service-eket."
+            },
+            "conway_nuance": {
+              "label": "Nem determinisztikusan értelmezi",
+              "description": "Befolyásként kezeli a törvényt, és megtartja a hasznos cross-team collaborationt."
+            }
+          },
+          "followUps": {
+            "arch_conway_metric_fu": "Mely delivery metric vagy dependency signal mutatná, hogy a redesign csökkentette a koordinációs költséget?"
+          },
+          "answerStructureHint": ""
+        }
+      }
+    },
+    {
+      "id": "hybrid_drawing_service_boundaries",
+      "title": "Drawing service boundaries",
+      "prompt": "The team wants to split a monolith into microservices. How do you decide where the boundaries go — and when would you say no?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "microservices_boundaries",
+        "bounded_context",
+        "conway_law"
+      ],
+      "expectedDurationSeconds": 420,
+      "thinkingTimeSeconds": 90,
+      "answerStructureHint": "Boundary criteria (ownership, data, contract) domain language/bounded contexts Conway's Law costs of too many services.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_drawing_service_boundaries_point_1",
+          "label": "Boundary criteria",
+          "description": "Clean ownership, API contract, data boundary, separate scaling, monitoring + deploy pipeline.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "api contract",
+            "data ownership",
+            "clear ownership",
+            "ownership",
+            "boundary criteria",
+            "clean ownership",
+            "data boundary",
+            "separate scaling"
+          ]
+        },
+        {
+          "id": "hybrid_drawing_service_boundaries_point_2",
+          "label": "Domain-driven boundaries",
+          "description": "Bounded contexts around business concepts; domain language first.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "bounded context",
+            "domain language",
+            "domain-driven boundaries",
+            "bounded contexts around business",
+            "contexts around business concepts",
+            "domain language first",
+            "domain-driven"
+          ]
+        },
+        {
+          "id": "hybrid_drawing_service_boundaries_point_3",
+          "label": "Conway's Law",
+          "description": "Team communication shapes the system; boundaries are an org question too.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4,
+            "frontend_architect": 4
+          },
+          "acceptedSignals": [
+            "team boundaries",
+            "conway's law",
+            "team communication shapes",
+            "boundaries are an org",
+            "an org question too",
+            "conway's"
+          ]
+        },
+        {
+          "id": "hybrid_drawing_service_boundaries_point_4",
+          "label": "Names the costs",
+          "description": "Too many services latency, debugging pain; monolith/modular monolith can be right.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 3,
+            "fullstack_developer": 3,
+            "backend_architect": 3,
+            "solution_architect": 3,
+            "frontend_architect": 3
+          },
+          "acceptedSignals": [
+            "names the costs",
+            "costs",
+            "too many services latency",
+            "debugging pain",
+            "monolith",
+            "modular monolith can be",
+            "monolith can be right"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_drawing_service_boundaries_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where does CQRS fit into this picture, and when would you avoid it?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Service-határok meghúzása",
+          "prompt": "A csapat microservice-ekre akarja bontani a monolithot. Hogyan döntöd el, hol legyenek a határok, és mikor mondanál nemet?",
+          "expectedPoints": {
+            "hybrid_drawing_service_boundaries_point_1": {
+              "label": "Boundarykritériumokat használ",
+              "description": "Tiszta ownership, API contract, data boundary, külön scaling, monitoring és deploy pipeline."
+            },
+            "hybrid_drawing_service_boundaries_point_2": {
+              "label": "Domain-driven boundarykat keres",
+              "description": "Business concept körüli bounded contextből és domain language-ből indul."
+            },
+            "hybrid_drawing_service_boundaries_point_3": {
+              "label": "Figyelembe veszi Conway törvényét",
+              "description": "A team communication alakítja a rendszert; a boundary szervezeti kérdés is."
+            },
+            "hybrid_drawing_service_boundaries_point_4": {
+              "label": "Megnevezi a költségeket",
+              "description": "Túl sok service latencyt és debugging pain-t okoz; monolith vagy modular monolith lehet a helyes döntés."
+            }
+          },
+          "followUps": {
+            "hybrid_drawing_service_boundaries_followup_1": "Hol illeszkedik ide a CQRS, és mikor kerülnéd?"
+          },
+          "answerStructureHint": "Ownership, data és contract; domain language és bounded context; Conway törvénye; túl sok service költsége."
+        }
+      }
+    },
+    {
+      "id": "arch_bounded_context_001",
+      "title": "Finding bounded contexts",
+      "prompt": "A company uses one Customer model for billing, support, and marketing, and every change breaks another team. How would bounded contexts help?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "design_review"
+      ],
+      "topicIds": [
+        "bounded_context",
+        "microservices_boundaries"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 60,
+      "expectedPoints": [
+        {
+          "id": "bc_meaning",
+          "label": "Identifies different meanings and rules",
+          "description": "Explains that the same term can have different models and rules in different contexts.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "different meanings",
+            "different domain models",
+            "context-specific model",
+            "billing customer",
+            "different meanings and rules"
+          ]
+        },
+        {
+          "id": "bc_ownership",
+          "label": "Defines ownership and boundaries",
+          "description": "Assigns clear ownership of data and rules within each context.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "clear ownership",
+            "owns the rules",
+            "bounded boundary",
+            "data owner",
+            "ownership and boundaries"
+          ]
+        },
+        {
+          "id": "bc_translation",
+          "label": "Adds explicit translation",
+          "description": "Uses contracts or an anti-corruption layer between contexts instead of one shared object.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "translation layer",
+            "anti-corruption layer",
+            "explicit contract",
+            "map between models",
+            "adds explicit translation"
+          ]
+        },
+        {
+          "id": "bc_not_service",
+          "label": "Separates modelling from deployment",
+          "description": "Notes that a context is not automatically one microservice.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "not necessarily a service",
+            "modelling boundary",
+            "module first",
+            "deployment decision",
+            "modelling from deployment"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_bounded_context_split_fu",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What evidence would make you deploy two contexts as separate services rather than modules in one application?",
+          "expectedPoints": []
+        }
+      ],
+      "answerStructureHint": "",
+      "i18n": {
+        "hu": {
+          "title": "Bounded contextek felismerése",
+          "prompt": "Egy cég ugyanazt a Customer modellt használja billinghez, supporthoz és marketinghez, ezért minden változtatás eltör egy másik csapatot. Hogyan segítene a bounded context?",
+          "expectedPoints": {
+            "bc_meaning": {
+              "label": "Felismeri az eltérő jelentést és szabályokat",
+              "description": "Elmagyarázza, hogy ugyanaz a kifejezés különböző contextben eltérő modellt és szabályt jelenthet."
+            },
+            "bc_ownership": {
+              "label": "Ownershipet és boundaryt definiál",
+              "description": "Minden contexten belül világos data- és rule ownershipet ad."
+            },
+            "bc_translation": {
+              "label": "Explicit translationt ad",
+              "description": "Egy shared object helyett contractot vagy anti-corruption layert használ a contextek között."
+            },
+            "bc_not_service": {
+              "label": "Szétválasztja a modellezést és deploymentet",
+              "description": "Megjegyzi, hogy egy context nem automatikusan egy microservice."
+            }
+          },
+          "followUps": {
+            "arch_bounded_context_split_fu": "Milyen bizonyíték indokolná, hogy két context külön service legyen, ne két module ugyanabban az applicationben?"
+          },
+          "answerStructureHint": ""
+        }
+      }
+    },
+    {
+      "id": "arch_cqrs_001",
+      "title": "When CQRS is justified",
+      "prompt": "A system has complex write rules but several high-volume read views. When would CQRS help, and what new problems would it introduce?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "system_design"
+      ],
+      "topicIds": [
+        "cqrs_pattern"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 60,
+      "expectedPoints": [
+        {
+          "id": "cqrs_separation",
+          "label": "Separates command and query models",
+          "description": "Explains that writes enforce business rules while read models are shaped for queries.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "command and query",
+            "separate read model",
+            "write model",
+            "read projection",
+            "read model"
+          ]
+        },
+        {
+          "id": "cqrs_reason",
+          "label": "Gives a real justification",
+          "description": "Uses differing models, scale, or query shapes rather than fashion.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "different read shape",
+            "read scale",
+            "complex write rules",
+            "measured need",
+            "a real justification"
+          ]
+        },
+        {
+          "id": "cqrs_consistency",
+          "label": "Owns eventual consistency",
+          "description": "Explains lag, failure recovery, and how users see stale projections.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "eventual consistency",
+            "projection lag",
+            "stale reads",
+            "rebuild projection"
+          ]
+        },
+        {
+          "id": "cqrs_not_requirements",
+          "label": "Avoids false requirements",
+          "description": "Notes CQRS does not require event sourcing, separate databases, or microservices.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "no event sourcing requirement",
+            "same database",
+            "not necessarily microservices",
+            "incremental adoption",
+            "false requirements"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_cqrs_rebuild_fu",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "cqrs_consistency"
+          },
+          "prompt": "How would you detect and rebuild a read projection that missed events?",
+          "expectedPoints": []
+        }
+      ],
+      "answerStructureHint": "",
+      "i18n": {
+        "hu": {
+          "title": "Mikor indokolt a CQRS?",
+          "prompt": "Egy rendszernek összetett write rule-jai és több nagy forgalmú read view-ja van. Mikor segít a CQRS, és milyen új problémákat vezet be?",
+          "expectedPoints": {
+            "cqrs_separation": {
+              "label": "Szétválasztja a command és query modellt",
+              "description": "Az írás üzleti szabályokat érvényesít, a read model pedig queryre optimalizált."
+            },
+            "cqrs_reason": {
+              "label": "Valódi indokot ad",
+              "description": "Eltérő modellekre, skálára vagy query shape-re hivatkozik, nem divatra."
+            },
+            "cqrs_consistency": {
+              "label": "Vállalja az eventual consistencyt",
+              "description": "Elmagyarázza a laget, failure recoveryt és azt, hogyan lát a user stale projectiont."
+            },
+            "cqrs_not_requirements": {
+              "label": "Elkerüli a hamis követelményeket",
+              "description": "Megjegyzi, hogy a CQRS nem igényel event sourcingot, külön adatbázist vagy microservice-t."
+            }
+          },
+          "followUps": {
+            "arch_cqrs_rebuild_fu": "Hogyan észlelnéd és építenéd újra az eseményt kihagyó read projectiont?"
+          },
+          "answerStructureHint": ""
+        }
+      }
+    },
+    {
+      "id": "hybrid_gateway_load_balancer_ingress_who_does_what",
+      "title": "Gateway, load balancer, ingress — who does what?",
+      "prompt": "In a Kubernetes deployment, explain the difference between an API gateway, a load balancer, an ingress, and service discovery — and what makes a rollout zero-downtime.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "system_design"
+      ],
+      "topicIds": [
+        "containers_runtime",
+        "container_orchestration"
+      ],
+      "expectedDurationSeconds": 420,
+      "thinkingTimeSeconds": 90,
+      "answerStructureHint": "State the decision, explain why, then cover trade-offs and failure modes.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_gateway_load_balancer_ingress_who_does_what_point_1",
+          "label": "Gateway = policy, LB = distribution",
+          "description": "Gateway: auth/rate limit/ routing/versioning for external APIs; LB spreads pods and drops unhealthy ones.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "gateway policy lb distribution",
+            "gateway",
+            "auth",
+            "rate limit",
+            "routing",
+            "versioning for external apis",
+            "lb spreads pods and",
+            "and drops unhealthy ones"
+          ]
+        },
+        {
+          "id": "hybrid_gateway_load_balancer_ingress_who_does_what_point_2",
+          "label": "Discovery + ingress",
+          "description": "Call services by name (payment-service); Ingress routes external HTTP into the cluster.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "discovery ingress",
+            "call services",
+            "payment-service",
+            "ingress routes external http",
+            "http into the cluster",
+            "discovery"
+          ]
+        },
+        {
+          "id": "hybrid_gateway_load_balancer_ingress_who_does_what_point_3",
+          "label": "Zero-downtime mechanics",
+          "description": "Readiness gates traffic to new pods; graceful shutdown drains old ones; rollback available.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "rollback",
+            "readiness",
+            "zero-downtime mechanics",
+            "readiness gates traffic to",
+            "traffic to new pods",
+            "graceful shutdown drains old",
+            "shutdown drains old ones",
+            "rollback available"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_gateway_load_balancer_ingress_who_does_what_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give one production example of Gateway, load balancer, ingress — who does what? and one common misuse.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Gateway, load balancer és ingress – melyik mit csinál?",
+          "prompt": "Kubernetes deploymentben magyarázd el az API gateway, load balancer, ingress és service discovery különbségét, valamint a zero-downtime rollout feltételeit.",
+          "expectedPoints": {
+            "hybrid_gateway_load_balancer_ingress_who_does_what_point_1": {
+              "label": "Gateway: policy, load balancer: elosztás",
+              "description": "Gateway authot, rate limitet, routingot és versioninget ad external API-hoz; a load balancer szétosztja a podokat és kihagyja az unhealthy instance-okat."
+            },
+            "hybrid_gateway_load_balancer_ingress_who_does_what_point_2": {
+              "label": "Discovery és ingress",
+              "description": "A service-eket név alapján hívjuk; az ingress külső HTTP-forgalmat route-ol a clusterbe."
+            },
+            "hybrid_gateway_load_balancer_ingress_who_does_what_point_3": {
+              "label": "Zero-downtime mechanika",
+              "description": "Readiness csak kész podra küld trafficet, graceful shutdown draineli a régit, és rollback elérhető."
+            }
+          },
+          "followUps": {
+            "hybrid_gateway_load_balancer_ingress_who_does_what_followup_1": "Adj egy production példát erre a felosztásra, és egy gyakori félrehasználást."
+          },
+          "answerStructureHint": "Különítsd el a policyt, traffic distributiont, cluster entryt és névfeloldást; majd readiness, graceful shutdown és rollback."
+        }
+      }
+    },
+    {
+      "id": "arch_k8s_secrets_001",
+      "title": "Reviewing Kubernetes secret handling",
+      "prompt": "A team stores production credentials in Kubernetes Secret manifests committed to Git and says Base64 protects them. What would you change?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "kubernetes_secrets",
+        "containers_runtime"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 60,
+      "expectedPoints": [
+        {
+          "id": "ksec_base64",
+          "label": "Rejects Base64 as protection",
+          "description": "States that Base64 is encoding and committed values are exposed.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "base64 is encoding",
+            "not encryption",
+            "remove from git",
+            "credential exposure",
+            "base64"
+          ]
+        },
+        {
+          "id": "ksec_at_rest",
+          "label": "Requires encryption at rest",
+          "description": "Enables cluster encryption at rest and protects encryption keys.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "encryption at rest",
+            "encrypt etcd",
+            "kms provider",
+            "protect the key"
+          ]
+        },
+        {
+          "id": "ksec_rbac",
+          "label": "Applies least privilege",
+          "description": "Limits Secret access through service accounts, RBAC, and workload boundaries.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "least privilege",
+            "rbac",
+            "service account",
+            "limit secret access"
+          ]
+        },
+        {
+          "id": "ksec_rotation",
+          "label": "Improves lifecycle",
+          "description": "Uses rotation, external secret management, or short-lived workload identity.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 4,
+            "solution_architect": 4
+          },
+          "acceptedSignals": [
+            "rotate credentials",
+            "external secret manager",
+            "workload identity",
+            "short-lived credentials",
+            "improves lifecycle"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_k8s_rotation_fu",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you rotate the credential without breaking currently running workloads?",
+          "expectedPoints": []
+        }
+      ],
+      "answerStructureHint": "",
+      "i18n": {
+        "hu": {
+          "title": "Kubernetes secret handling review",
+          "prompt": "A csapat production credentialt commitol Gitbe Kubernetes Secret manifestben, és azt mondja, a Base64 megvédi. Mit változtatnál?",
+          "expectedPoints": {
+            "ksec_base64": {
+              "label": "Elutasítja a Base64-et védelemként",
+              "description": "Kimondja, hogy a Base64 encoding, és a commitolt érték exposed."
+            },
+            "ksec_at_rest": {
+              "label": "Encryption at restet követel",
+              "description": "Bekapcsolja a cluster encryption at restet, és védi az encryption keyt."
+            },
+            "ksec_rbac": {
+              "label": "Least privilege-et alkalmaz",
+              "description": "Service accounttal, RBAC-kal és workload boundaryval korlátozza a Secret-hozzáférést."
+            },
+            "ksec_rotation": {
+              "label": "Javítja a lifecycle-t",
+              "description": "Rotationt, external secret managementet vagy short-lived workload identityt használ."
+            }
+          },
+          "followUps": {
+            "arch_k8s_rotation_fu": "Hogyan rotálnád a credentialt úgy, hogy a jelenleg futó workloadok ne törjenek el?"
+          },
+          "answerStructureHint": ""
+        }
+      }
+    },
+    {
+      "id": "arch_orchestration_001",
+      "title": "What orchestration adds",
+      "prompt": "A team already runs containers successfully on one server. What problems would justify adding an orchestrator, and what problems would it not solve for them?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "containers_runtime",
+        "container_orchestration"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Current operational pain -> scheduling and desired state -> discovery, recovery, and rollout -> remaining application and platform responsibilities.",
+      "expectedPoints": [
+        {
+          "id": "orch_need",
+          "label": "Identifies a real orchestration need",
+          "description": "Uses multi-host scheduling, replica recovery, service discovery, scaling, or controlled rollout as justification.",
           "importance": "critical",
           "roleWeight": {
             "backend_developer": 4,
@@ -395,18 +1877,37 @@
             "solution_architect": 5
           },
           "acceptedSignals": [
-            "design document",
-            "alternatives",
-            "risks",
-            "rollout plan",
-            "debatable",
-            "api contract"
+            "multiple hosts",
+            "replica recovery",
+            "service discovery",
+            "rolling updates",
+            "workload scheduling",
+            "desired state",
+            "a real orchestration need"
           ]
         },
         {
-          "id": "ap_slices",
-          "label": "Slicing + leadership",
-          "description": "Small deliverables (contract, mapping, validation, worker, monitoring); unblock, review, communicate.",
+          "id": "orch_mechanism",
+          "label": "Explains desired-state control",
+          "description": "Describes controllers and scheduling rather than treating the platform as a container launcher.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "controller loop",
+            "observed state",
+            "scheduler",
+            "reconciliation",
+            "desired-state control"
+          ]
+        },
+        {
+          "id": "orch_limits",
+          "label": "States what it does not solve",
+          "description": "Keeps application correctness, data recovery, capacity planning, and observability as explicit responsibilities.",
           "importance": "important",
           "roleWeight": {
             "backend_developer": 4,
@@ -414,33 +1915,71 @@
             "solution_architect": 5
           },
           "acceptedSignals": [
-            "smaller deliverables",
-            "break it down",
-            "code review",
-            "unblock",
-            "communicate with product"
+            "not automatic reliability",
+            "application responsibility",
+            "backup and recovery",
+            "capacity planning",
+            "needs observability",
+            "solve"
           ]
         },
         {
-          "id": "ap_migration",
-          "label": "Safe DB migration pattern",
-          "description": "Add nullable → write both → backfill → read new → retire old.",
-          "importance": "nice_to_have",
+          "id": "orch_cost",
+          "label": "Owns the operational cost",
+          "description": "Mentions platform complexity, skills, upgrades, and whether a managed service or simpler deployment is sufficient.",
+          "importance": "important",
           "roleWeight": {
-            "backend_developer": 4,
             "backend_architect": 5,
             "solution_architect": 5
           },
           "acceptedSignals": [
-            "backfill",
-            "write both",
-            "nullable first",
-            "expand contract",
-            "retire the old"
+            "operational complexity",
+            "managed service",
+            "platform skills",
+            "upgrade burden",
+            "simpler deployment",
+            "the operational cost"
           ]
         }
       ],
-      "followUps": []
+      "followUps": [
+        {
+          "id": "arch_orchestration_stateful_fu",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What extra design work is needed before moving a stateful database into the orchestrator?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mit ad hozzá az orchestration?",
+          "prompt": "A csapat egy szerveren már sikeresen futtat containereket. Milyen problémák indokolnák orchestrator bevezetését, és mely problémákat nem oldaná meg?",
+          "expectedPoints": {
+            "orch_need": {
+              "label": "Valós orchestration igényt azonosít",
+              "description": "Multi-host schedulinget, replica recoveryt, service discoveryt, scalinget vagy controlled rolloutot használ indokként."
+            },
+            "orch_mechanism": {
+              "label": "Elmagyarázza a desired-state controlt",
+              "description": "Controllereket és schedulinget ír le, nem egyszerű container launcherként kezeli a platformot."
+            },
+            "orch_limits": {
+              "label": "Kimondja, mit nem old meg",
+              "description": "Application correctness, data recovery, capacity planning és observability továbbra is explicit felelősség."
+            },
+            "orch_cost": {
+              "label": "Vállalja az operational costot",
+              "description": "Beszél platformcomplexityről, skillekről, upgrade-ről és arról, elég-e managed service vagy egyszerűbb deployment."
+            }
+          },
+          "followUps": {
+            "arch_orchestration_stateful_fu": "Milyen további design kell, mielőtt stateful adatbázist viszel az orchestratorba?"
+          },
+          "answerStructureHint": "Jelenlegi operational pain → scheduling és desired state → discovery, recovery és rollout → megmaradó application- és platformfelelősségek."
+        }
+      }
     }
   ]
 }

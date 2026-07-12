@@ -1,0 +1,933 @@
+{
+  "id": "data_consistency_essential",
+  "name": "Data and Consistency — Essential",
+  "description": "Curated full-stack essentials selected from the complete pack. Use this as a lighter replacement for the full version.",
+  "sources": [
+    "Luxair_interju_QA_gyujtemeny",
+    "Luxair_Interview_Terms_Glossary_HU",
+    "Luxair_Interview_Terms_Reminder_HU",
+    "Luxair_Top_10_Interview_Questions_HU",
+    "dennemeyer_system_design_100_tema_peldakkal_mobile_hu",
+    "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu"
+  ],
+  "topics": [
+    {
+      "id": "data_sql_vs_nosql",
+      "name": "SQL vs NoSQL",
+      "description": "Choosing a database model from access patterns, relationships, transactions, and scaling needs.",
+      "category": "database",
+      "relatedTopicIds": [
+        "data_transactions_acid"
+      ],
+      "studyNotes": "## What is it?\n\nSQL and NoSQL are broad database families with different strengths. SQL databases organize related data into tables and offer mature joins, constraints, and transactions. NoSQL includes document, key-value, wide-column, and graph models optimized for different access patterns.\n\n## What problem does it solve?\n\nThe wrong choice can force a relational database to behave like a key-value store, or force a document database to emulate complex joins and multi-record transactions. The decision should follow the real read/write model, not fashion.\n\n## How it works\n\n- Use SQL when relationships, joins, constraints, and multi-row transactions are central.\n- Use a NoSQL model when the access pattern is simple and predictable, flexible data shape or horizontal partitioning is a primary requirement.\n- Define consistency, query, write, and reporting needs before choosing a product.\n- Using more than one storage model is valid, but each additional database adds operational cost.\n\n## Common mistakes\n\n- Saying NoSQL means no schema or no consistency.\n- Choosing a database only because it is popular.\n- Introducing several storage technologies before one workload needs them.\n\n## Key terms\n\n- access pattern — how data is read and written\n- relational model — tables, keys, constraints, and joins\n- document model — records stored as nested documents\n- polyglot persistence — different storage models for different workloads",
+      "i18n": {
+        "hu": {
+          "name": "SQL vs NoSQL",
+          "description": "A database típust az access pattern, a kapcsolatok, a transaction igény és a skálázás alapján választjuk.",
+          "studyNotes": "## Mi ez?\n\nAz SQL és NoSQL nem egyszerűen két egymással versengő termékcsoport. Az SQL database-ek kapcsolódó táblákat, joinokat, constraint-eket és erős transaction támogatást adnak. A NoSQL több külön modellt jelent, például document, key-value, wide-column vagy graph database-t.\n\n## Milyen problémát old meg?\n\nRossz választásnál a relational database-t key-value store-ként erőltetjük, vagy egy document database-ben próbálunk bonyolult joinokat és több recordot érintő transactionöket utánozni. A döntésnek a valós read/write mintából kell indulnia.\n\n## Hogyan működik?\n\n- SQL jó kiindulás, ha fontosak a kapcsolatok, joinok, constraint-ek és multi-row transactionök.\n- NoSQL akkor lehet jobb, ha egyszerű és jól ismert az access pattern, rugalmas a data shape, vagy eleve horizontal partitioning kell.\n- Választás előtt írd le a consistency, query, write és reporting igényeket.\n- Több database együtt is használható, de minden új storage növeli az operational complexityt.\n\n## Gyakori hibák\n\n- Azt mondani, hogy NoSQL esetén nincs schema vagy consistency.\n- Csak azért választani egy database-t, mert népszerű.\n- Több storage technológiát bevezetni valódi workload indok nélkül.\n\n## Kulcsfogalmak\n\n- access pattern — hogyan olvassuk és írjuk az adatot\n- relational model — táblák, key-k, constraint-ek és joinok\n- document model — egymásba ágyazott documentként tárolt recordok\n- polyglot persistence — külön workloadokra külön storage modell használata"
+        }
+      }
+    },
+    {
+      "id": "data_transactions_acid",
+      "name": "Database Transactions and ACID",
+      "description": "Grouping related database operations into one atomic unit with clear concurrency guarantees.",
+      "category": "database",
+      "relatedTopicIds": [
+        "data_distributed_transactions_saga"
+      ],
+      "studyNotes": "## What is it?\n\nA database transaction groups related reads and writes into one unit. Either all changes commit together or all are rolled back. ACID describes atomicity, consistency, isolation, and durability.\n\n## What problem does it solve?\n\nWithout a transaction, failure between related writes can leave a partial business state. Concurrent requests may also observe or overwrite intermediate data unless the transaction and isolation model protect the invariant.\n\n## How it works\n\n- Place the transaction boundary around one business invariant inside one database.\n- Keep it short and avoid network calls while locks or versions are held.\n- Commit only after every required check and write succeeds.\n- Use database constraints as the final guard, not only application validation.\n\n## Common mistakes\n\n- Keeping a transaction open while calling another service.\n- Assuming a transaction automatically validates business rules.\n- Putting unrelated work into one large transaction.\n\n## Key terms\n\n- atomicity — all operations commit or none do\n- consistency — valid rules remain true\n- isolation — controls concurrent visibility\n- durability — committed data survives failure",
+      "i18n": {
+        "hu": {
+          "name": "Database Transactions és ACID",
+          "description": "Több összetartozó database műveletet egy egységként futtatunk, hogy ne maradjon félkész állapot.",
+          "studyNotes": "## Mi ez?\n\nA database transaction arra való, hogy több összetartozó read és write lépés egy egységként fusson. Vagy minden commitol, vagy az egész rollbackel. Az ACID az Atomicity, Consistency, Isolation és Durability garanciákat foglalja össze.\n\n## Milyen problémát old meg?\n\nTransaction nélkül egy hiba két write között félkész business állapotot hagyhat. Párhuzamos requestek közben egymás változtatásait is rossz időben láthatják vagy felülírhatják.\n\n## Hogyan működik?\n\n- A transaction boundary egyetlen business invariant köré kerüljön egy database-en belül.\n- Tartsd röviden, és ne hívj external service-t, miközben lockot tart.\n- Csak akkor commitolj, ha minden szükséges check és write sikerült.\n- A database constraint legyen az utolsó védelmi vonal, ne csak application validation.\n\n## Gyakori hibák\n\n- External API hívás közben nyitva tartani a transactiont.\n- Azt hinni, hogy a transaction automatikusan betartat minden business rule-t.\n- Egymástól független munkákat egy nagy transactionbe tenni.\n\n## Kulcsfogalmak\n\n- atomicity — minden operation commitol, vagy egyik sem\n- consistency — a szabályok commit előtt és után is igazak\n- isolation — a párhuzamos transactionök láthatóságát szabályozza\n- durability — a commitolt adat túléli a failure-t"
+        }
+      }
+    },
+    {
+      "id": "data_indexes",
+      "name": "Indexes and Composite Indexes",
+      "description": "Adding search structures that accelerate selected reads at a write and storage cost.",
+      "category": "database",
+      "relatedTopicIds": [
+        "data_query_performance",
+        "data_pagination"
+      ],
+      "studyNotes": "## What is it?\n\nAn index is a separate data structure that helps the database find rows without scanning the whole table. A composite index contains several columns, and column order determines which query patterns it supports efficiently.\n\n## What problem does it solve?\n\nAs data grows, filters, joins, sorting, and uniqueness checks may become too slow without an appropriate index. But every index consumes storage and must be updated on inserts, updates, and deletes.\n\n## How it works\n\n- Design indexes from real WHERE, JOIN, ORDER BY, and uniqueness patterns.\n- Use the query plan to verify that the index is selected and selective enough.\n- Choose composite column order to match equality filters, ranges, and sorting.\n- Remove unused or overlapping indexes after measuring.\n\n## Common mistakes\n\n- Indexing every column.\n- Creating a composite index without considering column order.\n- Assuming an index is useful because it exists.\n\n## Key terms\n\n- selectivity — how strongly a condition narrows rows\n- composite index — index with several ordered columns\n- covering index — index containing all data needed by a query\n- table scan — reading many or all rows",
+      "i18n": {
+        "hu": {
+          "name": "Indexes és Composite Indexes",
+          "description": "Az index külön keresőstruktúra, amely bizonyos queryket gyorsít, de storage-ot és write teljesítményt használ.",
+          "studyNotes": "## Mi ez?\n\nAz index segít, hogy a database ne minden row-t olvasson végig. A composite index több oszlopot tartalmaz, és az oszlopok sorrendje meghatározza, milyen query patternöket tud jól kiszolgálni.\n\n## Milyen problémát old meg?\n\nNagy adatmennyiségnél filter, join, sort vagy uniqueness check megfelelő index nélkül lassú lehet. Az index azonban minden insert, update és delete során karbantartandó.\n\n## Hogyan működik?\n\n- Valós WHERE, JOIN, ORDER BY és uniqueness pattern alapján tervezz indexet.\n- Query plannel ellenőrizd, hogy tényleg használja-e és elég selective-e.\n- A composite column order igazodjon az equality filterhez, range-hez és sorthoz.\n- Mérés után töröld az unused vagy erősen overlapping indexeket.\n\n## Gyakori hibák\n\n- Minden oszlopot indexelni.\n- Composite indexet column order átgondolása nélkül készíteni.\n- Azt hinni, hogy egy index hasznos csak azért, mert létezik.\n\n## Kulcsfogalmak\n\n- selectivity — mennyire szűkíti le a row-kat egy feltétel\n- composite index — több rendezett oszlopot tartalmazó index\n- covering index — a query minden szükséges adatát tartalmazó index\n- table scan — sok vagy minden row végigolvasása"
+        }
+      }
+    },
+    {
+      "id": "data_query_performance",
+      "name": "SQL Query Performance and Execution Plans",
+      "description": "Diagnosing slow queries from evidence before changing indexes, SQL, or infrastructure.",
+      "category": "database",
+      "relatedTopicIds": [
+        "data_indexes",
+        "data_n_plus_one"
+      ],
+      "studyNotes": "## What is it?\n\nSQL performance work identifies where time is spent and reduces unnecessary rows, sorting, joins, round trips, or lock waits. The execution plan is the database strategy for running a query.\n\n## What problem does it solve?\n\nA correct query may become slow as data grows. Blindly adding indexes or caching can hide the real bottleneck and make writes more expensive.\n\n## How it works\n\n- Confirm whether time is inside the database or waiting for a connection.\n- Inspect the actual execution plan, row estimates, joins, scans, sorts, and lock waits.\n- Return only required rows and columns and reduce round trips.\n- Measure before and after each change with representative data.\n\n## Common mistakes\n\n- Optimizing without an execution plan.\n- Adding hardware before locating the bottleneck.\n- Testing only on a small or empty development database.\n\n## Key terms\n\n- execution plan — database strategy for a query\n- row estimate — expected rows at a plan step\n- full table scan — reading the whole table\n- lock wait — waiting for another transaction",
+      "i18n": {
+        "hu": {
+          "name": "SQL Query Performance és Execution Plan",
+          "description": "A slow query okát evidence alapján keressük meg, nem véletlenszerű indexeléssel.",
+          "studyNotes": "## Mi ez?\n\nSQL performance tuningnál azt keressük, hol telik el az idő: table scan, rossz join order, sort, lock wait, túl sok round trip vagy connection pool várakozás. Az execution plan megmutatja, hogyan fut a query.\n\n## Milyen problémát old meg?\n\nEgy helyes query az adatmennyiség növekedésével belassulhat. Blind indexelés vagy caching elrejtheti az igazi bottlenecket, és közben drágítja a write-okat.\n\n## Hogyan működik?\n\n- Először döntsd el, hogy a database dolgozik lassan, vagy az application connectionre vár.\n- Nézd az actual execution plant, row estimate-et, joinokat, scant, sortot és lock waitet.\n- Csak szükséges rows-t és columns-t adj vissza, csökkentsd a round tripet.\n- Minden változtatást representative data mellett mérj előtte és utána.\n\n## Gyakori hibák\n\n- Execution plan nélkül optimalizálni.\n- Bottleneck keresés előtt hardware-t hozzáadni.\n- Csak kicsi vagy üres development database-en tesztelni.\n\n## Kulcsfogalmak\n\n- execution plan — a database query futtatási stratégiája\n- row estimate — egy plan step várható row száma\n- full table scan — az egész table végigolvasása\n- lock wait — másik transactionre váró query"
+        }
+      }
+    },
+    {
+      "id": "data_n_plus_one",
+      "name": "N+1 Query Problem",
+      "description": "Avoiding one initial query followed by one extra database call per returned item.",
+      "category": "database",
+      "relatedTopicIds": [
+        "data_query_performance",
+        "data_indexes"
+      ],
+      "studyNotes": "## What is it?\n\nN+1 happens when an application loads a list with one query and then executes one additional query for each item. A list of one hundred records becomes one hundred and one database round trips.\n\n## What problem does it solve?\n\nEach individual query may be fast, so the problem can stay hidden until list size or latency grows. ORMs and resolver-based APIs can generate this pattern silently.\n\n## How it works\n\n- Measure query count per request, not only single-query duration.\n- Use joins, controlled eager loading, batch loading, or an IN query.\n- Avoid loading relationships that the response does not need.\n- Test with realistic list sizes.\n\n## Common mistakes\n\n- Caching every small query instead of removing the pattern.\n- Fetching every relationship eagerly by default.\n- Looking only at slow-query logs, where each query appears fast.\n\n## Key terms\n\n- N+1 — one list query plus one query per item\n- batch loading — loading many related records in one call\n- eager loading — fetching related data with the main operation\n- round trip — one application-to-database request and response",
+      "i18n": {
+        "hu": {
+          "name": "N+1 Query Problem",
+          "description": "Egy list query után minden elemhez külön database query fut.",
+          "studyNotes": "## Mi ez?\n\nN+1 esetén az application egy queryvel lekéri a listát, majd minden itemhez még egy queryt futtat. Száz record így 101 database round tripet jelent.\n\n## Milyen problémát old meg?\n\nMinden egyes query gyors lehet, ezért a probléma nem feltétlenül látszik a slow-query logban. ORM vagy resolver-alapú API könnyen észrevétlenül előállítja.\n\n## Hogyan működik?\n\n- Requestenként a query countot is mérd, ne csak az egyes queryk idejét.\n- Használj joint, controlled eager loadingot, batch loadingot vagy IN queryt.\n- Ne tölts be olyan relationshipet, amely nem kell a response-hoz.\n- Reális listamérettel tesztelj.\n\n## Gyakori hibák\n\n- Minden kis queryt cache-elni a pattern megszüntetése helyett.\n- Minden relationshipet alapból eager loadolni.\n- Csak slow-query logot nézni, ahol minden query külön gyorsnak tűnik.\n\n## Kulcsfogalmak\n\n- N+1 — egy list query plusz itemenként egy query\n- batch loading — sok kapcsolódó record egy hívásban\n- eager loading — kapcsolódó adat betöltése a fő operationnel\n- round trip — egy application-database request és response"
+        }
+      }
+    },
+    {
+      "id": "data_pagination",
+      "name": "Offset and Keyset Pagination",
+      "description": "Returning large ordered result sets in stable pages without scanning or skipping excessive rows.",
+      "category": "database",
+      "relatedTopicIds": [
+        "data_indexes",
+        "data_query_performance"
+      ],
+      "studyNotes": "## What is it?\n\nOffset pagination uses LIMIT and OFFSET. It is simple, but deep offsets require the database to find and skip many rows. Keyset pagination uses the last seen ordered values as a cursor.\n\n## What problem does it solve?\n\nLarge or frequently changing lists can become slow or inconsistent with deep offset pagination. Inserts and deletes between requests may duplicate or skip items.\n\n## How it works\n\n- Use a deterministic order with a unique tiebreaker.\n- Use offset for small lists where page numbers matter.\n- Use keyset or cursor pagination for large changing feeds and APIs.\n- Create an index matching the filter and cursor order.\n\n## Common mistakes\n\n- Ordering only by a non-unique timestamp.\n- Using deep OFFSET for an unbounded feed.\n- Encoding database internals in a public cursor without versioning.\n\n## Key terms\n\n- offset pagination — skip N rows, then return the next page\n- keyset pagination — continue after the last ordered key\n- cursor — opaque continuation value\n- tiebreaker — unique field making order deterministic",
+      "i18n": {
+        "hu": {
+          "name": "Offset és Keyset Pagination",
+          "description": "Nagy rendezett listákat úgy lapozunk, hogy a query stabil és skálázható maradjon.",
+          "studyNotes": "## Mi ez?\n\nOffset pagination LIMIT és OFFSET alapján lapoz. Egyszerű, de deep offsetnél a database sok row-t keres meg és dob el. Keyset pagination az utolsó látott ordered value alapján folytatja.\n\n## Milyen problémát old meg?\n\nNagy vagy folyamatosan változó listánál a deep OFFSET lassú lehet, és insert vagy delete miatt itemek kimaradhatnak vagy duplikálódhatnak.\n\n## Hogyan működik?\n\n- Mindig deterministic ordert használj unique tiebreakerrel.\n- Offset jó kis listánál, ahol fontos a page number.\n- Keyset vagy cursor pagination jobb nagy, változó feedhez és API-hoz.\n- Az index kövesse a filter és cursor ordert.\n\n## Gyakori hibák\n\n- Csak nem unique timestamp alapján rendezni.\n- Unbounded feednél deep OFFSET-et használni.\n- Public cursorba versioning nélkül database internalt kódolni.\n\n## Kulcsfogalmak\n\n- offset pagination — N row kihagyása, majd a következő page\n- keyset pagination — folytatás az utolsó ordered key után\n- cursor — opaque continuation value\n- tiebreaker — unique field a deterministic orderhez"
+        }
+      }
+    },
+    {
+      "id": "data_strong_eventual_consistency",
+      "name": "Strong and Eventual Consistency",
+      "description": "Choosing when reads must immediately reflect writes and when temporary divergence is acceptable.",
+      "category": "database",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nStrong consistency requires a successful write to be visible to subsequent relevant reads. Eventual consistency allows temporary divergence as long as replicas or derived models converge later.\n\n## What problem does it solve?\n\nImmediate consistency can increase coordination and latency. Eventual consistency improves decoupling and scale, but the business and UI must tolerate a visible delay.\n\n## How it works\n\n- Choose consistency per operation and invariant, not once for the whole product.\n- Use strong consistency for payments, permissions, inventory decisions, and other correctness-critical state.\n- Use eventual consistency for dashboards, search indexes, analytics, and non-critical projections where acceptable.\n- Measure lag and expose processing states instead of contradictory success.\n\n## Common mistakes\n\n- Calling eventual consistency unreliable by definition.\n- Using stale data for a critical authorization or financial decision.\n- Promising convergence without monitoring lag or failed updates.\n\n## Key terms\n\n- strong consistency — relevant reads immediately observe committed state\n- eventual consistency — copies converge after a delay\n- read-after-write — writer immediately observes its change\n- consistency lag — time until required views converge",
+      "i18n": {
+        "hu": {
+          "name": "Strong és Eventual Consistency",
+          "description": "Operationönként döntjük el, kell-e immediate friss adat, vagy elfogadható rövid eltérés.",
+          "studyNotes": "## Mi ez?\n\nStrong consistency esetén a successful write utáni releváns read már az új állapotot látja. Eventual consistency rövid ideig eltérést enged, de a replica vagy derived model később konvergál.\n\n## Milyen problémát old meg?\n\nImmediate consistency több coordinationt és latencyt okozhat. Eventual consistency lazább couplingot ad, de a businessnek és UI-nak kezelnie kell a késést.\n\n## Hogyan működik?\n\n- Consistencyt operation és invariant alapján válassz, ne az egész productra egyszer.\n- Payment, permission, inventory decision és más critical state esetén gyakran strong kell.\n- Dashboard, search index, analytics és non-critical projection esetén eventual elfogadható lehet.\n- Mérd a lagot, és contradictory success helyett mutass Processing state-et.\n\n## Gyakori hibák\n\n- Az eventual consistencyt definíció szerint megbízhatatlannak nevezni.\n- Critical authorization vagy financial döntéshez stale adatot használni.\n- Convergence-t ígérni lag és failed update monitoring nélkül.\n\n## Kulcsfogalmak\n\n- strong consistency — releváns read azonnal látja a commitolt állapotot\n- eventual consistency — a copy-k késés után konvergálnak\n- read-after-write — a writer azonnal látja a saját change-ét\n- consistency lag — a view-k konvergálásához szükséges idő"
+        }
+      }
+    },
+    {
+      "id": "data_distributed_transactions_saga",
+      "name": "Distributed Transactions and Saga",
+      "description": "Coordinating a business process across services with local transactions and compensating actions.",
+      "category": "database",
+      "relatedTopicIds": [
+        "data_transactions_acid",
+        "data_transactional_outbox"
+      ],
+      "studyNotes": "## What is it?\n\nA global distributed transaction tries to commit several participants as one unit. In heterogeneous systems and external APIs this is often unavailable, blocking, or fragile. A saga splits the process into local transactions with explicit state and compensation.\n\n## What problem does it solve?\n\nA booking may touch inventory, payment, booking, and loyalty systems. No single database transaction can safely roll all of them back. The workflow must define what happens after each partial success or failure.\n\n## How it works\n\n- Model the workflow as explicit durable states and steps.\n- Use a local transaction for each service-owned change.\n- Define compensation for completed critical steps, such as releasing inventory or voiding payment.\n- Choose orchestration for a central critical workflow or choreography for looser event reactions.\n\n## Common mistakes\n\n- Calling compensation a true rollback when external side effects already happened.\n- Running a long database transaction across network calls.\n- Using choreography without end-to-end tracing or ownership.\n\n## Key terms\n\n- saga — business transaction split into local transactions\n- compensation — business action counteracting a completed step\n- orchestration — coordinator controls the workflow\n- choreography — services react to events without one coordinator",
+      "i18n": {
+        "hu": {
+          "name": "Distributed Transactions és Saga",
+          "description": "Több service-t érintő business flow-t local transactionökkel és compensating actionökkel kezelünk.",
+          "studyNotes": "## Mi ez?\n\nA global distributed transaction több participantet próbál egyetlen commitba fogni. Heterogeneous system és external API mellett ez gyakran nem elérhető, blocking vagy törékeny. A saga local transactionökre bontja a flow-t, explicit state-tel és compensationnel.\n\n## Milyen problémát old meg?\n\nEgy booking érintheti az inventory, payment, booking és loyalty rendszert. Nincs egyetlen database transaction, amely mindent biztonságosan rollbackel. Minden partial success és failure után definiálni kell a következő lépést.\n\n## Hogyan működik?\n\n- A workflow durable, explicit state-ekből és lépésekből álljon.\n- Minden service a saját change-ét local transactionben commitolja.\n- A completed critical stephez legyen compensation, például inventory release vagy payment void.\n- Critical, ordered flow-nál orchestration, lazább event reactionnél choreography lehet jobb.\n\n## Gyakori hibák\n\n- A compensationt valódi rollbacknek nevezni, amikor external side effect már megtörtént.\n- Network callokon át nyitva tartani egy database transactiont.\n- Choreographyt használni end-to-end tracing és ownership nélkül.\n\n## Kulcsfogalmak\n\n- saga — local transactionökre bontott business transaction\n- compensation — egy completed step hatását ellensúlyozó business action\n- orchestration — central coordinator irányítja a workflow-t\n- choreography — service-ek eventekre reagálnak central coordinator nélkül"
+        }
+      }
+    },
+    {
+      "id": "data_transactional_outbox",
+      "name": "Transactional Outbox",
+      "description": "Persisting a business change and its event in one local transaction before asynchronous publishing.",
+      "category": "database",
+      "relatedTopicIds": [
+        "data_distributed_transactions_saga",
+        "data_idempotent_consumers"
+      ],
+      "studyNotes": "## What is it?\n\nThe transactional outbox writes the business change and an outbox event record in the same database transaction. A separate publisher later sends the event to the broker.\n\n## What problem does it solve?\n\nIt solves the dual-write gap: the database commit may succeed and event publication may fail, or the event may publish before the database change commits. One atomic local transaction prevents silent divergence.\n\n## How it works\n\n- Insert the business row and outbox row in one transaction.\n- Publish pending outbox rows with a worker or change data capture.\n- Mark or remove published rows only after durable confirmation.\n- Make consumers idempotent because publication can still be retried.\n\n## Common mistakes\n\n- Calling outbox exactly-once delivery.\n- Deleting outbox rows before publication is durably confirmed.\n- Ignoring ordering requirements for related events.\n\n## Key terms\n\n- dual write — two separate writes that cannot commit atomically\n- outbox table — local table containing events to publish\n- publisher — process sending pending events\n- change data capture — reading database changes from a log or stream",
+      "i18n": {
+        "hu": {
+          "name": "Transactional Outbox",
+          "description": "A business change és a hozzá tartozó event ugyanabban a local transactionben kerül database-be, majd később publisholjuk.",
+          "studyNotes": "## Mi ez?\n\nTransactional outbox esetén a business row és az outbox event record ugyanabban a database transactionben íródik. Egy külön publisher később elküldi az eventet a brokernek.\n\n## Milyen problémát old meg?\n\nEz a dual-write problémát oldja meg: különben a database commit sikerülhet, miközben az event publish elbukik, vagy fordítva. Az egy local transaction megakadályozza a silent divergence-et.\n\n## Hogyan működik?\n\n- A business row és outbox row egy transactionben insertelődjön.\n- Background worker vagy change data capture publisholja a pending eventeket.\n- A published row státuszát vagy törlését csak durable confirmation után kezeld.\n- A consumer maradjon idempotent, mert a publish retry duplicate eventet okozhat.\n\n## Gyakori hibák\n\n- Az outboxot exactly-once deliverynek nevezni.\n- Durable publish confirmation előtt törölni az outbox row-t.\n- Kapcsolódó eventek ordering igényét figyelmen kívül hagyni.\n\n## Kulcsfogalmak\n\n- dual write — két külön write, amely nem commitolható atomikusan\n- outbox table — publisholandó eventeket tartalmazó local table\n- publisher — pending eventeket brokerre küldő process\n- change data capture — database log vagy stream alapján olvasott change-ek"
+        }
+      }
+    },
+    {
+      "id": "data_idempotent_consumers",
+      "name": "At-Least-Once Delivery and Idempotent Consumers",
+      "description": "Making duplicate message delivery harmless at the business boundary.",
+      "category": "database",
+      "relatedTopicIds": [
+        "data_transactional_outbox"
+      ],
+      "studyNotes": "## What is it?\n\nAt-least-once delivery means a message may be delivered more than once. An idempotent consumer makes repeated processing produce the same business result as one successful processing.\n\n## What problem does it solve?\n\nRetries are required for reliability, but they create duplicates. Without deduplication, one event can charge twice, send duplicate notifications, or repeat a state transition.\n\n## How it works\n\n- Give every event a stable event ID.\n- Record processed IDs, use a unique constraint, UPSERT, or a guarded state transition.\n- Commit the deduplication record and business effect in one local transaction.\n- Return success for a recognized duplicate instead of repeating the side effect.\n\n## Common mistakes\n\n- Generating a new event ID for every retry.\n- Checking a processed table and writing outside the same transaction.\n- Assuming the broker provides exactly-once effects across systems.\n\n## Key terms\n\n- at-least-once — delivery may repeat until acknowledged\n- idempotent consumer — duplicate processing has no extra effect\n- processed-events table — records handled event IDs\n- effective exactly-once — at-least-once delivery plus idempotent processing",
+      "i18n": {
+        "hu": {
+          "name": "At-Least-Once Delivery és Idempotent Consumers",
+          "description": "A duplicate message ne okozzon duplicate business side effectet.",
+          "studyNotes": "## Mi ez?\n\nAt-least-once delivery esetén ugyanaz a message többször is megérkezhet. Az idempotent consumer úgy dolgozza fel, hogy a többszöri processing business eredménye ugyanaz legyen, mint egyetlen sikeres feldolgozásé.\n\n## Milyen problémát old meg?\n\nA retry kell a reliabilityhez, de duplicate-ot hoz létre. Dedupe nélkül ugyanaz az event kétszer charge-olhat, notificationt küldhet vagy state transitiont hajthat végre.\n\n## Hogyan működik?\n\n- Minden eventnek legyen stabil event ID-ja.\n- Használj processed-ID recordot, UNIQUE constraintet, UPSERT-et vagy guarded state transitiont.\n- A dedupe record és business effect ugyanabban a local transactionben commitoljon.\n- Ismert duplicate esetén success legyen, ne ismételt side effect.\n\n## Gyakori hibák\n\n- Minden retryhoz új event ID-t generálni.\n- Processed table-t checkelni, majd külön transactionben írni.\n- Azt feltételezni, hogy a broker systemeken át exactly-once effectet ad.\n\n## Kulcsfogalmak\n\n- at-least-once — acknowledgementig ismétlődhet a delivery\n- idempotent consumer — duplicate processing nem okoz új effectet\n- processed-events table — handled event ID-k nyilvántartása\n- effective exactly-once — at-least-once delivery plus idempotent processing"
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "data_slow_list_001",
+      "title": "Diagnosing a slow SQL list endpoint",
+      "prompt": "A list endpoint became slow as the table grew from thousands to tens of millions of rows. Walk through your diagnosis and likely fixes.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "data_query_performance",
+        "data_indexes",
+        "data_n_plus_one",
+        "data_pagination"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Confirm where time is spent, inspect the plan and query count, then fix indexing, access shape, pagination, or pool pressure based on evidence.",
+      "expectedPoints": [
+        {
+          "id": "data_slow_measure",
+          "label": "Measures before changing",
+          "description": "Separates database execution time, connection-pool wait, application work, and network time.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "measure first",
+            "connection pool wait",
+            "database execution time",
+            "trace the endpoint"
+          ]
+        },
+        {
+          "id": "data_slow_plan",
+          "label": "Reads the execution plan",
+          "description": "Checks scans, join order, row estimates, sort, and whether the expected index is used.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "execution plan",
+            "full table scan",
+            "join order",
+            "row estimates",
+            "index used"
+          ]
+        },
+        {
+          "id": "data_slow_n1",
+          "label": "Checks query count and N+1",
+          "description": "Looks for one query per returned item and fixes it with join or batching.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "n plus one",
+            "query count",
+            "batch loading",
+            "join"
+          ]
+        },
+        {
+          "id": "data_slow_page",
+          "label": "Improves result shape and pagination",
+          "description": "Returns only needed data and considers keyset pagination for deep or changing lists.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "select needed columns",
+            "keyset pagination",
+            "avoid deep offset",
+            "limit rows"
+          ]
+        },
+        {
+          "id": "data_slow_verify",
+          "label": "Verifies with representative data",
+          "description": "Measures before and after with realistic volumes and traffic.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "representative data",
+            "compare before after",
+            "load test",
+            "realistic volume"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "data_slow_follow_index",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "data_slow_plan"
+          },
+          "prompt": "Why can adding an index make the overall system worse?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Lassú SQL list endpoint diagnosztikája",
+          "prompt": "Egy list endpoint belassult, amikor a table néhány ezer row-ról több tízmillióra nőtt. Hogyan diagnosztizálnád, és milyen javítások jöhetnek szóba?",
+          "answerStructureHint": "Először mérd meg, hol telik az idő, nézd meg a plant és query countot, majd evidence alapján javíts indexet, query shape-et, paginationt vagy pool pressure-t.",
+          "expectedPoints": {
+            "data_slow_measure": {
+              "label": "Változtatás előtt mér",
+              "description": "Elkülöníti a database executiont, connection-pool waitet, application munkát és network time-ot."
+            },
+            "data_slow_plan": {
+              "label": "Megnézi az execution plant",
+              "description": "Scan, join order, row estimate, sort és index usage kerül elő."
+            },
+            "data_slow_n1": {
+              "label": "Vizsgálja a query countot és N+1-et",
+              "description": "Itemenkénti queryt keres, majd joinnal vagy batchinggel javítja."
+            },
+            "data_slow_page": {
+              "label": "Javítja a result shape-et és paginationt",
+              "description": "Csak szükséges adatot ad vissza, deep listánál keyset paginationt mérlegel."
+            },
+            "data_slow_verify": {
+              "label": "Representative data mellett verifyol",
+              "description": "Reális volumen és traffic mellett mér előtte és utána."
+            }
+          },
+          "followUps": {
+            "data_slow_follow_index": "Miért ronthatja az egész rendszer teljesítményét egy új index?"
+          }
+        }
+      }
+    },
+    {
+      "id": "data_sql_nosql_choice_001",
+      "title": "Choosing storage for orders and product events",
+      "prompt": "You are designing an order system with payments, inventory reservations, customer history, and a very large stream of product-view events. Would you use one database model for everything?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "data_sql_vs_nosql",
+        "data_transactions_acid"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Separate transactional invariants from high-volume event access patterns, then justify the storage boundary and operational cost.",
+      "expectedPoints": [
+        {
+          "id": "data_choice_orders",
+          "label": "Uses relational storage for transactional invariants",
+          "description": "Connects orders, payments, and inventory to transactions, constraints, and relationships.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "relational database",
+            "transactions",
+            "foreign keys",
+            "inventory consistency",
+            "payment correctness"
+          ]
+        },
+        {
+          "id": "data_choice_events",
+          "label": "Uses an event-oriented model where justified",
+          "description": "Treats product-view events as append-heavy data with different query and scale requirements.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "append only events",
+            "high write volume",
+            "analytics store",
+            "event stream",
+            "different access pattern"
+          ]
+        },
+        {
+          "id": "data_choice_boundary",
+          "label": "Defines ownership and data flow",
+          "description": "Explains which system is authoritative and how derived analytics data is produced.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "source of truth",
+            "data ownership",
+            "event pipeline",
+            "derived data"
+          ]
+        },
+        {
+          "id": "data_choice_cost",
+          "label": "Mentions operational trade-offs",
+          "description": "Notes that multiple stores add monitoring, backup, security, and skill cost.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "operational complexity",
+            "backup strategy",
+            "monitoring cost",
+            "more technologies"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "data_choice_follow_one",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would you deliberately keep both workloads in one relational database?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Storage választás orderökhöz és product eventekhez",
+          "prompt": "Order systemet tervezel paymenttel, inventory reservationnel, customer historyval és nagyon nagy product-view event streammel. Ugyanazt a database modellt használnád mindenre?",
+          "answerStructureHint": "Válaszd szét a transactional invariantet és a high-volume event access patternt, majd indokold a storage boundaryt és operational costot.",
+          "expectedPoints": {
+            "data_choice_orders": {
+              "label": "Relational storage-ot használ a transactional invarianthez",
+              "description": "Az order, payment és inventory a transaction, constraint és relationship miatt SQL felé mutat."
+            },
+            "data_choice_events": {
+              "label": "Indokolt esetben event-orientált modellt választ",
+              "description": "A product-view append-heavy, high-volume data, eltérő query és scale igénnyel."
+            },
+            "data_choice_boundary": {
+              "label": "Meghatározza az ownershipöt és data flow-t",
+              "description": "Egyértelmű az authoritative system és a derived analytics data előállítása."
+            },
+            "data_choice_cost": {
+              "label": "Megemlíti az operational trade-offot",
+              "description": "Több store több monitoringot, backupot, securityt és skillt igényel."
+            }
+          },
+          "followUps": {
+            "data_choice_follow_one": "Mikor tartanád mégis mindkét workloadot egy relational database-ben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "data_pagination_feed_001",
+      "title": "Designing pagination for a changing feed",
+      "prompt": "A feed contains millions of records ordered by createdAt. Users scroll continuously while new records are inserted. How would you paginate it?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "data_pagination",
+        "data_indexes"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain why deep offset is unstable, use a deterministic cursor, and match the index to the query.",
+      "expectedPoints": [
+        {
+          "id": "data_page_keyset",
+          "label": "Chooses keyset or cursor pagination",
+          "description": "Uses the last seen ordered key rather than a growing OFFSET.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "keyset pagination",
+            "cursor pagination",
+            "last seen key",
+            "avoid deep offset"
+          ]
+        },
+        {
+          "id": "data_page_order",
+          "label": "Uses deterministic ordering",
+          "description": "Combines createdAt with a unique tiebreaker such as id.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "created at and id",
+            "unique tiebreaker",
+            "deterministic order",
+            "stable ordering"
+          ]
+        },
+        {
+          "id": "data_page_index",
+          "label": "Matches the index",
+          "description": "Uses a composite index aligned with filters and the cursor order.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "composite index",
+            "created at id index",
+            "matching order",
+            "index supports cursor"
+          ]
+        },
+        {
+          "id": "data_page_contract",
+          "label": "Defines cursor behaviour",
+          "description": "Keeps the cursor opaque and documents direction, page size, and end conditions.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "opaque cursor",
+            "page size limit",
+            "next cursor",
+            "end of feed"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "data_page_follow_jump",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you do if the product also requires jumping directly to page 200?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Pagination változó feedhez",
+          "prompt": "A feed több millió recordot tartalmaz createdAt szerint rendezve. A userek folyamatosan scrolloznak, miközben új recordok érkeznek. Hogyan lapoznád?",
+          "answerStructureHint": "Magyarázd el a deep OFFSET problémáját, használj deterministic cursort, és illeszd az indexet a queryhez.",
+          "expectedPoints": {
+            "data_page_keyset": {
+              "label": "Keyset vagy cursor paginationt választ",
+              "description": "A last seen ordered key alapján folytat, nem növekvő OFFSET-tel."
+            },
+            "data_page_order": {
+              "label": "Deterministic ordert használ",
+              "description": "A createdAt mellé unique tiebreaker, például id kerül."
+            },
+            "data_page_index": {
+              "label": "Az index illik a queryhez",
+              "description": "Composite index követi a filtert és cursor ordert."
+            },
+            "data_page_contract": {
+              "label": "Definiálja a cursor behaviourt",
+              "description": "Opaque cursor, direction, page size és end condition tartozik hozzá."
+            }
+          },
+          "followUps": {
+            "data_page_follow_jump": "Mit tennél, ha a product közvetlenül a 200. page-re ugrást is megköveteli?"
+          }
+        }
+      }
+    },
+    {
+      "id": "data_booking_saga_001",
+      "title": "Keeping a booking flow consistent across services",
+      "prompt": "A booking touches inventory, payment, booking, document generation, and loyalty services. How would you keep the flow consistent without a global transaction?",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "data_distributed_transactions_saga",
+        "data_transactional_outbox"
+      ],
+      "expectedDurationSeconds": 330,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Define durable saga state, local transactions, compensation, critical versus non-critical steps, and recovery.",
+      "expectedPoints": [
+        {
+          "id": "data_saga_state",
+          "label": "Models explicit saga state",
+          "description": "Uses a durable workflow state and step status instead of relying on an in-memory request chain.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "durable saga state",
+            "workflow status",
+            "persisted steps",
+            "long running transaction"
+          ]
+        },
+        {
+          "id": "data_saga_local",
+          "label": "Uses local transactions",
+          "description": "Each service commits only its own data and publishes or records the next transition reliably.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "local transaction",
+            "service owned data",
+            "outbox event",
+            "no global transaction"
+          ]
+        },
+        {
+          "id": "data_saga_comp",
+          "label": "Defines compensation",
+          "description": "Releases inventory or voids payment when a later critical step fails.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "compensating action",
+            "release inventory",
+            "void payment",
+            "refund"
+          ]
+        },
+        {
+          "id": "data_saga_priority",
+          "label": "Separates critical and non-critical work",
+          "description": "Keeps booking correctness in the main saga while document, loyalty, or notification work may retry asynchronously.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "critical path",
+            "non critical async",
+            "loyalty retry",
+            "document generation"
+          ]
+        },
+        {
+          "id": "data_saga_recover",
+          "label": "Plans recovery and reconciliation",
+          "description": "Includes idempotent steps, timeout handling, monitoring, and reconciliation for stuck or ambiguous state.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "idempotent steps",
+            "reconciliation",
+            "stuck saga",
+            "manual review",
+            "timeout recovery"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "data_saga_follow_style",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you orchestrate or choreograph this saga, and why?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Booking flow consistency több service között",
+          "prompt": "Egy booking érinti az inventory, payment, booking, document generation és loyalty service-eket. Hogyan tartanád konzisztensen global transaction nélkül?",
+          "answerStructureHint": "Legyen durable saga state, local transaction, compensation, critical és non-critical lépések, valamint recovery.",
+          "expectedPoints": {
+            "data_saga_state": {
+              "label": "Explicit saga state-et modellez",
+              "description": "Durable workflow state és step status van, nem egy in-memory request chain."
+            },
+            "data_saga_local": {
+              "label": "Local transactionöket használ",
+              "description": "Minden service csak a saját adatát commitolja, és reliable módon rögzíti vagy publisholja a következő transitiont."
+            },
+            "data_saga_comp": {
+              "label": "Compensationt definiál",
+              "description": "Későbbi critical failure esetén inventory release vagy payment void/refund történik."
+            },
+            "data_saga_priority": {
+              "label": "Elkülöníti a critical és non-critical munkát",
+              "description": "A booking correctness a fő saga része, document, loyalty vagy notification async retryolható."
+            },
+            "data_saga_recover": {
+              "label": "Recoveryt és reconciliationt tervez",
+              "description": "Idempotent step, timeout handling, monitoring és stuck vagy ambiguous state javítás szerepel."
+            }
+          },
+          "followUps": {
+            "data_saga_follow_style": "Orchestrálnád vagy choreographyn keresztül kezelnéd ezt a sagát, és miért?"
+          }
+        }
+      }
+    },
+    {
+      "id": "data_outbox_duplicate_001",
+      "title": "Reliable event publishing with duplicate delivery",
+      "prompt": "A service must update a booking and publish BookingCreated. The database commit can succeed while broker publishing fails, and the broker may later redeliver the event. Design the flow.",
+      "roles": [
+        "backend_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "data_transactional_outbox",
+        "data_idempotent_consumers"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Use one local transaction for business plus outbox, a retriable publisher, and an idempotent consumer.",
+      "expectedPoints": [
+        {
+          "id": "data_outbox_atomic",
+          "label": "Writes business and outbox atomically",
+          "description": "Stores the booking change and event record in the same local database transaction.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "same transaction",
+            "booking and outbox",
+            "atomic local write",
+            "outbox table"
+          ]
+        },
+        {
+          "id": "data_outbox_publish",
+          "label": "Publishes asynchronously and retries",
+          "description": "A worker or CDC process publishes pending events and marks them only after durable broker confirmation.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "background publisher",
+            "change data capture",
+            "retry publish",
+            "mark published after ack"
+          ]
+        },
+        {
+          "id": "data_outbox_consumer",
+          "label": "Makes the consumer idempotent",
+          "description": "Uses a stable event ID, unique constraint, processed-events record, UPSERT, or guarded transition.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "stable event id",
+            "idempotent consumer",
+            "processed events table",
+            "unique constraint",
+            "upsert"
+          ]
+        },
+        {
+          "id": "data_outbox_semantics",
+          "label": "States the delivery semantics honestly",
+          "description": "Explains that outbox plus broker still may deliver duplicates and is not magical exactly-once across systems.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 2,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "at least once",
+            "duplicates possible",
+            "not exactly once",
+            "effective exactly once"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "data_outbox_follow_order",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you preserve ordering for several events belonging to the same booking?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Reliable event publish duplicate delivery mellett",
+          "prompt": "A service update-eli a bookingot és BookingCreated eventet publishol. A database commit sikerülhet, miközben a broker publish elbukik, később pedig a broker duplicate eventet küldhet. Tervezd meg a flow-t.",
+          "answerStructureHint": "A business change és outbox egy local transaction, a publisher retryolható, a consumer idempotent.",
+          "expectedPoints": {
+            "data_outbox_atomic": {
+              "label": "Atomikusan írja a business és outbox adatot",
+              "description": "A booking change és event record ugyanabban a local database transactionben kerül mentésre."
+            },
+            "data_outbox_publish": {
+              "label": "Asynchronously publishol és retryol",
+              "description": "Worker vagy CDC publisholja a pending eventet, és csak durable broker confirmation után jelöli publishednek."
+            },
+            "data_outbox_consumer": {
+              "label": "Idempotent consumert tervez",
+              "description": "Stable event ID, unique constraint, processed-events record, UPSERT vagy guarded transition szerepel."
+            },
+            "data_outbox_semantics": {
+              "label": "Őszintén megnevezi a delivery semanticset",
+              "description": "Az outbox és broker mellett is lehet duplicate; ez nem mágikus exactly-once systemeken át."
+            }
+          },
+          "followUps": {
+            "data_outbox_follow_order": "Hogyan őriznéd meg ugyanahhoz a bookinghoz tartozó több event sorrendjét?"
+          }
+        }
+      }
+    }
+  ]
+}
