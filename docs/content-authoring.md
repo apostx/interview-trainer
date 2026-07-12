@@ -136,6 +136,13 @@ list is clearer than prose. (May be titled contextually, e.g.
 
 Aim for 150–400 words per topic.
 
+**Blank lines are required around every `## ` heading** — one blank line
+before it AND one blank line after it (including before the first `- ` bullet
+underneath). A heading glued to the text above or to the bullets below renders
+as literal `## ` text instead of a heading, and `content:check` rejects it.
+In JSON this means the `studyNotes` string uses `\n\n` before and after each
+`## ` marker, e.g. `"…prose.\n\n## How it works\n\n- first bullet…"`.
+
 Questions may also reference **existing seed topic ids** (see
 `src/core/seed/topics.ts`), e.g. `api_design`, `caching`, `message_queue`,
 `idempotency`, `observability`, `scalability`, `microservices`, …
@@ -317,6 +324,10 @@ Content rules:
   ("- term — one-line definition" bullets). Simple sentences; explain jargon
   the moment it appears; no insider one-liners. Paragraphs separated by \n\n.
   The questions are practice checks *under* the notes.
+- CRITICAL formatting: put \n\n BEFORE and AFTER every "## " heading (also
+  between a heading and the first "- " bullet under it). A heading without a
+  blank line on both sides renders as literal "## " text and is rejected by
+  content:check. Example: "…prose.\n\n## How it works\n\n- first bullet".
 - Every question needs 1-2 followUps that probe the most likely gap.
 - Mix the modes: concept_check for definitions, tradeoff_decision for X-vs-Y,
   scenario_discussion / troubleshooting for practical situations,
