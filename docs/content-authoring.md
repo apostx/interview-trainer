@@ -18,11 +18,10 @@ errors are shown on the **Topics** page (and in `npm run content:check`).
 3. Validate: `npm run content:check` — fix anything it reports.
 4. Reload the app. The Topics page lists the pack; its topics appear in the
    library and its questions join the session generator's pool.
-5. Optional dress rehearsal: **`npm run release:beta`** publishes your
-   CURRENT working state (even uncommitted) to
-   <https://interviewtrainer.sallai.cc/beta/> without touching your branch
-   or the version number. The sidebar there shows `vX.Y.Z-beta.<sha>` so it
-   cannot be mistaken for production.
+5. To compare candidate rebuilds against the live content before promoting,
+   drop each under `content/versions/<label>/` and open Study with `?dev=1`
+   (see "Comparing content versions" below). This works in dev, and on the
+   deployed site once the versions are shipped — no separate staging deploy.
 6. Publish to the live site: **`npm run release:content`** — it re-runs the
    gates, commits everything changed, bumps the minor version and pushes;
    the `v*` tag triggers the Pages deploy (~2 minutes to live). Custom commit
@@ -275,9 +274,13 @@ separately.
   listing `Live` plus every version folder. Selecting one swaps the entire
   Study bank (topics, questions, notes, translations, PDF export). The choice
   is URL-addressable (`?ver=<label>`), so you can link a specific version.
-- Without `?dev=1` the dropdown is hidden and only the live bank is used — so
-  version folders never affect normal use (they are still bundled, so delete
-  them before a release if you want a lean production build).
+- Without `?dev=1` the dropdown is hidden and only the live bank is used, so
+  normal visitors never see the versions — but the folders ARE bundled into
+  the build, including production. That is deliberate: release candidates to
+  the live site and compare them against Live at
+  `https://interviewtrainer.sallai.cc/study/?dev=1`, no staging deploy needed.
+  Once you have picked a winner, delete the version folders and release again
+  to drop them from the bundle.
 - `npm run content:check` validates every version folder as its own bank
   (schema, studyNotes structure), exactly like the live one. Version banks are
   independent, so ids may repeat across versions (but must be unique within

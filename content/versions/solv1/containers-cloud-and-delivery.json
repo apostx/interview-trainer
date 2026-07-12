@@ -1,0 +1,2139 @@
+{
+  "id": "containers_cloud_delivery_rebuild",
+  "name": "Containers, Cloud, and Delivery",
+  "description": "Container runtime fundamentals, Kubernetes operations, CI/CD, safe deployment, supply-chain controls, and production readiness.",
+  "sources": [
+    "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu",
+    "dennemeyer_system_design_100_tema_peldakkal_mobile_hu",
+    "Luxair_interju_QA_gyujtemeny",
+    "Luxair_Interview_Terms_Glossary_HU",
+    "Luxair_Interview_Terms_Reminder_HU",
+    "Luxair_Top_10_Interview_Questions_HU"
+  ],
+  "topics": [
+    {
+      "id": "deliv_containers",
+      "name": "Containers",
+      "description": "Packaging an application and its runtime dependencies into an isolated, repeatable unit.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_docker_image_lifecycle",
+        "deliv_production_dockerfile",
+        "deliv_kubernetes_objects"
+      ],
+      "studyNotes": "## What is it?\n\nA container is an isolated process packaged with the application, runtime, libraries, and startup configuration it needs. Unlike a virtual machine, it shares the host operating-system kernel instead of booting a complete guest operating system.\n\n## What problem does it solve?\n\nApplications often behave differently across laptops, CI agents, staging, and production because runtimes and native dependencies differ. A container makes the runtime unit repeatable, portable, and easier to automate.\n\n## How it works\n\n- Build an immutable image from a version-controlled definition such as a Dockerfile.\n- Run the image with environment-specific configuration supplied at startup rather than baked into it.\n- Write logs to stdout or stderr and treat the local filesystem as temporary unless a volume is explicitly required.\n- Keep the application responsible for health, graceful shutdown, security, and stateless behaviour; containerization does not repair a poor application design.\n\n## Common mistakes\n\n- Treating a container as a small virtual machine and installing or changing software after startup.\n- Writing critical state to the container filesystem and losing it during replacement.\n- Assuming Docker automatically provides scaling, resilience, or secure configuration.\n\n## Key terms\n\n- container — a running instance of an image\n- image — an immutable packaged filesystem and startup definition\n- host kernel — the operating-system kernel shared by containers\n- ephemeral filesystem — local storage that may disappear when the container is replaced",
+      "i18n": {
+        "hu": {
+          "name": "Containers",
+          "description": "Az application és runtime dependencyk izolált, ismételhető futtatási egységbe csomagolása.",
+          "studyNotes": "## Mi ez?\n\nA container egy izolált process, amely az applicationt, runtime-ot, libraryket és az induláshoz szükséges beállításokat együtt futtatja. A virtual machine-nel ellentétben nem indít külön teljes operációs rendszert, hanem a host kernelét használja.\n\n## Milyen problémát old meg?\n\nLaptopon, CI agenten, stagingben és productionben eltérhet a runtime vagy egy native dependency. A container ugyanazt a futtatási egységet teszi reprodukálhatóvá és automatizálhatóvá minden környezetben.\n\n## Hogyan működik?\n\n- Version controlban lévő Dockerfile alapján immutable image készül.\n- A környezetspecifikus config induláskor érkezik, nem kerül bele az image-be.\n- A log stdout vagy stderr felé megy, a local filesystem pedig alapból temporary.\n- A health check, graceful shutdown, security és stateless működés továbbra is az application felelőssége; a container nem javítja ki a rossz designt.\n\n## Gyakori hibák\n\n- A containert kis VM-ként kezelni, és futás közben kézzel módosítani.\n- Kritikus state-et a container local filesystemére írni.\n- Azt feltételezni, hogy a Docker önmagában scalinget, resiliencet vagy secure configot ad.\n\n## Kulcsfogalmak\n\n- container — egy image futó példánya\n- image — immutable csomagolt filesystem és startup definition\n- host kernel — a container-ek által közösen használt operációs rendszer kernel\n- ephemeral filesystem — a container cseréjekor eltűnő local storage"
+        }
+      }
+    },
+    {
+      "id": "deliv_docker_image_lifecycle",
+      "name": "Docker Image and Container Lifecycle",
+      "description": "Separating the immutable build artifact from the replaceable running process.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_containers",
+        "deliv_build_once_promote",
+        "deliv_rollback_rollforward"
+      ],
+      "studyNotes": "## What is it?\n\nA Docker image is the versioned build artifact; a container is one running process created from that image. Images should be immutable, while containers should be disposable and replaceable.\n\n## What problem does it solve?\n\nIf teams patch running containers manually or reuse mutable tags without knowing their contents, environments drift and rollback becomes unreliable.\n\n## How it works\n\n- Build and tag the image with an immutable identifier such as a commit SHA or release version.\n- Push the image to a registry and deploy that exact digest to each environment.\n- Create replacement containers instead of modifying existing ones in place.\n- Use startup, termination, and restart behaviour that leaves the service safe when an instance disappears at any time.\n\n## Common mistakes\n\n- Deploying the moving latest tag and not knowing which code is running.\n- Installing emergency fixes inside a live container without rebuilding the image.\n- Assuming restart preserves process memory or local files.\n\n## Key terms\n\n- registry — a service that stores and distributes images\n- tag — a human-readable image reference that may be mutable\n- digest — a content-addressed immutable image identifier\n- immutable artifact — a build output that is not changed after creation",
+      "i18n": {
+        "hu": {
+          "name": "Docker Image and Container Lifecycle",
+          "description": "Az immutable build artifact és a bármikor cserélhető futó container elkülönítése.",
+          "studyNotes": "## Mi ez?\n\nA Docker image a versionelt build artifact, a container pedig az image-ből indított futó process. Az image legyen immutable, a container pedig legyen bármikor eldobható és újraindítható.\n\n## Milyen problémát old meg?\n\nHa a team kézzel patcheli a futó containert, vagy egy folyamatosan változó latest taget deployol, a környezetek eltérnek és a rollback sem lesz megbízható.\n\n## Hogyan működik?\n\n- Az image commit SHA-val vagy release verzióval kap immutable identifiert.\n- Registrybe kerül, majd minden környezet ugyanazt a digestet deployolja.\n- Futó container módosítása helyett új container készül a kívánt image-ből.\n- A startup és shutdown úgy legyen megtervezve, hogy egy instance bármikor biztonságosan eltűnhessen.\n\n## Gyakori hibák\n\n- A mozgó latest taget deployolni, és nem tudni pontosan, melyik build fut.\n- Live containerben kézzel javítani a kódot image rebuild nélkül.\n- Azt várni, hogy restart után megmarad a process memory vagy a local file.\n\n## Kulcsfogalmak\n\n- registry — image-ek tárolására és terjesztésére szolgáló service\n- tag — ember számára olvasható, de akár változó image reference\n- digest — content alapján képzett immutable image identifier\n- immutable artifact — létrehozás után nem módosított build output"
+        }
+      }
+    },
+    {
+      "id": "deliv_production_dockerfile",
+      "name": "Production Dockerfile",
+      "description": "Building small, reproducible, secure images for production workloads.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_containers",
+        "deliv_supply_chain_security",
+        "deliv_ci_cd_pipeline"
+      ],
+      "studyNotes": "## What is it?\n\nA production Dockerfile defines how source code becomes a deployable image. It should produce a deterministic, minimal runtime image rather than copying the whole development environment into production.\n\n## What problem does it solve?\n\nLarge or non-reproducible images deploy slowly, contain unnecessary vulnerabilities, and make it difficult to know whether two builds are equivalent.\n\n## How it works\n\n- Use a lockfile and deterministic dependency installation.\n- Use a multi-stage build so compilers and development dependencies stay out of the runtime stage.\n- Choose a minimal, maintained base image and pin important versions or digests.\n- Run as a non-root user, copy only required files, and use a .dockerignore file.\n- Expose a clear startup command and let the application handle termination signals.\n\n## Common mistakes\n\n- Copying secrets, the full repository, test output, or node_modules from the host into the image.\n- Running the application as root without a reason.\n- Using an unpinned base image and getting different runtime contents from the same source commit.\n\n## Key terms\n\n- multi-stage build — separate build and runtime stages\n- base image — the starting filesystem and runtime layer\n- non-root user — a process identity without administrative container privileges\n- .dockerignore — a file excluding unnecessary build-context content",
+      "i18n": {
+        "hu": {
+          "name": "Production Dockerfile",
+          "description": "Kis, reprodukálható és biztonságos production image készítése.",
+          "studyNotes": "## Mi ez?\n\nA production Dockerfile leírja, hogyan lesz a source code-ból deployolható image. A cél nem a teljes development környezet becsomagolása, hanem egy reprodukálható és minimális runtime image.\n\n## Milyen problémát old meg?\n\nA nagy vagy nem reprodukálható image lassan deployolható, felesleges vulnerabilityket tartalmazhat, és nehéz bizonyítani, hogy két build tényleg ugyanaz.\n\n## Hogyan működik?\n\n- Lockfile és deterministic dependency install legyen használva.\n- Multi-stage build választja szét a compilerrel teli build stage-et a minimal runtime stage-től.\n- Karbantartott, kis base image kell, fontos verziók vagy digests pinelésével.\n- Az app non-root userként fusson, csak szükséges file-ok kerüljenek be, és legyen .dockerignore.\n- Legyen egyértelmű startup command, a termination signalokat pedig az application kezelje.\n\n## Gyakori hibák\n\n- Secretet, teljes repositoryt, test outputot vagy host node_modules-t az image-be másolni.\n- Indok nélkül rootként futtatni az applicationt.\n- Unpinned base image-et használni, ezért ugyanabból a commitból eltérő runtime-ot kapni.\n\n## Kulcsfogalmak\n\n- multi-stage build — külön build és runtime stage\n- base image — a kiinduló filesystem és runtime layer\n- non-root user — adminisztratív container privilege nélküli process identity\n- .dockerignore — a felesleges build-context tartalmat kizáró file"
+        }
+      }
+    },
+    {
+      "id": "deliv_container_configuration",
+      "name": "Container Configuration and Secrets",
+      "description": "Supplying environment-specific settings and credentials without rebuilding or exposing the image.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_production_dockerfile",
+        "deliv_kubernetes_objects",
+        "deliv_infrastructure_as_code"
+      ],
+      "studyNotes": "## What is it?\n\nConfiguration changes how the same application artifact behaves in an environment. Secrets are sensitive configuration values such as database credentials, API keys, and private keys.\n\n## What problem does it solve?\n\nBaking environment values into an image creates one artifact per environment, leaks credentials into layers or registries, and makes rotation require a rebuild.\n\n## How it works\n\n- Keep non-sensitive settings in environment variables, configuration files, or platform configuration objects.\n- Load secrets from a secret manager or orchestrator-managed secret and restrict access with least privilege.\n- Validate required configuration at startup and fail clearly before receiving traffic.\n- Rotate credentials independently from the application image and avoid logging their values.\n- Separate configuration ownership, audit access, and define safe defaults rather than silently using development settings.\n\n## Common mistakes\n\n- Committing secrets to Git or copying them into image layers.\n- Using one shared administrator credential for many services.\n- Starting successfully with missing config and failing later on the first user request.\n\n## Key terms\n\n- configuration — non-secret environment-specific behaviour settings\n- secret manager — a controlled system for storing and rotating sensitive values\n- least privilege — granting only the access required for one workload\n- rotation — replacing a credential without unnecessary application changes",
+      "i18n": {
+        "hu": {
+          "name": "Container Configuration and Secrets",
+          "description": "Environment-specifikus beállítások és credentialek biztonságos átadása image rebuild nélkül.",
+          "studyNotes": "## Mi ez?\n\nA configuration ugyanazt az application artifactot környezetenként másképp állítja be. A secrets érzékeny config értékek, például database credential, API key vagy private key.\n\n## Milyen problémát old meg?\n\nHa a környezetspecifikus érték az image-be kerül, minden environmenthez külön build kell, a credential image layerben vagy registryben maradhat, a rotation pedig rebuildhez kötődik.\n\n## Hogyan működik?\n\n- A nem érzékeny config environment variable-ben, config file-ban vagy platform config objectben legyen.\n- A secret secret managerből vagy orchestrator-managed secretből érkezzen, least-privilege access mellett.\n- Startupkor validáld a kötelező configot, és traffic fogadása előtt fail legyen egyértelműen.\n- A credential rotation az application image-től függetlenül történjen, az érték pedig ne kerüljön logba.\n- Legyen tiszta ownership és audit, development default pedig ne aktiválódjon észrevétlenül productionben.\n\n## Gyakori hibák\n\n- Secretet Gitbe commitolni vagy image layerbe másolni.\n- Több service-hez egy közös admin credentialt használni.\n- Hiányos configgal sikeresen elindulni, majd az első user requestnél hibázni.\n\n## Kulcsfogalmak\n\n- configuration — nem érzékeny, environment-specifikus behaviour setting\n- secret manager — sensitive value tárolását és rotationjét kezelő rendszer\n- least privilege — csak a szükséges access megadása\n- rotation — credential cseréje felesleges application módosítás nélkül"
+        }
+      }
+    },
+    {
+      "id": "deliv_kubernetes_objects",
+      "name": "Kubernetes Core Objects",
+      "description": "Using Pods, Deployments, and Services to run and expose containerized workloads.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_containers",
+        "deliv_service_discovery",
+        "deliv_readiness_liveness",
+        "deliv_resource_management"
+      ],
+      "studyNotes": "## What is it?\n\nKubernetes is a container orchestration platform. A Pod is the smallest scheduled runtime unit, a Deployment manages replicated stateless Pods and rollouts, and a Service gives a changing set of Pods a stable network endpoint.\n\n## What problem does it solve?\n\nManually starting containers does not provide automatic replacement, declarative scaling, stable discovery, or controlled rollout across many instances and services.\n\n## How it works\n\n- Declare the desired image, replica count, environment, resources, and probes in workload configuration.\n- A Deployment creates and replaces Pods through ReplicaSets until the desired state is reached.\n- A Service selects Pods by labels and provides a stable name and virtual address.\n- Controllers continuously reconcile actual state with declared desired state.\n- Use Kubernetes only when its operational cost is justified by the number of services, teams, and runtime needs.\n\n## Common mistakes\n\n- Treating a Pod as a permanent server with a stable IP.\n- Editing production Pods manually instead of changing the declarative configuration.\n- Adopting Kubernetes for a tiny workload without the skills to operate it.\n\n## Key terms\n\n- Pod — the smallest deployable Kubernetes runtime unit\n- Deployment — a controller for replicated stateless Pods and rollouts\n- Service — a stable endpoint for selected Pods\n- reconciliation — continuously moving actual state toward declared state",
+      "i18n": {
+        "hu": {
+          "name": "Kubernetes Core Objects",
+          "description": "Podok, Deploymentek és Service-ek használata containerized workload futtatására.",
+          "studyNotes": "## Mi ez?\n\nA Kubernetes container orchestration platform. A Pod a legkisebb schedule-ölhető runtime unit, a Deployment replicated stateless Podokat és rolloutot kezel, a Service pedig stabil network endpointot ad a változó Podok elé.\n\n## Milyen problémát old meg?\n\nA container-ek kézi indítása nem ad automatikus replacementet, declarative scalinget, stabil discoveryt vagy kontrollált rolloutot sok instance és service esetén.\n\n## Hogyan működik?\n\n- A kívánt image, replica count, environment, resources és probes declarative konfigurációban szerepel.\n- A Deployment ReplicaSeteken keresztül hozza létre és cseréli a Podokat a desired state eléréséig.\n- A Service label selector alapján megtalálja a Podokat, és stabil nevet vagy virtual addresst biztosít.\n- A controllerek folyamatosan összehangolják az actual state-et a declared desired state-tel.\n- Kubernetes csak akkor indokolt, ha a service-ek, teamek és runtime igények ellensúlyozzák az operational costot.\n\n## Gyakori hibák\n\n- A Podot stabil IP-jű, permanent servernek tekinteni.\n- Production Podot kézzel módosítani declarative config helyett.\n- Kis workloadhoz Kubernetes-t bevezetni úgy, hogy a team nem tudja üzemeltetni.\n\n## Kulcsfogalmak\n\n- Pod — a legkisebb deployolható Kubernetes runtime unit\n- Deployment — replicated stateless Podokat és rolloutot kezelő controller\n- Service — stabil endpoint a kiválasztott Podok előtt\n- reconciliation — actual state folyamatos közelítése a declared state-hez"
+        }
+      }
+    },
+    {
+      "id": "deliv_service_discovery",
+      "name": "Service Discovery",
+      "description": "Finding healthy service instances by stable logical name instead of changing addresses.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_kubernetes_objects",
+        "deliv_traffic_routing",
+        "deliv_stateless_stateful"
+      ],
+      "studyNotes": "## What is it?\n\nService discovery lets a caller address a service by a stable logical name while the platform resolves that name to currently available instances. In Kubernetes, a Service and cluster DNS commonly provide this behaviour.\n\n## What problem does it solve?\n\nPods and instances are replaced, scaled, and rescheduled, so their IP addresses are temporary. Hard-coded addresses break as soon as the runtime changes.\n\n## How it works\n\n- Call a stable service name such as payment-service rather than a Pod IP.\n- Let the platform update endpoints as Pods become ready or disappear.\n- Combine discovery with readiness so unhealthy or unready instances are not selected.\n- Use timeouts, retries, and load balancing because discovery does not guarantee a successful call.\n\n## Common mistakes\n\n- Caching one resolved instance forever.\n- Treating successful discovery as proof that the dependency is healthy.\n- Using externally exposed addresses for internal service-to-service traffic without a need.\n\n## Key terms\n\n- logical service name — a stable name used by callers\n- endpoint — one concrete reachable service instance\n- DNS discovery — resolving a service name through DNS\n- endpoint update — adding or removing current instances from discovery",
+      "i18n": {
+        "hu": {
+          "name": "Service Discovery",
+          "description": "Változó instance address helyett stabil logical name alapján történő service elérés.",
+          "studyNotes": "## Mi ez?\n\nA service discovery lehetővé teszi, hogy a caller stabil logical name alapján hívjon egy service-t, miközben a platform az aktuálisan elérhető instance-okra oldja fel a nevet. Kubernetesben ezt tipikusan a Service és a cluster DNS adja.\n\n## Milyen problémát old meg?\n\nA Pod vagy instance replacement, scaling és rescheduling miatt folyamatosan változik. A hard-coded IP az első runtime változásnál eltörik.\n\n## Hogyan működik?\n\n- Pod IP helyett stabil service nevet hívj, például payment-service.\n- A platform frissítse az endpointokat, amikor Pod ready lesz vagy eltűnik.\n- Readiness-szel együtt használd, hogy unready vagy unhealthy instance ne kapjon trafficot.\n- Timeout, retry és load balancing továbbra is kell, mert a discovery önmagában nem garantál sikeres hívást.\n\n## Gyakori hibák\n\n- Egy feloldott instance addresst örökre cache-elni.\n- A sikeres discoveryt a dependency health bizonyítékának tekinteni.\n- Internal service callhoz szükségtelenül external endpointot használni.\n\n## Kulcsfogalmak\n\n- logical service name — caller által használt stabil név\n- endpoint — egy konkrét elérhető service instance\n- DNS discovery — service név feloldása DNS segítségével\n- endpoint update — aktuális instance-ok hozzáadása vagy eltávolítása"
+        }
+      }
+    },
+    {
+      "id": "deliv_traffic_routing",
+      "name": "Ingress, Reverse Proxy, Load Balancer, and API Gateway",
+      "description": "Separating external routing, traffic distribution, protocol handling, and API policy concerns.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_kubernetes_objects",
+        "deliv_service_discovery",
+        "deliv_deployment_strategies"
+      ],
+      "studyNotes": "## What is it?\n\nThese components all sit in the traffic path but have different responsibilities. A load balancer distributes traffic, an Ingress defines external HTTP routing into a Kubernetes cluster, a reverse proxy forwards requests and may terminate TLS, and an API gateway applies API policies such as authentication and rate limits.\n\n## What problem does it solve?\n\nUsing the terms interchangeably produces duplicated layers, hidden policy, and unclear ownership. It also makes failures harder to diagnose because nobody knows which layer changed the request.\n\n## How it works\n\n- Use load balancing to spread traffic across healthy instances.\n- Use Ingress rules and an Ingress controller to route external HTTP hosts or paths into cluster Services.\n- Use a reverse proxy for concerns such as TLS termination, compression, header handling, and request-size limits.\n- Use an API gateway when a central policy point is needed for external APIs, but keep business logic out of it.\n- Document the full request path and avoid adding a layer without a clear responsibility.\n\n## Common mistakes\n\n- Putting business workflow into the gateway until it becomes a new ESB.\n- Adding a gateway to internal traffic that only needs service discovery and load balancing.\n- Configuring several layers to rewrite the same paths and headers differently.\n\n## Key terms\n\n- load balancer — distributes traffic across instances\n- Ingress — Kubernetes external HTTP routing rules\n- reverse proxy — an intermediary forwarding and transforming protocol-level traffic\n- API gateway — a policy enforcement point for APIs",
+      "i18n": {
+        "hu": {
+          "name": "Ingress, Reverse Proxy, Load Balancer, and API Gateway",
+          "description": "External routing, traffic distribution, proxy és API policy felelősségek elkülönítése.",
+          "studyNotes": "## Mi ez?\n\nEzek a komponensek mind a traffic pathban vannak, de más a feladatuk. A load balancer instance-ok között osztja el a trafficot, az Ingress Kubernetes clusterbe vezető external HTTP routingot ír le, a reverse proxy továbbít és például TLS-t terminál, az API gateway pedig auth, rate limit és más API policyket alkalmaz.\n\n## Milyen problémát old meg?\n\nHa ezeket szinonimaként kezeljük, könnyen lesz duplicate layer, rejtett policy és bizonytalan ownership. Incidentnél azt sem lehet tudni, melyik réteg módosította a requestet.\n\n## Hogyan működik?\n\n- Load balancing osztja el a trafficot healthy instance-ok között.\n- Ingress rule és Ingress controller route-olja az external hostot vagy pathot cluster Service-re.\n- Reverse proxy kezelhet TLS terminationt, compressiont, headereket és request-size limitet.\n- API gateway akkor kell, ha external API-hoz central policy point szükséges, de business logic ne kerüljön bele.\n- Dokumentáld a teljes request pathot, és ne adj hozzá új layert konkrét felelősség nélkül.\n\n## Gyakori hibák\n\n- Business workflow-t a gatewaybe tenni, amíg új ESB-vé válik.\n- Internal traffichoz gatewayt használni, amikor discovery és load balancing elég.\n- Több layerben egymásnak ellentmondó path- és header-rewrite szabályokat tartani.\n\n## Kulcsfogalmak\n\n- load balancer — traffic elosztása instance-ok között\n- Ingress — Kubernetes external HTTP routing rule\n- reverse proxy — protocol-level trafficot továbbító köztes réteg\n- API gateway — API policy enforcement point"
+        }
+      }
+    },
+    {
+      "id": "deliv_readiness_liveness",
+      "name": "Readiness, Liveness, and Startup Probes",
+      "description": "Distinguishing whether a process should receive traffic, be restarted, or be given more startup time.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_kubernetes_objects",
+        "deliv_graceful_shutdown",
+        "deliv_deployment_strategies"
+      ],
+      "studyNotes": "## What is it?\n\nReadiness answers whether an instance can receive traffic now. Liveness answers whether the process is stuck and should be restarted. A startup probe gives a slow-starting process time before liveness checks begin.\n\n## What problem does it solve?\n\nOne generic health endpoint cannot safely answer all three questions. A wrong probe can route traffic too early, repeatedly restart a healthy but slow application, or keep a broken instance serving users.\n\n## How it works\n\n- Readiness stays false until required configuration and internal startup work are complete.\n- Readiness becomes false before shutdown so the instance drains without new traffic.\n- Liveness checks a narrow condition that restart can realistically repair.\n- Startup probes protect slow initialization from premature liveness failure.\n- Choose timeouts and failure thresholds from measured startup and failure behaviour.\n\n## Common mistakes\n\n- Making liveness depend on every downstream service and causing restart storms during an external outage.\n- Returning ready before the application can actually serve requests.\n- Using a probe that always returns success and provides no protection.\n\n## Key terms\n\n- readiness — whether the instance should receive traffic\n- liveness — whether the process should be restarted\n- startup probe — temporary protection for slow application startup\n- restart loop — repeated restarts caused by persistent probe failure",
+      "i18n": {
+        "hu": {
+          "name": "Readiness, Liveness, and Startup Probes",
+          "description": "Annak elkülönítése, hogy az instance kaphat-e trafficot, restart kell-e, vagy csak több startup időre van szüksége.",
+          "studyNotes": "## Mi ez?\n\nA readiness azt válaszolja meg, hogy az instance most kaphat-e trafficot. A liveness azt, hogy a process beragadt-e és restart kell-e. A startup probe időt ad a lassan induló processnek, mielőtt a liveness ellenőrzés aktív lesz.\n\n## Milyen problémát old meg?\n\nEgyetlen általános health endpoint nem tudja biztonságosan megválaszolni mindhárom kérdést. Rossz probe túl korán küld trafficot, healthy de lassú appot restart loopba rak, vagy broken instance-t tart service-ben.\n\n## Hogyan működik?\n\n- Readiness false marad, amíg a szükséges config és belső startup work nem készült el.\n- Shutdown előtt readiness false lesz, így az instance új traffic nélkül drainelhet.\n- Liveness csak olyan szűk hibát nézzen, amelyet a restart valóban javíthat.\n- Startup probe védje a lassú initializationt a túl korai liveness failure-től.\n- Timeout és failure threshold mért startup és failure behaviour alapján legyen beállítva.\n\n## Gyakori hibák\n\n- Livenesst minden downstream dependency health-jéhez kötni, és external outage alatt restart stormot okozni.\n- Ready választ adni, amikor az application még nem képes requestet kezelni.\n- Mindig sikeres probe-ot használni, amely valójában semmit nem ellenőriz.\n\n## Kulcsfogalmak\n\n- readiness — kaphat-e az instance trafficot\n- liveness — restartolni kell-e a processt\n- startup probe — lassú application startup ideiglenes védelme\n- restart loop — tartós probe failure miatti ismételt restart"
+        }
+      }
+    },
+    {
+      "id": "deliv_resource_management",
+      "name": "Resource Requests and Limits",
+      "description": "Declaring expected and maximum CPU and memory usage for predictable scheduling and isolation.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_kubernetes_objects",
+        "deliv_autoscaling",
+        "deliv_capacity_scaling"
+      ],
+      "studyNotes": "## What is it?\n\nA resource request tells Kubernetes what CPU and memory a Pod needs for scheduling. A limit caps usage: CPU may be throttled, while exceeding a memory limit commonly causes the container to be terminated.\n\n## What problem does it solve?\n\nWithout requests the scheduler cannot place workloads intelligently. Without appropriate limits, one workload can consume shared capacity and harm others; with unrealistic limits, healthy workloads may be throttled or killed.\n\n## How it works\n\n- Set requests from measured normal usage plus suitable headroom.\n- Set limits with awareness of burst behaviour, garbage collection, and startup peaks.\n- Observe throttling, OOMKills, working set, and saturation rather than CPU percentage alone.\n- Consider the total requests and limits of all replicas and namespaces, not one Pod in isolation.\n- Revisit values after load tests and production evidence.\n\n## Common mistakes\n\n- Copying identical CPU and memory numbers to every service.\n- Setting a memory limit below realistic peak usage and diagnosing repeated OOMKills as random crashes.\n- Using limits as capacity planning without measuring downstream bottlenecks.\n\n## Key terms\n\n- request — resource amount used by the scheduler\n- limit — maximum allowed resource usage\n- CPU throttling — slowing a container that exceeds CPU quota\n- OOMKilled — termination after exceeding the memory limit",
+      "i18n": {
+        "hu": {
+          "name": "Resource Requests and Limits",
+          "description": "Várható és maximális CPU/memory usage deklarálása predictable scheduling és isolation érdekében.",
+          "studyNotes": "## Mi ez?\n\nA resource request megmondja Kubernetesnek, mennyi CPU és memory kell a Pod schedule-öléséhez. A limit maximumot ad: CPU esetén throttling, memory limit túllépésekor jellemzően container termination történik.\n\n## Milyen problémát old meg?\n\nRequest nélkül a scheduler nem tud jó placementet választani. Megfelelő limit nélkül egy workload elviheti a shared capacityt, irreális limit mellett pedig healthy application is throttled vagy OOMKilled lehet.\n\n## Hogyan működik?\n\n- A request mért normal usage és megfelelő headroom alapján készüljön.\n- A limit vegye figyelembe a burstöt, garbage collectiont és startup peaket.\n- CPU percentage mellett throttlingot, OOMKillt, working setet és saturationt is figyelj.\n- Ne csak egy Podot nézz: minden replica és namespace összes requestje és limitje számít.\n- Load test és production evidence alapján időnként hangold újra az értékeket.\n\n## Gyakori hibák\n\n- Minden service-re ugyanazt a CPU és memory értéket másolni.\n- A real peak alá tenni a memory limitet, majd random crashként kezelni az OOMKilleket.\n- Resource limitből capacity plant készíteni downstream bottleneck mérése nélkül.\n\n## Kulcsfogalmak\n\n- request — scheduler által figyelembe vett resource igény\n- limit — engedélyezett maximum resource usage\n- CPU throttling — CPU quota túllépésekor történő lassítás\n- OOMKilled — memory limit túllépése miatti termination"
+        }
+      }
+    },
+    {
+      "id": "deliv_autoscaling",
+      "name": "Autoscaling",
+      "description": "Adjusting capacity from meaningful demand signals without hiding downstream bottlenecks.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_resource_management",
+        "deliv_capacity_scaling",
+        "deliv_stateless_stateful"
+      ],
+      "studyNotes": "## What is it?\n\nAutoscaling changes the number or size of running instances in response to demand. Kubernetes Horizontal Pod Autoscaler commonly changes replica count from CPU, memory, or custom metrics.\n\n## What problem does it solve?\n\nFixed capacity wastes resources at quiet times and may overload during peaks. However, adding Pods helps only when the application and its dependencies can scale with them.\n\n## How it works\n\n- Choose a signal that leads demand, such as queue lag, in-flight work, request rate, or CPU for CPU-bound workloads.\n- Define minimum, maximum, scale-up speed, and scale-down stabilization to avoid oscillation.\n- Ensure resource requests are meaningful because percentage-based CPU scaling depends on them.\n- Check database connections, rate limits, queues, and third-party capacity before increasing replicas.\n- Plan for startup time so new capacity arrives before the service is already failing.\n\n## Common mistakes\n\n- Scaling on a metric unrelated to the actual bottleneck.\n- Adding Pods when the database is saturated and making the problem worse with more connections.\n- Scaling down too quickly and repeatedly oscillating around the threshold.\n\n## Key terms\n\n- horizontal scaling — adding more instances\n- vertical scaling — giving an instance more resources\n- custom metric — a workload-specific scaling signal\n- stabilization window — time used to avoid rapid scale oscillation",
+      "i18n": {
+        "hu": {
+          "name": "Autoscaling",
+          "description": "Capacity módosítása meaningful demand signal alapján, downstream bottleneck elrejtése nélkül.",
+          "studyNotes": "## Mi ez?\n\nAz autoscaling demand alapján változtatja a futó capacityt. Kubernetesben a Horizontal Pod Autoscaler tipikusan replica countot módosít CPU, memory vagy custom metric alapján.\n\n## Milyen problémát old meg?\n\nFix capacity csendes időben pazarló, peakben pedig kevés lehet. Több Pod azonban csak akkor segít, ha az application és a dependencyk is képesek együtt skálázódni.\n\n## Hogyan működik?\n\n- A signal kövesse a valódi demandet, például queue lag, in-flight work, request rate vagy CPU CPU-bound workloadnál.\n- Legyen minimum, maximum, scale-up speed és scale-down stabilization az oscillation elkerülésére.\n- A resource request legyen reális, mert a százalékos CPU scaling erre épül.\n- Replica emelés előtt vizsgáld a database connectiont, rate limitet, queue-t és third-party capacityt.\n- Startup time miatt a capacitynak a failure előtt kell megérkeznie.\n\n## Gyakori hibák\n\n- A valódi bottlenecktől független metric alapján skálázni.\n- Saturated database mellett több Podot indítani, és még több connectionnel rontani a helyzetet.\n- Túl gyorsan scale downolni, ezért folyamatosan oscillálni a threshold körül.\n\n## Kulcsfogalmak\n\n- horizontal scaling — több instance hozzáadása\n- vertical scaling — egy instance resource növelése\n- custom metric — workload-specifikus scaling signal\n- stabilization window — gyors scale oscillationt csökkentő időablak"
+        }
+      }
+    },
+    {
+      "id": "deliv_capacity_scaling",
+      "name": "Horizontal and Vertical Scaling",
+      "description": "Choosing between more instances and larger instances based on the actual bottleneck.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_autoscaling",
+        "deliv_stateless_stateful",
+        "deliv_resource_management"
+      ],
+      "studyNotes": "## What is it?\n\nVertical scaling gives one instance more CPU or memory. Horizontal scaling adds more instances and distributes work across them.\n\n## What problem does it solve?\n\nA scaling decision made without bottleneck analysis can waste money or reduce reliability. More API replicas do not fix a saturated database, and a larger machine does not remove a single-threaded blocking path.\n\n## How it works\n\n- Measure which resource or dependency limits throughput and latency.\n- Use vertical scaling for quick relief or workloads that are difficult to distribute, within hardware limits.\n- Use horizontal scaling for stateless or partitionable workloads that benefit from failure isolation and elasticity.\n- Externalize shared state and design load balancing, concurrency, and connection pools for the total replica count.\n- Consider cost, startup time, operational complexity, and diminishing returns.\n\n## Common mistakes\n\n- Assuming horizontal scaling is always more modern and therefore always better.\n- Adding replicas while shared connection pools or external rate limits remain fixed.\n- Scaling before profiling a CPU-heavy or memory-leaking application.\n\n## Key terms\n\n- vertical scaling — increasing resources of one instance\n- horizontal scaling — adding more instances\n- bottleneck — the limiting resource or dependency\n- elasticity — adjusting capacity as demand changes",
+      "i18n": {
+        "hu": {
+          "name": "Horizontal and Vertical Scaling",
+          "description": "Több vagy nagyobb instance közötti választás a valódi bottleneck alapján.",
+          "studyNotes": "## Mi ez?\n\nVertical scaling esetén egy instance több CPU-t vagy memoryt kap. Horizontal scaling esetén több instance indul, és a workload szétoszlik közöttük.\n\n## Milyen problémát old meg?\n\nBottleneck analysis nélküli scaling pénzt pazarolhat vagy csökkentheti a reliabilityt. Több API replica nem javít saturated database-t, és nagyobb gép sem szüntet meg egy single-threaded blocking pathot.\n\n## Hogyan működik?\n\n- Mérd meg, melyik resource vagy dependency limitálja a throughputot és latencyt.\n- Vertical scaling gyors relief lehet vagy nehezen elosztható workloadnál működik, de hardware limitje van.\n- Horizontal scaling stateless vagy partitionable workloadnál ad elasticityt és failure isolationt.\n- A shared state kerüljön ki az instance-ból, a load balancing, concurrency és connection pool pedig a teljes replica countra legyen tervezve.\n- Vedd figyelembe a costot, startup time-ot, operational complexityt és diminishing returnt.\n\n## Gyakori hibák\n\n- Azt gondolni, hogy a horizontal scaling mindig modernebb és ezért mindig jobb.\n- Replica countot emelni változatlan shared pool vagy external rate limit mellett.\n- CPU-heavy vagy memory-leaking application profilozása előtt skálázni.\n\n## Kulcsfogalmak\n\n- vertical scaling — egy instance resource növelése\n- horizontal scaling — több instance hozzáadása\n- bottleneck — a limitáló resource vagy dependency\n- elasticity — capacity igazítása a változó demandhez"
+        }
+      }
+    },
+    {
+      "id": "deliv_stateless_stateful",
+      "name": "Stateless and Stateful Workloads",
+      "description": "Understanding how local state changes replacement, routing, and scaling requirements.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_kubernetes_objects",
+        "deliv_service_discovery",
+        "deliv_capacity_scaling",
+        "deliv_graceful_shutdown"
+      ],
+      "studyNotes": "## What is it?\n\nA stateless service does not require a specific instance to remember previous requests; required durable state lives in an external store or travels with the request. A stateful workload keeps important data or long-lived connections tied to an instance.\n\n## What problem does it solve?\n\nOrchestrators replace instances freely. Hidden local state causes lost sessions, inconsistent behaviour, and difficult scaling when traffic moves to another instance.\n\n## How it works\n\n- Keep API session and workflow state in a database, distributed cache, or signed token when appropriate.\n- Treat WebSocket connections, local caches, and in-progress jobs as explicit state that needs coordination or draining.\n- Use persistent volumes and stateful controllers only for workloads that truly own durable local data.\n- Design routing, replication, backup, and recovery differently for stateful systems.\n- Prefer stateless application tiers because replacement and horizontal scaling are simpler.\n\n## Common mistakes\n\n- Calling a service stateless while it depends on in-memory session or job state.\n- Assuming a persistent volume automatically provides replication and backup.\n- Using sticky sessions to hide state problems without planning failover.\n\n## Key terms\n\n- stateless — no required request history tied to one instance\n- stateful — important data or connections tied to an instance\n- sticky session — routing one client repeatedly to the same instance\n- persistent volume — storage whose lifetime is separate from one Pod",
+      "i18n": {
+        "hu": {
+          "name": "Stateless and Stateful Workloads",
+          "description": "Annak megértése, hogyan változtatja meg a local state a replacement, routing és scaling igényeit.",
+          "studyNotes": "## Mi ez?\n\nA stateless service-nek nem kell ugyanazon az instance-on emlékeznie a korábbi requestre; a durable state external store-ban van vagy a request hordozza. A stateful workload fontos adatot vagy long-lived connectiont köt egy konkrét instance-hoz.\n\n## Milyen problémát old meg?\n\nAz orchestrator szabadon cseréli az instance-okat. A rejtett local state elveszett sessiont, inconsistent behaviourt és nehéz scalinget okoz, amikor a traffic másik instance-ra kerül.\n\n## Hogyan működik?\n\n- API session és workflow state database-ben, distributed cache-ben vagy indokolt esetben signed tokenben legyen.\n- WebSocket connection, local cache és in-progress job explicit state, amelyhez coordination vagy draining kell.\n- Persistent volume és stateful controller csak valóban durable local data-t birtokló workloadhoz kell.\n- Stateful rendszernél külön kell tervezni routingot, replicationt, backupot és recoveryt.\n- Application tiernél a stateless design egyszerűbb replacementet és horizontal scalinget ad.\n\n## Gyakori hibák\n\n- Statelessnek nevezni egy service-t, miközben in-memory sessionre vagy job state-re épül.\n- Azt gondolni, hogy a persistent volume automatikusan replication és backup is.\n- Sticky sessionnel elfedni a state problémát failover plan nélkül.\n\n## Kulcsfogalmak\n\n- stateless — nincs egy instance-hoz kötött szükséges request history\n- stateful — fontos adat vagy connection kötődik az instance-hoz\n- sticky session — egy client ismételt route-olása ugyanarra az instance-ra\n- persistent volume — egy Pod lifetime-jától független storage"
+        }
+      }
+    },
+    {
+      "id": "deliv_graceful_shutdown",
+      "name": "Graceful Shutdown and Draining",
+      "description": "Stopping an instance without accepting new work or abandoning in-flight operations.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_readiness_liveness",
+        "deliv_deployment_strategies",
+        "deliv_stateless_stateful"
+      ],
+      "studyNotes": "## What is it?\n\nGraceful shutdown is a controlled termination sequence. The instance stops receiving new work, completes or safely hands off in-flight work, closes resources, and exits before the platform force-kills it.\n\n## What problem does it solve?\n\nDeployments, autoscaling, node maintenance, and crashes replace instances routinely. Immediate termination drops requests, interrupts message processing, leaks locks, or leaves partial work.\n\n## How it works\n\n- Handle the platform termination signal and mark the instance unready.\n- Stop accepting new HTTP requests, queue messages, or background jobs.\n- Allow bounded time for in-flight work to finish and make unfinished work retry-safe.\n- Close database, Redis, broker, and telemetry connections cleanly.\n- Set the platform termination grace period longer than the application drain budget and test the sequence.\n\n## Common mistakes\n\n- Catching the signal but continuing to accept new work.\n- Waiting forever for a request that has no timeout.\n- Acknowledging a queue message before the work is durably complete and then terminating.\n\n## Key terms\n\n- draining — finishing accepted work without taking new work\n- termination signal — the operating-system request to stop\n- grace period — time before forced termination\n- in-flight work — accepted operations not yet completed",
+      "i18n": {
+        "hu": {
+          "name": "Graceful Shutdown and Draining",
+          "description": "Instance leállítása új munka fogadása és in-flight operation eldobása nélkül.",
+          "studyNotes": "## Mi ez?\n\nA graceful shutdown kontrollált termination sequence. Az instance nem fogad új munkát, befejezi vagy biztonságosan átadja az in-flight worköt, lezárja a resource-okat, majd kilép a force kill előtt.\n\n## Milyen problémát old meg?\n\nDeployment, autoscaling, node maintenance és crash miatt rendszeresen cserélődnek instance-ok. Az azonnali termination requestet dob el, message processinget szakít meg, lockot hagyhat bent vagy partial worköt okozhat.\n\n## Hogyan működik?\n\n- Kezeld a platform termination signalját, és állítsd az instance-ot unready állapotba.\n- Ne fogadj új HTTP requestet, queue message-et vagy background jobot.\n- Bounded idő legyen az in-flight work befejezésére, a félbemaradt work pedig legyen retry-safe.\n- Database, Redis, broker és telemetry connection záródjon le szabályosan.\n- A platform termination grace period legyen hosszabb az application drain budgetnél, és teszteld az egész sequence-t.\n\n## Gyakori hibák\n\n- Elkapni a signal-t, de továbbra is új munkát fogadni.\n- Örökké várni egy timeoutra nem képes requestre.\n- Queue message-et a durable completion előtt acknowledge-olni, majd terminate-elni.\n\n## Kulcsfogalmak\n\n- draining — elfogadott munka befejezése új munka felvétele nélkül\n- termination signal — operációs rendszer stop kérése\n- grace period — force termination előtti idő\n- in-flight work — elfogadott, de még be nem fejezett operation"
+        }
+      }
+    },
+    {
+      "id": "deliv_ci_cd_pipeline",
+      "name": "CI/CD Pipeline",
+      "description": "Automating repeatable integration, verification, packaging, and controlled delivery.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_production_dockerfile",
+        "deliv_build_once_promote",
+        "deliv_deployment_strategies",
+        "deliv_supply_chain_security"
+      ],
+      "studyNotes": "## What is it?\n\nContinuous Integration verifies every change through an automated build and test process. Continuous Delivery keeps a releasable artifact ready and moves it through controlled environments; deployment to production may be automatic or require approval.\n\n## What problem does it solve?\n\nManual, environment-specific release steps are slow, inconsistent, difficult to audit, and easy to skip under pressure.\n\n## How it works\n\n- Install dependencies from a lockfile, compile, lint, and run unit, integration, and contract tests as relevant.\n- Run dependency, secret, image, and static security checks with an explicit policy for failures.\n- Build and sign or identify one immutable artifact and publish it to a registry.\n- Deploy to a representative environment, run smoke or end-to-end checks, and promote with controlled rollout.\n- Record provenance, approvals, deployment status, and a tested rollback or roll-forward path.\n\n## Common mistakes\n\n- A fast pipeline with weak tests and no release controls.\n- Rebuilding different artifacts for staging and production.\n- Allowing flaky tests to become permanent ignored noise.\n\n## Key terms\n\n- CI — frequent automated integration and verification\n- CD — controlled delivery or deployment of verified artifacts\n- quality gate — a condition required before promotion\n- provenance — evidence of how and from which source an artifact was built",
+      "i18n": {
+        "hu": {
+          "name": "CI/CD Pipeline",
+          "description": "Repeatable integration, verification, packaging és controlled delivery automatizálása.",
+          "studyNotes": "## Mi ez?\n\nA Continuous Integration minden change-et automated builddel és testtel ellenőriz. A Continuous Delivery mindig releasable artifactot tart készen, és kontrolláltan mozgatja a környezetek között; production deployment lehet automatikus vagy approvalhoz kötött.\n\n## Milyen problémát old meg?\n\nA manuális, környezetenként eltérő release step lassú, inconsistent, nehezen auditálható, és pressure alatt könnyű kihagyni belőle valamit.\n\n## Hogyan működik?\n\n- Lockfile alapján install, compile, lint, majd szükség szerint unit, integration és contract test fut.\n- Dependency, secret, image és static security check legyen, egyértelmű failure policyvel.\n- Egy immutable artifact készüljön és kerüljön registrybe, megfelelő identityvel vagy signature-rel.\n- Representative environment deploy után smoke vagy end-to-end check, majd controlled rollout következzen.\n- Provenance, approval, deployment status és tesztelt rollback vagy roll-forward path legyen rögzítve.\n\n## Gyakori hibák\n\n- Gyors pipeline gyenge testekkel és release control nélkül.\n- Staginghez és productionhöz külön artifactot rebuildelni.\n- Flaky testet állandóan figyelmen kívül hagyott zajként megtartani.\n\n## Kulcsfogalmak\n\n- CI — gyakori automated integration és verification\n- CD — verified artifact kontrollált deliveryje vagy deploymentje\n- quality gate — promotion előtt kötelező feltétel\n- provenance — bizonyíték arról, miből és hogyan készült az artifact"
+        }
+      }
+    },
+    {
+      "id": "deliv_build_once_promote",
+      "name": "Build Once and Promote",
+      "description": "Deploying the same immutable artifact through every environment.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_docker_image_lifecycle",
+        "deliv_ci_cd_pipeline",
+        "deliv_container_configuration"
+      ],
+      "studyNotes": "## What is it?\n\nBuild once and promote means CI creates one immutable artifact, tests it, and then deploys that exact artifact to staging and production. Environment differences come from configuration, not recompilation.\n\n## What problem does it solve?\n\nIf production is rebuilt separately, it may contain different dependencies, base-image updates, generated code, or compiler output from the artifact that was tested.\n\n## How it works\n\n- Identify the artifact by immutable version or digest.\n- Store it in an artifact or image registry with provenance metadata.\n- Inject environment configuration and secrets at deployment time.\n- Promote the existing artifact after approval rather than starting another build.\n- Use the same artifact identity for rollback and incident investigation.\n\n## Common mistakes\n\n- Embedding environment URLs or credentials during compilation when runtime configuration would work.\n- Promoting a tag that can be overwritten instead of a digest.\n- Claiming the same source commit is enough even though the artifact was rebuilt later.\n\n## Key terms\n\n- promotion — moving an existing artifact to the next environment\n- artifact registry — storage for versioned build outputs\n- digest — immutable content identity\n- runtime configuration — environment values supplied when the artifact runs",
+      "i18n": {
+        "hu": {
+          "name": "Build Once and Promote",
+          "description": "Ugyanannak az immutable artifactnak a deployolása minden környezetben.",
+          "studyNotes": "## Mi ez?\n\nA build once and promote azt jelenti, hogy CI egyetlen immutable artifactot készít és tesztel, majd pontosan ugyanezt deployoljuk stagingbe és productionbe. Az environment difference configból jön, nem recompilationből.\n\n## Milyen problémát old meg?\n\nHa production külön rebuild, eltérő dependency, base-image update, generated code vagy compiler output kerülhet bele ahhoz képest, amit ténylegesen teszteltünk.\n\n## Hogyan működik?\n\n- Az artifact immutable versionnel vagy digesttel legyen azonosítva.\n- Artifact vagy image registry tárolja provenance metadata mellett.\n- Environment config és secret deploymentkor kerüljön átadásra.\n- Approval után a meglévő artifact promotionje történjen, ne új build induljon.\n- Rollback és incident investigation ugyanazt az artifact identityt használja.\n\n## Gyakori hibák\n\n- Environment URL-t vagy credentialt compile time beégetni, amikor runtime config is működne.\n- Felülírható taget promote-olni digest helyett.\n- Azt mondani, hogy a same commit elég, miközben az artifact később újra lett buildelve.\n\n## Kulcsfogalmak\n\n- promotion — meglévő artifact mozgatása a következő environmentbe\n- artifact registry — versioned build output tároló\n- digest — immutable content identity\n- runtime configuration — futáskor átadott environment value"
+        }
+      }
+    },
+    {
+      "id": "deliv_deployment_strategies",
+      "name": "Rolling, Blue-Green, and Canary Deployment",
+      "description": "Controlling release blast radius, capacity cost, and rollback speed.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_readiness_liveness",
+        "deliv_graceful_shutdown",
+        "deliv_feature_flags",
+        "deliv_rollback_rollforward"
+      ],
+      "studyNotes": "## What is it?\n\nRolling, blue-green, and canary are rollout strategies. Rolling gradually replaces instances, blue-green switches traffic between two complete environments, and canary exposes a small traffic slice before wider rollout.\n\n## What problem does it solve?\n\nA release can be technically correct in tests but fail under production traffic, data, or dependency behaviour. A rollout strategy limits how many users are exposed before evidence is available.\n\n## How it works\n\n- Use rolling updates for routine compatible changes when gradual instance replacement is sufficient.\n- Use blue-green when fast traffic switching and a full parallel environment justify the extra cost.\n- Use canary for risky changes when metrics and business signals can compare the new version with the baseline.\n- Define health criteria, observation time, and automatic or manual abort conditions before starting.\n- Keep old and new versions compatible with shared data and external contracts during overlap.\n\n## Common mistakes\n\n- Running a canary without watching meaningful metrics.\n- Assuming rollback is safe after a destructive database migration.\n- Deploying incompatible versions together during a rolling update.\n\n## Key terms\n\n- rolling update — gradual replacement of existing instances\n- blue-green — two complete environments with traffic switching\n- canary — limited exposure before full rollout\n- blast radius — the users and systems affected by a failure",
+      "i18n": {
+        "hu": {
+          "name": "Rolling, Blue-Green, and Canary Deployment",
+          "description": "Release blast radius, capacity cost és rollback speed kontrollálása.",
+          "studyNotes": "## Mi ez?\n\nA rolling, blue-green és canary rollout strategy. Rolling fokozatosan cseréli az instance-okat, blue-green két teljes environment között vált trafficot, canary pedig kis traffic slice-on teszteli az új verziót a teljes rollout előtt.\n\n## Milyen problémát old meg?\n\nEgy release teszten helyes lehet, de production traffic, data vagy dependency behaviour mellett hibázhat. A rollout strategy korlátozza, hány user találkozik vele, mielőtt evidence áll rendelkezésre.\n\n## Hogyan működik?\n\n- Rolling update rutin, compatible change esetén jó, amikor gradual replacement elég.\n- Blue-green akkor jó, ha a gyors traffic switch és full parallel environment megéri a többletköltséget.\n- Canary risky change-nél működik, ha metrics és business signal összehasonlítható a baseline-nal.\n- Health criteria, observation time és abort condition még rollout előtt legyen definiálva.\n- Overlap alatt old és new version legyen compatible a shared data-val és external contracttal.\n\n## Gyakori hibák\n\n- Canaryt meaningful metrics figyelése nélkül futtatni.\n- Destructive database migration után automatikusan biztonságos rollbacket feltételezni.\n- Rolling update közben incompatible verziókat egyszerre futtatni.\n\n## Kulcsfogalmak\n\n- rolling update — existing instance-ok gradual replacementje\n- blue-green — két teljes environment és traffic switch\n- canary — limited exposure full rollout előtt\n- blast radius — failure által érintett userek és rendszerek köre"
+        }
+      }
+    },
+    {
+      "id": "deliv_feature_flags",
+      "name": "Feature Flags",
+      "description": "Separating code deployment from feature activation and exposure.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_deployment_strategies",
+        "deliv_rollback_rollforward",
+        "deliv_ci_cd_pipeline"
+      ],
+      "studyNotes": "## What is it?\n\nA feature flag is a runtime decision that enables code for selected users, tenants, percentages, or environments after the code has already been deployed.\n\n## What problem does it solve?\n\nDeployment and release have different risks. A large code change may need to reach production before the business feature is enabled, or a feature may need gradual exposure without another deployment.\n\n## How it works\n\n- Deploy the inactive code path, verify production health, then enable the feature separately.\n- Use targeting for internal users, tenants, regions, or percentages where the business case requires it.\n- Define a safe default and failure behaviour if the flag service is unavailable.\n- Audit changes and restrict who may modify production flags.\n- Remove stale flags after the rollout so permanent branching does not accumulate.\n\n## Common mistakes\n\n- Using a flag as a substitute for testing.\n- Leaving old flags and dead branches in the codebase indefinitely.\n- Creating security or authorization decisions only in the client-side flag.\n\n## Key terms\n\n- deployment — making code available in an environment\n- release — making behaviour available to users\n- targeting — selecting which audience receives the feature\n- kill switch — a flag used to disable risky behaviour quickly",
+      "i18n": {
+        "hu": {
+          "name": "Feature Flags",
+          "description": "A code deployment és feature activation különválasztása.",
+          "studyNotes": "## Mi ez?\n\nA feature flag runtime decision, amely a már deployolt kódot selected user, tenant, percentage vagy environment számára aktiválja.\n\n## Milyen problémát old meg?\n\nA deployment és release más kockázat. Nagy code change productionbe kerülhet a business feature aktiválása előtt, vagy gradual exposure kellhet új deployment nélkül.\n\n## Hogyan működik?\n\n- Inactive code path kerüljön productionbe, health verification után külön történjen az enable.\n- Targeting lehet internal user, tenant, region vagy percentage alapján, ha ezt a business case indokolja.\n- Legyen safe default és failure behaviour, ha a flag service unavailable.\n- A production flag change auditált és restricted legyen.\n- Rollout után a stale flaget és dead branchet el kell távolítani.\n\n## Gyakori hibák\n\n- Feature flaget testing helyettesítésére használni.\n- Régi flaget és dead branchet határozatlan ideig bent hagyni.\n- Security vagy authorization döntést csak client-side flagre építeni.\n\n## Kulcsfogalmak\n\n- deployment — kód elérhetővé tétele egy environmentben\n- release — behaviour elérhetővé tétele userek számára\n- targeting — feature-t kapó audience kiválasztása\n- kill switch — risky behaviour gyors kikapcsolására használt flag"
+        }
+      }
+    },
+    {
+      "id": "deliv_rollback_rollforward",
+      "name": "Rollback and Roll Forward",
+      "description": "Recovering from a failed release by reverting safely or deploying a corrective change.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_deployment_strategies",
+        "deliv_build_once_promote",
+        "deliv_feature_flags"
+      ],
+      "studyNotes": "## What is it?\n\nRollback restores a previously known application version or traffic path. Roll forward deploys a new corrective version. The safer option depends on data changes, external effects, and how quickly a fix can be verified.\n\n## What problem does it solve?\n\nA rollback button is not enough if the release changed database schemas, emitted irreversible events, or modified data that old code cannot understand.\n\n## How it works\n\n- Define rollback and abort criteria before rollout rather than during the incident.\n- Keep previous artifacts and configuration available by immutable identity.\n- Make schema and contract changes backward compatible during the rollback window.\n- Use feature flags or traffic routing to disable behaviour when binary rollback is unsafe.\n- Prefer roll forward when data has already changed irreversibly and a small corrective patch is safer.\n\n## Common mistakes\n\n- Assuming application rollback also undoes database or external side effects.\n- Discovering during an incident that the previous artifact cannot be redeployed.\n- Rolling back repeatedly without understanding which signal proves recovery.\n\n## Key terms\n\n- rollback — returning to a previous known version or traffic path\n- roll forward — deploying a corrective new version\n- abort criterion — a predefined condition that stops a rollout\n- rollback window — the period during which old and new behaviour remain compatible",
+      "i18n": {
+        "hu": {
+          "name": "Rollback and Roll Forward",
+          "description": "Failed release helyreállítása safe revert vagy corrective deployment segítségével.",
+          "studyNotes": "## Mi ez?\n\nA rollback egy korábbi known application versiont vagy traffic pathot állít vissza. A roll forward új corrective versiont deployol. A biztonságosabb opció attól függ, történt-e data change, external side effect, és milyen gyorsan validálható a fix.\n\n## Milyen problémát old meg?\n\nA rollback gomb önmagában kevés, ha a release database schemát változtatott, irreversible eventet küldött vagy olyan data-t írt, amelyet az old code nem ért.\n\n## Hogyan működik?\n\n- Rollback és abort criteria rollout előtt legyen definiálva, ne incident közben.\n- A previous artifact és config immutable identity alapján maradjon elérhető.\n- Schema és contract change maradjon backward compatible a rollback window alatt.\n- Feature flag vagy traffic routing kapcsolja ki a behaviourt, ha binary rollback unsafe.\n- Irreversible data change után gyakran safer egy small corrective roll forward.\n\n## Gyakori hibák\n\n- Azt feltételezni, hogy application rollback a database és external side effectet is visszacsinálja.\n- Incident közben felfedezni, hogy a previous artifact már nem deployolható.\n- Recoveryt bizonyító signal nélkül újra és újra rollbackelni.\n\n## Kulcsfogalmak\n\n- rollback — previous known version vagy traffic path visszaállítása\n- roll forward — corrective new version deployolása\n- abort criterion — rolloutot leállító előre definiált condition\n- rollback window — old és new behaviour compatibility időszaka"
+        }
+      }
+    },
+    {
+      "id": "deliv_supply_chain_security",
+      "name": "Build and Supply-Chain Security",
+      "description": "Reducing the risk that source, dependencies, images, or pipeline credentials are compromised.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_production_dockerfile",
+        "deliv_ci_cd_pipeline",
+        "deliv_container_configuration"
+      ],
+      "studyNotes": "## What is it?\n\nSoftware supply-chain security protects the path from source code and dependencies to the artifact deployed in production. It includes dependency control, build isolation, provenance, signing, scanning, and pipeline access.\n\n## What problem does it solve?\n\nA secure application can still be compromised through a malicious dependency, a leaked CI credential, a replaced image tag, or an untrusted build runner.\n\n## How it works\n\n- Pin dependencies with lockfiles and review or automate dependency updates.\n- Scan source, dependencies, secrets, and images, while defining how severity and exploitability affect release decisions.\n- Use short-lived, least-privilege pipeline credentials and protected build environments.\n- Record provenance and verify that the deployed artifact matches the approved build.\n- Patch base images and dependencies through a repeatable rebuild, not manual production modification.\n\n## Common mistakes\n\n- Treating a clean vulnerability scan as proof that an artifact is trustworthy.\n- Giving CI permanent administrator credentials.\n- Ignoring base-image updates because application code did not change.\n\n## Key terms\n\n- supply chain — the path from source and dependencies to deployed artifact\n- provenance — verifiable build origin and process metadata\n- artifact signing — cryptographic evidence about artifact identity\n- SBOM — an inventory of software components in an artifact",
+      "i18n": {
+        "hu": {
+          "name": "Build and Supply-Chain Security",
+          "description": "Source, dependency, image és pipeline credential kompromittálásának csökkentése.",
+          "studyNotes": "## Mi ez?\n\nA software supply-chain security a source code-tól és dependencyktől a productionbe deployolt artifactig védi az utat. Ide tartozik dependency control, build isolation, provenance, signing, scanning és pipeline access.\n\n## Milyen problémát old meg?\n\nEgy secure application is kompromittálható malicious dependency, leaked CI credential, lecserélt image tag vagy untrusted build runner miatt.\n\n## Hogyan működik?\n\n- Dependency pinelés lockfile-lal, reviewolt vagy automatizált update folyamattal.\n- Source, dependency, secret és image scan fusson, a severity és exploitability pedig explicit release policyhez kapcsolódjon.\n- Short-lived, least-privilege pipeline credential és protected build environment kell.\n- Provenance rögzítse, hogy a deployolt artifact valóban az approved build outputja.\n- Base image és dependency patch repeatable rebuilddel történjen, ne manual production módosítással.\n\n## Gyakori hibák\n\n- Clean vulnerability scanből azt következtetni, hogy az artifact biztosan trustworthy.\n- CI-nak permanent administrator credentialt adni.\n- Base-image update-et figyelmen kívül hagyni, mert application code nem változott.\n\n## Kulcsfogalmak\n\n- supply chain — source és dependency útja a deployed artifactig\n- provenance — verifiable build origin és process metadata\n- artifact signing — artifact identityt bizonyító cryptographic evidence\n- SBOM — artifact software komponenseinek inventoryja"
+        }
+      }
+    },
+    {
+      "id": "deliv_infrastructure_as_code",
+      "name": "Infrastructure as Code",
+      "description": "Managing infrastructure and platform configuration as versioned, reviewable definitions.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_container_configuration",
+        "deliv_ci_cd_pipeline",
+        "deliv_production_readiness"
+      ],
+      "studyNotes": "## What is it?\n\nInfrastructure as Code, or IaC, represents infrastructure and platform configuration in declarative or programmatic files that can be reviewed, tested, and applied repeatedly.\n\n## What problem does it solve?\n\nClicking resources into existence produces undocumented drift, inconsistent environments, and slow disaster recovery. Manual changes are also difficult to audit or reproduce.\n\n## How it works\n\n- Store definitions in version control and review changes like application code.\n- Use remote state, locking, and controlled credentials where the IaC tool requires state.\n- Plan or preview changes before applying them and protect destructive operations.\n- Separate reusable modules from environment-specific values without copying entire stacks.\n- Detect and reconcile drift instead of accepting manual production changes as the new truth.\n\n## Common mistakes\n\n- Putting secrets directly into IaC source or unprotected state files.\n- Using one unreviewed administrator pipeline for every environment.\n- Creating resources manually and assuming the code still describes production.\n\n## Key terms\n\n- IaC — infrastructure represented as versioned code or configuration\n- plan — a preview of intended infrastructure changes\n- state — tool metadata mapping declarations to real resources\n- drift — difference between declared and actual infrastructure",
+      "i18n": {
+        "hu": {
+          "name": "Infrastructure as Code",
+          "description": "Infrastructure és platform config versioned, reviewable definitionként kezelése.",
+          "studyNotes": "## Mi ez?\n\nAz Infrastructure as Code, vagy IaC, infrastructure és platform config deklaratív vagy programmatic file-okban történő leírása, amely reviewolható, tesztelhető és repeatable módon alkalmazható.\n\n## Milyen problémát old meg?\n\nA kézzel kattintgatott resource undocumented driftet, inconsistent environmentet és lassú disaster recoveryt okoz. Manual change auditálása és reprodukálása is nehéz.\n\n## Hogyan működik?\n\n- A definition version controlban legyen, és application code-hoz hasonló reviewt kapjon.\n- Ha az IaC tool state-et használ, legyen remote state, locking és kontrollált credential.\n- Apply előtt plan vagy preview mutassa a change-et, destructive operation pedig legyen védett.\n- Reusable module és environment-specific value legyen szétválasztva teljes stack copy helyett.\n- Drift detection és reconciliation kell, manual production change ne váljon észrevétlenül új truth-tá.\n\n## Gyakori hibák\n\n- Secretet közvetlenül IaC source-ba vagy unprotected state file-ba tenni.\n- Minden environmenthez egyetlen unreviewed admin pipeline-t használni.\n- Resource-ot kézzel létrehozni, majd azt hinni, hogy a code továbbra is productiont írja le.\n\n## Kulcsfogalmak\n\n- IaC — versioned code vagy config formájában kezelt infrastructure\n- plan — intended infrastructure change previewja\n- state — declaration és real resource kapcsolatát tároló tool metadata\n- drift — declared és actual infrastructure közötti eltérés"
+        }
+      }
+    },
+    {
+      "id": "deliv_production_readiness",
+      "name": "Production Readiness",
+      "description": "Verifying that a service can be operated, changed, and recovered safely before launch.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_ci_cd_pipeline",
+        "deliv_readiness_liveness",
+        "deliv_rollback_rollforward",
+        "deliv_infrastructure_as_code"
+      ],
+      "studyNotes": "## What is it?\n\nProduction readiness is the evidence that a service can handle expected traffic, failures, deployment, support, and recovery. It is broader than finishing the feature or passing unit tests.\n\n## What problem does it solve?\n\nA service that works in staging may still fail because nobody defined alerts, capacity, ownership, rollback, dependency limits, backup, or incident procedures.\n\n## How it works\n\n- Confirm measurable availability, latency, security, data, and capacity requirements.\n- Provide health probes, graceful shutdown, resource settings, and dependency timeouts.\n- Create dashboards, actionable alerts, correlation, and safe logging.\n- Test deployment, rollback or roll forward, backup and restore, and failure behaviour.\n- Assign ownership, on-call or support expectations, runbooks, and escalation paths.\n- Review open risks explicitly and decide who accepts them before launch.\n\n## Common mistakes\n\n- Using a checklist mechanically without evidence that the controls work.\n- Treating observability and runbooks as post-launch tasks.\n- Calling the service ready while rollback, ownership, or recovery remains undefined.\n\n## Key terms\n\n- production readiness review — an evidence-based launch and operability assessment\n- runbook — documented operational investigation and response steps\n- operational ownership — the team accountable for running and supporting the service\n- recovery test — proof that restore or failover procedures work",
+      "i18n": {
+        "hu": {
+          "name": "Production Readiness",
+          "description": "Annak ellenőrzése, hogy a service launch előtt biztonságosan üzemeltethető, változtatható és helyreállítható.",
+          "studyNotes": "## Mi ez?\n\nA production readiness annak evidence-e, hogy a service expected traffic, failure, deployment, support és recovery mellett is üzemeltethető. Több annál, hogy a feature elkészült és a unit test zöld.\n\n## Milyen problémát old meg?\n\nStagingben működő service productionben elbukhat, ha nincs alert, capacity, ownership, rollback, dependency limit, backup vagy incident procedure.\n\n## Hogyan működik?\n\n- Legyen measurable availability, latency, security, data és capacity requirement.\n- Health probes, graceful shutdown, resource setting és dependency timeout legyen kész.\n- Dashboard, actionable alert, correlation és safe logging álljon rendelkezésre.\n- Deployment, rollback vagy roll forward, backup/restore és failure behaviour legyen tesztelve.\n- Legyen owner, on-call vagy support expectation, runbook és escalation path.\n- Launch előtt az open riskeket explicit módon reviewoljátok és valaki fogadja el őket.\n\n## Gyakori hibák\n\n- Checklistet mechanikusan kipipálni bizonyíték nélkül, hogy a control működik.\n- Observabilityt és runbookot post-launch feladatnak tekinteni.\n- Readynek nevezni a service-t undefined rollback, ownership vagy recovery mellett.\n\n## Kulcsfogalmak\n\n- production readiness review — evidence-based launch és operability assessment\n- runbook — dokumentált operational investigation és response step\n- operational ownership — service futtatásáért és supportjáért felelős team\n- recovery test — restore vagy failover procedure működésének bizonyítéka"
+        }
+      }
+    },
+    {
+      "id": "deliv_dora_metrics",
+      "name": "DORA Delivery Metrics",
+      "description": "Measuring delivery flow and stability without turning metrics into individual targets.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deliv_ci_cd_pipeline",
+        "deliv_deployment_strategies",
+        "deliv_production_readiness"
+      ],
+      "studyNotes": "## What is it?\n\nDORA metrics summarize software delivery performance through deployment frequency, lead time for changes, change failure rate, and time to restore service. They balance delivery speed with stability.\n\n## What problem does it solve?\n\nCounting output alone can reward frequent but risky releases, while focusing only on incident avoidance can make change slow and painful. The metrics help teams find constraints in the delivery system.\n\n## How it works\n\n- Measure deployment frequency and lead time to understand delivery flow.\n- Measure change failure rate and restoration time to understand release stability and recovery.\n- Use trends and service context rather than comparing unrelated teams or individuals.\n- Connect changes to process experiments such as smaller batches, better tests, or safer rollouts.\n- Keep definitions consistent so the measurement does not change when the result looks uncomfortable.\n\n## Common mistakes\n\n- Turning deployment frequency into a quota and encouraging meaningless releases.\n- Comparing teams with different products, risk, and release boundaries as a ranking.\n- Improving the number by redefining what counts as a failed change.\n\n## Key terms\n\n- deployment frequency — how often production changes are released\n- lead time for changes — time from change to production\n- change failure rate — share of changes causing degradation or recovery work\n- time to restore — time required to recover service after failure",
+      "i18n": {
+        "hu": {
+          "name": "DORA Delivery Metrics",
+          "description": "Delivery flow és stability mérése anélkül, hogy a metric individual targetté válna.",
+          "studyNotes": "## Mi ez?\n\nA DORA metrics a software delivery performance-et deployment frequency, lead time for changes, change failure rate és time to restore service segítségével írja le. Egyszerre figyeli a delivery speedet és stabilityt.\n\n## Milyen problémát old meg?\n\nCsak outputot számolva a gyakori, de risky release jutalmazható, kizárólag incident avoidance-ra fókuszálva pedig lassú és fájdalmas lesz minden change. A metrics a delivery system constraintjeit segít megtalálni.\n\n## Hogyan működik?\n\n- Deployment frequency és lead time mutatja a delivery flow-t.\n- Change failure rate és restoration time mutatja a release stabilityt és recoveryt.\n- Trendeket és service contextet használj unrelated team vagy individual ranking helyett.\n- A metricet kösd process experimenthez, például kisebb batchhez, jobb testhez vagy safer rollouthoz.\n- A definition maradjon consistent, ne változzon azért, mert az eredmény kellemetlen.\n\n## Gyakori hibák\n\n- Deployment frequencyből quota-t csinálni, és értelmetlen release-eket ösztönözni.\n- Eltérő producttal és riskkel működő teameket rankingként összehasonlítani.\n- A failed change definícióját átírni azért, hogy jobb legyen a szám.\n\n## Kulcsfogalmak\n\n- deployment frequency — production change-ek release gyakorisága\n- lead time for changes — change productionbe jutási ideje\n- change failure rate — degradationt vagy recovery worköt okozó change-ek aránya\n- time to restore — failure utáni service recovery ideje"
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "deliv_containerize_node_001",
+      "title": "Containerizing a Node.js service for production",
+      "prompt": "A Node.js service currently runs directly on a VM. How would you create a production-ready container image and runtime configuration for it?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design",
+        "design_review"
+      ],
+      "topicIds": [
+        "deliv_containers",
+        "deliv_production_dockerfile",
+        "deliv_container_configuration",
+        "deliv_supply_chain_security"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover reproducible build, minimal runtime image, non-root execution, configuration and secrets, then runtime behaviour.",
+      "expectedPoints": [
+        {
+          "id": "deliv_node_build",
+          "label": "Creates a reproducible build",
+          "description": "Uses a lockfile, pinned base, and multi-stage build to separate compilation from runtime.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "lockfile install",
+            "multi stage build",
+            "pinned base image",
+            "reproducible image"
+          ]
+        },
+        {
+          "id": "deliv_node_minimal",
+          "label": "Produces a minimal secure runtime",
+          "description": "Copies only runtime files, uses a maintained small base, and runs as non-root.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "minimal runtime image",
+            "non root user",
+            "dockerignore",
+            "production dependencies only"
+          ]
+        },
+        {
+          "id": "deliv_node_config",
+          "label": "Separates configuration and secrets",
+          "description": "Injects environment settings at runtime and retrieves secrets from controlled storage.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "runtime configuration",
+            "environment variables",
+            "secret manager",
+            "do not bake secrets"
+          ]
+        },
+        {
+          "id": "deliv_node_runtime",
+          "label": "Handles container runtime behaviour",
+          "description": "Uses stdout logging, health endpoints, termination signals, and an ephemeral filesystem assumption.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "stdout logging",
+            "health endpoint",
+            "graceful shutdown",
+            "ephemeral filesystem"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "deliv_node_followup_tag",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why is deploying only the latest tag risky?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Node.js service containerizálása productionre",
+          "prompt": "Egy Node.js service jelenleg közvetlenül VM-en fut. Hogyan készítenél hozzá production-ready container image-et és runtime konfigurációt?",
+          "answerStructureHint": "Térj ki a reproducible buildre, minimal runtime image-re, non-root futásra, config/secrets kezelésre és runtime behaviourre.",
+          "expectedPoints": {
+            "deliv_node_build": {
+              "label": "Reprodukálható buildet készít",
+              "description": "Lockfile, pinned base és multi-stage build választja szét a compilationt a runtime-tól."
+            },
+            "deliv_node_minimal": {
+              "label": "Minimal és secure runtime image-et készít",
+              "description": "Csak runtime file-ok kerülnek be, maintained small base és non-root user használatával."
+            },
+            "deliv_node_config": {
+              "label": "Elkülöníti a configot és secretet",
+              "description": "Environment setting runtime érkezik, a secret kontrollált storage-ból töltődik."
+            },
+            "deliv_node_runtime": {
+              "label": "Kezeli a container runtime behaviourt",
+              "description": "Stdout logging, health endpoint, termination signal és ephemeral filesystem assumption szerepel."
+            }
+          },
+          "followUps": {
+            "deliv_node_followup_tag": "Miért kockázatos csak a latest taget deployolni?"
+          }
+        }
+      }
+    },
+    {
+      "id": "deliv_k8s_request_path_001",
+      "title": "Explaining the Kubernetes request path",
+      "prompt": "A request arrives at api.company.com/payments and reaches one of several payment Pods. Explain the responsibilities of Ingress, Service, Deployment, Pod, and service discovery.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "system_design"
+      ],
+      "topicIds": [
+        "deliv_kubernetes_objects",
+        "deliv_service_discovery",
+        "deliv_traffic_routing"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Walk from external routing to a stable Service, selected Pods, and the controller that maintains them.",
+      "expectedPoints": [
+        {
+          "id": "deliv_k8s_ingress",
+          "label": "Explains external routing",
+          "description": "Ingress and its controller route external host or path traffic into the cluster.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "ingress routes external http",
+            "host routing",
+            "path routing",
+            "ingress controller"
+          ]
+        },
+        {
+          "id": "deliv_k8s_service",
+          "label": "Explains the stable Service",
+          "description": "A Service selects ready Pods and provides a stable name and virtual endpoint.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "stable service name",
+            "service selects pods",
+            "cluster dns",
+            "virtual endpoint"
+          ]
+        },
+        {
+          "id": "deliv_k8s_deploy",
+          "label": "Explains Deployment and Pods",
+          "description": "A Deployment maintains replicated Pods and manages replacement or rollout.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "deployment manages replicas",
+            "pods run containers",
+            "replicaset",
+            "desired state"
+          ]
+        },
+        {
+          "id": "deliv_k8s_discovery",
+          "label": "Connects service discovery and health",
+          "description": "Internal callers use logical names and unready endpoints are excluded.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "service discovery",
+            "call by name",
+            "readiness excludes pod",
+            "changing pod ips"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "deliv_k8s_followup_gateway",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where would an API gateway fit, and when would it be unnecessary?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Kubernetes request path elmagyarázása",
+          "prompt": "Egy request az api.company.com/payments címre érkezik, majd több payment Pod egyikéhez jut. Magyarázd el az Ingress, Service, Deployment, Pod és service discovery felelősségét.",
+          "answerStructureHint": "Haladj az external routingtól a stable Service-en át a selected Podokig és az őket fenntartó controllerig.",
+          "expectedPoints": {
+            "deliv_k8s_ingress": {
+              "label": "Elmagyarázza az external routingot",
+              "description": "Az Ingress és controller external host vagy path trafficot route-ol a clusterbe."
+            },
+            "deliv_k8s_service": {
+              "label": "Elmagyarázza a stabil Service-t",
+              "description": "A Service ready Podokat választ, stabil nevet és virtual endpointot ad."
+            },
+            "deliv_k8s_deploy": {
+              "label": "Elmagyarázza a Deploymentet és Podot",
+              "description": "A Deployment replicated Podokat tart fenn és replacementet vagy rolloutot kezel."
+            },
+            "deliv_k8s_discovery": {
+              "label": "Összeköti a discoveryt a health-tel",
+              "description": "Internal caller logical name-et használ, unready endpoint pedig nem kap trafficot."
+            }
+          },
+          "followUps": {
+            "deliv_k8s_followup_gateway": "Hová kerülne az API gateway, és mikor lenne szükségtelen?"
+          }
+        }
+      }
+    },
+    {
+      "id": "deliv_zero_downtime_001",
+      "title": "Designing a zero-downtime rollout",
+      "prompt": "A Kubernetes service drops requests during every deployment. How would you diagnose and redesign the rollout?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "design_review"
+      ],
+      "topicIds": [
+        "deliv_readiness_liveness",
+        "deliv_graceful_shutdown",
+        "deliv_deployment_strategies"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Inspect readiness and termination timing, then connect rollout strategy, draining, and compatibility.",
+      "expectedPoints": [
+        {
+          "id": "deliv_zero_ready",
+          "label": "Gates traffic with readiness",
+          "description": "New Pods receive no traffic until startup and required initialization are complete.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "readiness probe",
+            "no traffic until ready",
+            "startup complete",
+            "ready endpoint"
+          ]
+        },
+        {
+          "id": "deliv_zero_drain",
+          "label": "Drains old instances",
+          "description": "Termination marks old Pods unready, stops new work, finishes in-flight work, and closes resources.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "graceful shutdown",
+            "mark unready",
+            "drain in flight requests",
+            "termination signal"
+          ]
+        },
+        {
+          "id": "deliv_zero_rollout",
+          "label": "Configures the rollout safely",
+          "description": "Uses controlled surge and unavailable settings, enough capacity, and tested rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "rolling update",
+            "max surge",
+            "max unavailable",
+            "rollback path"
+          ]
+        },
+        {
+          "id": "deliv_zero_compat",
+          "label": "Keeps versions compatible during overlap",
+          "description": "Ensures old and new versions can share contracts and data while both run.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "backward compatible",
+            "old and new together",
+            "schema compatibility",
+            "contract compatibility"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "deliv_zero_followup_queue",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How does graceful shutdown differ for a queue consumer?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Zero-downtime rollout tervezése",
+          "prompt": "Egy Kubernetes service minden deployment alatt requesteket dob el. Hogyan diagnosztizálnád és terveznéd újra a rolloutot?",
+          "answerStructureHint": "Nézd meg a readiness és termination timingot, majd kösd össze a rollout strategyt, draininget és compatibilityt.",
+          "expectedPoints": {
+            "deliv_zero_ready": {
+              "label": "Readiness-szel gate-eli a trafficot",
+              "description": "Új Pod nem kap trafficot, amíg a startup és required initialization nem teljes."
+            },
+            "deliv_zero_drain": {
+              "label": "Draineli a régi instance-okat",
+              "description": "Terminationkor unready lesz, nem fogad új worköt, befejezi az in-flight operationt és lezárja a resource-okat."
+            },
+            "deliv_zero_rollout": {
+              "label": "Biztonságosan konfigurálja a rolloutot",
+              "description": "Controlled surge/unavailable setting, megfelelő capacity és tesztelt rollback szerepel."
+            },
+            "deliv_zero_compat": {
+              "label": "Overlap alatt compatible verziókat tart",
+              "description": "Old és new version közösen tudja használni a contractot és data-t."
+            }
+          },
+          "followUps": {
+            "deliv_zero_followup_queue": "Miben különbözik a graceful shutdown egy queue consumernél?"
+          }
+        }
+      }
+    },
+    {
+      "id": "deliv_probe_restart_loop_001",
+      "title": "A liveness probe causes a restart loop",
+      "prompt": "A service restarts repeatedly whenever its database is unavailable because the liveness endpoint checks the database. What is wrong and how would you redesign the probes?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "concept_check"
+      ],
+      "topicIds": [
+        "deliv_readiness_liveness"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate process health from traffic readiness and explain what restart can actually repair.",
+      "expectedPoints": [
+        {
+          "id": "deliv_probe_distinguish",
+          "label": "Separates liveness from readiness",
+          "description": "Database unavailability should usually make the instance unready, not necessarily dead.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "database failure affects readiness",
+            "liveness versus readiness",
+            "remove from traffic",
+            "do not restart automatically"
+          ]
+        },
+        {
+          "id": "deliv_probe_restart",
+          "label": "Uses liveness only for restartable failure",
+          "description": "Liveness detects a stuck or non-progressing process that a restart can fix.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "restart can repair",
+            "stuck process",
+            "event loop blocked",
+            "narrow liveness check"
+          ]
+        },
+        {
+          "id": "deliv_probe_thresholds",
+          "label": "Tunes probe timing",
+          "description": "Uses startup probes, timeouts, periods, and failure thresholds based on measured behaviour.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "startup probe",
+            "failure threshold",
+            "probe timeout",
+            "measured startup time"
+          ]
+        },
+        {
+          "id": "deliv_probe_dependency",
+          "label": "Handles dependency failure explicitly",
+          "description": "Keeps dependency status observable and returns controlled application errors or degraded behaviour.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "dependency metric",
+            "controlled 503",
+            "degraded mode",
+            "dependency alert"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "deliv_probe_followup_ready",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Should readiness always fail when any downstream dependency fails?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Liveness probe restart loopot okoz",
+          "prompt": "A service minden database outage alatt folyamatosan restartol, mert a liveness endpoint a database-t is ellenőrzi. Mi a baj, és hogyan terveznéd újra a probe-okat?",
+          "answerStructureHint": "Különítsd el a process health-et a traffic readinesstől, és mondd el, milyen hibát javíthat valóban a restart.",
+          "expectedPoints": {
+            "deliv_probe_distinguish": {
+              "label": "Elkülöníti a livenesst és readinesst",
+              "description": "Database outage tipikusan unready állapotot okoz, nem feltétlenül dead processt."
+            },
+            "deliv_probe_restart": {
+              "label": "Livenesst csak restartolható hibára használ",
+              "description": "A liveness olyan stuck vagy non-progressing processt jelez, amelyet a restart valóban javíthat."
+            },
+            "deliv_probe_thresholds": {
+              "label": "Beállítja a probe timingot",
+              "description": "Startup probe, timeout, period és failure threshold mért behaviour alapján készül."
+            },
+            "deliv_probe_dependency": {
+              "label": "Explicit kezeli a dependency failure-t",
+              "description": "A dependency status observable, az application pedig controlled errorral vagy degraded módban reagál."
+            }
+          },
+          "followUps": {
+            "deliv_probe_followup_ready": "Mindig fail legyen-e a readiness, ha bármely downstream dependency hibázik?"
+          }
+        }
+      }
+    },
+    {
+      "id": "deliv_resource_oom_001",
+      "title": "Diagnosing throttling and OOMKilled Pods",
+      "prompt": "A service has high latency during traffic peaks and some Pods are OOMKilled. How would you investigate requests, limits, and application behaviour?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "deliv_resource_management",
+        "deliv_autoscaling",
+        "deliv_capacity_scaling"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use evidence to separate CPU throttling, memory peaks or leaks, bad sizing, and downstream saturation.",
+      "expectedPoints": [
+        {
+          "id": "deliv_res_evidence",
+          "label": "Checks resource evidence",
+          "description": "Inspects working set, limit, OOM events, CPU throttling, garbage collection, and per-Pod imbalance.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "oomkilled events",
+            "memory working set",
+            "cpu throttling",
+            "garbage collection",
+            "per pod metrics"
+          ]
+        },
+        {
+          "id": "deliv_res_size",
+          "label": "Reviews requests and limits",
+          "description": "Compares normal and peak usage with requests, limits, and node capacity.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "resource requests",
+            "resource limits",
+            "peak usage",
+            "scheduler placement"
+          ]
+        },
+        {
+          "id": "deliv_res_app",
+          "label": "Investigates application causes",
+          "description": "Looks for memory leaks, unbounded buffers, large payloads, concurrency, and blocking work.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "memory leak",
+            "unbounded buffer",
+            "large payload",
+            "concurrency limit",
+            "blocking work"
+          ]
+        },
+        {
+          "id": "deliv_res_scale",
+          "label": "Avoids blind scaling",
+          "description": "Checks database and downstream saturation before increasing replicas or limits.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "database bottleneck",
+            "downstream saturation",
+            "do not blindly scale",
+            "connection limits"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "deliv_res_followup_limit",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would removing a CPU limit help, and what new risk could it create?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Throttling és OOMKilled Podok diagnosztikája",
+          "prompt": "Peak traffic alatt magas a latency, és néhány Pod OOMKilled lesz. Hogyan vizsgálnád a requests, limits és application behaviour kapcsolatát?",
+          "answerStructureHint": "Evidence alapján különítsd el a CPU throttlingot, memory peaket vagy leaket, rossz sizinget és downstream saturationt.",
+          "expectedPoints": {
+            "deliv_res_evidence": {
+              "label": "Resource evidence-et vizsgál",
+              "description": "Working set, limit, OOM event, CPU throttling, garbage collection és per-Pod imbalance kerül elő."
+            },
+            "deliv_res_size": {
+              "label": "Felülvizsgálja a requestet és limitet",
+              "description": "Normal és peak usage összehasonlítása requests, limits és node capacity értékekkel."
+            },
+            "deliv_res_app": {
+              "label": "Application okokat keres",
+              "description": "Memory leak, unbounded buffer, large payload, concurrency és blocking work vizsgálata."
+            },
+            "deliv_res_scale": {
+              "label": "Nem skáláz vakon",
+              "description": "Replica vagy limit emelése előtt database és downstream saturationt ellenőriz."
+            }
+          },
+          "followUps": {
+            "deliv_res_followup_limit": "Mikor segíthet a CPU limit eltávolítása, és milyen új kockázatot okozhat?"
+          }
+        }
+      }
+    },
+    {
+      "id": "deliv_autoscale_db_001",
+      "title": "Autoscaling makes the database problem worse",
+      "prompt": "An API scales from 10 to 50 Pods when latency rises, but the database becomes less stable and latency increases further. Explain why and redesign the scaling approach.",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "backend_developer"
+      ],
+      "modes": [
+        "troubleshooting",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "deliv_autoscaling",
+        "deliv_capacity_scaling",
+        "deliv_resource_management"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Identify the real bottleneck, total connection multiplication, the right scaling signal, and protective limits.",
+      "expectedPoints": [
+        {
+          "id": "deliv_scale_bottleneck",
+          "label": "Identifies the database bottleneck",
+          "description": "Explains that more application replicas cannot add database capacity and may amplify load.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "database is bottleneck",
+            "more pods add load",
+            "shared dependency",
+            "scaling amplification"
+          ]
+        },
+        {
+          "id": "deliv_scale_connections",
+          "label": "Accounts for total connections",
+          "description": "Calculates or controls pool size across all replicas and avoids exhausting the database.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "pool size times replicas",
+            "total database connections",
+            "connection exhaustion",
+            "global pool budget"
+          ]
+        },
+        {
+          "id": "deliv_scale_signal",
+          "label": "Chooses a meaningful signal",
+          "description": "Uses queueing, in-flight work, throughput, or dependency-aware metrics instead of latency alone.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "queue lag",
+            "in flight requests",
+            "throughput metric",
+            "dependency aware scaling"
+          ]
+        },
+        {
+          "id": "deliv_scale_protection",
+          "label": "Adds capacity and protection deliberately",
+          "description": "Uses concurrency limits, backpressure, caching or database scaling based on evidence.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "concurrency limit",
+            "backpressure",
+            "cache",
+            "database scaling"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "deliv_scale_followup_queue",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is queue depth a better autoscaling signal than CPU?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Az autoscaling rontja a database problémát",
+          "prompt": "Az API latency növekedésekor 10-ről 50 Podra skáláz, de a database instabilabb lesz és a latency tovább nő. Miért történik ez, és hogyan terveznéd újra a scalinget?",
+          "answerStructureHint": "Találd meg a valódi bottlenecket, számolj a total connection multiplicationnel, válassz jobb signalt és adj protective limitet.",
+          "expectedPoints": {
+            "deliv_scale_bottleneck": {
+              "label": "Azonosítja a database bottlenecket",
+              "description": "Több application replica nem ad database capacityt, inkább tovább növelheti a loadot."
+            },
+            "deliv_scale_connections": {
+              "label": "Számol a total connectionnel",
+              "description": "Minden replica poolja összeadódik, ezért global connection budget kell."
+            },
+            "deliv_scale_signal": {
+              "label": "Meaningful scaling signalt választ",
+              "description": "Latency alone helyett queueing, in-flight work, throughput vagy dependency-aware metric szerepel."
+            },
+            "deliv_scale_protection": {
+              "label": "Tudatos capacity és protection megoldást ad",
+              "description": "Evidence alapján concurrency limit, backpressure, cache vagy database scaling következik."
+            }
+          },
+          "followUps": {
+            "deliv_scale_followup_queue": "Mikor jobb autoscaling signal a queue depth, mint a CPU?"
+          }
+        }
+      }
+    },
+    {
+      "id": "deliv_pipeline_design_001",
+      "title": "Designing a CI/CD pipeline for an integration service",
+      "prompt": "Design a CI/CD pipeline for a Node.js integration service that calls external APIs, uses a database, and runs in Kubernetes.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design",
+        "design_review"
+      ],
+      "topicIds": [
+        "deliv_ci_cd_pipeline",
+        "deliv_build_once_promote",
+        "deliv_supply_chain_security",
+        "deliv_deployment_strategies"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover verification, security, immutable artifact creation, representative testing, controlled rollout, and recovery.",
+      "expectedPoints": [
+        {
+          "id": "deliv_pipe_verify",
+          "label": "Builds and verifies the change",
+          "description": "Uses lockfile install, compile, lint, unit, integration, and contract tests where appropriate.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "lockfile install",
+            "compile typescript",
+            "integration tests",
+            "contract tests",
+            "lint"
+          ]
+        },
+        {
+          "id": "deliv_pipe_security",
+          "label": "Applies supply-chain controls",
+          "description": "Scans dependencies, secrets and images and uses least-privilege pipeline credentials.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "dependency scan",
+            "secret scan",
+            "image scan",
+            "least privilege pipeline"
+          ]
+        },
+        {
+          "id": "deliv_pipe_artifact",
+          "label": "Builds one immutable artifact",
+          "description": "Tags or identifies the image immutably, records provenance, and promotes the same artifact.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "immutable image",
+            "commit sha tag",
+            "image digest",
+            "build once promote",
+            "provenance"
+          ]
+        },
+        {
+          "id": "deliv_pipe_release",
+          "label": "Uses controlled release and recovery",
+          "description": "Deploys to staging, runs smoke checks, uses canary or another safe rollout, and defines rollback criteria.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "staging deploy",
+            "smoke test",
+            "canary rollout",
+            "rollback criteria"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "deliv_pipe_followup_external",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you test external API failure behaviour without depending on the real provider in every pipeline run?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "CI/CD pipeline tervezése integration service-hez",
+          "prompt": "Tervezz CI/CD pipeline-t egy Node.js integration service-hez, amely external API-kat hív, database-t használ és Kubernetesben fut.",
+          "answerStructureHint": "Térj ki verificationre, securityre, immutable artifactra, representative testingre, controlled rolloutra és recoveryre.",
+          "expectedPoints": {
+            "deliv_pipe_verify": {
+              "label": "Buildeli és ellenőrzi a change-et",
+              "description": "Lockfile install, compile, lint, unit, integration és szükség szerint contract test fut."
+            },
+            "deliv_pipe_security": {
+              "label": "Supply-chain controlokat használ",
+              "description": "Dependency, secret és image scan, valamint least-privilege pipeline credential szerepel."
+            },
+            "deliv_pipe_artifact": {
+              "label": "Egy immutable artifactot készít",
+              "description": "Immutable image identity, provenance és ugyanannak az artifactnak a promotionje történik."
+            },
+            "deliv_pipe_release": {
+              "label": "Controlled release-t és recoveryt ad",
+              "description": "Staging, smoke check, safe rollout és előre definiált rollback criteria szerepel."
+            }
+          },
+          "followUps": {
+            "deliv_pipe_followup_external": "Hogyan tesztelnéd az external API failure behaviourt anélkül, hogy minden pipeline run a valódi providertől függjön?"
+          }
+        }
+      }
+    },
+    {
+      "id": "deliv_strategy_choice_001",
+      "title": "Choosing rolling, blue-green, or canary",
+      "prompt": "Compare rolling, blue-green, and canary deployment for a high-traffic public API. When would you choose each?",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "backend_developer"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "concept_check"
+      ],
+      "topicIds": [
+        "deliv_deployment_strategies",
+        "deliv_rollback_rollforward"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare replacement model, blast radius, infrastructure cost, observability needs, and rollback behaviour.",
+      "expectedPoints": [
+        {
+          "id": "deliv_strat_rolling",
+          "label": "Explains rolling deployment",
+          "description": "Gradually replaces instances with lower extra capacity but runs old and new versions together.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "gradual replacement",
+            "old and new coexist",
+            "lower extra capacity",
+            "rolling update"
+          ]
+        },
+        {
+          "id": "deliv_strat_blue",
+          "label": "Explains blue-green",
+          "description": "Runs two complete environments and switches traffic for fast rollback at higher cost.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "two environments",
+            "traffic switch",
+            "fast rollback",
+            "higher infrastructure cost"
+          ]
+        },
+        {
+          "id": "deliv_strat_canary",
+          "label": "Explains canary",
+          "description": "Limits exposure to a small traffic slice and requires strong comparison metrics and abort conditions.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "small traffic percentage",
+            "limited blast radius",
+            "compare metrics",
+            "abort criteria"
+          ]
+        },
+        {
+          "id": "deliv_strat_compat",
+          "label": "Owns compatibility and data constraints",
+          "description": "Notes that shared schema and irreversible effects can make rollback unsafe in every strategy.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "database compatibility",
+            "irreversible side effects",
+            "rollback may be unsafe",
+            "backward compatible"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "deliv_strat_followup_internal",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would your choice differ for a low-traffic internal admin tool?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Rolling, blue-green vagy canary választása",
+          "prompt": "Hasonlítsd össze a rolling, blue-green és canary deploymentet egy high-traffic public API esetén. Mikor melyiket választanád?",
+          "answerStructureHint": "Hasonlítsd össze a replacement modelt, blast radiust, infrastructure costot, observability igényt és rollback behaviourt.",
+          "expectedPoints": {
+            "deliv_strat_rolling": {
+              "label": "Elmagyarázza a rolling deploymentet",
+              "description": "Gradual replacement, kisebb extra capacity, de old és new version együtt fut."
+            },
+            "deliv_strat_blue": {
+              "label": "Elmagyarázza a blue-green modellt",
+              "description": "Két teljes environment és traffic switch gyors rollbacket ad magasabb cost mellett."
+            },
+            "deliv_strat_canary": {
+              "label": "Elmagyarázza a canary modellt",
+              "description": "Kis traffic slice-ra korlátozza az exposure-t, erős comparison metrics és abort criteria kell."
+            },
+            "deliv_strat_compat": {
+              "label": "Figyelembe veszi a compatibility és data constraintet",
+              "description": "Shared schema és irreversible effect minden strategynél unsafe rollbacket okozhat."
+            }
+          },
+          "followUps": {
+            "deliv_strat_followup_internal": "Más deployment strategyt választanál egy low-traffic internal admin toolhoz?"
+          }
+        }
+      }
+    },
+    {
+      "id": "deliv_build_once_001",
+      "title": "Why build once and promote?",
+      "prompt": "Your pipeline rebuilds the Docker image independently for test, staging, and production. What risk does this create, and how would you change the pipeline?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review",
+        "concept_check"
+      ],
+      "topicIds": [
+        "deliv_build_once_promote",
+        "deliv_docker_image_lifecycle",
+        "deliv_container_configuration"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain artifact drift, immutable identity, runtime configuration, and promotion.",
+      "expectedPoints": [
+        {
+          "id": "deliv_once_risk",
+          "label": "Explains artifact drift",
+          "description": "Separate builds may resolve different dependencies, base images, generated output, or tooling.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "different artifacts",
+            "dependency drift",
+            "base image drift",
+            "compiler output differs"
+          ]
+        },
+        {
+          "id": "deliv_once_identity",
+          "label": "Uses immutable artifact identity",
+          "description": "Builds once and identifies the artifact with a version or digest.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "build once",
+            "immutable artifact",
+            "image digest",
+            "commit sha"
+          ]
+        },
+        {
+          "id": "deliv_once_config",
+          "label": "Moves environment differences to configuration",
+          "description": "Supplies URLs, credentials, and settings at deploy or runtime instead of rebuilding.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "runtime configuration",
+            "environment variables",
+            "secrets at deployment",
+            "same image"
+          ]
+        },
+        {
+          "id": "deliv_once_promote",
+          "label": "Promotes the tested artifact",
+          "description": "Moves the existing artifact through approval and environment gates.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "promote artifact",
+            "registry",
+            "approval gate",
+            "same artifact production"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "deliv_once_followup_frontend",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What makes runtime configuration more difficult for a browser bundle than for a backend container?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Miért build once and promote?",
+          "prompt": "A pipeline külön rebuildeli a Docker image-et test, staging és production környezethez. Milyen kockázatot okoz ez, és hogyan változtatnád meg?",
+          "answerStructureHint": "Magyarázd el az artifact driftet, immutable identityt, runtime configot és promotiont.",
+          "expectedPoints": {
+            "deliv_once_risk": {
+              "label": "Elmagyarázza az artifact driftet",
+              "description": "Külön build eltérő dependencyt, base image-et, generated outputot vagy tooling resultot hozhat."
+            },
+            "deliv_once_identity": {
+              "label": "Immutable artifact identityt használ",
+              "description": "Egyszer buildel, majd version vagy digest alapján azonosítja az artifactot."
+            },
+            "deliv_once_config": {
+              "label": "Environment differencet configba tesz",
+              "description": "URL, credential és setting deploy vagy runtime érkezik rebuild helyett."
+            },
+            "deliv_once_promote": {
+              "label": "A tesztelt artifactot promote-olja",
+              "description": "A meglévő artifact approval és environment gate-eken halad végig."
+            }
+          },
+          "followUps": {
+            "deliv_once_followup_frontend": "Miért nehezebb a runtime configuration egy browser bundle-nél, mint egy backend containernél?"
+          }
+        }
+      }
+    },
+    {
+      "id": "deliv_secret_leak_001",
+      "title": "A secret is found inside a container image",
+      "prompt": "A database password is discovered in an old image layer in the registry. What do you do immediately, and how do you prevent recurrence?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "deliv_container_configuration",
+        "deliv_supply_chain_security",
+        "deliv_production_dockerfile"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Treat the credential as compromised, remove exposure, then fix the build and credential model.",
+      "expectedPoints": [
+        {
+          "id": "deliv_secret_rotate",
+          "label": "Rotates and revokes immediately",
+          "description": "Treats the credential as compromised, rotates it, and checks where it was used.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "rotate credential",
+            "revoke secret",
+            "assume compromised",
+            "audit usage"
+          ]
+        },
+        {
+          "id": "deliv_secret_registry",
+          "label": "Contains the exposed artifact",
+          "description": "Restricts or removes the image where possible and identifies every copied tag or registry.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "remove image",
+            "restrict registry access",
+            "find copied tags",
+            "contain exposure"
+          ]
+        },
+        {
+          "id": "deliv_secret_build",
+          "label": "Fixes the build process",
+          "description": "Removes secrets from source, build arguments, layers, and logs and adds secret scanning.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "remove from dockerfile",
+            "not build args",
+            "secret scan",
+            "clean build logs"
+          ]
+        },
+        {
+          "id": "deliv_secret_runtime",
+          "label": "Uses proper runtime secret delivery",
+          "description": "Retrieves a least-privilege credential from a secret manager and supports rotation.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "secret manager",
+            "runtime secret",
+            "least privilege",
+            "rotation support"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "deliv_secret_followup_history",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why is deleting the final file in a later Dockerfile layer not enough?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Secret található egy container image-ben",
+          "prompt": "Egy régi image layerben database passwordöt találtok a registryben. Mit teszel azonnal, és hogyan előzöd meg az ismétlődést?",
+          "answerStructureHint": "A credentialt compromisednek kell tekinteni, containeld az exposure-t, majd javítsd a buildet és credential modellt.",
+          "expectedPoints": {
+            "deliv_secret_rotate": {
+              "label": "Azonnal rotate-ol és revoke-ol",
+              "description": "A credential compromisednek számít, rotation és usage audit szükséges."
+            },
+            "deliv_secret_registry": {
+              "label": "Containeli az exposed artifactot",
+              "description": "Lehetőség szerint korlátozza vagy eltávolítja az image-et, és megkeresi minden copied tagjét vagy registryjét."
+            },
+            "deliv_secret_build": {
+              "label": "Javítja a build processt",
+              "description": "Secret kikerül source-ból, build argból, layerből és logból, secret scanning pedig bekerül."
+            },
+            "deliv_secret_runtime": {
+              "label": "Helyes runtime secret deliveryt használ",
+              "description": "Least-privilege credential secret managerből érkezik, rotation supporttal."
+            }
+          },
+          "followUps": {
+            "deliv_secret_followup_history": "Miért nem elég egy későbbi Dockerfile layerben törölni a file-t?"
+          }
+        }
+      }
+    },
+    {
+      "id": "deliv_prod_ready_001",
+      "title": "Production readiness review for a new service",
+      "prompt": "A new payment-adjacent integration service is ready for launch. What evidence would you require before calling it production-ready?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "deliv_production_readiness",
+        "deliv_ci_cd_pipeline",
+        "deliv_readiness_liveness",
+        "deliv_rollback_rollforward"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover measurable requirements, operability, failure behaviour, release safety, recovery, and ownership.",
+      "expectedPoints": [
+        {
+          "id": "deliv_ready_requirements",
+          "label": "Confirms measurable requirements",
+          "description": "Defines traffic, latency, availability, security, data correctness, and audit expectations.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "traffic target",
+            "latency target",
+            "availability target",
+            "security requirement",
+            "audit requirement"
+          ]
+        },
+        {
+          "id": "deliv_ready_ops",
+          "label": "Requires operability",
+          "description": "Has health probes, graceful shutdown, dashboards, alerts, correlation, and safe logs.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "readiness probe",
+            "graceful shutdown",
+            "dashboard and alerts",
+            "correlation id",
+            "safe logging"
+          ]
+        },
+        {
+          "id": "deliv_ready_failure",
+          "label": "Tests failure and recovery",
+          "description": "Exercises dependency outage, retry safety, backup or restore where relevant, and degraded behaviour.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "dependency failure test",
+            "retry safety",
+            "restore test",
+            "degraded mode"
+          ]
+        },
+        {
+          "id": "deliv_ready_release",
+          "label": "Proves release and rollback safety",
+          "description": "Uses a tested pipeline, controlled rollout, clear abort criteria, and a viable rollback or roll-forward path.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "tested pipeline",
+            "canary rollout",
+            "abort criteria",
+            "rollback path"
+          ]
+        },
+        {
+          "id": "deliv_ready_owner",
+          "label": "Assigns ownership",
+          "description": "Provides runbooks, support expectations, escalation, and explicit acceptance of remaining risk.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "runbook",
+            "service owner",
+            "escalation path",
+            "risk acceptance"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "deliv_ready_followup_3am",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "At 3 AM, which three prepared items would shorten the incident most?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Production readiness review egy új service-hez",
+          "prompt": "Egy payment-adjacent integration service launchra kész. Milyen evidence-et kérnél, mielőtt production-readynek nevezed?",
+          "answerStructureHint": "Térj ki measurable requirementre, operabilityre, failure behaviourre, release safetyre, recoveryre és ownershipre.",
+          "expectedPoints": {
+            "deliv_ready_requirements": {
+              "label": "Measurable requirementeket kér",
+              "description": "Traffic, latency, availability, security, data correctness és audit expectation szerepel."
+            },
+            "deliv_ready_ops": {
+              "label": "Operabilityt követel meg",
+              "description": "Health probe, graceful shutdown, dashboard, alert, correlation és safe log rendelkezésre áll."
+            },
+            "deliv_ready_failure": {
+              "label": "Teszteli a failure-t és recoveryt",
+              "description": "Dependency outage, retry safety, szükség szerint backup/restore és degraded behaviour van tesztelve."
+            },
+            "deliv_ready_release": {
+              "label": "Bizonyítja a release és rollback safety-t",
+              "description": "Tested pipeline, controlled rollout, abort criteria és működő rollback vagy roll-forward path szerepel."
+            },
+            "deliv_ready_owner": {
+              "label": "Ownershipöt rendel hozzá",
+              "description": "Runbook, support expectation, escalation és remaining risk acceptance rendelkezésre áll."
+            }
+          },
+          "followUps": {
+            "deliv_ready_followup_3am": "Hajnali 3-kor melyik három előkészített elem rövidítené le legjobban az incidentet?"
+          }
+        }
+      }
+    },
+    {
+      "id": "deliv_k8s_when_not_001",
+      "title": "When Kubernetes is not justified",
+      "prompt": "A three-person team has one small API and wants Kubernetes because it is considered standard. How would you evaluate the decision?",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "backend_developer"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "deliv_kubernetes_objects",
+        "deliv_containers",
+        "deliv_infrastructure_as_code"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Start from the operational problem, compare benefits with platform cost, and propose a simpler alternative when appropriate.",
+      "expectedPoints": [
+        {
+          "id": "deliv_k8s_problem",
+          "label": "Asks what problem Kubernetes solves",
+          "description": "Looks for real needs such as many services, independent teams, complex rollout, autoscaling, or platform standardization.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "what problem are we solving",
+            "number of services",
+            "team ownership",
+            "autoscaling need",
+            "rollout need"
+          ]
+        },
+        {
+          "id": "deliv_k8s_cost",
+          "label": "Names operational cost",
+          "description": "Includes cluster upgrades, security, observability, networking, manifests, and required team skills.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "cluster operations",
+            "upgrade burden",
+            "networking complexity",
+            "security complexity",
+            "team skills"
+          ]
+        },
+        {
+          "id": "deliv_k8s_alt",
+          "label": "Offers a simpler option",
+          "description": "Considers a managed container platform, PaaS, or simple VM/container deployment.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "managed container service",
+            "platform as a service",
+            "simple vm",
+            "simpler deployment"
+          ]
+        },
+        {
+          "id": "deliv_k8s_future",
+          "label": "Keeps the design evolvable",
+          "description": "Uses containers, health checks, config separation, and CI/CD so migration remains possible later.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 3,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "containerize now",
+            "health checks",
+            "runtime configuration",
+            "ci cd",
+            "migrate later"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "deliv_k8s_followup_threshold",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What change in scale or organization would make you reconsider Kubernetes?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mikor nem indokolt a Kubernetes?",
+          "prompt": "Egy háromfős teamnek egyetlen kis API-ja van, de Kubernetes-t szeretne, mert standardnek számít. Hogyan értékelnéd a döntést?",
+          "answerStructureHint": "A valódi operational problemből indulj, hasonlítsd össze a benefitet a platform costtal, és szükség esetén adj simpler alternative-et.",
+          "expectedPoints": {
+            "deliv_k8s_problem": {
+              "label": "Megkérdezi, milyen problémát old meg",
+              "description": "Valódi igényt keres: sok service, independent team, complex rollout, autoscaling vagy platform standardization."
+            },
+            "deliv_k8s_cost": {
+              "label": "Megnevezi az operational costot",
+              "description": "Cluster upgrade, security, observability, networking, manifest és szükséges team skill szerepel."
+            },
+            "deliv_k8s_alt": {
+              "label": "Egyszerűbb opciót ad",
+              "description": "Managed container platform, PaaS vagy simple VM/container deployment is felmerül."
+            },
+            "deliv_k8s_future": {
+              "label": "Evolvable marad a design",
+              "description": "Container, health check, config separation és CI/CD miatt később is lehetséges migration."
+            }
+          },
+          "followUps": {
+            "deliv_k8s_followup_threshold": "Milyen scale- vagy organization-változásnál gondolnád újra a Kubernetes bevezetését?"
+          }
+        }
+      }
+    }
+  ]
+}
