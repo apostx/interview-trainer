@@ -171,6 +171,20 @@ export function toQuestionCard(q: PackQuestion): QuestionCard {
   return card as QuestionCard;
 }
 
+/**
+ * Whether a parsed JSON value is meant to be a content pack (has a string
+ * `id`). Non-pack sidecar files an AI may drop into a content folder — audit
+ * summaries, manifests, notes — lack an `id` and are ignored, not validated.
+ */
+export function looksLikePack(raw: unknown): boolean {
+  return (
+    typeof raw === "object" &&
+    raw !== null &&
+    !Array.isArray(raw) &&
+    typeof (raw as { id?: unknown }).id === "string"
+  );
+}
+
 export function formatZodError(error: z.ZodError): string {
   return error.issues
     .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`)

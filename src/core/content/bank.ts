@@ -1,5 +1,5 @@
 import type { QuestionCard, Topic } from "@/core/models";
-import { contentPackSchema, formatZodError } from "./schema";
+import { contentPackSchema, formatZodError, looksLikePack } from "./schema";
 import type { ContentPack } from "./schema";
 import {
   defaultLoadedPacks,
@@ -58,6 +58,8 @@ function loadVersions(): ContentVersion[] {
       g.errors.push(`${fileName}: not valid JSON (${String(e)})`);
       continue;
     }
+    // Ignore non-pack sidecar files (audits/manifests) that lack an id.
+    if (!looksLikePack(raw)) continue;
     const parsed = contentPackSchema.safeParse(raw);
     if (!parsed.success) {
       g.errors.push(`${fileName}: ${formatZodError(parsed.error)}`);

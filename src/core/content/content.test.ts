@@ -1,8 +1,22 @@
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { contentPackSchema, formatZodError, type ContentPack } from "./schema";
+import {
+  contentPackSchema,
+  formatZodError,
+  looksLikePack,
+  type ContentPack,
+} from "./schema";
 import { seedTopics } from "@/core/seed/topics";
+
+/** True unless the file is a non-pack sidecar (audit/manifest without an id). */
+function isPackFile(raw: string): boolean {
+  try {
+    return looksLikePack(JSON.parse(raw));
+  } catch {
+    return true; // malformed JSON is a real error the schema step will report
+  }
+}
 
 /** The fixed studyNotes structure every topic must follow (shared by the live
  * packs and the dev-mode version banks). */
@@ -48,7 +62,8 @@ function loadPackFiles(): { file: string; raw: string }[] {
     .map((file) => ({
       file,
       raw: readFileSync(path.join(PACKS_DIR, file), "utf-8"),
-    }));
+    }))
+    .filter((f) => isPackFile(f.raw));
 }
 
 const packFiles = loadPackFiles();
@@ -145,11 +160,9 @@ function loadVersionFiles(): { label: string; file: string; raw: string }[] {
     const dir = path.join(VERSIONS_DIR, label);
     if (!statSync(dir).isDirectory()) continue;
     for (const f of readdirSync(dir).filter((n) => n.endsWith(".json"))) {
-      out.push({
-        label,
-        file: `${label}/${f}`,
-        raw: readFileSync(path.join(dir, f), "utf-8"),
-      });
+      const raw = readFileSync(path.join(dir, f), "utf-8");
+      if (!isPackFile(raw)) continue; // skip audit/manifest sidecars
+      out.push({ label, file: `${label}/${f}`, raw });
     }
   }
   return out;

@@ -282,6 +282,9 @@ separately.
   (schema, studyNotes structure), exactly like the live one. Version banks are
   independent, so ids may repeat across versions (but must be unique within
   one).
+- Non-pack JSON files (an AI's audit summary, a manifest — anything without a
+  top-level `id`) are ignored by both the loader and the gate, so you can drop
+  an AI's whole output folder in as-is.
 
 Typical flow: have each AI rebuild the bank, drop the results into
 `content/versions/<ai-name>/`, run `content:check`, then compare them in Study
