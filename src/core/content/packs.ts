@@ -1,17 +1,13 @@
-import type { QuestionCard, Topic } from "@/core/models";
-import {
-  contentPackSchema,
-  formatZodError,
-  toQuestionCard,
-  toTopic,
-} from "./schema";
+import type { ContentPack } from "./schema";
+import { contentPackSchema, formatZodError } from "./schema";
 
 /**
- * Auto-discovers content packs: every `.json` file dropped into
- * `content/packs/` is bundled, validated against the pack schema and merged
- * into the question/topic bank at build time (hot-reloaded in dev).
- * Invalid packs are skipped and reported via `packErrors` (shown on the
- * Topics page) instead of breaking the app.
+ * Auto-discovers content packs. Every `.json` in `content/packs/` is bundled,
+ * validated against the pack schema and parsed here; the live bank is derived
+ * from these (see `deriveBank`/`bank`). Alternate versions for the dev-mode
+ * comparison switcher live under `content/versions/<label>/` and are parsed
+ * with the same `parsePackContext`. Invalid packs are skipped and reported via
+ * `errors` (shown on the Topics page) instead of breaking the app.
  */
 
 export type LoadedPack = {
@@ -22,56 +18,39 @@ export type LoadedPack = {
   questionCount: number;
 };
 
-export const loadedPacks: LoadedPack[] = [];
-export const packErrors: string[] = [];
-export const packTopics: Topic[] = [];
-export const packQuestions: QuestionCard[] = [];
-/** Which pack (source) each pack question came from. */
-export const packIdByQuestionId = new Map<string, string>();
-/** Origin dataresource files per question (question override > pack). */
-export const sourcesByQuestionId = new Map<string, string[]>();
+export type ParsedPacks = {
+  packs: ContentPack[];
+  loadedPacks: LoadedPack[];
+  errors: string[];
+};
 
-function tryLoadContext(): RequireContext | null {
-  try {
-    // Statically analyzed by the bundler; unavailable in plain Node (tests).
-    return require.context("../../../content/packs", false, /\.json$/);
-  } catch {
-    return null;
-  }
-}
-
-const context = tryLoadContext();
-if (context) {
-  const seenPackIds = new Set<string>();
+/** Validate every `.json` in a bundler require.context of content packs. */
+export function parsePackContext(context: RequireContext): ParsedPacks {
+  const packs: ContentPack[] = [];
+  const loadedPacks: LoadedPack[] = [];
+  const errors: string[] = [];
+  const seen = new Set<string>();
   for (const key of context.keys().sort()) {
     const fileName = key.replace(/^\.\//, "");
     let raw: unknown;
     try {
       raw = context(key);
     } catch (e) {
-      packErrors.push(`${fileName}: not valid JSON (${String(e)})`);
+      errors.push(`${fileName}: not valid JSON (${String(e)})`);
       continue;
     }
     const parsed = contentPackSchema.safeParse(raw);
     if (!parsed.success) {
-      packErrors.push(`${fileName}: ${formatZodError(parsed.error)}`);
+      errors.push(`${fileName}: ${formatZodError(parsed.error)}`);
       continue;
     }
     const pack = parsed.data;
-    if (seenPackIds.has(pack.id)) {
-      packErrors.push(`${fileName}: duplicate pack id "${pack.id}" — skipped`);
+    if (seen.has(pack.id)) {
+      errors.push(`${fileName}: duplicate pack id "${pack.id}" — skipped`);
       continue;
     }
-    seenPackIds.add(pack.id);
-    packTopics.push(...pack.topics.map(toTopic));
-    for (const q of pack.questions) {
-      packQuestions.push(toQuestionCard(q));
-      packIdByQuestionId.set(q.id, pack.id);
-      const sources =
-        q.sources && q.sources.length > 0 ? q.sources : pack.sources;
-      // Packs without declared files fall back to the pack itself as source.
-      sourcesByQuestionId.set(q.id, sources.length > 0 ? sources : [pack.id]);
-    }
+    seen.add(pack.id);
+    packs.push(pack);
     loadedPacks.push({
       id: pack.id,
       name: pack.name,
@@ -80,4 +59,22 @@ if (context) {
       questionCount: pack.questions.length,
     });
   }
+  return { packs, loadedPacks, errors };
 }
+
+function loadDefault(): ParsedPacks {
+  try {
+    // Statically analyzed by the bundler; unavailable in plain Node (tests).
+    return parsePackContext(
+      require.context("../../../content/packs", false, /\.json$/),
+    );
+  } catch {
+    return { packs: [], loadedPacks: [], errors: [] };
+  }
+}
+
+const def = loadDefault();
+/** The live content packs (from `content/packs/`). */
+export const defaultPacks = def.packs;
+export const defaultLoadedPacks = def.loadedPacks;
+export const defaultPackErrors = def.errors;

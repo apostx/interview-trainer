@@ -1,78 +1,90 @@
 import type { QuestionCard, Topic } from "@/core/models";
-import { seedTopics } from "@/core/seed/topics";
+import { contentPackSchema, formatZodError } from "./schema";
+import type { ContentPack } from "./schema";
 import {
-  loadedPacks,
-  packErrors,
-  packQuestions,
-  packTopics,
-  sourcesByQuestionId,
+  defaultLoadedPacks,
+  defaultPackErrors,
+  defaultPacks,
+  type LoadedPack,
 } from "./packs";
+import { type Bank, type ContentSource, deriveBank } from "./deriveBank";
 
 /**
- * The content bank: every valid content pack from `content/packs/` — all
- * questions come from the dataresource-derived packs. The seed topics remain
- * only as shared taxonomy that packs can reference. Duplicate ids keep the
- * first occurrence and are reported as pack errors.
+ * The live content bank (from `content/packs/`) plus any alternate versions
+ * under `content/versions/<label>/` used by the Study dev-mode switcher.
  */
 
-function mergeById<T extends { id: string }>(
-  base: T[],
-  extra: T[],
-  kind: string,
-): T[] {
-  const merged = [...base];
-  const seen = new Set(base.map((item) => item.id));
-  for (const item of extra) {
-    if (seen.has(item.id)) {
-      packErrors.push(`duplicate ${kind} id "${item.id}" — pack entry skipped`);
+export type { Bank, ContentSource };
+
+/** The live bank as a single object (used by the dev-mode version list). */
+export const liveBank: Bank = deriveBank(defaultPacks, defaultLoadedPacks);
+
+export const allTopics: Topic[] = liveBank.topics;
+export const allQuestions: QuestionCard[] = liveBank.questions;
+export const sourcesByCardId = liveBank.sourcesByCardId;
+export const contentSources = liveBank.contentSources;
+export const getCard = (id: string): QuestionCard | undefined =>
+  liveBank.getCard(id);
+export const loadedPacks = defaultLoadedPacks;
+export const packErrors = [...defaultPackErrors, ...liveBank.errors];
+
+/** A selectable content bank in the dev-mode comparison switcher. */
+export type ContentVersion = { label: string; bank: Bank };
+
+function loadVersions(): ContentVersion[] {
+  let context: RequireContext;
+  try {
+    // Recursive: keys look like "./<label>/<pack>.json".
+    context = require.context("../../../content/versions", true, /\.json$/);
+  } catch {
+    return [];
+  }
+  const groups = new Map<
+    string,
+    { packs: ContentPack[]; loaded: LoadedPack[]; seen: Set<string>; errors: string[] }
+  >();
+  for (const key of context.keys().sort()) {
+    const m = key.match(/^\.\/([^/]+)\/(.+\.json)$/);
+    if (!m) continue;
+    const [, label, fileName] = m;
+    const g =
+      groups.get(label) ??
+      { packs: [], loaded: [], seen: new Set<string>(), errors: [] };
+    groups.set(label, g);
+    let raw: unknown;
+    try {
+      raw = context(key);
+    } catch (e) {
+      g.errors.push(`${fileName}: not valid JSON (${String(e)})`);
       continue;
     }
-    seen.add(item.id);
-    merged.push(item);
+    const parsed = contentPackSchema.safeParse(raw);
+    if (!parsed.success) {
+      g.errors.push(`${fileName}: ${formatZodError(parsed.error)}`);
+      continue;
+    }
+    const pack = parsed.data;
+    if (g.seen.has(pack.id)) {
+      g.errors.push(`${fileName}: duplicate pack id "${pack.id}" — skipped`);
+      continue;
+    }
+    g.seen.add(pack.id);
+    g.packs.push(pack);
+    g.loaded.push({
+      id: pack.id,
+      name: pack.name,
+      fileName,
+      topicCount: pack.topics.length,
+      questionCount: pack.questions.length,
+    });
   }
-  return merged;
+  return [...groups.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([label, g]) => {
+      const bank = deriveBank(g.packs, g.loaded);
+      return { label, bank: { ...bank, errors: [...g.errors, ...bank.errors] } };
+    });
 }
 
-export const allTopics: Topic[] = mergeById(seedTopics, packTopics, "topic");
-export const allQuestions: QuestionCard[] = mergeById(
-  [],
-  packQuestions,
-  "question",
-);
-
-const questionsById = new Map(allQuestions.map((q) => [q.id, q]));
-
-export function getCard(id: string): QuestionCard | undefined {
-  return questionsById.get(id);
-}
-
-/** File-level sources of every question (dataresource paths). */
-export const sourcesByCardId = new Map<string, string[]>(
-  allQuestions.map((q) => [
-    q.id,
-    sourcesByQuestionId.get(q.id) ?? ["unknown"],
-  ]),
-);
-
-const packNameById = new Map(loadedPacks.map((p) => [p.id, p.name]));
-
-/**
- * All selectable sources with their dropdown group. dataresource/ is the
- * data root: files living there directly get an empty group (rendered flat),
- * subfolders group by name.
- */
-export type ContentSource = { id: string; name: string; group: string };
-export const contentSources: ContentSource[] = [
-  ...new Set([...sourcesByCardId.values()].flat()),
-]
-  .sort()
-  .map((id) => {
-    const packName = packNameById.get(id);
-    if (packName) return { id, name: packName, group: "" };
-    const slash = id.indexOf("/");
-    return slash > 0
-      ? { id, name: id.slice(slash + 1), group: id.slice(0, slash) }
-      : { id, name: id, group: "" };
-  });
-
-export { loadedPacks, packErrors };
+/** Alternate content banks for the dev-mode switcher (empty in normal use). */
+export const contentVersions: ContentVersion[] = loadVersions();

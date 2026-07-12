@@ -1,15 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, ModeBadge, PageHeader, buttonGhost, inputBase, selectCompact } from "@/components/ui";
 import type { InterviewRole, LangCode, QuestionCard, Topic } from "@/core/models";
 import { ROLE_LABELS, ROLE_TRACKS, TRACK_MEMBER_ROLES } from "@/core/models";
-import {
-  allQuestions,
-  allTopics,
-  contentSources,
-  sourcesByCardId,
-} from "@/core/content/bank";
+import { contentVersions, liveBank } from "@/core/content/bank";
 import {
   availableLanguages,
   DEFAULT_LANG,
@@ -40,33 +35,14 @@ const CATEGORY_LABELS: Record<Topic["category"], string> = {
   core: "Core Engineering",
 };
 
-// Static content — computed once at module load.
-const cardsByTopicId = new Map<string, QuestionCard[]>();
-for (const card of allQuestions) {
-  for (const topicId of card.topicIds) {
-    cardsByTopicId.set(topicId, [...(cardsByTopicId.get(topicId) ?? []), card]);
-  }
-}
-const studyTopics = allTopics.filter(
-  (t) => cardsByTopicId.has(t.id) || t.studyNotes,
-);
-
-// Languages any content provides (always includes English). The selector is
-// hidden until at least one translation exists.
-const LANGUAGES = availableLanguages(allTopics, allQuestions);
 const LANG_STORAGE_KEY = "study-lang";
 
-// Source dropdown: root files flat first, then subfolders as groups.
-const sourceGroups: [string, { id: string; name: string }[]][] = (() => {
-  const groups = new Map<string, { id: string; name: string }[]>();
-  for (const src of contentSources) {
-    groups.set(src.group, [
-      ...(groups.get(src.group) ?? []),
-      { id: src.id, name: src.name },
-    ]);
-  }
-  return [...groups.entries()].sort();
-})();
+// The live bank plus any alternate versions (content/versions/<label>/),
+// selectable in dev mode (?dev=1) to compare content banks for quality.
+const ALL_BANKS: { label: string; bank: typeof liveBank }[] = [
+  { label: "Live", bank: liveBank },
+  ...contentVersions,
+];
 
 type RoleFilter = InterviewRole | "all";
 type SourceFilter = string; // "all" or a source id
@@ -76,12 +52,13 @@ function cardMatchesFilters(
   card: QuestionCard,
   role: RoleFilter,
   source: SourceFilter,
+  sources: Map<string, string[]>,
 ): boolean {
   if (role !== "all") {
     const members = TRACK_MEMBER_ROLES[role] ?? [role];
     if (!card.roles.some((r) => members.includes(r))) return false;
   }
-  if (source !== "all" && !sourcesByCardId.get(card.id)?.includes(source)) {
+  if (source !== "all" && !sources.get(card.id)?.includes(source)) {
     return false;
   }
   return true;
@@ -172,14 +149,16 @@ function StudyCard({ card }: { card: QuestionCard }) {
 /** Study reading-language dropdown; renders nothing unless translations exist. */
 function LanguagePicker({
   lang,
+  languages,
   onChange,
   className,
 }: {
   lang: LangCode;
+  languages: LangCode[];
   onChange: (lang: LangCode) => void;
   className?: string;
 }) {
-  if (LANGUAGES.length < 2) return null;
+  if (languages.length < 2) return null;
   return (
     <div className={`flex items-center gap-2 ${className ?? ""}`}>
       <label className="text-sm font-medium text-secondary" htmlFor="lang-filter">
@@ -191,7 +170,7 @@ function LanguagePicker({
         value={lang}
         onChange={(e) => onChange(e.target.value)}
       >
-        {LANGUAGES.map((code) => (
+        {languages.map((code) => (
           <option key={code} value={code}>
             {languageLabel(code)}
           </option>
@@ -238,6 +217,8 @@ function readUrlState() {
     role: (p.get("role") as RoleFilter | null) ?? null,
     source: p.get("source") ?? "all",
     query: p.get("q") ?? "",
+    dev: p.get("dev") === "1",
+    version: p.get("ver") ?? "Live",
   };
 }
 
@@ -252,8 +233,41 @@ export default function StudyPage() {
   const [selectedSource, setSourceState] = useState<SourceFilter>("all");
   const [query, setQueryState] = useState("");
   const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
+  const [devMode, setDevMode] = useState(false);
+  const [versionLabel, setVersionLabelState] = useState("Live");
   const [generating, setGenerating] = useState<StudyPdfFormat | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
+
+  // The active content bank (Live, or an alternate version picked in dev mode).
+  const activeBank =
+    ALL_BANKS.find((b) => b.label === versionLabel)?.bank ?? liveBank;
+
+  // Everything the view lists is derived from the active bank, so switching
+  // versions swaps the whole Study content at once.
+  const { cardsByTopicId, studyTopics, sourceGroups, languages } = useMemo(() => {
+    const cardsByTopicId = new Map<string, QuestionCard[]>();
+    for (const card of activeBank.questions) {
+      for (const topicId of card.topicIds) {
+        cardsByTopicId.set(topicId, [
+          ...(cardsByTopicId.get(topicId) ?? []),
+          card,
+        ]);
+      }
+    }
+    const studyTopics = activeBank.topics.filter(
+      (t) => cardsByTopicId.has(t.id) || t.studyNotes,
+    );
+    const groups = new Map<string, { id: string; name: string }[]>();
+    for (const src of activeBank.contentSources) {
+      groups.set(src.group, [
+        ...(groups.get(src.group) ?? []),
+        { id: src.id, name: src.name },
+      ]);
+    }
+    const sourceGroups = [...groups.entries()].sort();
+    const languages = availableLanguages(activeBank.topics, activeBank.questions);
+    return { cardsByTopicId, studyTopics, sourceGroups, languages };
+  }, [activeBank]);
 
   // Study reading language is a preference (persisted), not view navigation,
   // so it lives in localStorage rather than the URL.
@@ -271,16 +285,23 @@ export default function StudyPage() {
       setRoleParam(s.role);
       setSourceState(s.source);
       setQueryState(s.query);
+      setDevMode(s.dev);
+      setVersionLabelState(s.version);
     };
     const init = () => {
       const saved = localStorage.getItem(LANG_STORAGE_KEY);
-      if (saved && LANGUAGES.includes(saved)) setLangState(saved);
+      if (saved) setLangState(saved);
       syncUrl();
     };
     init();
     window.addEventListener("popstate", syncUrl);
     return () => window.removeEventListener("popstate", syncUrl);
   }, []);
+
+  const setVersion = (label: string) => {
+    setVersionLabelState(label);
+    writeUrl({ ver: label === "Live" ? null : label });
+  };
 
   // The role filter defaults to the user's target role until they pick one
   // (an explicit choice — including "all" — is written to the URL and wins).
@@ -343,16 +364,20 @@ export default function StudyPage() {
     }
   }
 
+  // The chosen language may not exist in the active bank (e.g. after switching
+  // to an untranslated version); fall back to English for display.
+  const activeLang = languages.includes(lang) ? lang : DEFAULT_LANG;
+
   const matchingCardsOfTopic = (topicId: string) =>
     (cardsByTopicId.get(topicId) ?? []).filter((c) =>
-      cardMatchesFilters(c, selectedRole, selectedSource),
+      cardMatchesFilters(c, selectedRole, selectedSource, activeBank.sourcesByCardId),
     );
 
   const roleLabel = selectedRole === "all" ? null : ROLE_LABELS[selectedRole];
   const sourceLabel =
     selectedSource === "all"
       ? null
-      : contentSources.find((s) => s.id === selectedSource)?.name;
+      : activeBank.contentSources.find((s) => s.id === selectedSource)?.name;
   const scopeName = [roleLabel, sourceLabel].filter(Boolean).join(" · ") || null;
   const scopeSlug =
     [
@@ -368,7 +393,7 @@ export default function StudyPage() {
 
   if (selectedTopic) {
     const cards = matchingCardsOfTopic(selectedTopic.id);
-    const t = localizeTopic(selectedTopic, lang);
+    const t = localizeTopic(selectedTopic, activeLang);
     return (
       <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
@@ -380,7 +405,11 @@ export default function StudyPage() {
             ← All topics
           </button>
           <div className="flex flex-wrap items-center gap-3">
-            <LanguagePicker lang={lang} onChange={setLang} />
+            <LanguagePicker
+              lang={activeLang}
+              languages={languages}
+              onChange={setLang}
+            />
             <PdfButtons
               generating={generating}
               onGenerate={(format) =>
@@ -388,7 +417,9 @@ export default function StudyPage() {
                   cardIds: cards.map((c) => c.id),
                   name: t.name,
                   slug: selectedTopic.id,
-                  lang,
+                  lang: activeLang,
+                  topics: activeBank.topics,
+                  questions: activeBank.questions,
                 })
               }
             />
@@ -407,7 +438,7 @@ export default function StudyPage() {
           </p>
         )}
         {cards.map((card) => (
-          <StudyCard key={card.id} card={localizeCard(card, lang)} />
+          <StudyCard key={card.id} card={localizeCard(card, activeLang)} />
         ))}
       </div>
     );
@@ -419,13 +450,13 @@ export default function StudyPage() {
   const visibleEntries = studyTopics
     .map((topic) => {
       // Match search against what the reader actually sees (the chosen language).
-      const localizedName = localizeTopic(topic, lang).name;
+      const localizedName = localizeTopic(topic, activeLang).name;
       const cards = searching
         ? (cardsByTopicId.get(topic.id) ?? []).filter(
             (c) =>
               normalizedIncludes(localizedName, query) ||
               normalizedIncludes(query, localizedName) ||
-              cardMatchesQuery(localizeCard(c, lang), query),
+              cardMatchesQuery(localizeCard(c, activeLang), query),
           )
         : matchingCardsOfTopic(topic.id);
       return { topic, cards };
@@ -456,10 +487,14 @@ export default function StudyPage() {
       studyTopics.flatMap((t) => matchingCardsOfTopic(t.id).map((c) => c.id)),
     ),
   ];
-  const exportScope: StudyPdfScope =
-    scopeName === null
-      ? { lang }
-      : { cardIds: exportCardIds, name: scopeName, slug: scopeSlug, lang };
+  const exportScope: StudyPdfScope = {
+    lang: activeLang,
+    topics: activeBank.topics,
+    questions: activeBank.questions,
+    ...(scopeName === null
+      ? {}
+      : { cardIds: exportCardIds, name: scopeName, slug: scopeSlug }),
+  };
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
@@ -544,8 +579,34 @@ export default function StudyPage() {
           )}
         </select>
 
-        <LanguagePicker lang={lang} onChange={setLang} className="ml-auto" />
+        <LanguagePicker
+          lang={activeLang}
+          languages={languages}
+          onChange={setLang}
+          className="ml-auto"
+        />
       </div>
+
+      {devMode && ALL_BANKS.length > 1 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-hairline bg-background px-3 py-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Dev · content version
+          </span>
+          <select
+            className={selectCompact}
+            value={versionLabel}
+            onChange={(e) => setVersion(e.target.value)}
+            aria-label="Content version"
+          >
+            {ALL_BANKS.map((b) => (
+              <option key={b.label} value={b.label}>
+                {b.label} ({b.bank.topics.filter((t) => t.studyNotes).length}{" "}
+                topics)
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <input
         type="search"
@@ -574,7 +635,7 @@ export default function StudyPage() {
                 .map(({ topic, cards }) => ({
                   topic,
                   cards,
-                  loc: localizeTopic(topic, lang),
+                  loc: localizeTopic(topic, activeLang),
                 }))
                 .sort((a, b) => a.loc.name.localeCompare(b.loc.name))
                 .map(({ topic, cards, loc }) => (

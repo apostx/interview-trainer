@@ -26,6 +26,9 @@ export type StudyPdfScope = {
   slug?: string;
   /** Study reading language; content falls back to English per field. */
   lang?: LangCode;
+  /** Content bank to export (defaults to the live bank). */
+  topics?: Topic[];
+  questions?: QuestionCard[];
 };
 
 const ACCENT = "#2a78d6";
@@ -215,11 +218,13 @@ export function buildStudyPdfDefinition(
   const g = geometry(format);
   const base = g.base;
   const lang = scope.lang ?? DEFAULT_LANG;
+  const bankTopics = scope.topics ?? allTopics;
+  const bankQuestions = scope.questions ?? allQuestions;
 
   const cardIdSet = scope.cardIds ? new Set(scope.cardIds) : null;
   const scopedQuestions = cardIdSet
-    ? allQuestions.filter((q) => cardIdSet.has(q.id))
-    : allQuestions;
+    ? bankQuestions.filter((q) => cardIdSet.has(q.id))
+    : bankQuestions;
   const cardsByTopicId = new Map<string, QuestionCard[]>();
   for (const card of scopedQuestions) {
     if (scope.topicId) {
@@ -234,7 +239,7 @@ export function buildStudyPdfDefinition(
       cardsByTopicId.set(primary, [...(cardsByTopicId.get(primary) ?? []), card]);
     }
   }
-  const studyTopics = allTopics.filter((t) => {
+  const studyTopics = bankTopics.filter((t) => {
     if (!cardsByTopicId.has(t.id) && !t.studyNotes) return false;
     if (cardIdSet && !cardsByTopicId.has(t.id)) return false;
     if (scope.topicId) return t.id === scope.topicId;

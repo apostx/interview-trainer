@@ -261,6 +261,32 @@ selector), use the ready-made prompt in
 below — translations are additive `i18n` blocks, so they never touch ids or
 the English text.
 
+## Comparing content versions (dev mode)
+
+To judge which rebuild reads best, you can hold several full content banks in
+the app at once and switch between them while reading — without deploying each
+separately.
+
+- The **live** bank is `content/packs/` (what ships).
+- Each **alternate version** is a subfolder of `content/versions/<label>/`
+  holding a full set of pack JSONs. `<label>` is what shows in the switcher
+  (e.g. `content/versions/gpt-rewrite/`, `content/versions/claude-rewrite/`).
+- Open Study with **`?dev=1`** to reveal a "Dev · content version" dropdown
+  listing `Live` plus every version folder. Selecting one swaps the entire
+  Study bank (topics, questions, notes, translations, PDF export). The choice
+  is URL-addressable (`?ver=<label>`), so you can link a specific version.
+- Without `?dev=1` the dropdown is hidden and only the live bank is used — so
+  version folders never affect normal use (they are still bundled, so delete
+  them before a release if you want a lean production build).
+- `npm run content:check` validates every version folder as its own bank
+  (schema, studyNotes structure), exactly like the live one. Version banks are
+  independent, so ids may repeat across versions (but must be unique within
+  one).
+
+Typical flow: have each AI rebuild the bank, drop the results into
+`content/versions/<ai-name>/`, run `content:check`, then compare them in Study
+under `?dev=1` and copy the winner into `content/packs/`.
+
 ## AI prompt template
 
 Paste this into the AI chat (together with the `content:ids` output), fill
