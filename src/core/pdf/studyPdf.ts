@@ -67,14 +67,14 @@ function geometry(format: StudyPdfFormat): Geometry {
   if (format === "phone") {
     const pageMargins: [number, number, number, number] = [20, 24, 20, 30];
     return {
-      // 13pt base: fitted to a phone screen the page is shown at roughly
-      // physical size, and 11pt read too small there.
-      base: 13,
+      // 15pt base: fitted to a phone screen the page is shown at roughly
+      // physical size, and smaller sizes read uncomfortably there.
+      base: 15,
       pageSize: { width: 400, height: 710 },
       pageMargins,
       usableHeight: 710 - 24 - 30,
-      // ~360pt text width / ~6.2pt avg glyph at 12pt body
-      charsPerLine: 58,
+      // ~360pt text width / ~7.2pt avg glyph at 14pt body
+      charsPerLine: 50,
     };
   }
   const pageMargins: [number, number, number, number] = [46, 48, 46, 52];

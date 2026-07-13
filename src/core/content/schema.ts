@@ -137,6 +137,11 @@ export const packTopicSchema = z.object({
   /** Educational prose for the Study view: paragraphs separated by blank
    * lines, "- " lines become bullet lists. */
   studyNotes: z.string().optional(),
+  /** Interview essentiality, 5 = asked almost always … 1 = niche. Optional
+   * for backward compatibility; drives the Study importance filter. */
+  importance: z
+    .union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)])
+    .optional(),
   /** Study-only translations of name/description/studyNotes. */
   i18n: topicI18nSchema.optional(),
 });

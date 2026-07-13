@@ -63,11 +63,24 @@ only picks up content after a release — dev mode hot-reloads instantly.
                                     // devops | observability | soft_technical | core
   "relatedTopicIds": ["event_driven"], // optional
   "studyNotes": "Educational prose for the Study view. Paragraphs separated by\nblank lines (\\n\\n); lines starting with \"- \" become bullet lists; a line\nstarting with \"## \" becomes a subheading.",  // optional but strongly encouraged
+  "importance": 4,                      // optional, 1–5: how essential for interviews
+                                        // (5 = asked in almost every relevant interview,
+                                        //  3 = commonly comes up, 1 = niche/rare).
+                                        // Drives the Study "Importance" filter so the
+                                        // learner can start with the essentials.
   "i18n": {                             // optional Study-only translations
     "hu": { "name": "…", "studyNotes": "…" }  // any omitted field falls back to English
   }
 }
 ```
+
+`importance` is optional for backward compatibility. When at least one topic
+has it, an "Importance" filter appears in Study (Essentials only / 4+ / 3+ /
+2+ / All); topics WITHOUT a rating only show under "All". Rate honestly and
+relative to the whole bank — if everything is a 5, the filter is useless.
+Rough guide: 5 = a first-round staple (HTTP basics, Big-O, core language
+features); 4 = expected from the target role; 3 = commonly asked; 2 =
+occasional; 1 = niche/specialist.
 
 ### Study translations (`i18n`)
 
@@ -313,7 +326,8 @@ The JSON must follow this exact structure (all ids snake_case):
     { "id": "...", "name": "...", "description": "...",
       "category": "<frontend|backend|fullstack|architecture|cloud|security|database|devops|observability|soft_technical|core>",
       "relatedTopicIds": [],
-      "studyNotes": "## What is it?\\n\\n<plain definition>\\n\\n## What problem does it solve?\\n\\n<why it exists>\\n\\n## How it works\\n\\n<mechanism; '- ' lines become bullets>\\n\\n## Common mistakes\\n\\n- <misunderstanding or weak answer>\\n\\n## Key terms\\n\\n- <term> — <one-line definition>" }
+      "studyNotes": "## What is it?\\n\\n<plain definition>\\n\\n## What problem does it solve?\\n\\n<why it exists>\\n\\n## How it works\\n\\n<mechanism; '- ' lines become bullets>\\n\\n## Common mistakes\\n\\n- <misunderstanding or weak answer>\\n\\n## Key terms\\n\\n- <term> — <one-line definition>",
+      "importance": <1-5: how essential for interviews; 5 = asked almost always, 3 = common, 1 = niche> }
   ],
   "questions": [
     {
@@ -368,6 +382,11 @@ Content rules:
 - Do NOT reuse or change any id from the inventory I pasted; new ids must not
   collide with it. Where a concept already exists as a topic in the inventory,
   reference it via relatedTopicIds instead of creating a duplicate topic.
+- Rate every topic's "importance" (1-5) by how often it comes up in real
+  interviews for the target roles: 5 = a first-round staple asked almost
+  always, 4 = expected from the role, 3 = commonly asked, 2 = occasional,
+  1 = niche. Spread the ratings honestly across the scale — if everything
+  is a 5 the learner cannot prioritize.
 - ONE topic = ONE concept. Never bundle several distinct concepts into a
   combined topic ("X, Y & Z"); make separate topics linked by relatedTopicIds.
   Comparisons ("X vs Y") count as one concept.

@@ -212,6 +212,7 @@ function PdfButtons({
 // Reads the Study view state out of the current query string.
 function readUrlState() {
   const p = new URLSearchParams(window.location.search);
+  const imp = Number(p.get("imp"));
   return {
     topicId: p.get("topic"),
     role: (p.get("role") as RoleFilter | null) ?? null,
@@ -219,6 +220,7 @@ function readUrlState() {
     query: p.get("q") ?? "",
     dev: p.get("dev") === "1",
     version: p.get("ver") ?? "Live",
+    minImportance: imp >= 1 && imp <= 5 ? imp : null,
   };
 }
 
@@ -235,6 +237,7 @@ export default function StudyPage() {
   const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
   const [devMode, setDevMode] = useState(false);
   const [versionLabel, setVersionLabelState] = useState("Live");
+  const [minImportance, setMinImportanceState] = useState<number | null>(null);
   const [generating, setGenerating] = useState<StudyPdfFormat | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
 
@@ -244,7 +247,7 @@ export default function StudyPage() {
 
   // Everything the view lists is derived from the active bank, so switching
   // versions swaps the whole Study content at once.
-  const { cardsByTopicId, studyTopics, sourceGroups, languages } = useMemo(() => {
+  const { cardsByTopicId, studyTopics, sourceGroups, languages, hasImportance } = useMemo(() => {
     const cardsByTopicId = new Map<string, QuestionCard[]>();
     for (const card of activeBank.questions) {
       for (const topicId of card.topicIds) {
@@ -266,7 +269,9 @@ export default function StudyPage() {
     }
     const sourceGroups = [...groups.entries()].sort();
     const languages = availableLanguages(activeBank.topics, activeBank.questions);
-    return { cardsByTopicId, studyTopics, sourceGroups, languages };
+    // The importance filter only appears when the content actually rates topics.
+    const hasImportance = studyTopics.some((t) => t.importance !== undefined);
+    return { cardsByTopicId, studyTopics, sourceGroups, languages, hasImportance };
   }, [activeBank]);
 
   // Study reading language is a preference (persisted), not view navigation,
@@ -287,6 +292,7 @@ export default function StudyPage() {
       setQueryState(s.query);
       setDevMode(s.dev);
       setVersionLabelState(s.version);
+      setMinImportanceState(s.minImportance);
     };
     const init = () => {
       const saved = localStorage.getItem(LANG_STORAGE_KEY);
@@ -302,6 +308,15 @@ export default function StudyPage() {
     setVersionLabelState(label);
     writeUrl({ ver: label === "Live" ? null : label });
   };
+
+  const setMinImportance = (value: number | null) => {
+    setMinImportanceState(value);
+    writeUrl({ imp: value === null ? null : String(value) });
+  };
+
+  // Topics without an importance rating only show in the "All" view.
+  const passesImportance = (topic: Topic) =>
+    minImportance === null || (topic.importance ?? 0) >= minImportance;
 
   // The role filter defaults to the user's target role until they pick one
   // (an explicit choice — including "all" — is written to the URL and wins).
@@ -378,11 +393,19 @@ export default function StudyPage() {
     selectedSource === "all"
       ? null
       : activeBank.contentSources.find((s) => s.id === selectedSource)?.name;
-  const scopeName = [roleLabel, sourceLabel].filter(Boolean).join(" · ") || null;
+  const importanceLabel =
+    minImportance === null
+      ? null
+      : minImportance === 5
+        ? "Essentials"
+        : `Importance ${minImportance}+`;
+  const scopeName =
+    [roleLabel, sourceLabel, importanceLabel].filter(Boolean).join(" · ") || null;
   const scopeSlug =
     [
       selectedRole === "all" ? null : selectedRole,
       selectedSource === "all" ? null : selectedSource,
+      minImportance === null ? null : `imp${minImportance}`,
     ]
       .filter(Boolean)
       .join("-") || "all";
@@ -469,7 +492,10 @@ export default function StudyPage() {
         (!searching &&
           e.topic.studyNotes &&
           (cardsByTopicId.get(e.topic.id) ?? []).length === 0),
-    );
+    )
+    // Search deliberately looks across everything; otherwise the importance
+    // threshold hides less essential (and unrated) topics.
+    .filter((e) => searching || passesImportance(e.topic));
 
   const byCategory = new Map<
     Topic["category"],
@@ -484,7 +510,9 @@ export default function StudyPage() {
 
   const exportCardIds = [
     ...new Set(
-      studyTopics.flatMap((t) => matchingCardsOfTopic(t.id).map((c) => c.id)),
+      studyTopics
+        .filter(passesImportance)
+        .flatMap((t) => matchingCardsOfTopic(t.id).map((c) => c.id)),
     ),
   ];
   const exportScope: StudyPdfScope = {
@@ -579,6 +607,31 @@ export default function StudyPage() {
           )}
         </select>
 
+        {hasImportance && (
+          <>
+            <label
+              className="text-sm font-medium text-secondary"
+              htmlFor="importance-filter"
+            >
+              Importance
+            </label>
+            <select
+              id="importance-filter"
+              className={selectCompact}
+              value={minImportance ?? ""}
+              onChange={(e) =>
+                setMinImportance(e.target.value ? Number(e.target.value) : null)
+              }
+            >
+              <option value="">All topics</option>
+              <option value="5">Essentials only (5)</option>
+              <option value="4">High (4+)</option>
+              <option value="3">Medium (3+)</option>
+              <option value="2">Low (2+)</option>
+            </select>
+          </>
+        )}
+
         <LanguagePicker
           lang={activeLang}
           languages={languages}
@@ -653,8 +706,22 @@ export default function StudyPage() {
                         </span>
                       )}
                     </span>
-                    <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-secondary">
-                      {cards.length} card{cards.length === 1 ? "" : "s"}
+                    <span className="flex shrink-0 items-center gap-1.5">
+                      {topic.importance !== undefined && (
+                        <span
+                          title={`Interview importance ${topic.importance}/5`}
+                          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            topic.importance >= 4
+                              ? "bg-accent/15 text-accent"
+                              : "bg-background text-muted"
+                          }`}
+                        >
+                          ★{topic.importance}
+                        </span>
+                      )}
+                      <span className="rounded-full bg-background px-2 py-0.5 text-xs font-medium text-secondary">
+                        {cards.length} card{cards.length === 1 ? "" : "s"}
+                      </span>
                     </span>
                   </button>
                 ))}

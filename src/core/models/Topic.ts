@@ -9,6 +9,11 @@ export type Topic = {
   relatedTopicIds: string[];
   /** Educational prose for the Study view (paragraphs, "- " bullets). */
   studyNotes?: string;
+  /**
+   * How essential the topic is for interviews (5 = asked almost always,
+   * 1 = niche). Optional — untagged topics only show in the "All" filter.
+   */
+  importance?: 1 | 2 | 3 | 4 | 5;
   /** Study-only translations of name/description/studyNotes. */
   i18n?: TopicI18n;
   status: TopicStatus;

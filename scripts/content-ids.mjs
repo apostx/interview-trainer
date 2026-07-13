@@ -33,7 +33,8 @@ for (const file of readdirSync(PACKS_DIR).filter((f) => f.endsWith(".json"))) {
   console.log(`## Pack: ${pack.id}  (file: ${file})`);
   console.log(`sources: ${JSON.stringify(pack.sources ?? [])}`);
   for (const t of pack.topics ?? []) {
-    console.log(`  topic: ${t.id} — ${t.name} [${t.category}]`);
+    const imp = t.importance !== undefined ? ` (importance ${t.importance})` : "";
+    console.log(`  topic: ${t.id} — ${t.name} [${t.category}]${imp}`);
   }
   for (const q of pack.questions ?? []) {
     console.log(`  question: ${q.id} — ${q.title} (topics: ${q.topicIds.join(", ")})`);
