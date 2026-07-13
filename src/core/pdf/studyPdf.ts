@@ -67,12 +67,14 @@ function geometry(format: StudyPdfFormat): Geometry {
   if (format === "phone") {
     const pageMargins: [number, number, number, number] = [20, 24, 20, 30];
     return {
-      base: 11,
+      // 13pt base: fitted to a phone screen the page is shown at roughly
+      // physical size, and 11pt read too small there.
+      base: 13,
       pageSize: { width: 400, height: 710 },
       pageMargins,
       usableHeight: 710 - 24 - 30,
-      // ~360pt text width / ~5.1pt avg glyph at 10pt body
-      charsPerLine: 68,
+      // ~360pt text width / ~6.2pt avg glyph at 12pt body
+      charsPerLine: 58,
     };
   }
   const pageMargins: [number, number, number, number] = [46, 48, 46, 52];
@@ -132,13 +134,13 @@ function pointItem(p: QuestionCard["expectedPoints"][number], base: number): any
 }
 
 function notesBlocks(notes: string, base: number): any[] {
-  return parseStudyNotes(notes).map((block) =>
+  const rendered = parseStudyNotes(notes).map((block) =>
     block.type === "h"
       ? { text: block.text, fontSize: base + 1, bold: true, color: INK, margin: [0, 6, 0, 2] }
       : block.type === "p"
         ? { text: block.text, fontSize: base - 0.5, color: BODY, margin: [0, 0, 0, 4], lineHeight: 1.35 }
         : {
-            ul: block.items.map((item) => ({
+            ul: (block as { items: string[] }).items.map((item) => ({
               text: item,
               fontSize: base - 0.5,
               color: BODY,
@@ -148,6 +150,19 @@ function notesBlocks(notes: string, base: number): any[] {
             margin: [2, 0, 0, 4],
           },
   );
+  // Glue each heading to the block that follows it, so a section title can
+  // never sit alone at the bottom of a page with its content on the next.
+  const blocks = parseStudyNotes(notes);
+  const out: any[] = [];
+  for (let i = 0; i < rendered.length; i++) {
+    if (blocks[i].type === "h" && i + 1 < rendered.length) {
+      out.push({ stack: [rendered[i], rendered[i + 1]], unbreakable: true });
+      i++;
+    } else {
+      out.push(rendered[i]);
+    }
+  }
+  return out;
 }
 
 function cardBox(card: QuestionCard, g: Geometry): any {
@@ -349,39 +364,50 @@ export function buildStudyPdfDefinition(
       .map((topic) => ({ topic, loc: localizeTopic(topic, lang) }))
       .sort((a, b) => a.loc.name.localeCompare(b.loc.name));
     sorted.forEach(({ topic, loc }, index) => {
+      const header = [
+        {
+          text: loc.name,
+          tocItem: topicsInToc,
+          tocMargin: [12, 0, 0, 0],
+          fontSize: base + 3,
+          bold: true,
+          color: INK,
+          margin: [0, index === 0 ? 0 : 12, 0, 1],
+        },
+        ...(loc.description
+          ? [{ text: loc.description, fontSize: base - 1, color: MUTED, margin: [0, 0, 0, 4] }]
+          : []),
+      ];
+      const notes = loc.studyNotes ? notesBlocks(loc.studyNotes, base) : [];
+      // The topic header travels with the first notes block, so a topic name
+      // can never end a page while its material starts the next.
       content.push({
-        stack: [
-          {
-            text: loc.name,
-            tocItem: topicsInToc,
-            tocMargin: [12, 0, 0, 0],
-            fontSize: base + 3,
-            bold: true,
-            color: INK,
-            margin: [0, index === 0 ? 0 : 12, 0, 1],
-          },
-          ...(loc.description
-            ? [{ text: loc.description, fontSize: base - 1, color: MUTED, margin: [0, 0, 0, 4] }]
-            : []),
-        ],
+        stack: [...header, ...(notes.length > 0 ? [notes[0]] : [])],
         unbreakable: true,
       });
-      if (loc.studyNotes) {
-        content.push(...notesBlocks(loc.studyNotes, base));
-      }
+      content.push(...notes.slice(1));
+
       const topicCards = cardsByTopicId.get(topic.id) ?? [];
       if (topicCards.length > 0) {
-        content.push({
+        const label = {
           text: "PRACTICE CHECKS",
           fontSize: base - 3.5,
           bold: true,
           characterSpacing: 0.6,
           color: MUTED,
           margin: [0, 4, 0, 2],
-        });
-      }
-      for (const card of topicCards) {
-        content.push(cardBox(localizeCard(card, lang), g));
+        };
+        const localized = topicCards.map((card) => localizeCard(card, lang));
+        const [first, ...rest] = localized;
+        // Keep the label with the first card when the pair fits a page.
+        if (estimateCardHeight(first, g) < g.usableHeight * 0.85) {
+          content.push({ stack: [label, cardBox(first, g)], unbreakable: true });
+        } else {
+          content.push(label, cardBox(first, g));
+        }
+        for (const card of rest) {
+          content.push(cardBox(card, g));
+        }
       }
     });
   }

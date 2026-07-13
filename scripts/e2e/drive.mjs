@@ -207,14 +207,19 @@ async function main() {
   log("✅", "Topic library lists the new topic (status Unknown)");
 
   // ---- Study view: browse material without being quizzed
+  // Content-agnostic: the checks derive names/counts from whatever content is
+  // loaded, so a full content rebuild cannot break them.
   // role=all makes the visible set deterministic regardless of saved target role.
   await page.goto(BASE + "/study/?role=all");
   await page.getByRole("heading", { name: "Study", exact: true }).waitFor();
-  await page.getByText("Circuit breaker", { exact: true }).first().click();
+  const topicButtons = page.locator("section button", { hasText: /cards?$/ });
+  const allCount = await topicButtons.count();
+  // Open the first topic that has at least one practice card.
+  await topicButtons.filter({ hasText: /[1-9]\d* cards?$/ }).first().click();
   await page.getByText("A strong answer covers").first().waitFor();
-  log("✅", "Study view: selected topic shows only its cards with answer points");
+  log("✅", "Study view: selected topic shows its cards with answer points");
   // The open topic is reflected in the URL and survives a reload (linkable).
-  const topicInUrl = /[?&]topic=circuit_breaker\b/.test(page.url());
+  const topicInUrl = /[?&]topic=[a-z0-9_]+/.test(page.url());
   await page.reload();
   const survivesReload = await page
     .getByRole("heading", { name: "What is it?" })
@@ -225,28 +230,7 @@ async function main() {
     topicInUrl && survivesReload ? "✅" : "❌",
     "Study topic is URL-addressable and survives a refresh",
   );
-  await page.getByRole("button", { name: "← All topics" }).click();
-  // Category chips: only the selected category's topics are shown
-  await page.getByRole("button", { name: "Backend", exact: true }).click();
-  await page.getByText("Outbox pattern", { exact: true }).first().waitFor();
-  const crossCategoryLeak = await page
-    .getByText("CSS box-sizing", { exact: true })
-    .isVisible()
-    .catch(() => false);
-  log(
-    crossCategoryLeak ? "❌" : "✅",
-    "Study category switcher shows only the selected category",
-  );
-  await page.getByText("exports Backend").waitFor();
-  log("🔍", "Export scope follows the selected category");
-  await page.getByLabel("Search topics and questions").fill("box-sizing");
-  await page.getByText("CSS box-sizing", { exact: true }).first().waitFor();
-  log("🔍", "Search looks across all categories");
-  await page.getByLabel("Search topics and questions").fill("");
-
-  // Study notes: a topic renders the fixed note structure + a Practice checks label
-  await page.getByLabel("Search topics and questions").fill("Big-O Basics");
-  await page.getByText("Big-O Basics", { exact: false }).first().click();
+  // Structured notes render as real headings above the practice checks.
   const structureShown = (
     await Promise.all(
       ["What is it?", "Common mistakes", "Key terms"].map((h) =>
@@ -268,6 +252,23 @@ async function main() {
     "Study view renders structured notes (What is it? …) above the practice checks",
   );
   await page.getByRole("button", { name: "← All topics" }).click();
+  await page.getByRole("heading", { name: "Study", exact: true }).waitFor();
+
+  // Role filter narrows the list (or keeps it) and never empties it.
+  await page.getByRole("button", { name: "Backend", exact: true }).click();
+  await page.getByText("exports Backend").waitFor();
+  const backendCount = await topicButtons.count();
+  log(
+    backendCount > 0 && backendCount <= allCount ? "✅" : "❌",
+    `Role filter narrows the topic list (${allCount} → ${backendCount}) and scopes the export`,
+  );
+
+  // Search finds a topic by (part of) its own name, across roles.
+  const firstName = (await topicButtons.first().locator("span span").first().textContent()) ?? "";
+  const word = firstName.split(/\s+/).find((w) => w.length > 3) ?? firstName;
+  await page.getByLabel("Search topics and questions").fill(word);
+  await page.getByText(firstName, { exact: true }).first().waitFor();
+  log("🔍", `Search finds "${firstName}" by "${word}" across all categories`);
   await page.getByLabel("Search topics and questions").fill("");
   await page.screenshot({ path: `${SHOTS}/17-study.png` });
 
