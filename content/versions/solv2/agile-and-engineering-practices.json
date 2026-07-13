@@ -1,0 +1,2410 @@
+{
+  "id": "agile_engineering_practices_rebuild",
+  "name": "Agile and Engineering Practices",
+  "description": "Agile delivery, Scrum, Kanban, estimation, testing, collaboration, leadership and continuous improvement.",
+  "sources": [
+    "agile",
+    "modszertanok",
+    "interview-trainer-study-all-phone-original",
+    "interview-trainer-study-all-phone-chatgpt",
+    "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu",
+    "artec_frontend_interju_felkeszules"
+  ],
+  "topics": [
+    {
+      "id": "agile_mindset",
+      "name": "Agile Mindset",
+      "description": "Short feedback loops and adaptive delivery rather than a meeting schedule",
+      "category": "soft_technical",
+      "importance": 4,
+      "relatedTopicIds": [
+        "agile_scrum",
+        "agile_kanban",
+        "agile_continuous_improvement"
+      ],
+      "studyNotes": "## What is it?\n\nAgile is a set of values for delivering useful software under uncertainty through working increments, collaboration and adaptation.\n\n## What problem does it solve?\n\nLong plans can efficiently deliver the wrong product when assumptions are not tested.\n\n## How it works\n\n- Deliver small usable increments.\n- Collect feedback early.\n- Preserve a clear goal while adapting the plan.\n- Maintain technical quality and sustainable pace.\n\n## Common mistakes\n\n- Treating Agile as ceremonies.\n- Using Agile as an excuse for no design or documentation.\n- Accepting constant scope drift.\n\n## Key terms\n\n- feedback loop — time from decision to evidence\n- increment — usable product addition\n- sustainable pace — delivery without permanent overtime",
+      "i18n": {
+        "hu": {
+          "name": "Agile Mindset",
+          "description": "Rövid feedback loop és adaptive delivery, nem egyszerű meetinglista",
+          "studyNotes": "## Mi ez?\n\nAz Agile értékek gyűjteménye useful software szállítására working increment, collaboration és adaptation segítségével.\n\n## Milyen problémát old meg?\n\nA hosszú terv rossz productot is szállíthat, ha az assumptionök túl későn kapnak feedbacket.\n\n## Hogyan működik?\n\n- Kis usable incrementet szállíts.\n- Korán gyűjts feedbacket.\n- A clear goal maradjon, a plan legyen adaptálható.\n- Technical quality és sustainable pace szükséges.\n\n## Gyakori hibák\n\n- Az Agile-t ceremonykkal azonosítani.\n- Design és documentation hiányát Agile-lal indokolni.\n- Folyamatos scope driftet elfogadni.\n\n## Kulcsfogalmak\n\n- feedback loop — döntés és evidence közötti idő\n- increment — usable product addition\n- sustainable pace — permanent overtime nélküli delivery"
+        }
+      }
+    },
+    {
+      "id": "agile_scrum",
+      "name": "Scrum Framework",
+      "description": "Sprint-based product inspection with clear accountabilities and goals",
+      "category": "soft_technical",
+      "importance": 3,
+      "relatedTopicIds": [
+        "agile_mindset",
+        "agile_backlog_refinement",
+        "agile_definition_done"
+      ],
+      "studyNotes": "## What is it?\n\nScrum is a lightweight framework for complex product work using a Product Goal, short Sprints and regular inspection.\n\n## What problem does it solve?\n\nIt creates focus and a predictable feedback cadence without pretending the full solution is known upfront.\n\n## How it works\n\n- Product Owner orders the backlog.\n- Scrum Master enables effective Scrum.\n- Developers create the Increment.\n- Planning, Daily Scrum, Review and Retrospective inspect and adapt work.\n\n## Common mistakes\n\n- Scrum Master as task manager.\n- Daily Scrum as management report.\n- Review as slides instead of product inspection.\n\n## Key terms\n\n- Product Goal — longer-term objective\n- Sprint Goal — objective for one Sprint\n- Increment — usable Done work",
+      "i18n": {
+        "hu": {
+          "name": "Scrum Framework",
+          "description": "Sprint-alapú product inspection tiszta accountabilityvel és goalokkal",
+          "studyNotes": "## Mi ez?\n\nA Scrum lightweight framework komplex product workhöz Product Goal, rövid Sprint és regular inspection segítségével.\n\n## Milyen problémát old meg?\n\nFocus-t és predictable feedback cadence-t ad anélkül, hogy a teljes solutiont előre ismertnek tekintené.\n\n## Hogyan működik?\n\n- Product Owner ordereli a backlogot.\n- Scrum Master támogatja a framework működését.\n- Developers készíti az Incrementet.\n- Planning, Daily, Review és Retrospective inspectál és adaptál.\n\n## Gyakori hibák\n\n- Scrum Mastert task managerként kezelni.\n- Daily-t management reporttá tenni.\n- Review-n working product helyett slide-ot mutatni.\n\n## Kulcsfogalmak\n\n- Product Goal — hosszabb távú objective\n- Sprint Goal — egy Sprint objective-je\n- Increment — usable Done work"
+        }
+      }
+    },
+    {
+      "id": "agile_kanban",
+      "name": "Kanban",
+      "description": "Continuous flow with visualized work and WIP limits",
+      "category": "soft_technical",
+      "importance": 3,
+      "relatedTopicIds": [
+        "agile_mindset",
+        "agile_flow_metrics",
+        "agile_work_slicing"
+      ],
+      "studyNotes": "## What is it?\n\nKanban improves flow by visualizing work, limiting work in progress and making policies explicit.\n\n## What problem does it solve?\n\nToo much concurrent work creates waiting, context switching and hidden bottlenecks.\n\n## How it works\n\n- Model the real workflow.\n- Set WIP limits.\n- Pull work when capacity is available.\n- Track lead time, cycle time, throughput and cumulative flow.\n\n## Common mistakes\n\n- A board without WIP limits.\n- Every request marked urgent.\n- Blocked work kept invisible.\n\n## Key terms\n\n- WIP limit — maximum active work\n- pull system — work starts when capacity exists\n- cycle time — started to done",
+      "i18n": {
+        "hu": {
+          "name": "Kanban",
+          "description": "Continuous flow visualized work és WIP limit mellett",
+          "studyNotes": "## Mi ez?\n\nA Kanban visualizálja a worköt, limitálja a work in progresst és explicit policykkal javítja a flow-t.\n\n## Milyen problémát old meg?\n\nA túl sok concurrent work waitinget, context switchinget és hidden bottlenecket okoz.\n\n## Hogyan működik?\n\n- A valós workflow-t modellezd.\n- Használj WIP limitet.\n- Capacity esetén pullolj új worköt.\n- Mérj lead time-ot, cycle time-ot, throughputot és cumulative flow-t.\n\n## Gyakori hibák\n\n- WIP limit nélküli board.\n- Minden request urgent.\n- Blocked work elrejtése.\n\n## Kulcsfogalmak\n\n- WIP limit — maximum active work\n- pull system — capacity esetén induló work\n- cycle time — startedtől done-ig"
+        }
+      }
+    },
+    {
+      "id": "agile_sdlc_models",
+      "name": "SDLC Delivery Models",
+      "description": "Sequential, iterative, incremental and risk-driven delivery choices",
+      "category": "soft_technical",
+      "importance": 2,
+      "relatedTopicIds": [
+        "agile_mindset",
+        "agile_scrum",
+        "agile_kanban"
+      ],
+      "studyNotes": "## What is it?\n\nSDLC models order requirements, design, implementation, verification and release differently.\n\n## What problem does it solve?\n\nStable regulated work and uncertain product discovery need different risk and feedback models.\n\n## How it works\n\n- Waterfall is mostly sequential.\n- V-model pairs development with verification.\n- Incremental delivery adds usable slices.\n- Iterative delivery refines repeatedly.\n- Spiral delivery centres explicit risk analysis.\n\n## Common mistakes\n\n- Choosing by fashion.\n- Calling all planned work Waterfall.\n- Assuming Agile means no architecture.\n\n## Key terms\n\n- sequential — phases mostly in order\n- incremental — usable slices over time\n- iterative — repeated refinement",
+      "i18n": {
+        "hu": {
+          "name": "SDLC Delivery Models",
+          "description": "Sequential, iterative, incremental és risk-driven delivery választások",
+          "studyNotes": "## Mi ez?\n\nAz SDLC model eltérően rendezi a requirements, design, implementation, verification és release lépéseket.\n\n## Milyen problémát old meg?\n\nStable regulated work és uncertain product discovery más feedback és risk modellt igényel.\n\n## Hogyan működik?\n\n- Waterfall főként sequential.\n- V-model development stage-et verificationnel párosít.\n- Incremental delivery usable slice-okat ad.\n- Iterative delivery ismételten finomít.\n- Spiral explicit risk analysisra épül.\n\n## Gyakori hibák\n\n- Fashion alapján választani.\n- Minden planned worköt Waterfallnak nevezni.\n- Azt hinni, Agile mellett nincs architecture.\n\n## Kulcsfogalmak\n\n- sequential — phase-ek nagyrészt sorrendben\n- incremental — usable slice időben\n- iterative — ismételt finomítás"
+        }
+      }
+    },
+    {
+      "id": "agile_user_stories",
+      "name": "User Stories and Acceptance Criteria",
+      "description": "A valuable need made observable and testable",
+      "category": "soft_technical",
+      "importance": 5,
+      "relatedTopicIds": [
+        "agile_backlog_refinement",
+        "agile_definition_done",
+        "agile_estimation"
+      ],
+      "studyNotes": "## What is it?\n\nA user story starts a conversation about who needs what and why. Acceptance criteria define observable behaviour.\n\n## What problem does it solve?\n\nA vague ticket leaves scope, errors and success conditions open to interpretation.\n\n## How it works\n\n- Use INVEST as a quality check.\n- Cover normal, error, permission and boundary cases.\n- Use Given/When/Then where helpful.\n- Split large stories by user value.\n\n## Common mistakes\n\n- Treating one sentence as the full requirement.\n- Writing implementation steps as acceptance criteria.\n- Splitting only by technical layer.\n\n## Key terms\n\n- INVEST — story quality checklist\n- acceptance criterion — observable condition\n- vertical slice — small end-to-end capability",
+      "i18n": {
+        "hu": {
+          "name": "User Stories és Acceptance Criteria",
+          "description": "Valuable need observable és testable formában",
+          "studyNotes": "## Mi ez?\n\nA user story conversation starter arról, kinek, mire és miért van szüksége. Az acceptance criteria observable behaviourt definiál.\n\n## Milyen problémát old meg?\n\nA vague ticket nyitva hagyja a scope-ot, errort és success conditiont.\n\n## Hogyan működik?\n\n- Használd az INVEST-et quality checkként.\n- Normal, error, permission és boundary case is legyen.\n- Given/When/Then használható.\n- Nagy storyt user value alapján splitelj.\n\n## Gyakori hibák\n\n- Egy mondatot teljes requirementnek tekinteni.\n- Implementation stepet acceptance criteriának írni.\n- Csak technical layer szerint splitelni.\n\n## Kulcsfogalmak\n\n- INVEST — story quality checklist\n- acceptance criterion — observable condition\n- vertical slice — kis end-to-end capability"
+        }
+      }
+    },
+    {
+      "id": "agile_definition_done",
+      "name": "Definition of Done and Ready",
+      "description": "Shared quality bar and optional readiness policy",
+      "category": "soft_technical",
+      "importance": 3,
+      "relatedTopicIds": [
+        "agile_scrum",
+        "agile_user_stories",
+        "agile_testing_strategy"
+      ],
+      "studyNotes": "## What is it?\n\nDefinition of Done is the quality standard every Increment must meet. Definition of Ready is an optional policy for sufficiently understood work.\n\n## What problem does it solve?\n\nWithout a common bar, Done can mean coded, tested, deployed or accepted depending on the person.\n\n## How it works\n\n- Include broad review, test, security, documentation and operational expectations.\n- Keep story acceptance criteria separate.\n- Improve the DoD over time.\n- Use readiness to expose missing decisions, not reject all uncertainty.\n\n## Common mistakes\n\n- Done means development finished.\n- An impossible checklist.\n- Ready used as a bureaucratic gate.\n\n## Key terms\n\n- Definition of Done — shared Increment quality bar\n- Definition of Ready — optional start policy\n- hidden work — unfinished quality work",
+      "i18n": {
+        "hu": {
+          "name": "Definition of Done és Ready",
+          "description": "Közös quality bar és opcionális readiness policy",
+          "studyNotes": "## Mi ez?\n\nA Definition of Done minden Increment közös quality standardja. A Definition of Ready opcionális policy a sufficiently understood workhöz.\n\n## Milyen problémát old meg?\n\nKözös bar nélkül a Done jelentheti azt, hogy coded, tested, deployed vagy accepted.\n\n## Hogyan működik?\n\n- Általános review, test, security, documentation és operational expectation legyen benne.\n- Story acceptance criteria maradjon külön.\n- A DoD idővel javuljon.\n- Readiness hiányzó decisiont tárjon fel, ne minden uncertaintyt zárjon ki.\n\n## Gyakori hibák\n\n- Done egyenlő development finished.\n- Teljesíthetetlen checklist.\n- Ready mint bureaucratic gate.\n\n## Kulcsfogalmak\n\n- Definition of Done — közös Increment quality bar\n- Definition of Ready — opcionális start policy\n- hidden work — befejezetlen quality work"
+        }
+      }
+    },
+    {
+      "id": "agile_backlog_refinement",
+      "name": "Backlog Refinement and Prioritization",
+      "description": "Keeping upcoming work understandable and ordered",
+      "category": "soft_technical",
+      "importance": 4,
+      "relatedTopicIds": [
+        "agile_user_stories",
+        "agile_work_slicing",
+        "agile_stakeholder_collaboration"
+      ],
+      "studyNotes": "## What is it?\n\nRefinement clarifies, splits, orders and estimates upcoming work. Prioritization balances value, urgency, risk, dependency and cost.\n\n## What problem does it solve?\n\nAn unrefined backlog turns planning into discovery and lets the loudest stakeholder control delivery.\n\n## How it works\n\n- Clarify outcome and success evidence.\n- Surface risks and dependencies.\n- Split oversized items.\n- Use spikes for genuine unknowns.\n- Route priority through one product decision process.\n\n## Common mistakes\n\n- Refining the entire long-term backlog in detail.\n- Treating estimates as commitments.\n- Direct stakeholder insertion into active work.\n\n## Key terms\n\n- refinement — preparation of upcoming work\n- spike — timeboxed research\n- prioritization — ordering by value and risk",
+      "i18n": {
+        "hu": {
+          "name": "Backlog Refinement és Prioritization",
+          "description": "Upcoming work tisztázása, splitelése és orderelése",
+          "studyNotes": "## Mi ez?\n\nA refinement tisztázza, spliteli, ordereli és estimate-eli a közelgő worköt. A prioritization value, urgency, risk, dependency és cost között egyensúlyoz.\n\n## Milyen problémát old meg?\n\nUnrefined backlog esetén planning közben történik a discovery, és a loudest stakeholder irányít.\n\n## Hogyan működik?\n\n- Tisztázd az outcome-ot és success evidence-et.\n- Surface-öld a risket és dependencyt.\n- Spliteld az oversized itemet.\n- Genuine unknownhoz spike használható.\n- Priority egy product decision processen keresztül érkezzen.\n\n## Gyakori hibák\n\n- A teljes long-term backlog részletes refinementje.\n- Estimate commitmentként kezelése.\n- Direct stakeholder insertion active workbe.\n\n## Kulcsfogalmak\n\n- refinement — upcoming work előkészítése\n- spike — timeboxed research\n- prioritization — value és risk szerinti order"
+        }
+      }
+    },
+    {
+      "id": "agile_estimation",
+      "name": "Story Points and Planning Poker",
+      "description": "Relative estimation without pretending exact-hour certainty",
+      "category": "soft_technical",
+      "importance": 2,
+      "relatedTopicIds": [
+        "agile_user_stories",
+        "agile_flow_metrics",
+        "agile_backlog_refinement"
+      ],
+      "studyNotes": "## What is it?\n\nStory points estimate relative size through effort, complexity and uncertainty. Planning poker reveals estimates simultaneously and discusses differences.\n\n## What problem does it solve?\n\nExact hours often imply false precision, while spoken estimates create anchoring.\n\n## How it works\n\n- Use reference stories and a small relative scale.\n- Include uncertainty and risk.\n- Reveal simultaneously.\n- Discuss high and low assumptions.\n- Split or spike oversized unknown work.\n\n## Common mistakes\n\n- Converting points to hours.\n- Comparing velocity between teams.\n- Velocity used as a performance KPI.\n\n## Key terms\n\n- story point — relative size\n- planning poker — simultaneous estimation\n- velocity — team planning input",
+      "i18n": {
+        "hu": {
+          "name": "Story Points és Planning Poker",
+          "description": "Relative estimation exact-hour certainty látszata nélkül",
+          "studyNotes": "## Mi ez?\n\nA story point effort, complexity és uncertainty alapján relative size-t becsül. A planning poker egyszerre revealeli az estimate-et, majd a különbségeket megbeszéli.\n\n## Milyen problémát old meg?\n\nAz exact hour false precisiont, a hangosan sorban adott estimate anchoringot okoz.\n\n## Hogyan működik?\n\n- Reference storyt és kis scale-t használj.\n- Uncertainty és risk is számítson.\n- Egyszerre revealelj.\n- A high és low assumption kerüljön elő.\n- Oversized unknown worköt splitelj vagy spike-olj.\n\n## Gyakori hibák\n\n- Pointot hourrá konvertálni.\n- Team velocityt összehasonlítani.\n- Velocityt performance KPI-ként használni.\n\n## Kulcsfogalmak\n\n- story point — relative size\n- planning poker — simultaneous estimation\n- velocity — team planning input"
+        }
+      }
+    },
+    {
+      "id": "agile_flow_metrics",
+      "name": "Agile and Flow Metrics",
+      "description": "Progress and bottleneck signals rather than performance targets",
+      "category": "soft_technical",
+      "importance": 2,
+      "relatedTopicIds": [
+        "agile_kanban",
+        "agile_estimation",
+        "agile_continuous_improvement"
+      ],
+      "studyNotes": "## What is it?\n\nBurndown, burnup, lead time, cycle time, throughput and cumulative flow describe delivery behaviour.\n\n## What problem does it solve?\n\nTeams need evidence about predictability and queues, but metrics become harmful when made targets.\n\n## How it works\n\n- Burndown shows remaining work.\n- Burnup also shows changing total scope.\n- Lead time is request to delivery.\n- Cycle time is started to done.\n- A widening cumulative-flow band indicates a bottleneck.\n\n## Common mistakes\n\n- Comparing team velocity.\n- Individual cycle-time targets.\n- Optimizing the metric rather than the flow.\n\n## Key terms\n\n- lead time — customer clock\n- cycle time — team clock\n- Goodhart's law — targets corrupt measures",
+      "i18n": {
+        "hu": {
+          "name": "Agile és Flow Metrics",
+          "description": "Progress és bottleneck signal, nem performance target",
+          "studyNotes": "## Mi ez?\n\nBurndown, burnup, lead time, cycle time, throughput és cumulative flow a delivery behaviourt írja le.\n\n## Milyen problémát old meg?\n\nEvidence kell predictabilityről és queue-ról, de a targetté tett metric káros lesz.\n\n## Hogyan működik?\n\n- Burndown remaining worköt mutat.\n- Burnup a changing total scope-ot is megmutatja.\n- Lead time requesttől deliveryig tart.\n- Cycle time startedtől done-ig tart.\n- Widening cumulative-flow band bottlenecket jelez.\n\n## Gyakori hibák\n\n- Team velocity összehasonlítása.\n- Individual cycle-time target.\n- Flow helyett metric optimalizálása.\n\n## Kulcsfogalmak\n\n- lead time — customer clock\n- cycle time — team clock\n- Goodhart's law — target torzítja a measure-t"
+        }
+      }
+    },
+    {
+      "id": "agile_work_slicing",
+      "name": "Work Breakdown and Vertical Slicing",
+      "description": "Small reviewable end-to-end deliverables",
+      "category": "soft_technical",
+      "importance": 5,
+      "relatedTopicIds": [
+        "agile_user_stories",
+        "agile_backlog_refinement",
+        "agile_technical_leadership"
+      ],
+      "studyNotes": "## What is it?\n\nWork breakdown turns a large outcome into manageable deliverables. Vertical slicing creates a thin end-to-end capability rather than isolated technical layers.\n\n## What problem does it solve?\n\nLarge tickets delay feedback, increase review risk and hide progress.\n\n## How it works\n\n- Start from a user or business outcome.\n- Pull major risk forward.\n- Create narrow end-to-end slices.\n- Include tests, observability, rollout and rollback.\n- Keep changes reviewable and deployable where possible.\n\n## Common mistakes\n\n- One ticket for the entire feature.\n- Frontend/backend/database stories with no standalone value.\n- Ignoring rollout work.\n\n## Key terms\n\n- deliverable — concrete verifiable result\n- vertical slice — thin end-to-end capability\n- work breakdown — decomposition into units",
+      "i18n": {
+        "hu": {
+          "name": "Work Breakdown és Vertical Slicing",
+          "description": "Kis reviewable end-to-end deliverable-ök",
+          "studyNotes": "## Mi ez?\n\nA work breakdown nagy outcome-ot manageable deliverable-ökre bont. A vertical slicing vékony end-to-end capabilityt készít isolated technical layer helyett.\n\n## Milyen problémát old meg?\n\nA nagy ticket késlelteti a feedbacket, növeli a review risket és elrejti a progresst.\n\n## Hogyan működik?\n\n- User vagy business outcome-ból indulj.\n- A major risket hozd előre.\n- Narrow end-to-end slice-ot készíts.\n- Test, observability, rollout és rollback is legyen benne.\n- A change lehetőleg reviewable és deployable legyen.\n\n## Gyakori hibák\n\n- Egy ticketbe tenni az egész feature-t.\n- Standalone value nélküli frontend/backend/database story.\n- Rollout work kihagyása.\n\n## Kulcsfogalmak\n\n- deliverable — konkrét verifikálható result\n- vertical slice — vékony end-to-end capability\n- work breakdown — unitokra bontás"
+        }
+      }
+    },
+    {
+      "id": "agile_xp",
+      "name": "Extreme Programming Practices",
+      "description": "TDD, pairing, continuous integration and refactoring",
+      "category": "soft_technical",
+      "importance": 2,
+      "relatedTopicIds": [
+        "agile_tdd",
+        "agile_code_review",
+        "agile_ci"
+      ],
+      "studyNotes": "## What is it?\n\nXP focuses on engineering practices that allow software to change safely and frequently.\n\n## What problem does it solve?\n\nScrum ceremonies alone do not stop a codebase from becoming harder to change every Sprint.\n\n## How it works\n\n- Use TDD where fast behavioural feedback helps.\n- Pair on risky or knowledge-heavy work.\n- Integrate small changes frequently.\n- Refactor continuously.\n- Prefer simple design for current needs.\n\n## Common mistakes\n\n- Treating XP as only TDD.\n- Applying practices as rituals.\n- Deferring all refactoring to a future Sprint.\n\n## Key terms\n\n- TDD — red, green, refactor\n- pair programming — driver and navigator\n- continuous integration — frequent verified merge",
+      "i18n": {
+        "hu": {
+          "name": "Extreme Programming Practices",
+          "description": "TDD, pairing, continuous integration és refactoring",
+          "studyNotes": "## Mi ez?\n\nAz XP engineering practice-ekre fókuszál, amelyekkel a software safe és gyakran változtatható.\n\n## Milyen problémát old meg?\n\nA Scrum ceremony önmagában nem akadályozza meg, hogy a codebase minden Sprintben nehezebben változzon.\n\n## Hogyan működik?\n\n- TDD-t használj, ahol fast behavioural feedback segít.\n- Risky vagy knowledge-heavy worknél pair-elj.\n- Small change-et gyakran integrálj.\n- Folyamatosan refactorálj.\n- Current needhez simple designt válassz.\n\n## Gyakori hibák\n\n- Az XP-t csak TDD-nek tekinteni.\n- Ritualként alkalmazni.\n- Minden refactoringot későbbi Sprintre tolni.\n\n## Kulcsfogalmak\n\n- TDD — red, green, refactor\n- pair programming — driver és navigator\n- continuous integration — frequent verified merge"
+        }
+      }
+    },
+    {
+      "id": "agile_tdd",
+      "name": "Test-Driven Development",
+      "description": "Red-Green-Refactor in small verified steps",
+      "category": "soft_technical",
+      "importance": 3,
+      "relatedTopicIds": [
+        "agile_xp",
+        "agile_testing_strategy",
+        "agile_technical_debt"
+      ],
+      "studyNotes": "## What is it?\n\nTDD writes a small failing test, adds the minimum passing implementation and then improves design while tests stay green.\n\n## What problem does it solve?\n\nIt creates fast behavioural feedback and a regression safety net.\n\n## How it works\n\n- Test one observable behaviour.\n- Confirm failure for the expected reason.\n- Add minimal code.\n- Refactor without behaviour change.\n- Use integration tests when risk is at a boundary.\n\n## Common mistakes\n\n- Testing private implementation details.\n- Treating TDD as mandatory for every exploratory task.\n- Skipping refactoring.\n\n## Key terms\n\n- red — expected failing test\n- green — minimum passing code\n- refactor — improve structure safely",
+      "i18n": {
+        "hu": {
+          "name": "Test-Driven Development",
+          "description": "Red-Green-Refactor kis verified step-ekben",
+          "studyNotes": "## Mi ez?\n\nA TDD kis failing testet ír, minimal passing implementationt ad, majd green test mellett javítja a designt.\n\n## Milyen problémát old meg?\n\nFast behavioural feedbacket és regression safety netet ad.\n\n## Hogyan működik?\n\n- Egy observable behaviourt tesztelj.\n- A test a várt okból failoljon.\n- Minimal code kerüljön be.\n- Behaviour change nélkül refactorálj.\n- Boundary riskhez integration test kell.\n\n## Gyakori hibák\n\n- Private implementation detailt tesztelni.\n- Minden exploratory taskhoz kötelezővé tenni.\n- Refactoring kihagyása.\n\n## Kulcsfogalmak\n\n- red — expected failing test\n- green — minimum passing code\n- refactor — safe structure improvement"
+        }
+      }
+    },
+    {
+      "id": "agile_testing_strategy",
+      "name": "Testing Strategy",
+      "description": "Matching risks to unit, integration, contract and E2E tests",
+      "category": "soft_technical",
+      "importance": 5,
+      "relatedTopicIds": [
+        "agile_tdd",
+        "agile_definition_done",
+        "agile_ci"
+      ],
+      "studyNotes": "## What is it?\n\nA testing strategy assigns risks to appropriate layers: unit, integration, contract and a small number of end-to-end tests.\n\n## What problem does it solve?\n\nOne test type cannot provide fast feedback, realistic boundaries and broad confidence at equal cost.\n\n## How it works\n\n- Unit test deterministic logic.\n- Integration test real boundaries.\n- Contract test independently deployed interfaces.\n- E2E test only critical journeys.\n- Track flakiness and feedback time.\n\n## Common mistakes\n\n- Testing implementation details.\n- Replacing all tests with E2E.\n- Mocking every real boundary.\n- Ignoring flaky tests.\n\n## Key terms\n\n- unit test — isolated logic\n- integration test — real components together\n- contract test — interface agreement\n- E2E — complete journey",
+      "i18n": {
+        "hu": {
+          "name": "Testing Strategy",
+          "description": "Risk hozzárendelése unit, integration, contract és E2E testhez",
+          "studyNotes": "## Mi ez?\n\nA testing strategy a riskeket megfelelő layerhez rendeli: unit, integration, contract és kevés end-to-end test.\n\n## Milyen problémát old meg?\n\nEgy test type nem ad azonos cost mellett fast feedbacket, realistic boundaryt és broad confidence-t.\n\n## Hogyan működik?\n\n- Deterministic logichoz unit test.\n- Real boundaryhoz integration test.\n- Independently deployed interface-hez contract test.\n- E2E csak critical journeyre.\n- Flakiness és feedback time legyen követve.\n\n## Gyakori hibák\n\n- Implementation detailt tesztelni.\n- Minden testet E2E-re cserélni.\n- Minden real boundaryt mockolni.\n- Flaky testet ignorálni.\n\n## Kulcsfogalmak\n\n- unit test — isolated logic\n- integration test — real componentek együtt\n- contract test — interface agreement\n- E2E — complete journey"
+        }
+      }
+    },
+    {
+      "id": "agile_code_review",
+      "name": "Code Review and Pair Programming",
+      "description": "Collaborative quality and knowledge sharing",
+      "category": "soft_technical",
+      "importance": 4,
+      "relatedTopicIds": [
+        "agile_xp",
+        "agile_technical_leadership",
+        "agile_ci"
+      ],
+      "studyNotes": "## What is it?\n\nCode review evaluates a proposed change. Pair programming has two engineers collaborate continuously, commonly as driver and navigator.\n\n## What problem does it solve?\n\nBoth expose assumptions, catch defects and reduce single-person ownership of critical code.\n\n## How it works\n\n- Keep changes small.\n- Review correctness, tests, security, operations and maintainability.\n- Distinguish blocking issues from suggestions.\n- Pair on complex, risky or knowledge-transfer work.\n\n## Common mistakes\n\n- Review only for style.\n- Giant pull requests.\n- Comments aimed at the author.\n- Passive pairing.\n\n## Key terms\n\n- blocking comment — must resolve before merge\n- driver — controls keyboard\n- navigator — reviews and thinks ahead",
+      "i18n": {
+        "hu": {
+          "name": "Code Review és Pair Programming",
+          "description": "Collaborative quality és knowledge sharing",
+          "studyNotes": "## Mi ez?\n\nA code review proposed change-et vizsgál. Pair programmingnél két engineer folyamatosan együtt dolgozik driver és navigator szerepben.\n\n## Milyen problémát old meg?\n\nMindkettő hidden assumptiont és defectet tár fel, valamint csökkenti a critical code single-person ownershipját.\n\n## Hogyan működik?\n\n- A change legyen small.\n- Correctness, test, security, operations és maintainability legyen reviewzva.\n- Blocking issue és suggestion különüljön el.\n- Complex, risky vagy knowledge-transfer worknél pair-elj.\n\n## Gyakori hibák\n\n- Review csak style miatt.\n- Giant pull request.\n- Authorra irányuló comment.\n- Passive pairing.\n\n## Kulcsfogalmak\n\n- blocking comment — merge előtt megoldandó\n- driver — keyboardot kezel\n- navigator — reviewz és előre gondolkodik"
+        }
+      }
+    },
+    {
+      "id": "agile_ci",
+      "name": "Continuous Integration and Branching",
+      "description": "Frequent verified integration with short-lived branches",
+      "category": "soft_technical",
+      "importance": 4,
+      "relatedTopicIds": [
+        "agile_xp",
+        "agile_code_review",
+        "agile_work_slicing"
+      ],
+      "studyNotes": "## What is it?\n\nContinuous integration means merging small changes frequently into a shared mainline with automated verification.\n\n## What problem does it solve?\n\nLong-lived branches accumulate incompatible assumptions and turn integration into a risky final project.\n\n## How it works\n\n- Merge small changes frequently.\n- Run fast checks on every integration.\n- Keep main releasable.\n- Use flags or compatibility for incomplete work.\n- Fix broken main immediately.\n\n## Common mistakes\n\n- Weekly merging called CI.\n- Months-long feature branches.\n- Feature flags without owners or removal.\n\n## Key terms\n\n- mainline — shared integration branch\n- trunk-based — frequent mainline integration\n- integration debt — delayed merge cost",
+      "i18n": {
+        "hu": {
+          "name": "Continuous Integration és Branching",
+          "description": "Frequent verified integration short-lived branch mellett",
+          "studyNotes": "## Mi ez?\n\nContinuous integration esetén small change gyakran kerül shared mainline-ba automated verification mellett.\n\n## Milyen problémát old meg?\n\nA long-lived branch incompatible assumptiont halmoz, az integration pedig risky final project lesz.\n\n## Hogyan működik?\n\n- Small change-et gyakran merge-elj.\n- Minden integrationnél fast check fusson.\n- Main maradjon releasable.\n- Incomplete workhöz flag vagy compatibility használható.\n- Broken maint azonnal javíts.\n\n## Gyakori hibák\n\n- Heti merge-et CI-nek nevezni.\n- Több hónapos feature branch.\n- Owner és removal nélküli feature flag.\n\n## Kulcsfogalmak\n\n- mainline — shared integration branch\n- trunk-based — frequent mainline integration\n- integration debt — delayed merge cost"
+        }
+      }
+    },
+    {
+      "id": "agile_technical_debt",
+      "name": "Technical Debt and Refactoring",
+      "description": "Managing future change cost and risk",
+      "category": "soft_technical",
+      "importance": 5,
+      "relatedTopicIds": [
+        "agile_tdd",
+        "agile_work_slicing",
+        "agile_stakeholder_collaboration"
+      ],
+      "studyNotes": "## What is it?\n\nTechnical debt is future cost or risk created by a compromise. Refactoring improves internal design without observable behaviour change.\n\n## What problem does it solve?\n\nInvisible debt slows delivery and increases defects, but calling every disliked design debt destroys prioritization.\n\n## How it works\n\n- Describe business impact.\n- Record affected areas and triggers.\n- Fix small debt continuously.\n- Create explicit work for larger risk.\n- Measure improvement.\n\n## Common mistakes\n\n- Giant rewrite called debt removal.\n- Refactoring stable code for style.\n- Vague debt with no impact.\n\n## Key terms\n\n- debt interest — recurring cost\n- refactoring — internal improvement without behaviour change\n- rewrite — replacement",
+      "i18n": {
+        "hu": {
+          "name": "Technical Debt és Refactoring",
+          "description": "Future change cost és risk kezelése",
+          "studyNotes": "## Mi ez?\n\nA technical debt compromise által létrehozott future cost vagy risk. A refactoring observable behaviour change nélkül javítja az internal designt.\n\n## Milyen problémát old meg?\n\nInvisible debt lassít és defectet növel, de ha minden nem kedvelt design debt, nincs prioritization.\n\n## Hogyan működik?\n\n- Business impacttal írd le.\n- Affected area és trigger legyen rögzítve.\n- Kis debtet folyamatosan javíts.\n- Nagy riskhez explicit work kell.\n- Mérd az improvementet.\n\n## Gyakori hibák\n\n- Giant rewrite debt removal néven.\n- Stable code refactor style miatt.\n- Impact nélküli vague debt.\n\n## Kulcsfogalmak\n\n- debt interest — recurring cost\n- refactoring — internal improvement behaviour change nélkül\n- rewrite — replacement"
+        }
+      }
+    },
+    {
+      "id": "agile_continuous_improvement",
+      "name": "Retrospectives and Continuous Improvement",
+      "description": "Small owned improvements based on evidence",
+      "category": "soft_technical",
+      "importance": 3,
+      "relatedTopicIds": [
+        "agile_mindset",
+        "agile_flow_metrics",
+        "agile_postmortems"
+      ],
+      "studyNotes": "## What is it?\n\nA retrospective inspects how the team worked and selects changes. Continuous improvement repeatedly adapts the system of work.\n\n## What problem does it solve?\n\nDiscussion without ownership and follow-up repeats the same problems.\n\n## How it works\n\n- Use evidence such as delays, incidents and flow data.\n- Select one or two actions.\n- Assign owner and review date.\n- Treat changes as experiments.\n- Review previous actions first.\n\n## Common mistakes\n\n- Long action lists.\n- No owners.\n- Management evaluation.\n- Skipping retros when busy.\n\n## Key terms\n\n- retrospective — inspection of working method\n- action item — owned improvement\n- experiment — change with expected signal",
+      "i18n": {
+        "hu": {
+          "name": "Retrospectives és Continuous Improvement",
+          "description": "Evidence alapú small owned improvement",
+          "studyNotes": "## Mi ez?\n\nA retrospective inspectálja a team working methodját és change-et választ. Continuous improvement rendszeresen adaptálja a working systemet.\n\n## Milyen problémát old meg?\n\nOwnership és follow-up nélküli discussion ugyanazt a problémát ismétli.\n\n## Hogyan működik?\n\n- Delay, incident és flow data evidence-et használj.\n- Egy-két actiont válassz.\n- Legyen owner és review date.\n- Change-et experimentként kezeld.\n- Először az előző actiont reviewzd.\n\n## Gyakori hibák\n\n- Long action list.\n- Owner hiánya.\n- Management evaluation.\n- Busy időszakban retros kihagyása.\n\n## Kulcsfogalmak\n\n- retrospective — working method inspection\n- action item — owned improvement\n- experiment — expected signallal rendelkező change"
+        }
+      }
+    },
+    {
+      "id": "agile_postmortems",
+      "name": "Incident Postmortems",
+      "description": "Blameless learning with timelines and owned prevention",
+      "category": "soft_technical",
+      "importance": 3,
+      "relatedTopicIds": [
+        "agile_continuous_improvement",
+        "agile_technical_leadership",
+        "agile_testing_strategy"
+      ],
+      "studyNotes": "## What is it?\n\nA postmortem reconstructs impact, timeline, contributing factors, response and corrective actions.\n\n## What problem does it solve?\n\nStopping after recovery leaves the same conditions in place; blaming one person hides system causes.\n\n## How it works\n\n- Record user and business impact.\n- Build a factual timeline.\n- Identify contributing and detection gaps.\n- Explain decisions in their original context.\n- Create specific owned actions.\n\n## Common mistakes\n\n- Human error as root cause.\n- Vague be-careful action.\n- Long report with no prevention.\n\n## Key terms\n\n- contributing factor — condition increasing risk\n- blameless — system learning instead of punishment\n- corrective action — owned prevention",
+      "i18n": {
+        "hu": {
+          "name": "Incident Postmortems",
+          "description": "Blameless learning timeline-nal és owned preventionnel",
+          "studyNotes": "## Mi ez?\n\nA postmortem rekonstruálja az impactet, timeline-t, contributing factort, response-t és corrective actiont.\n\n## Milyen problémát old meg?\n\nRecovery után megállva ugyanazok a conditionök maradnak; egy ember hibáztatása elrejti a system cause-okat.\n\n## Hogyan működik?\n\n- Rögzíts user és business impactet.\n- Készíts factual timeline-t.\n- Keresd a contributing és detection gapet.\n- A decisiont eredeti contextjében értékeld.\n- Specific owned action készüljön.\n\n## Gyakori hibák\n\n- Human error mint root cause.\n- Vague be-careful action.\n- Prevention nélküli hosszú report.\n\n## Kulcsfogalmak\n\n- contributing factor — risket növelő condition\n- blameless — punishment helyett system learning\n- corrective action — owned prevention"
+        }
+      }
+    },
+    {
+      "id": "agile_technical_leadership",
+      "name": "Technical Leadership and Mentoring",
+      "description": "Direction and team enablement without micromanagement",
+      "category": "soft_technical",
+      "importance": 4,
+      "relatedTopicIds": [
+        "agile_work_slicing",
+        "agile_code_review",
+        "agile_stakeholder_collaboration"
+      ],
+      "studyNotes": "## What is it?\n\nTechnical leadership clarifies requirements, compares options, names risks, documents decisions, reviews changes, mentors and unblocks delivery.\n\n## What problem does it solve?\n\nA team needs coherent direction without one person becoming the decision bottleneck.\n\n## How it works\n\n- Make goals, constraints and trade-offs visible.\n- Involve the team in decisions.\n- Delegate bounded ownership.\n- Create review points.\n- Coach through questions, pairing and examples.\n\n## Common mistakes\n\n- Making every decision alone.\n- Micromanaging implementation.\n- Abstract architecture without execution plan.\n\n## Key terms\n\n- enablement — increasing team independence\n- delegation — ownership with boundaries\n- mentoring — longer-term skill growth",
+      "i18n": {
+        "hu": {
+          "name": "Technical Leadership és Mentoring",
+          "description": "Direction és team enablement micromanagement nélkül",
+          "studyNotes": "## Mi ez?\n\nA technical leadership requirementet tisztáz, optiont hasonlít, risket nevez meg, decisiont dokumentál, reviewz, mentorál és unblockol.\n\n## Milyen problémát old meg?\n\nA teamnek coherent direction kell úgy, hogy egy ember ne legyen decision bottleneck.\n\n## Hogyan működik?\n\n- Goal, constraint és trade-off legyen látható.\n- A team legyen bevonva a decisionbe.\n- Bounded ownershipot delegálj.\n- Review pointot hozz létre.\n- Question, pairing és example segítségével coacholj.\n\n## Gyakori hibák\n\n- Minden decisiont egyedül meghozni.\n- Implementationt micromanagelni.\n- Execution plan nélküli abstract architecture.\n\n## Kulcsfogalmak\n\n- enablement — team independence növelése\n- delegation — ownership boundaryvel\n- mentoring — hosszabb távú skill growth"
+        }
+      }
+    },
+    {
+      "id": "agile_stakeholder_collaboration",
+      "name": "Stakeholder and Product Collaboration",
+      "description": "Turning business goals into technical decisions and explicit trade-offs",
+      "category": "soft_technical",
+      "importance": 4,
+      "relatedTopicIds": [
+        "agile_backlog_refinement",
+        "agile_technical_debt",
+        "agile_technical_leadership"
+      ],
+      "studyNotes": "## What is it?\n\nStakeholder collaboration connects customer outcomes with technical design and delivery.\n\n## What problem does it solve?\n\nUnfiltered requests create conflicting priorities, while technical risks remain hidden if engineers communicate only implementation detail.\n\n## How it works\n\n- Ask for the desired outcome and success measure.\n- Clarify deadline, scope flexibility and constraints.\n- Express technical risk as business impact and options.\n- Route changes through product prioritization.\n- Use demos for early feedback.\n\n## Common mistakes\n\n- Saying no with jargon.\n- Accepting every request directly into active work.\n- Hiding uncertainty until late.\n\n## Key terms\n\n- product outcome — measurable user or business result\n- scope flexibility — what may change\n- decision record — choice and alternatives",
+      "i18n": {
+        "hu": {
+          "name": "Stakeholder és Product Collaboration",
+          "description": "Business goal technikai decisionné és explicit trade-offá alakítása",
+          "studyNotes": "## Mi ez?\n\nA stakeholder collaboration customer outcome-ot köt technical designhoz és deliveryhez.\n\n## Milyen problémát old meg?\n\nUnfiltered request conflicting priorityt okoz; technical risk rejtve marad, ha csak implementation detailről beszélünk.\n\n## Hogyan működik?\n\n- Kérdezd meg a desired outcome-ot és success measure-t.\n- Tisztázd a deadline-t, scope flexibilityt és constraintet.\n- Technical risket business impact és option formájában kommunikálj.\n- Change product prioritizationön keresztül érkezzen.\n- Demo adjon early feedbacket.\n\n## Gyakori hibák\n\n- Jargonnal nemet mondani.\n- Minden requestet active workbe tenni.\n- Uncertaintyt későig rejteni.\n\n## Kulcsfogalmak\n\n- product outcome — measurable user vagy business result\n- scope flexibility — változtatható rész\n- decision record — choice és alternative"
+        }
+      }
+    },
+    {
+      "id": "agile_ai_assisted",
+      "name": "AI-Assisted Development",
+      "description": "AI as an accelerator with human review and ownership",
+      "category": "soft_technical",
+      "importance": 3,
+      "relatedTopicIds": [
+        "agile_testing_strategy",
+        "agile_code_review",
+        "agile_technical_leadership"
+      ],
+      "studyNotes": "## What is it?\n\nAI tools can generate code, tests, documentation and options, while the engineer remains responsible for the result.\n\n## What problem does it solve?\n\nGenerated output may be plausible but wrong, insecure or inconsistent; faster generation increases verification needs.\n\n## How it works\n\n- Use AI for bounded repetitive work and exploration.\n- Provide constraints and architecture context.\n- Review correctness, security, performance and maintainability.\n- Apply tests, types and normal review.\n- Never ship code the team cannot explain.\n\n## Common mistakes\n\n- Generated output treated as reviewed.\n- Unverified APIs or dependencies.\n- Architecture ownership outsourced to the tool.\n\n## Key terms\n\n- guardrail — tests, types, review or policy\n- explainability — ability to understand and maintain\n- ownership — human responsibility",
+      "i18n": {
+        "hu": {
+          "name": "AI-Assisted Development",
+          "description": "AI mint accelerator human review és ownership mellett",
+          "studyNotes": "## Mi ez?\n\nAz AI code-ot, testet, documentationt és optiont generálhat, de a resultért továbbra is az engineer felel.\n\n## Milyen problémát old meg?\n\nA generated output lehet plausible, mégis wrong, insecure vagy inconsistent; a gyors generation erősebb verificationt igényel.\n\n## Hogyan működik?\n\n- Bounded repetitive workre és explorationre használd.\n- Adj constraintet és architecture contextet.\n- Reviewzd a correctness-t, securityt, performance-et és maintainabilityt.\n- Test, type és normál review szükséges.\n- Ne shipelj olyan code-ot, amelyet a team nem ért.\n\n## Gyakori hibák\n\n- Generated output reviewedként kezelése.\n- Unverified API vagy dependency.\n- Architecture ownership kiszervezése a toolnak.\n\n## Kulcsfogalmak\n\n- guardrail — test, type, review vagy policy\n- explainability — megérthetőség és maintainability\n- ownership — human responsibility"
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "agile_scrum_kanban_001",
+      "title": "Choosing Scrum or Kanban",
+      "prompt": "A product team develops planned features, while a support team receives unpredictable requests. Which workflow would you use and why?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_scrum",
+        "agile_kanban",
+        "agile_mindset"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare cadence, incoming-work pattern, WIP, goals and feedback instead of declaring one method universally better.",
+      "expectedPoints": [
+        {
+          "id": "ask_scrum",
+          "label": "Uses Scrum where a Sprint Goal helps",
+          "description": "Chooses Scrum for planned product work benefiting from a short goal and review cadence.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "sprint goal",
+            "planned product work",
+            "review cadence",
+            "increment"
+          ]
+        },
+        {
+          "id": "ask_kanban",
+          "label": "Uses Kanban for continuous flow",
+          "description": "Chooses Kanban for unpredictable work with WIP limits and pull policies.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "continuous flow",
+            "unpredictable requests",
+            "wip limits",
+            "pull system"
+          ]
+        },
+        {
+          "id": "ask_context",
+          "label": "Uses context rather than dogma",
+          "description": "Considers arrival pattern, risk, team and feedback needs.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "depends on context",
+            "arrival pattern",
+            "feedback needs",
+            "team context"
+          ]
+        },
+        {
+          "id": "ask_metrics",
+          "label": "Names suitable signals",
+          "description": "Uses Sprint Goal or forecast signals for Scrum and flow metrics for Kanban.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "cycle time",
+            "lead time",
+            "throughput",
+            "sprint goal"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ask_follow_mix",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Could one team combine Scrum cadence with Kanban-style WIP limits?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Scrum vagy Kanban választása",
+          "prompt": "Egy product team planned feature-öket fejleszt, egy support team pedig unpredictable requesteket kap. Mely workflow-t használnád, és miért?",
+          "answerStructureHint": "Cadence, incoming-work pattern, WIP, goal és feedback alapján hasonlíts.",
+          "expectedPoints": {
+            "ask_scrum": {
+              "label": "Scrumot választ, ahol Sprint Goal segít",
+              "description": "Planned product worknél short goal és review cadence indokolt."
+            },
+            "ask_kanban": {
+              "label": "Kanbant választ continuous flow-hoz",
+              "description": "Unpredictable worknél WIP limit és pull policy szerepel."
+            },
+            "ask_context": {
+              "label": "Context alapján dönt",
+              "description": "Arrival pattern, risk, team és feedback need alapján választ."
+            },
+            "ask_metrics": {
+              "label": "Megfelelő signalt nevez meg",
+              "description": "Scrumnál Sprint Goal vagy forecast, Kanbannál flow metric szerepel."
+            }
+          },
+          "followUps": {
+            "ask_follow_mix": "Kombinálhatja-e egy team a Scrum cadence-t Kanban-style WIP limittel?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_refine_story_001",
+      "title": "Refining an unclear story",
+      "prompt": "The backlog contains Improve account security with no acceptance criteria. How would you refine it?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_user_stories",
+        "agile_backlog_refinement",
+        "agile_definition_done"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify outcome, scope and risks; create observable criteria; split valuable work; separate story criteria from the general quality bar.",
+      "expectedPoints": [
+        {
+          "id": "ars_outcome",
+          "label": "Clarifies the outcome",
+          "description": "Identifies user, problem, desired result and success evidence.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "user outcome",
+            "security problem",
+            "success measure",
+            "why"
+          ]
+        },
+        {
+          "id": "ars_scope",
+          "label": "Clarifies constraints",
+          "description": "Surfaces permissions, compliance, migration, threats and operations as relevant.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "permissions",
+            "compliance",
+            "migration",
+            "threat",
+            "scope"
+          ]
+        },
+        {
+          "id": "ars_criteria",
+          "label": "Creates observable criteria",
+          "description": "Covers normal, error and boundary behaviour rather than implementation steps.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "acceptance criteria",
+            "given when then",
+            "error cases",
+            "observable behavior"
+          ]
+        },
+        {
+          "id": "ars_split",
+          "label": "Splits valuable work",
+          "description": "Creates small end-to-end deliverables or a spike for genuine unknowns.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "vertical slice",
+            "small story",
+            "spike",
+            "end to end"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ars_follow_done",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which requirements belong in the story and which belong in the Definition of Done?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy tisztázatlan story refinementje",
+          "prompt": "A backlogban csak Improve account security szerepel acceptance criteria nélkül. Hogyan refinementelnéd?",
+          "answerStructureHint": "Outcome, scope és risk, observable criteria, valuable split és story criteria vs quality bar.",
+          "expectedPoints": {
+            "ars_outcome": {
+              "label": "Tisztázza az outcome-ot",
+              "description": "User, problem, desired result és success evidence szerepel."
+            },
+            "ars_scope": {
+              "label": "Tisztázza a constraintet",
+              "description": "Permission, compliance, migration, threat és operations szükség szerint előkerül."
+            },
+            "ars_criteria": {
+              "label": "Observable criteriát készít",
+              "description": "Normal, error és boundary behaviour szerepel implementation step helyett."
+            },
+            "ars_split": {
+              "label": "Valuable workre bont",
+              "description": "Small end-to-end deliverable vagy genuine unknown esetén spike készül."
+            }
+          },
+          "followUps": {
+            "ars_follow_done": "Mi tartozik a storyba, és mi a Definition of Done-ba?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_velocity_kpi_001",
+      "title": "Velocity used as a performance KPI",
+      "prompt": "Management compares team velocities and demands a 20 percent point increase. What will happen, and what would you use instead?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_estimation",
+        "agile_flow_metrics",
+        "agile_stakeholder_collaboration"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain relative team-local points, metric gaming, correct planning use and better outcome or flow signals.",
+      "expectedPoints": [
+        {
+          "id": "avk_relative",
+          "label": "Explains team-relative points",
+          "description": "States that points are not comparable across teams or fixed hours.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "relative estimate",
+            "team specific",
+            "not comparable",
+            "not hours"
+          ]
+        },
+        {
+          "id": "avk_gaming",
+          "label": "Predicts gaming",
+          "description": "Explains point inflation and behaviour distortion when velocity becomes a target.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "point inflation",
+            "goodhart",
+            "gaming",
+            "metric target"
+          ]
+        },
+        {
+          "id": "avk_planning",
+          "label": "Keeps velocity for planning",
+          "description": "Uses recent velocity only for one team's near-term forecast.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "planning input",
+            "team forecast",
+            "recent sprints",
+            "not performance"
+          ]
+        },
+        {
+          "id": "avk_outcomes",
+          "label": "Suggests better signals",
+          "description": "Uses product outcomes, lead or cycle time, quality or customer impact with context.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "lead time",
+            "cycle time",
+            "quality",
+            "product outcome",
+            "customer impact"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "avk_follow_exec",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you explain this to an executive who still wants one simple number?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Velocity mint performance KPI",
+          "prompt": "A management team velocitykat hasonlít össze és 20 százalékos pointnövekedést kér. Mi történik, és mit használnál helyette?",
+          "answerStructureHint": "Team-relative point, gaming, correct planning use és jobb outcome vagy flow signal.",
+          "expectedPoints": {
+            "avk_relative": {
+              "label": "Elmagyarázza a team-relative pointot",
+              "description": "A point team-ek között nem összehasonlítható és nem fixed hour."
+            },
+            "avk_gaming": {
+              "label": "Felismeri a gaminget",
+              "description": "Velocity target point inflationt és behaviour distortiont okoz."
+            },
+            "avk_planning": {
+              "label": "Planningre tartja meg",
+              "description": "Recent velocity csak egy team near-term forecastját segíti."
+            },
+            "avk_outcomes": {
+              "label": "Jobb signalt javasol",
+              "description": "Product outcome, lead vagy cycle time, quality vagy customer impact szerepel."
+            }
+          },
+          "followUps": {
+            "avk_follow_exec": "Hogyan magyaráznád ezt egy executive-nak, aki egyetlen egyszerű számot akar?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_slice_feature_001",
+      "title": "Breaking down a large platform feature",
+      "prompt": "An integration feature includes API contract, database migration, mapping, authentication, tests, monitoring and rollout. How would you split it?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_work_slicing",
+        "agile_user_stories",
+        "agile_technical_leadership"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Start from a usable outcome, create thin end-to-end slices, pull risk forward and include operational completion.",
+      "expectedPoints": [
+        {
+          "id": "asf_outcome",
+          "label": "Starts with a usable outcome",
+          "description": "Finds the smallest demonstrable customer or operational capability.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "usable outcome",
+            "customer value",
+            "demonstrable",
+            "smallest capability"
+          ]
+        },
+        {
+          "id": "asf_vertical",
+          "label": "Creates vertical slices",
+          "description": "Combines enough layers for meaningful validation instead of layer-only tickets.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "vertical slice",
+            "end to end",
+            "not frontend backend split",
+            "meaningful validation"
+          ]
+        },
+        {
+          "id": "asf_risk",
+          "label": "Pulls risk forward",
+          "description": "Uses contract-first work, spikes or compatibility steps to test assumptions early.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "contract first",
+            "spike",
+            "risk first",
+            "compatibility",
+            "assumption"
+          ]
+        },
+        {
+          "id": "asf_ops",
+          "label": "Includes operational work",
+          "description": "Includes tests, observability, migration, rollout and rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "monitoring",
+            "rollout",
+            "rollback",
+            "migration",
+            "tests"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "asf_follow_flag",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where could a feature flag help, and where would it not solve the migration problem?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy nagy platform feature lebontása",
+          "prompt": "Egy integration feature API contractot, database migrationt, mappinget, authenticationt, testet, monitoringot és rolloutot tartalmaz. Hogyan splitelnéd?",
+          "answerStructureHint": "Usable outcome, thin end-to-end slice, early risk és operational completion.",
+          "expectedPoints": {
+            "asf_outcome": {
+              "label": "Usable outcome-ból indul",
+              "description": "A legkisebb demonstrálható customer vagy operational capabilityt keresi."
+            },
+            "asf_vertical": {
+              "label": "Vertical slice-ot készít",
+              "description": "Meaningful validationt ad technical-layer ticket helyett."
+            },
+            "asf_risk": {
+              "label": "Előrehozza a risket",
+              "description": "Contract-first work, spike vagy compatibility step teszteli az assumptiont."
+            },
+            "asf_ops": {
+              "label": "Operational worköt is beépít",
+              "description": "Test, observability, migration, rollout és rollback része a worknek."
+            }
+          },
+          "followUps": {
+            "asf_follow_flag": "Hol segíthet feature flag, és hol nem oldja meg a migration problémát?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_tdd_choice_001",
+      "title": "When TDD helps and when it does not",
+      "prompt": "How would you use TDD for a pricing-rule engine, and why might you not use the same approach for a short visual prototype?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_tdd",
+        "agile_testing_strategy",
+        "agile_xp"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe Red-Green-Refactor for deterministic rules and compare feedback value with exploratory work.",
+      "expectedPoints": [
+        {
+          "id": "atc_cycle",
+          "label": "Explains Red-Green-Refactor",
+          "description": "Uses a failing test, minimal passing code and safe refactoring.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "red green refactor",
+            "failing test",
+            "minimal implementation",
+            "refactor"
+          ]
+        },
+        {
+          "id": "atc_fit",
+          "label": "Matches TDD to rule logic",
+          "description": "Uses it where examples, edge cases and regression risk make behavioural feedback valuable.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "pricing rules",
+            "edge cases",
+            "deterministic logic",
+            "regression"
+          ]
+        },
+        {
+          "id": "atc_nodogma",
+          "label": "Avoids dogma",
+          "description": "Explains why exploratory visual work may need learning first and different tests later.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "exploratory prototype",
+            "not mandatory",
+            "learning first",
+            "test later"
+          ]
+        },
+        {
+          "id": "atc_layers",
+          "label": "Chooses boundary tests",
+          "description": "Uses integration or contract tests when risk is at an external boundary.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "integration test",
+            "contract test",
+            "boundary",
+            "not only unit"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "atc_follow_legacy",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you introduce TDD around untested legacy code?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mikor segít a TDD, és mikor nem",
+          "prompt": "Hogyan használnál TDD-t pricing-rule engine esetén, és miért nem feltétlenül ugyanígy egy rövid visual prototype-nál?",
+          "answerStructureHint": "Red-Green-Refactor deterministic rule-höz, majd feedback value exploratory worknél.",
+          "expectedPoints": {
+            "atc_cycle": {
+              "label": "Elmagyarázza a Red-Green-Refactor cycle-t",
+              "description": "Failing test, minimal passing code és safe refactoring szerepel."
+            },
+            "atc_fit": {
+              "label": "Rule logichoz illeszti",
+              "description": "Example, edge case és regression risk esetén értékes."
+            },
+            "atc_nodogma": {
+              "label": "Nem dogmatikusan használja",
+              "description": "Exploratory visual worknél learning first és későbbi más test lehet jobb."
+            },
+            "atc_layers": {
+              "label": "Boundary testet választ",
+              "description": "External boundary riskhez integration vagy contract test kerül."
+            }
+          },
+          "followUps": {
+            "atc_follow_legacy": "Hogyan vezetnéd be a TDD-t untested legacy code körül?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_test_strategy_001",
+      "title": "Designing a test strategy",
+      "prompt": "Design a test strategy for a service with business rules, a database, a public API and three critical user journeys.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_testing_strategy",
+        "agile_definition_done",
+        "agile_tdd"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Map risks to unit, integration, contract and focused E2E layers.",
+      "expectedPoints": [
+        {
+          "id": "ats_unit",
+          "label": "Uses unit tests for rules",
+          "description": "Tests deterministic logic and edge cases cheaply.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "unit tests",
+            "business rules",
+            "edge cases",
+            "fast feedback"
+          ]
+        },
+        {
+          "id": "ats_integration",
+          "label": "Tests real boundaries",
+          "description": "Covers database, framework and API serialization behaviour.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "integration tests",
+            "database",
+            "api boundary",
+            "real components"
+          ]
+        },
+        {
+          "id": "ats_contract",
+          "label": "Protects the contract",
+          "description": "Uses contract or schema tests for public API compatibility.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "contract tests",
+            "schema",
+            "public api",
+            "backward compatibility"
+          ]
+        },
+        {
+          "id": "ats_e2e",
+          "label": "Keeps focused E2E coverage",
+          "description": "Automates a few critical journeys without making the whole suite slow E2E.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "critical journeys",
+            "end to end",
+            "small e2e suite",
+            "avoid too many"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ats_follow_flaky",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you do when the E2E suite becomes flaky and teams stop trusting it?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Testing strategy tervezése",
+          "prompt": "Tervezz testing strategyt business rule-t, database-t, public API-t és három critical user journeyt tartalmazó service-hez.",
+          "answerStructureHint": "Risket rendelj unit, integration, contract és focused E2E layerhez.",
+          "expectedPoints": {
+            "ats_unit": {
+              "label": "Unit testet használ rule-höz",
+              "description": "Deterministic logic és edge case olcsón tesztelt."
+            },
+            "ats_integration": {
+              "label": "Real boundaryt tesztel",
+              "description": "Database, framework és API serialization behaviour szerepel."
+            },
+            "ats_contract": {
+              "label": "Védi a contractot",
+              "description": "Public API compatibility contract vagy schema testtel védett."
+            },
+            "ats_e2e": {
+              "label": "Focused E2E coverage-et tart",
+              "description": "Kevés critical journey automated, a teljes suite nem slow E2E."
+            }
+          },
+          "followUps": {
+            "ats_follow_flaky": "Mit tennél, ha az E2E suite flaky lenne, és a team nem bízna benne?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_large_pr_001",
+      "title": "A pull request is too large",
+      "prompt": "A developer opens a 6,000-line pull request after three weeks. How would you review it and prevent recurrence?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_code_review",
+        "agile_work_slicing",
+        "agile_ci"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Reduce immediate review risk, keep collaboration constructive, then change slicing and integration habits.",
+      "expectedPoints": [
+        {
+          "id": "alp_current",
+          "label": "Manages current risk",
+          "description": "Separates mechanical and behavioural changes and requests smaller reviewable segments where possible.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "split pull request",
+            "separate mechanical changes",
+            "review context",
+            "risk"
+          ]
+        },
+        {
+          "id": "alp_quality",
+          "label": "Prioritizes important review areas",
+          "description": "Checks correctness, migrations, security, tests, rollout and operations.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "security",
+            "migration",
+            "tests",
+            "rollout",
+            "correctness"
+          ]
+        },
+        {
+          "id": "alp_collab",
+          "label": "Keeps review constructive",
+          "description": "Uses a walkthrough or pairing and comments on decisions rather than the author.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "pair review",
+            "walkthrough",
+            "constructive feedback",
+            "code not person"
+          ]
+        },
+        {
+          "id": "alp_prevent",
+          "label": "Changes the work system",
+          "description": "Introduces smaller slices, short-lived branches, early review and frequent integration.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "small changes",
+            "early review",
+            "short lived branches",
+            "continuous integration"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "alp_follow_resp",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Does reviewer approval transfer responsibility away from the author?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Túl nagy pull request",
+          "prompt": "Egy developer három hét után 6000 soros pull requestet nyit. Hogyan reviewznád és előznéd meg az ismétlődést?",
+          "answerStructureHint": "Immediate review risk, constructive collaboration, majd slicing és integration habit.",
+          "expectedPoints": {
+            "alp_current": {
+              "label": "Kezeli a current risket",
+              "description": "Mechanical és behavioural change-et különít, és ahol lehet kisebb reviewable részt kér."
+            },
+            "alp_quality": {
+              "label": "Fontos review területre fókuszál",
+              "description": "Correctness, migration, security, test, rollout és operations szerepel."
+            },
+            "alp_collab": {
+              "label": "Constructive marad",
+              "description": "Walkthrough vagy pairing történik, a comment a decisionre irányul."
+            },
+            "alp_prevent": {
+              "label": "Megváltoztatja a working systemet",
+              "description": "Smaller slice, short-lived branch, early review és frequent integration kerül be."
+            }
+          },
+          "followUps": {
+            "alp_follow_resp": "A reviewer approval átadja-e a responsibilityt az authorról?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_debt_rewrite_001",
+      "title": "Prioritizing technical debt",
+      "prompt": "The team requests a six-month rewrite while product wants features. How would you evaluate the debt?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_technical_debt",
+        "agile_stakeholder_collaboration",
+        "agile_work_slicing"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Replace the vague rewrite with concrete impact, compare options and create incremental measurable work.",
+      "expectedPoints": [
+        {
+          "id": "adr_impact",
+          "label": "Makes debt concrete",
+          "description": "Connects affected areas to delay, defects, incidents, security or operating cost.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "business impact",
+            "delivery delay",
+            "incidents",
+            "security risk",
+            "change cost"
+          ]
+        },
+        {
+          "id": "adr_options",
+          "label": "Compares alternatives",
+          "description": "Considers targeted refactoring, strangler replacement, testing or no change.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "targeted refactoring",
+            "strangler",
+            "alternatives",
+            "avoid rewrite"
+          ]
+        },
+        {
+          "id": "adr_slice",
+          "label": "Creates incremental work",
+          "description": "Uses small owned backlog items or nearby refactoring.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "incremental",
+            "backlog item",
+            "small steps",
+            "nearby code"
+          ]
+        },
+        {
+          "id": "adr_measure",
+          "label": "Defines evidence",
+          "description": "Measures lead time, defects, incidents or risk after changes.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "lead time",
+            "defect rate",
+            "incident reduction",
+            "measure improvement"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "adr_follow_full",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What evidence could justify a full rewrite?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Technical debt priorizálása",
+          "prompt": "A team hat hónapos rewrite-ot kér, a product pedig feature-öket akar. Hogyan értékelnéd a debtet?",
+          "answerStructureHint": "Vague rewrite helyett concrete impact, option comparison és incremental measurable work.",
+          "expectedPoints": {
+            "adr_impact": {
+              "label": "Concrete-tá teszi a debtet",
+              "description": "Delay, defect, incident, security vagy operating cost kapcsolat szerepel."
+            },
+            "adr_options": {
+              "label": "Alternative-okat hasonlít",
+              "description": "Targeted refactoring, strangler, testing vagy no change kerül elő."
+            },
+            "adr_slice": {
+              "label": "Incremental worköt készít",
+              "description": "Small owned backlog item vagy nearby refactoring történik."
+            },
+            "adr_measure": {
+              "label": "Evidence-et definiál",
+              "description": "Lead time, defect, incident vagy risk változása mérhető."
+            }
+          },
+          "followUps": {
+            "adr_follow_full": "Milyen evidence indokolhatna teljes rewrite-ot?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_retro_actions_001",
+      "title": "Retrospectives produce no change",
+      "prompt": "The same issues appear in every retrospective and action items are forgotten. How would you fix the process?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_continuous_improvement",
+        "agile_flow_metrics"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use evidence, select few actions, assign ownership and review experiments.",
+      "expectedPoints": [
+        {
+          "id": "ara_evidence",
+          "label": "Uses evidence",
+          "description": "Brings delays, rework, incidents or flow data.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "flow metrics",
+            "incidents",
+            "rework",
+            "evidence"
+          ]
+        },
+        {
+          "id": "ara_focus",
+          "label": "Selects few actions",
+          "description": "Chooses one or two high-value improvements.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "one or two actions",
+            "prioritize",
+            "small improvement",
+            "focus"
+          ]
+        },
+        {
+          "id": "ara_owner",
+          "label": "Adds ownership",
+          "description": "Assigns an owner and review date and checks previous actions first.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "owner",
+            "review date",
+            "follow up",
+            "previous actions"
+          ]
+        },
+        {
+          "id": "ara_experiment",
+          "label": "Uses experiments",
+          "description": "Defines expected results and later keeps, changes or stops the intervention.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "experiment",
+            "expected outcome",
+            "measure result",
+            "adapt"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ara_follow_safety",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you respond if people fear blame and do not speak honestly?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "A retrospective nem eredményez változást",
+          "prompt": "Ugyanazok a problémák jelennek meg minden retrospective-en, az action itemeket pedig elfelejtik. Hogyan javítanád?",
+          "answerStructureHint": "Evidence, kevés action, ownership és experiment review.",
+          "expectedPoints": {
+            "ara_evidence": {
+              "label": "Evidence-et használ",
+              "description": "Delay, rework, incident vagy flow data kerül elő."
+            },
+            "ara_focus": {
+              "label": "Kevés actiont választ",
+              "description": "Egy-két high-value improvement készül."
+            },
+            "ara_owner": {
+              "label": "Ownershipot ad",
+              "description": "Owner és review date van, az előző action először reviewzott."
+            },
+            "ara_experiment": {
+              "label": "Experimentet használ",
+              "description": "Expected result alapján később keep, change vagy stop decision történik."
+            }
+          },
+          "followUps": {
+            "ara_follow_safety": "Mit tennél, ha az emberek blame-től félve nem beszélnének őszintén?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_postmortem_001",
+      "title": "A postmortem blames human error",
+      "prompt": "An outage report concludes that an engineer deployed the wrong configuration and says be more careful. How would you improve it?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_postmortems",
+        "agile_continuous_improvement",
+        "agile_technical_leadership"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Build a factual timeline, identify system contributors and detection gaps, then create specific owned controls.",
+      "expectedPoints": [
+        {
+          "id": "apm_timeline",
+          "label": "Builds a timeline",
+          "description": "Uses logs, deployment records, alerts and communication history.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "timeline",
+            "logs",
+            "deployment records",
+            "alerts"
+          ]
+        },
+        {
+          "id": "apm_context",
+          "label": "Finds contributing factors",
+          "description": "Examines defaults, access, review, tooling and available information.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "contributing factors",
+            "tooling",
+            "review process",
+            "available information",
+            "defaults"
+          ]
+        },
+        {
+          "id": "apm_gaps",
+          "label": "Finds detection gaps",
+          "description": "Checks why the configuration was not prevented or detected earlier.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "detection gap",
+            "validation",
+            "pre deployment check",
+            "monitoring"
+          ]
+        },
+        {
+          "id": "apm_actions",
+          "label": "Creates specific actions",
+          "description": "Uses automation, validation, safer rollout or access controls with owners.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "automation",
+            "validation",
+            "owner",
+            "safer rollout",
+            "access control"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "apm_follow_account",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How can a postmortem be blameless while people remain accountable?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy postmortem human errort hibáztat",
+          "prompt": "Egy outage report szerint egy engineer rossz configurationt deployolt, és az action be more careful. Hogyan javítanád?",
+          "answerStructureHint": "Factual timeline, system contributor, detection gap és specific owned control.",
+          "expectedPoints": {
+            "apm_timeline": {
+              "label": "Timeline-t készít",
+              "description": "Log, deployment record, alert és communication history alapján dolgozik."
+            },
+            "apm_context": {
+              "label": "Contributing factort keres",
+              "description": "Default, access, review, tooling és available information előkerül."
+            },
+            "apm_gaps": {
+              "label": "Detection gapet keres",
+              "description": "Megvizsgálja, miért nem volt prevent vagy earlier detection."
+            },
+            "apm_actions": {
+              "label": "Specific actiont készít",
+              "description": "Automation, validation, safer rollout vagy access control kap ownert."
+            }
+          },
+          "followUps": {
+            "apm_follow_account": "Hogyan lehet blameless a postmortem úgy, hogy accountability is marad?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_lead_bottleneck_001",
+      "title": "Leading without becoming the bottleneck",
+      "prompt": "You lead a feature involving several developers and teams. How do you provide direction without deciding everything yourself?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_technical_leadership",
+        "agile_work_slicing",
+        "agile_stakeholder_collaboration"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Provide shared context, delegate bounded ownership, create review points and coach.",
+      "expectedPoints": [
+        {
+          "id": "alb_context",
+          "label": "Provides shared context",
+          "description": "Clarifies goals, constraints, NFRs, risks and decision principles.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "goals",
+            "constraints",
+            "trade offs",
+            "nfrs",
+            "decision principles"
+          ]
+        },
+        {
+          "id": "alb_delegate",
+          "label": "Delegates bounded ownership",
+          "description": "Gives clear responsibility and freedom inside agreed boundaries.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "delegate ownership",
+            "clear boundaries",
+            "team autonomy",
+            "responsibility"
+          ]
+        },
+        {
+          "id": "alb_review",
+          "label": "Creates review points",
+          "description": "Uses design review, code review, demos and risk checkpoints.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "design review",
+            "code review",
+            "checkpoint",
+            "demo"
+          ]
+        },
+        {
+          "id": "alb_coach",
+          "label": "Coaches and documents",
+          "description": "Uses questions, pairing, examples and decision records.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "mentoring",
+            "pairing",
+            "decision record",
+            "coach",
+            "standards"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "alb_follow_unsafe",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you do when a delegated design is moving in an unsafe direction?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Leadership bottleneck nélkül",
+          "prompt": "Több developert és teamet érintő feature-t vezetsz. Hogyan adsz directiont úgy, hogy ne mindent te dönts el?",
+          "answerStructureHint": "Shared context, bounded ownership, review point és coaching.",
+          "expectedPoints": {
+            "alb_context": {
+              "label": "Shared contextet ad",
+              "description": "Goal, constraint, NFR, risk és decision principle tisztázott."
+            },
+            "alb_delegate": {
+              "label": "Bounded ownershipot delegál",
+              "description": "Clear responsibility és decision freedom van agreed boundaryn belül."
+            },
+            "alb_review": {
+              "label": "Review pointot készít",
+              "description": "Design review, code review, demo és risk checkpoint szerepel."
+            },
+            "alb_coach": {
+              "label": "Coachol és dokumentál",
+              "description": "Question, pairing, example és decision record növeli a capabilityt."
+            }
+          },
+          "followUps": {
+            "alb_follow_unsafe": "Mit tennél, ha egy delegated design unsafe irányba haladna?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_change_sprint_001",
+      "title": "Stakeholders change requirements during a Sprint",
+      "prompt": "A stakeholder repeatedly asks developers directly to add urgent work to the current Sprint. How would you handle it?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_stakeholder_collaboration",
+        "agile_scrum",
+        "agile_backlog_refinement"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Protect the goal and decision process while handling genuine emergencies explicitly.",
+      "expectedPoints": [
+        {
+          "id": "acs_goal",
+          "label": "Protects the Sprint Goal",
+          "description": "Evaluates impact on the current objective rather than treating the plan as frozen or disposable.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "sprint goal",
+            "protect focus",
+            "evaluate impact",
+            "not frozen"
+          ]
+        },
+        {
+          "id": "acs_route",
+          "label": "Uses the priority owner",
+          "description": "Routes the request through Product Owner or agreed decision owner.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "product owner",
+            "single priority owner",
+            "backlog",
+            "not direct"
+          ]
+        },
+        {
+          "id": "acs_trade",
+          "label": "Makes trade-offs visible",
+          "description": "Explains what scope, risk, quality or date changes if the work enters.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "trade off",
+            "remove scope",
+            "impact",
+            "risk",
+            "deadline"
+          ]
+        },
+        {
+          "id": "acs_emergency",
+          "label": "Handles real emergencies",
+          "description": "Uses an agreed expedite or incident process for security, outage or legal emergencies.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "expedite policy",
+            "incident",
+            "security emergency",
+            "legal"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "acs_follow_cancel",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would cancelling a Sprint be justified?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Stakeholder Sprint közben változtat requirementet",
+          "prompt": "Egy stakeholder rendszeresen közvetlenül a developerektől kér urgent worköt a current Sprintbe. Hogyan kezelnéd?",
+          "answerStructureHint": "Sprint Goal és decision process védelme, genuine emergency explicit kezelése.",
+          "expectedPoints": {
+            "acs_goal": {
+              "label": "Védi a Sprint Goalt",
+              "description": "A current objective-re gyakorolt impactet vizsgálja; a plan nem frozen és nem disposable."
+            },
+            "acs_route": {
+              "label": "Priority owneren keresztül kezeli",
+              "description": "A request Product Ownerhez vagy agreed decision ownerhez kerül."
+            },
+            "acs_trade": {
+              "label": "Láthatóvá teszi a trade-offot",
+              "description": "Scope, risk, quality vagy date változása explicit."
+            },
+            "acs_emergency": {
+              "label": "Real emergencyt kezel",
+              "description": "Security, outage vagy legal emergency agreed expedite vagy incident processt kap."
+            }
+          },
+          "followUps": {
+            "acs_follow_cancel": "Mikor lenne indokolt egy Sprint cancelölése?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_sdlc_choice_001",
+      "title": "Choosing an SDLC model",
+      "prompt": "Compare delivery approaches for a regulated system with stable requirements and an experimental product with uncertain requirements.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_sdlc_models",
+        "agile_mindset"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Match requirement volatility, compliance, verification, risk and feedback cost to the delivery model.",
+      "expectedPoints": [
+        {
+          "id": "asd_regulated",
+          "label": "Chooses controlled verification for regulated work",
+          "description": "Explains why sequential planning or a V-model may help traceability and verification when change is expensive.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "v model",
+            "traceability",
+            "verification",
+            "regulated",
+            "stable requirements"
+          ]
+        },
+        {
+          "id": "asd_experiment",
+          "label": "Chooses iterative learning for uncertainty",
+          "description": "Uses incremental or iterative delivery to test uncertain product assumptions early.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "iterative",
+            "incremental",
+            "product discovery",
+            "early feedback",
+            "uncertainty"
+          ]
+        },
+        {
+          "id": "asd_risk",
+          "label": "Uses risk as a decision factor",
+          "description": "Considers spiral-style explicit risk work for large high-risk unknowns.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "risk analysis",
+            "spiral",
+            "high risk",
+            "prototype"
+          ]
+        },
+        {
+          "id": "asd_nodogma",
+          "label": "Avoids false binaries",
+          "description": "Explains that real organisations can combine controls and feedback practices.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "hybrid",
+            "depends on context",
+            "not dogmatic",
+            "combine practices"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "asd_follow_change",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would the process change if the regulated project also had rapidly changing requirements?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "SDLC model választása",
+          "prompt": "Hasonlítsd össze a delivery approachot egy stable requirementű regulated system és egy uncertain experimental product esetén.",
+          "answerStructureHint": "Requirement volatility, compliance, verification, risk és feedback cost alapján válassz.",
+          "expectedPoints": {
+            "asd_regulated": {
+              "label": "Controlled verificationt választ regulated workhöz",
+              "description": "Sequential planning vagy V-model traceabilityt és verificationt adhat expensive change mellett."
+            },
+            "asd_experiment": {
+              "label": "Iterative learninget választ uncertaintyhez",
+              "description": "Incremental vagy iterative delivery korán teszteli a product assumptiont."
+            },
+            "asd_risk": {
+              "label": "Risket használ decision factorként",
+              "description": "Nagy high-risk unknown esetén explicit spiral-style risk work kerül elő."
+            },
+            "asd_nodogma": {
+              "label": "Elkerüli a false binaryt",
+              "description": "A valós process kontrollt és feedback practice-et kombinálhat."
+            }
+          },
+          "followUps": {
+            "asd_follow_change": "Hogyan változna a process, ha a regulated project requirementjei is gyorsan változnának?"
+          }
+        }
+      }
+    },
+    {
+      "id": "agile_ai_release_001",
+      "title": "Using AI-generated code responsibly",
+      "prompt": "An AI tool produces a large feature quickly, but nobody fully understands it. What would you require before release?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "agile_ai_assisted",
+        "agile_testing_strategy",
+        "agile_code_review"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Keep human ownership, reduce the change to understandable pieces, verify risks and apply normal quality gates.",
+      "expectedPoints": [
+        {
+          "id": "aar_understand",
+          "label": "Requires explainability",
+          "description": "Does not ship code the team cannot explain, debug, secure and maintain.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "understand the code",
+            "human ownership",
+            "explainability",
+            "maintain"
+          ]
+        },
+        {
+          "id": "aar_review",
+          "label": "Performs risk-based review",
+          "description": "Checks architecture, edge cases, security, performance and dependencies.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "architecture review",
+            "security",
+            "edge cases",
+            "performance",
+            "dependencies"
+          ]
+        },
+        {
+          "id": "aar_tests",
+          "label": "Applies guardrails",
+          "description": "Requires tests, types, lint, integration checks and safe rollout.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "tests",
+            "type checking",
+            "lint",
+            "integration",
+            "safe rollout"
+          ]
+        },
+        {
+          "id": "aar_slice",
+          "label": "Reduces change size",
+          "description": "Splits generated work into reviewable and verifiable pieces.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "small changes",
+            "split feature",
+            "reviewable",
+            "verify each"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "aar_follow_data",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What data-security rules would you apply when giving context to an AI tool?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "AI-generated code felelős használata",
+          "prompt": "Egy AI tool gyorsan generál egy nagy feature-t, de senki nem érti teljesen. Mit követelnél release előtt?",
+          "answerStructureHint": "Human ownership, understandable small pieces, risk verification és normál quality gate.",
+          "expectedPoints": {
+            "aar_understand": {
+              "label": "Explainabilityt követel",
+              "description": "A team által nem érthető, debugolható, secure-ölhető és maintainelhető code nem shipelhető."
+            },
+            "aar_review": {
+              "label": "Risk-based reviewt végez",
+              "description": "Architecture, edge case, security, performance és dependency vizsgált."
+            },
+            "aar_tests": {
+              "label": "Guardrailt alkalmaz",
+              "description": "Test, type, lint, integration check és safe rollout szükséges."
+            },
+            "aar_slice": {
+              "label": "Csökkenti a change size-t",
+              "description": "Generated work reviewable és verifiable részekre bomlik."
+            }
+          },
+          "followUps": {
+            "aar_follow_data": "Milyen data-security szabályt alkalmaznál, amikor contextet adsz egy AI toolnak?"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,2378 @@
+{
+  "id": "core_javascript_typescript_rebuild",
+  "name": "Core JavaScript and TypeScript",
+  "description": "JavaScript runtime behaviour, asynchronous programming, collections, memory, modules, and practical TypeScript modelling.",
+  "sources": [
+    "tesco_hungary",
+    "lufthansa",
+    "artec_frontend_interju_felkeszules",
+    "interview-trainer-study-all-phone-chatgpt",
+    "interview-trainer-study-all-phone-original",
+    "Luxair_interju_QA_gyujtemeny"
+  ],
+  "topics": [
+    {
+      "id": "js_scope_execution_context",
+      "name": "Scope and Execution Context",
+      "description": "How JavaScript resolves variables and tracks function execution.",
+      "category": "core",
+      "importance": 4,
+      "relatedTopicIds": [
+        "js_closures",
+        "js_hoisting_tdz",
+        "js_this_binding"
+      ],
+      "studyNotes": "## What is it?\n\nScope defines where a variable can be accessed. An execution context is the runtime state created when global code or a function runs.\n\n## What problem does it solve?\n\nIt explains name lookup, nested functions, closures, and why refactoring can expose the wrong binding.\n\n## How it works\n\n- Global, module, function, and block scopes create visibility boundaries.\n- Name lookup starts locally and walks outward through the lexical scope chain.\n- Every function call gets its own local bindings.\n- `let` and `const` are block-scoped; `var` is function-scoped.\n\n## Common mistakes\n\n- Treating lexical scope as if it followed runtime call order.\n- Relying on accidental globals.\n- Confusing block scope with function scope.\n\n## Key terms\n\n- lexical scope — visibility determined by source-code nesting\n- scope chain — outward lookup path\n- execution context — runtime state for one call\n- binding — association between a name and value",
+      "i18n": {
+        "hu": {
+          "name": "Scope és Execution Context",
+          "description": "Megmutatja, honnan érhető el egy variable, és milyen runtime state tartozik egy function callhoz.",
+          "studyNotes": "## Mi ez?\n\nA scope azt mondja meg, hogy egy variable hol érhető el. Az execution context global code vagy function call futásakor létrejövő runtime state.\n\n## Milyen problémát old meg?\n\nEz magyarázza a name lookupot, nested functionöket, closure-öket és sok refactor után megjelenő hibát.\n\n## Hogyan működik?\n\n- Global, module, function és block scope külön visibility boundaryt ad.\n- A lookup a local lexical scope-ból indul, majd kifelé halad.\n- Minden function call saját local bindingokat kap.\n- A `let` és `const` block-scoped, a `var` function-scoped.\n\n## Gyakori hibák\n\n- A lexical scope-ot runtime call orderként kezelni.\n- Accidental global variable-re támaszkodni.\n- A block scope-ot és function scope-ot összekeverni.\n\n## Kulcsfogalmak\n\n- lexical scope — source-code nesting alapján meghatározott visibility\n- scope chain — kifelé haladó lookup útvonal\n- execution context — egy call runtime state-je\n- binding — kapcsolat név és value között"
+        }
+      }
+    },
+    {
+      "id": "js_closures",
+      "name": "Closures",
+      "description": "Functions retaining access to variables from their lexical environment.",
+      "category": "core",
+      "importance": 5,
+      "relatedTopicIds": [
+        "js_scope_execution_context",
+        "js_memory_gc_leaks"
+      ],
+      "studyNotes": "## What is it?\n\nA closure exists when a function keeps access to bindings from the lexical environment where it was created.\n\n## What problem does it solve?\n\nClosures enable private state, callbacks, factories, and memoization, but long-lived closures can retain stale state or large object graphs.\n\n## How it works\n\n- Nested functions can use outer bindings after the outer call returns.\n- Each factory call can create separate private state.\n- Closures retain bindings, not frozen snapshots.\n- Timers, listeners, and caches need lifecycle cleanup.\n\n## Common mistakes\n\n- Saying a closure copies values at creation time.\n- Keeping listeners alive after their owner is gone.\n- Accidentally sharing one mutable binding between callbacks.\n\n## Key terms\n\n- lexical environment — visible bindings at creation\n- retained reference — reference keeping data alive\n- stale closure — callback using older logical state\n- factory function — function creating configured functions or objects",
+      "i18n": {
+        "hu": {
+          "name": "Closures",
+          "description": "A function később is hozzáfér a létrehozási lexical environment bindingjaihoz.",
+          "studyNotes": "## Mi ez?\n\nClosure esetén a function a létrehozási lexical environment változóihoz később is hozzáfér.\n\n## Milyen problémát old meg?\n\nPrivate state, callback, factory és memoization építhető rá, de stale state-et vagy nagy object graphet is életben tarthat.\n\n## Hogyan működik?\n\n- A nested function az outer call befejezése után is használhat outer bindingot.\n- Minden factory call külön private state-et hozhat létre.\n- A closure bindingot tart elérhetően, nem frozen snapshotot.\n- Timer, listener és cache esetén cleanup kellhet.\n\n## Gyakori hibák\n\n- Azt mondani, hogy a closure lemásolja az értéket.\n- Listenerrel unmount után is state-et életben tartani.\n- Több callback között véletlenül ugyanazt a mutable bindingot megosztani.\n\n## Kulcsfogalmak\n\n- lexical environment — a létrehozási helyen látható bindingok\n- retained reference — data-t életben tartó reference\n- stale closure — régebbi logical state-et olvasó callback\n- factory function — konfigurált functiont vagy objectet készítő function"
+        }
+      }
+    },
+    {
+      "id": "js_hoisting_tdz",
+      "name": "Hoisting and the Temporal Dead Zone",
+      "description": "Declaration processing and initialization rules for var, let, const, classes, and functions.",
+      "category": "core",
+      "importance": 3,
+      "relatedTopicIds": [
+        "js_scope_execution_context"
+      ],
+      "studyNotes": "## What is it?\n\nJavaScript prepares declaration bindings before executing the surrounding code. The important difference is when each binding becomes initialized and usable.\n\n## What problem does it solve?\n\nThe shortcut that declarations “move to the top” hides why one early access returns `undefined` while another throws a ReferenceError.\n\n## How it works\n\n- Function declarations are initialized early.\n- `var` is function-scoped and initialized to `undefined`.\n- `let`, `const`, and classes remain inaccessible in the TDZ until their declaration executes.\n- Function expressions follow the rules of their variable binding.\n\n## Common mistakes\n\n- Saying JavaScript physically moves source lines.\n- Claiming `let` and `const` are not hoisted at all.\n- Calling a function expression before initialization.\n\n## Key terms\n\n- hoisting — bindings prepared before execution\n- TDZ — period before lexical initialization\n- declaration — introduces a binding\n- initialization — makes the binding usable",
+      "i18n": {
+        "hu": {
+          "name": "Hoisting és Temporal Dead Zone",
+          "description": "A declaration bindingok létrehozási és initialization szabályai.",
+          "studyNotes": "## Mi ez?\n\nJavaScript execution előtt előkészíti a declaration bindingokat. A lényeg az, hogy mikor kapnak használható initial value-t.\n\n## Milyen problémát old meg?\n\nA „felkerül a tetejére” magyarázat nem mutatja meg, miért lesz az egyik early access `undefined`, a másik ReferenceError.\n\n## Hogyan működik?\n\n- A function declaration korán initialized.\n- A `var` function-scoped és kezdetben `undefined`.\n- A `let`, `const` és class a TDZ végéig nem használható.\n- A function expression a tároló variable szabályait követi.\n\n## Gyakori hibák\n\n- Azt mondani, hogy a source line fizikailag átrendeződik.\n- Azt hinni, hogy `let` és `const` egyáltalán nincs hoistolva.\n- Function expressiont initialization előtt hívni.\n\n## Kulcsfogalmak\n\n- hoisting — bindingok előkészítése execution előtt\n- TDZ — lexical initialization előtti időszak\n- declaration — binding létrehozása\n- initialization — a binding használhatóvá tétele"
+        }
+      }
+    },
+    {
+      "id": "js_this_binding",
+      "name": "this Binding",
+      "description": "How call style determines `this`, and how arrow functions differ.",
+      "category": "core",
+      "importance": 4,
+      "relatedTopicIds": [
+        "js_scope_execution_context",
+        "js_closures"
+      ],
+      "studyNotes": "## What is it?\n\nFor regular functions, `this` is mainly determined by how the function is called. Arrow functions use the surrounding lexical `this`.\n\n## What problem does it solve?\n\nMethods passed as callbacks often lose their receiver, causing undefined property access or work on the wrong object.\n\n## How it works\n\n- `object.method()` normally binds the object as receiver.\n- Plain strict-mode calls use `undefined`.\n- `call`, `apply`, and `bind` set the receiver explicitly.\n- Arrow functions capture surrounding `this` and cannot be rebound.\n\n## Common mistakes\n\n- Saying `this` always comes from the declaration location.\n- Passing a method directly as a callback.\n- Using arrow functions as prototype methods when dynamic receivers are needed.\n\n## Key terms\n\n- receiver — object used as `this`\n- implicit binding — receiver from method-call syntax\n- explicit binding — call/apply/bind\n- lexical this — surrounding `this` used by arrows",
+      "i18n": {
+        "hu": {
+          "name": "`this` Binding",
+          "description": "Regular functionnél a call style adja a `this` értéket, arrow functionnél a surrounding lexical `this` marad.",
+          "studyNotes": "## Mi ez?\n\nRegular function esetén a `this` főleg attól függ, hogyan történik a call. Arrow function a surrounding lexical `this` értéket használja.\n\n## Milyen problémát old meg?\n\nCallbackként átadott method gyakran elveszíti a receiverét, ezért rossz objecten fut vagy `undefined` propertyt olvas.\n\n## Hogyan működik?\n\n- `object.method()` esetén az object a receiver.\n- Plain call strict mode-ban `undefined` `this`-t kap.\n- `call`, `apply` és `bind` explicit receivert ad.\n- Az arrow function surrounding `this`-t capture-öl, és nem bindolható át.\n\n## Gyakori hibák\n\n- Azt mondani, hogy a `this` mindig a declaration helyétől függ.\n- Methodot közvetlen callbackként átadni.\n- Dynamic receivert igénylő prototype methodhoz arrow functiont használni.\n\n## Kulcsfogalmak\n\n- receiver — a call során `this`-ként használt object\n- implicit binding — method-call syntax adja a receivert\n- explicit binding — call/apply/bind\n- lexical this — arrow function surrounding `this` értéke"
+        }
+      }
+    },
+    {
+      "id": "js_prototype_inheritance",
+      "name": "Prototypes and Inheritance",
+      "description": "JavaScript object delegation through prototype chains and class syntax.",
+      "category": "core",
+      "importance": 3,
+      "relatedTopicIds": [
+        "js_property_descriptors_locking",
+        "ts_structural_typing"
+      ],
+      "studyNotes": "## What is it?\n\nObjects delegate missing property lookup through a prototype chain. Class syntax is a convenient interface over this prototype-based model.\n\n## What problem does it solve?\n\nIt explains shared methods, `instanceof`, lookup order, and why mutable prototype state affects every instance.\n\n## How it works\n\n- Property lookup checks own properties first, then prototypes.\n- Classes and constructor functions normally place shared methods on `prototype`.\n- `Object.create` chooses a prototype explicitly.\n- Composition is often clearer than deep inheritance.\n\n## Common mistakes\n\n- Storing mutable per-instance data on a shared prototype.\n- Modifying built-in prototypes.\n- Treating JavaScript classes as identical to nominal classes in every language.\n\n## Key terms\n\n- prototype — delegation target\n- prototype chain — lookup sequence\n- own property — directly stored property\n- delegation — forwarding property lookup",
+      "i18n": {
+        "hu": {
+          "name": "Prototypes és Inheritance",
+          "description": "A hiányzó property lookup a prototype chainen keresztül folytatódik.",
+          "studyNotes": "## Mi ez?\n\nA JavaScript object a saját property után a prototype chainen keres tovább. A class syntax kényelmes felületet ad ehhez.\n\n## Milyen problémát old meg?\n\nEz magyarázza a shared methodot, `instanceof`-ot, lookup ordert és a shared mutable prototype state veszélyét.\n\n## Hogyan működik?\n\n- A lookup először own propertyt, majd prototype-ot néz.\n- Class és constructor function shared methodjai általában a `prototype` objectre kerülnek.\n- Az `Object.create` explicit prototype-ot választ.\n- Mély inheritance helyett gyakran tisztább a composition.\n\n## Gyakori hibák\n\n- Per-instance mutable state-et shared prototype-on tárolni.\n- Built-in prototype-ot módosítani.\n- A JavaScript class-t mindenben nominal classként kezelni.\n\n## Kulcsfogalmak\n\n- prototype — delegation target\n- prototype chain — lookup sequence\n- own property — közvetlenül tárolt property\n- delegation — property lookup továbbadása"
+        }
+      }
+    },
+    {
+      "id": "js_value_reference",
+      "name": "Primitive Values and Object References",
+      "description": "How assignments and function calls behave for primitives and objects.",
+      "category": "core",
+      "importance": 5,
+      "relatedTopicIds": [
+        "js_immutability_copying",
+        "js_equality_coercion"
+      ],
+      "studyNotes": "## What is it?\n\nPrimitives are immutable values. Objects are reached through references. Assignment always copies a value; for an object that value is a reference.\n\n## What problem does it solve?\n\nThe phrase “passed by reference” is misleading: a function cannot replace the caller variable, but it can mutate the shared object reached through the copied reference.\n\n## How it works\n\n- Primitive assignment copies the primitive.\n- Object assignment copies a reference to the same object.\n- Parameter reassignment changes only the local binding.\n- Property mutation changes the shared object.\n- Object equality compares identity.\n\n## Common mistakes\n\n- Expecting equal-looking object literals to be `===`.\n- Mutating through an unexpected alias.\n- Assuming spread creates a deep copy.\n\n## Key terms\n\n- primitive — immutable non-object value\n- reference — value identifying an object\n- alias — another reference to the same object\n- identity — whether two references point to the same object",
+      "i18n": {
+        "hu": {
+          "name": "Primitive Values és Object References",
+          "description": "Assignment mindig value-t másol; object esetén ez egy reference ugyanahhoz az objecthez.",
+          "studyNotes": "## Mi ez?\n\nA primitive immutable value. Objecthez reference-en keresztül férünk hozzá. Assignment mindig value-t másol; object esetén ez a reference.\n\n## Milyen problémát old meg?\n\nA „pass by reference” félrevezető: a function nem cseréli le a caller variable-jét, de a copied reference-en keresztül módosíthatja a shared objectet.\n\n## Hogyan működik?\n\n- Primitive assignment a primitive value-t másolja.\n- Object assignment ugyanahhoz az objecthez tartozó reference-et másol.\n- Parameter reassignment csak local bindingot változtat.\n- Property mutation a shared objectet módosítja.\n- Object equality identityt hasonlít.\n\n## Gyakori hibák\n\n- Equal-looking object literalnál `===` eredményt várni.\n- Váratlan aliason keresztül módosítani.\n- Spread után deep copyt feltételezni.\n\n## Kulcsfogalmak\n\n- primitive — immutable, nem object value\n- reference — objectet azonosító value\n- alias — másik reference ugyanahhoz az objecthez\n- identity — ugyanarra az objectre mutat-e két reference"
+        }
+      }
+    },
+    {
+      "id": "js_equality_coercion",
+      "name": "Equality and Type Coercion",
+      "description": "Strict equality, loose equality, conversion rules, and truthiness.",
+      "category": "core",
+      "importance": 4,
+      "relatedTopicIds": [
+        "js_value_reference"
+      ],
+      "studyNotes": "## What is it?\n\nStrict equality (`===`) compares without conversion. Loose equality (`==`) may coerce operands first. Conditions also convert values through truthiness.\n\n## What problem does it solve?\n\nImplicit conversion can accept unexpected values, especially empty strings, booleans, nullish values, and numeric strings.\n\n## How it works\n\n- Prefer `===` and `!==` for normal comparisons.\n- `null == undefined` is true, but strict equality differs.\n- `+` concatenates when a string is involved; other arithmetic operators usually convert toward numbers.\n- Parse and validate external values explicitly.\n\n## Common mistakes\n\n- Using truthiness when `0`, `false`, or `\"\"` are valid.\n- Comparing object contents with `===`.\n- Relying on implicit numeric parsing.\n\n## Key terms\n\n- coercion — implicit type conversion\n- strict equality — comparison without conversion\n- truthy/falsy — condition conversion\n- identity comparison — object comparison by reference",
+      "i18n": {
+        "hu": {
+          "name": "Equality és Type Coercion",
+          "description": "A `===` conversion nélkül hasonlít, a `==` coerciont végezhet.",
+          "studyNotes": "## Mi ez?\n\nA strict equality (`===`) conversion nélkül hasonlít. A loose equality (`==`) előtte coerciont végezhet. A condition truthiness alapján dönt.\n\n## Milyen problémát old meg?\n\nImplicit conversion unexpected value-t fogadhat el, főleg empty string, boolean, nullish value és numeric string esetén.\n\n## Hogyan működik?\n\n- Normál esetben `===` és `!==` legyen az alap.\n- `null == undefined` true, strict módon viszont különböznek.\n- A `+` string mellett concatenationt végez, más arithmetic operator inkább numberré konvertál.\n- External value-t explicit parse-olj és validálj.\n\n## Gyakori hibák\n\n- Truthiness-t használni, amikor `0`, `false` vagy `\"\"` valid.\n- Object contentet `===` segítségével hasonlítani.\n- Implicit numeric parsingre támaszkodni.\n\n## Kulcsfogalmak\n\n- coercion — implicit type conversion\n- strict equality — conversion nélküli comparison\n- truthy/falsy — condition conversion\n- identity comparison — objectek reference szerinti comparisonje"
+        }
+      }
+    },
+    {
+      "id": "js_immutability_copying",
+      "name": "Immutability, Shallow Copy, and Deep Copy",
+      "description": "Changing shared state through new values while understanding copy depth.",
+      "category": "core",
+      "importance": 5,
+      "relatedTopicIds": [
+        "js_value_reference",
+        "js_property_descriptors_locking"
+      ],
+      "studyNotes": "## What is it?\n\nImmutability means producing a new value instead of changing shared state in place. Spread and `Object.assign` normally create only shallow copies.\n\n## What problem does it solve?\n\nIn-place mutation breaks reference-based change detection and makes debugging harder, while blind deep cloning is expensive and may lose semantics.\n\n## How it works\n\n- Copy only the path that changes.\n- Use non-mutating array operations when ownership is shared.\n- `const` freezes the binding, not object contents.\n- `structuredClone` is useful only when its supported semantics fit the data.\n- Define clear ownership instead of banning all local mutation.\n\n## Common mistakes\n\n- Believing spread is a deep copy.\n- Believing `const` freezes an object.\n- Using JSON round-trips for Dates, Maps, cycles, or custom prototypes.\n\n## Key terms\n\n- immutable update — create a new changed value\n- shallow copy — copy one level of references\n- deep copy — recursively independent nested data\n- structural sharing — reuse unchanged subtrees",
+      "i18n": {
+        "hu": {
+          "name": "Immutability, Shallow Copy és Deep Copy",
+          "description": "Shared state változtatásakor új value készül, miközben a copy depth ismert marad.",
+          "studyNotes": "## Mi ez?\n\nImmutability esetén shared state in-place módosítása helyett új value készül. A spread és `Object.assign` általában csak shallow copyt ad.\n\n## Milyen problémát old meg?\n\nAz in-place mutation elrontja a reference-based change detectiont és nehezíti a debuggingot, a vak deep clone viszont drága és semantics-et veszíthet.\n\n## Hogyan működik?\n\n- Csak a changed pathot másold.\n- Shared ownershipnál non-mutating array operationt használj.\n- A `const` bindingot rögzít, nem object contentet.\n- `structuredClone` csak megfelelő data semantics mellett jó.\n- Clear ownership jobb, mint minden local mutation tiltása.\n\n## Gyakori hibák\n\n- A spreadet deep copyként kezelni.\n- Azt hinni, hogy `const` lefagyasztja az objectet.\n- JSON round-tripet használni Date, Map, cycle vagy custom prototype esetén.\n\n## Kulcsfogalmak\n\n- immutable update — új changed value készítése\n- shallow copy — egy reference-szint másolása\n- deep copy — nested data független másolata\n- structural sharing — unchanged subtree-k újrafelhasználása"
+        }
+      }
+    },
+    {
+      "id": "js_object_map_set_weak",
+      "name": "Object, Map, Set, WeakMap, and WeakSet",
+      "description": "Choosing collections by key type, identity, iteration, serialization, and lifetime.",
+      "category": "core",
+      "importance": 4,
+      "relatedTopicIds": [
+        "js_value_reference",
+        "js_memory_gc_leaks"
+      ],
+      "studyNotes": "## What is it?\n\nObjects fit fixed-shape records. Maps fit dynamic key-value collections with arbitrary key types. Sets store unique values. Weak collections do not keep object keys or members alive.\n\n## What problem does it solve?\n\nUsing objects as dictionaries causes key coercion and inherited-key issues, while regular Maps can accidentally retain object-keyed cache entries forever.\n\n## How it works\n\n- Use Object for known fields and direct JSON representation.\n- Use Map for frequent add/remove or non-string keys.\n- Use Set for membership and deduplication.\n- Use WeakMap for metadata tied to object lifetime.\n- Weak collections are not enumerable and expose no stable size.\n\n## Common mistakes\n\n- Using object keys in a plain object.\n- Expecting Map to serialize automatically.\n- Using WeakMap when iteration is required.\n- Expecting Set to deduplicate deep-equal objects.\n\n## Key terms\n\n- key coercion — converting keys to strings\n- insertion order — order entries were added\n- weak reference — does not keep an object alive\n- membership — whether a Set contains a value",
+      "i18n": {
+        "hu": {
+          "name": "Object, Map, Set, WeakMap és WeakSet",
+          "description": "Collection választás key type, identity, iteration, serialization és lifetime alapján.",
+          "studyNotes": "## Mi ez?\n\nAz Object fixed-shape recordhoz jó. A Map dynamic key-value collection arbitrary key type-pal. A Set unique value-kat tárol. A weak collection nem tartja életben az object key-t vagy membert.\n\n## Milyen problémát old meg?\n\nObject dictionaryként key coercion és inherited-key problémát okozhat, regular Map pedig object-keyed cache esetén leaket okozhat.\n\n## Hogyan működik?\n\n- Known fieldhez és direct JSON representationhöz Object.\n- Frequent add/remove vagy non-string key esetén Map.\n- Membership és deduplication esetén Set.\n- Object lifetime-hoz kötött metadata esetén WeakMap.\n- Weak collection nem enumerable és nincs stabil size.\n\n## Gyakori hibák\n\n- Object keyt plain object keyként használni.\n- Automatikus JSON serializationt várni Maptől.\n- WeakMapet használni, amikor iteration kell.\n- Deep-equal object deduplicationt várni Settől.\n\n## Kulcsfogalmak\n\n- key coercion — key stringgé alakítása\n- insertion order — hozzáadási sorrend\n- weak reference — nem tartja életben az objectet\n- membership — tartalmaz-e a Set egy value-t"
+        }
+      }
+    },
+    {
+      "id": "js_property_descriptors_locking",
+      "name": "Property Descriptors and Object Locking",
+      "description": "Controlling writability, enumerability, configurability, and extension.",
+      "category": "core",
+      "importance": 1,
+      "relatedTopicIds": [
+        "js_immutability_copying",
+        "js_prototype_inheritance"
+      ],
+      "studyNotes": "## What is it?\n\nProperties have descriptors. Data properties use `value` and `writable`; accessors use getters and setters. `enumerable` and `configurable` control visibility and redefinition.\n\n## What problem does it solve?\n\nDescriptors give precise control for library APIs and shared configuration, while seal or freeze can catch accidental writes.\n\n## How it works\n\n- `Object.defineProperty` sets descriptors.\n- `preventExtensions` blocks new properties.\n- `seal` also blocks deletion and reconfiguration.\n- `freeze` additionally makes existing data properties non-writable.\n- All are shallow.\n\n## Common mistakes\n\n- Treating freeze as recursive.\n- Confusing non-enumerable with private or secure.\n- Creating getters with hidden side effects.\n\n## Key terms\n\n- writable — whether a value may change\n- enumerable — whether iteration includes it\n- configurable — whether it may be deleted or redefined\n- accessor property — getter/setter property",
+      "i18n": {
+        "hu": {
+          "name": "Property Descriptors és Object Locking",
+          "description": "A property writability, enumerability, configurability és object extension szabályozása.",
+          "studyNotes": "## Mi ez?\n\nA propertyhez descriptor tartozik. Data property `value` és `writable`, accessor property getter/setter alapján működik. Az `enumerable` és `configurable` visibilityt és redefinitiont szabályoz.\n\n## Milyen problémát old meg?\n\nDescriptorral library API és shared config pontosan kontrollálható, seal/freeze pedig accidental write-ot foghat meg.\n\n## Hogyan működik?\n\n- Az `Object.defineProperty` descriptort állít.\n- A `preventExtensions` tiltja az új propertyt.\n- A `seal` deletiont és reconfigurationt is tilt.\n- A `freeze` az existing data propertyt non-writable állapotúvá teszi.\n- Mindegyik shallow.\n\n## Gyakori hibák\n\n- A `freeze`-t recursive védelemnek tekinteni.\n- A non-enumerable propertyt private-nak vagy secure-nek gondolni.\n- Hidden side effectet tartalmazó gettert készíteni.\n\n## Kulcsfogalmak\n\n- writable — változhat-e a value\n- enumerable — bekerül-e iterationbe\n- configurable — törölhető vagy redefiniálható-e\n- accessor property — getter/setter property"
+        }
+      }
+    },
+    {
+      "id": "js_event_loop",
+      "name": "JavaScript Event Loop",
+      "description": "Coordination of the call stack, tasks, microtasks, host APIs, and rendering.",
+      "category": "core",
+      "importance": 5,
+      "relatedTopicIds": [
+        "js_promises_async_await",
+        "js_async_composition",
+        "js_memory_gc_leaks"
+      ],
+      "studyNotes": "## What is it?\n\nThe event loop coordinates synchronous JavaScript with asynchronous work handled by the browser or Node host environment.\n\n## What problem does it solve?\n\nIt explains Promise timing, timer ordering, UI freezes, and Node event-loop lag. Async syntax does not make CPU-heavy work parallel.\n\n## How it works\n\n- Run synchronous code until the stack is empty.\n- Drain microtasks such as Promise reactions.\n- Take the next task such as a timer or event.\n- Browsers may render between task turns.\n- Split or offload CPU-heavy work.\n\n## Common mistakes\n\n- Saying `setTimeout(fn, 0)` runs immediately.\n- Assuming `await` moves CPU work to another thread.\n- Creating endless microtask chains that starve other work.\n\n## Key terms\n\n- call stack — executing JavaScript frames\n- task/macrotask — queued host event\n- microtask — high-priority continuation\n- event-loop lag — delay before queued work runs",
+      "i18n": {
+        "hu": {
+          "name": "JavaScript Event Loop",
+          "description": "A call stack, tasks, microtasks és host API-k együttműködését koordinálja.",
+          "studyNotes": "## Mi ez?\n\nAz event loop a synchronous JavaScript és a browser vagy Node host environment asynchronous munkáját koordinálja.\n\n## Milyen problémát old meg?\n\nEz magyarázza a Promise timingot, timer orderinget, UI freeze-t és Node event-loop lagot. Az async syntax nem teszi parallelé a CPU-heavy worköt.\n\n## Hogyan működik?\n\n- Synchronous code fut, amíg a stack ki nem ürül.\n- Ezután lefutnak a microtaskok, például Promise reactionök.\n- Majd jön a következő task, például timer vagy event.\n- Browserben task turnök között lehet rendering.\n- CPU-heavy worköt fel kell darabolni vagy offloadolni.\n\n## Gyakori hibák\n\n- Azt mondani, hogy `setTimeout(fn, 0)` azonnal fut.\n- Azt hinni, hogy `await` más threadre teszi a CPU worköt.\n- Endless microtask chaint készíteni.\n\n## Kulcsfogalmak\n\n- call stack — aktuálisan futó frame-ek\n- task/macrotask — queued host event\n- microtask — high-priority continuation\n- event-loop lag — queued work extra késése"
+        }
+      }
+    },
+    {
+      "id": "js_promises_async_await",
+      "name": "Promises and async/await",
+      "description": "Representing asynchronous completion, failure propagation, and readable control flow.",
+      "category": "core",
+      "importance": 5,
+      "relatedTopicIds": [
+        "js_event_loop",
+        "js_async_composition"
+      ],
+      "studyNotes": "## What is it?\n\nA Promise represents future fulfillment or rejection. `async` functions return Promises, and `await` suspends that function continuation without blocking the thread.\n\n## What problem does it solve?\n\nPromises replace deeply nested callbacks with composable sequencing and predictable error propagation.\n\n## How it works\n\n- Return Promises instead of starting hidden work.\n- Await only when later work depends on the result.\n- Rejections propagate until handled.\n- `try/catch` handles awaited rejections in its scope.\n- Decide whether work is awaited, returned, aggregated, or intentionally detached.\n\n## Common mistakes\n\n- Forgetting to return a Promise from a chain callback.\n- Catching and silently swallowing errors.\n- Sequentially awaiting independent work.\n\n## Key terms\n\n- fulfillment — successful completion\n- rejection — failed completion\n- continuation — code resumed after await\n- unhandled rejection — rejection without an effective handler",
+      "i18n": {
+        "hu": {
+          "name": "Promises és async/await",
+          "description": "Asynchronous completiont, failure propagationt és olvasható control flow-t kezel.",
+          "studyNotes": "## Mi ez?\n\nA Promise future fulfillmentet vagy rejectiont reprezentál. Az `async` function Promise-t ad vissza, az `await` pedig a function continuationjét függeszti fel thread blocking nélkül.\n\n## Milyen problémát old meg?\n\nA Promise composable sequencinget és kiszámítható error propagationt ad a nested callbackek helyett.\n\n## Hogyan működik?\n\n- Hidden work helyett returnölj Promise-t.\n- Csak akkor awaitelj, ha a következő lépés függ az eredménytől.\n- A rejection továbbterjed, amíg valaki kezeli.\n- `try/catch` az adott scope awaited rejectionjét kezeli.\n- Legyen tudatos, hogy a work awaited, returned, aggregated vagy detached.\n\n## Gyakori hibák\n\n- Chain callbackből elfelejteni returnölni a Promise-t.\n- Errort catch után csendben lenyelni.\n- Independent worköt sequential awaitelni.\n\n## Kulcsfogalmak\n\n- fulfillment — sikeres completion\n- rejection — sikertelen completion\n- continuation — await után folytatódó code\n- unhandled rejection — handler nélkül maradó rejection"
+        }
+      }
+    },
+    {
+      "id": "js_async_composition",
+      "name": "Asynchronous Composition and Concurrency Control",
+      "description": "Combining independent work while controlling failure semantics and resource pressure.",
+      "category": "core",
+      "importance": 5,
+      "relatedTopicIds": [
+        "js_promises_async_await",
+        "js_event_loop"
+      ],
+      "studyNotes": "## What is it?\n\n`Promise.all`, `allSettled`, `race`, and `any` combine asynchronous outcomes. Concurrency limits bound how many operations are in flight.\n\n## What problem does it solve?\n\nSequential awaits waste time, but unbounded concurrency can overload APIs, pools, browsers, or databases.\n\n## How it works\n\n- Use `Promise.all` when all results are required and fail-fast is correct.\n- Use `allSettled` when every outcome must be inspected.\n- Use `race` for the first settled result and `any` for the first fulfillment.\n- Limit concurrency for large collections.\n- Cancellation requires explicit support such as `AbortController`.\n\n## Common mistakes\n\n- Believing `Promise.all` cancels remaining work.\n- Running unbounded `map(async ...)` on large input.\n- Adding timeouts without aborting underlying work.\n\n## Key terms\n\n- fail fast — group fails on first rejection\n- concurrency limit — maximum in-flight work\n- cancellation — stopping irrelevant work\n- aggregation — combining outcomes",
+      "i18n": {
+        "hu": {
+          "name": "Asynchronous Composition és Concurrency Control",
+          "description": "Independent async work futtatása megfelelő failure semantics és resource limit mellett.",
+          "studyNotes": "## Mi ez?\n\nA `Promise.all`, `allSettled`, `race` és `any` több async outcome-ot kapcsol össze. A concurrency limit az egyszerre in-flight work mennyiségét korlátozza.\n\n## Milyen problémát old meg?\n\nA sequential await lassú lehet, az unbounded concurrency pedig túlterhelhet API-t, poolt, browsert vagy database-t.\n\n## Hogyan működik?\n\n- `Promise.all`, ha minden result required és fail-fast kell.\n- `allSettled`, ha minden outcome-ot külön meg kell nézni.\n- `race` az első settled, `any` az első fulfilled resultot adja.\n- Nagy collectionnél concurrency limit kell.\n- Cancellation explicit támogatást igényel, például `AbortController`.\n\n## Gyakori hibák\n\n- Azt hinni, hogy `Promise.all` cancelöli a többi worköt.\n- Nagy inputra unbounded `map(async ...)` futtatni.\n- Timeoutot tenni underlying abort nélkül.\n\n## Kulcsfogalmak\n\n- fail fast — első rejectionnél group failure\n- concurrency limit — maximum in-flight work\n- cancellation — irreleváns work leállítása\n- aggregation — outcome-ok összekapcsolása"
+        }
+      }
+    },
+    {
+      "id": "js_iterables_generators",
+      "name": "Iterables, Iterators, and Generators",
+      "description": "Protocols for producing values lazily and consuming sequences consistently.",
+      "category": "core",
+      "importance": 2,
+      "relatedTopicIds": [
+        "js_async_composition"
+      ],
+      "studyNotes": "## What is it?\n\nAn iterable exposes `Symbol.iterator`. Its iterator returns `{value, done}` from `next()`. Generators implement the protocol while preserving suspended local state.\n\n## What problem does it solve?\n\nLarge or infinite sequences should not always be materialized in memory, and custom collections benefit from standard iteration syntax.\n\n## How it works\n\n- Calling a generator returns an iterator without running the body.\n- Each `next()` resumes until the next `yield`.\n- `yield*` delegates to another iterable.\n- Async iterables use `Symbol.asyncIterator` and `for await...of`.\n\n## Common mistakes\n\n- Reusing an exhausted one-shot iterator.\n- Spreading an infinite iterable.\n- Using a generator when a small array is clearer.\n\n## Key terms\n\n- iterable — creates an iterator\n- iterator — object with `next()`\n- generator — suspended function implementing iteration\n- lazy evaluation — compute only when requested",
+      "i18n": {
+        "hu": {
+          "name": "Iterables, Iterators és Generators",
+          "description": "Lazy sequence-ek előállítására és egységes fogyasztására szolgáló protocolok.",
+          "studyNotes": "## Mi ez?\n\nAz iterable `Symbol.iterator` methodot ad. Az iterator `next()` hívása `{value, done}` resultot ad. A generator suspended local state mellett valósítja meg ezt.\n\n## Milyen problémát old meg?\n\nNagy vagy infinite sequence-et nem kell mindig teljesen memoryban létrehozni, és custom collection is működhet standard iteration syntaxszal.\n\n## Hogyan működik?\n\n- Generator hívásakor iterator készül, a body még nem fut.\n- Minden `next()` a következő `yield`-ig fut.\n- A `yield*` másik iterable-re delegál.\n- Async iterable `Symbol.asyncIterator` és `for await...of` alapján működik.\n\n## Gyakori hibák\n\n- Exhausted one-shot iteratort reuse-olni.\n- Infinite iterable-t spreaddel materializálni.\n- Generatort használni kis array helyett.\n\n## Kulcsfogalmak\n\n- iterable — iteratort létrehozó value\n- iterator — `next()` methoddal rendelkező object\n- generator — suspended function iteration protocolhoz\n- lazy evaluation — csak kéréskor számol"
+        }
+      }
+    },
+    {
+      "id": "js_modules_bundling",
+      "name": "JavaScript Modules and Bundling",
+      "description": "ES modules, CommonJS, dependency graphs, tree shaking, and code splitting.",
+      "category": "core",
+      "importance": 4,
+      "relatedTopicIds": [
+        "ts_runtime_validation"
+      ],
+      "studyNotes": "## What is it?\n\nModules define explicit imports and exports. ESM is the modern static format; CommonJS uses runtime `require`. Bundlers build a dependency graph and produce deployable assets.\n\n## What problem does it solve?\n\nModule boundaries remove implicit globals, while bundling and code splitting control startup cost and loading behaviour.\n\n## How it works\n\n- Prefer ESM for new code where supported.\n- Static imports enable analysis and tree shaking.\n- Dynamic `import()` creates an asynchronous loading boundary.\n- Side-effectful modules reduce optimization safety.\n- Package format must match the target runtime.\n\n## Common mistakes\n\n- Calling CommonJS a bundler.\n- Assuming tree shaking removes all unused code regardless of side effects.\n- Creating too many tiny chunks.\n- Mixing formats without understanding interop.\n\n## Key terms\n\n- dependency graph — module import relationships\n- tree shaking — removing statically unused exports\n- code splitting — separately loadable chunks\n- side effect — module execution changing external state",
+      "i18n": {
+        "hu": {
+          "name": "JavaScript Modules és Bundling",
+          "description": "ES modules, CommonJS, dependency graph, tree shaking és code splitting.",
+          "studyNotes": "## Mi ez?\n\nA module explicit importot és exportot definiál. Az ESM modern static formátum, a CommonJS runtime `require` modellt használ. A bundler dependency graphot épít és deployolható assetet készít.\n\n## Milyen problémát old meg?\n\nA module boundary megszünteti az implicit global dependencyt, a bundling és code splitting pedig loading costot kontrollál.\n\n## Hogyan működik?\n\n- Új code-nál ESM legyen az alap, ahol támogatott.\n- Static import segíti az analysis-t és tree shakinget.\n- Dynamic `import()` async loading boundaryt ad.\n- Side-effectful module csökkenti az optimization biztonságát.\n- A package format illeszkedjen a target runtime-hoz.\n\n## Gyakori hibák\n\n- A CommonJS-t bundlernek nevezni.\n- Azt hinni, hogy tree shaking side effecttől függetlenül mindent eltávolít.\n- Túl sok tiny chunkot készíteni.\n- Formatokat interop-ismeret nélkül keverni.\n\n## Kulcsfogalmak\n\n- dependency graph — module import kapcsolatok\n- tree shaking — statikusan unused export eltávolítása\n- code splitting — külön betölthető chunkok\n- side effect — external state-et módosító module execution"
+        }
+      }
+    },
+    {
+      "id": "js_memory_gc_leaks",
+      "name": "Memory Management and Leaks",
+      "description": "Reachability-based garbage collection and accidental retention.",
+      "category": "core",
+      "importance": 4,
+      "relatedTopicIds": [
+        "js_closures",
+        "js_object_map_set_weak",
+        "js_event_loop"
+      ],
+      "studyNotes": "## What is it?\n\nJavaScript memory becomes reclaimable when values are no longer reachable from active roots. A leak occurs when an unnecessary object remains reachable.\n\n## What problem does it solve?\n\nLong-lived pages and Node processes can gradually consume memory, slow garbage collection, and eventually crash.\n\n## How it works\n\n- Common roots include globals, active stacks, module state, timers, listeners, and caches.\n- Remove listeners and cancel timers with their owner lifecycle.\n- Bound caches by size or lifetime.\n- Compare heap snapshots and retained paths.\n- Distinguish a real leak from temporary heap growth.\n\n## Common mistakes\n\n- Assuming garbage collection prevents leaks.\n- Keeping unbounded Maps, arrays, or caches.\n- Closing over large state in long-lived callbacks.\n\n## Key terms\n\n- reachability — whether a root can reach a value\n- retained path — reference chain keeping data alive\n- heap snapshot — captured memory graph\n- unbounded cache — cache without size or lifetime limits",
+      "i18n": {
+        "hu": {
+          "name": "Memory Management és Leaks",
+          "description": "Reachability-alapú garbage collection és accidental retention.",
+          "studyNotes": "## Mi ez?\n\nJavaScript memory akkor reclaimelhető, ha a value már nem reachable aktív rootból. Leak esetén egy már nem szükséges object továbbra is reachable marad.\n\n## Milyen problémát old meg?\n\nHosszú életű page vagy Node process fokozatosan egyre több memoryt használhat, a GC lassulhat, végül crash történhet.\n\n## Hogyan működik?\n\n- Tipikus root: global, active stack, module state, timer, listener és cache.\n- Listener cleanup és timer cancellation az owner lifecycle része.\n- Cache legyen size vagy lifetime alapján bounded.\n- Heap snapshot és retained path alapján vizsgálj.\n- Különítsd el a leaket az átmeneti heap growthtól.\n\n## Gyakori hibák\n\n- Azt hinni, hogy GC mellett leak lehetetlen.\n- Unbounded Mapet, arrayt vagy cache-t tartani.\n- Long-lived callbackben nagy state-et closure-ben megtartani.\n\n## Kulcsfogalmak\n\n- reachability — elérhető-e még a value rootból\n- retained path — életben tartó reference chain\n- heap snapshot — rögzített memory graph\n- unbounded cache — size vagy lifetime limit nélküli cache"
+        }
+      }
+    },
+    {
+      "id": "js_debounce_throttle",
+      "name": "Debounce and Throttle",
+      "description": "Controlling high-frequency callbacks by delaying or limiting execution.",
+      "category": "core",
+      "importance": 3,
+      "relatedTopicIds": [
+        "js_event_loop",
+        "js_promises_async_await"
+      ],
+      "studyNotes": "## What is it?\n\nDebounce waits for a quiet period and runs once. Throttle allows execution at most once per interval while calls continue.\n\n## What problem does it solve?\n\nInput, scroll, resize, and pointer events can trigger far more work than the application should perform.\n\n## How it works\n\n- Debounce search or validation when only the final value matters.\n- Throttle scroll or drag feedback when bounded continuous updates matter.\n- Choose leading and trailing behaviour.\n- Cancel pending work on cleanup.\n- Abort or ignore stale network responses.\n\n## Common mistakes\n\n- Using throttle when only the final value matters.\n- Using debounce for continuous feedback.\n- Recreating the wrapped function every render.\n- Ignoring stale requests.\n\n## Key terms\n\n- debounce — run after a quiet period\n- throttle — limit execution frequency\n- leading edge — run at interval start\n- trailing edge — run after final call",
+      "i18n": {
+        "hu": {
+          "name": "Debounce és Throttle",
+          "description": "High-frequency callback futását delay vagy frequency limit segítségével kontrollálja.",
+          "studyNotes": "## Mi ez?\n\nA debounce quiet period után egyszer fut. A throttle folyamatos callok mellett legfeljebb adott időközönként enged executiont.\n\n## Milyen problémát old meg?\n\nInput, scroll, resize és pointer event sokkal gyakrabban futhat, mint amennyi expensive work indokolt.\n\n## Hogyan működik?\n\n- Search vagy validation esetén debounce, ha csak a final value számít.\n- Scroll vagy drag feedbackhez throttle, ha continuous bounded update kell.\n- Döntsd el a leading és trailing behaviourt.\n- Cleanupnál cancelöld a pending worköt.\n- Stale network response-t abortolj vagy ignorálj.\n\n## Gyakori hibák\n\n- Throttle-t használni, amikor csak final value kell.\n- Debounce-ot használni continuous feedbackhez.\n- Minden renderben új wrapped functiont készíteni.\n- Stale requestet ignorálni.\n\n## Kulcsfogalmak\n\n- debounce — quiet period után fut\n- throttle — execution frequencyt limitál\n- leading edge — interval elején fut\n- trailing edge — final call után fut"
+        }
+      }
+    },
+    {
+      "id": "ts_strict_unknown_any_never",
+      "name": "TypeScript strictness, any, unknown, and never",
+      "description": "Using the type system to expose uncertainty instead of bypassing it.",
+      "category": "core",
+      "importance": 5,
+      "relatedTopicIds": [
+        "ts_unions_discriminated",
+        "ts_runtime_validation"
+      ],
+      "studyNotes": "## What is it?\n\nStrict TypeScript enables stronger checks. `any` disables checking, `unknown` requires narrowing, and `never` represents impossible states or non-returning paths.\n\n## What problem does it solve?\n\nA codebase can compile while unsafe data spreads through `any`. Strictness makes missing cases and nullability visible earlier.\n\n## How it works\n\n- Use strict mode for new code and migrate legacy areas incrementally.\n- Accept untrusted values as `unknown`.\n- Isolate unavoidable `any` at compatibility boundaries.\n- Use `never` for exhaustiveness.\n- Model null and undefined explicitly.\n\n## Common mistakes\n\n- Replacing compiler errors with `any`.\n- Treating `unknown` as inconvenient `any`.\n- Assuming TypeScript validates runtime data.\n- Overusing non-null assertions.\n\n## Key terms\n\n- strict mode — stronger compiler checks\n- any — opt-out from checking\n- unknown — requires narrowing\n- never — impossible value or path",
+      "i18n": {
+        "hu": {
+          "name": "TypeScript strictness, `any`, `unknown` és `never`",
+          "description": "A type system segítségével láthatóvá teszi a bizonytalanságot.",
+          "studyNotes": "## Mi ez?\n\nA strict TypeScript erősebb checkeket kapcsol be. Az `any` kikapcsolja az ellenőrzést, az `unknown` narrowingot követel, a `never` pedig impossible state-et vagy pathot jelöl.\n\n## Milyen problémát old meg?\n\nA codebase compile-olhat úgy is, hogy unsafe data `any`-n keresztül terjed. A strictness korábban láthatóvá teszi a missing case-t és nullabilityt.\n\n## Hogyan működik?\n\n- Új code-nál strict mode, legacy migrationnál fokozatos bevezetés.\n- Untrusted value `unknown` legyen.\n- Elkerülhetetlen `any` izolált compatibility boundaryn maradjon.\n- Exhaustiveness checkhez `never` használható.\n- `null` és `undefined` legyen explicit.\n\n## Gyakori hibák\n\n- Compiler errort `any` segítségével eltüntetni.\n- Az `unknown`-t kényelmetlen `any`-nak tekinteni.\n- Runtime validationt várni TypeScripttől.\n- Non-null assertiont túlhasználni.\n\n## Kulcsfogalmak\n\n- strict mode — erősebb compiler checkek\n- any — type checking kikapcsolása\n- unknown — narrowingot igényel\n- never — impossible value vagy path"
+        }
+      }
+    },
+    {
+      "id": "ts_unions_discriminated",
+      "name": "Union Types and Discriminated Unions",
+      "description": "Representing alternatives explicitly and narrowing them safely.",
+      "category": "core",
+      "importance": 4,
+      "relatedTopicIds": [
+        "ts_strict_unknown_any_never",
+        "ts_generics_utility_types"
+      ],
+      "studyNotes": "## What is it?\n\nA union describes one of several types. A discriminated union adds a common literal field such as `status` so each variant can be narrowed safely.\n\n## What problem does it solve?\n\nSeveral optional fields often permit impossible combinations such as success data and an error at the same time.\n\n## How it works\n\n- Define one type per valid variant.\n- Add a stable literal discriminant.\n- Narrow with switch or equality checks.\n- Use a `never` check for exhaustiveness.\n- Align variants with real domain states.\n\n## Common mistakes\n\n- Replacing a state machine with unrelated booleans.\n- Making the discriminant optional.\n- Forgetting a new variant in one consumer.\n\n## Key terms\n\n- union — one of several types\n- discriminant — literal field identifying the variant\n- narrowing — proving which member is present\n- exhaustiveness — handling every variant",
+      "i18n": {
+        "hu": {
+          "name": "Union Types és Discriminated Unions",
+          "description": "Alternatív state-ek explicit és safely narrowolható modellezése.",
+          "studyNotes": "## Mi ez?\n\nA union több type egyikét írja le. A discriminated union közös literal fieldet ad, például `status`-t, így safe narrowing lehetséges.\n\n## Milyen problémát old meg?\n\nTöbb optional field könnyen impossible combinationt enged, például egyszerre success data és error.\n\n## Hogyan működik?\n\n- Minden valid varianthoz külön type készüljön.\n- Legyen stabil literal discriminant.\n- `switch` vagy equality check alapján narrowolj.\n- Exhaustivenesshez `never` check használható.\n- A variant valós domain state-et jelentsen.\n\n## Gyakori hibák\n\n- State machine helyett unrelated booleant használni.\n- A discriminantet optional fielddé tenni.\n- Új variantnál egy consumert kihagyni.\n\n## Kulcsfogalmak\n\n- union — több type egyike\n- discriminant — variantot azonosító literal field\n- narrowing — annak bizonyítása, melyik member van jelen\n- exhaustiveness — minden variant kezelése"
+        }
+      }
+    },
+    {
+      "id": "ts_generics_utility_types",
+      "name": "Generics and Utility Types",
+      "description": "Preserving relationships between types without duplicating declarations.",
+      "category": "core",
+      "importance": 4,
+      "relatedTopicIds": [
+        "ts_unions_discriminated",
+        "ts_structural_typing"
+      ],
+      "studyNotes": "## What is it?\n\nGenerics parameterize types and functions so input-output relationships remain precise. Utility types transform existing declarations.\n\n## What problem does it solve?\n\nWithout generics, reusable APIs often fall back to `any`, broad unions, or duplicate types.\n\n## How it works\n\n- Introduce a type parameter when the same unknown type appears in several related positions.\n- Add constraints only when implementation needs them.\n- Prefer inference.\n- Use `Pick`, `Omit`, `Partial`, `Readonly`, `Record`, and similar utilities for mechanical transformations.\n- Use named domain types when meaning matters.\n\n## Common mistakes\n\n- Adding a generic used only once.\n- Building unreadable nested utility chains.\n- Using `Partial` for updates without defining allowed changes.\n\n## Key terms\n\n- type parameter — placeholder type\n- constraint — requirement on a parameter\n- inference — compiler derives a type argument\n- utility type — reusable type transformation",
+      "i18n": {
+        "hu": {
+          "name": "Generics és Utility Types",
+          "description": "Type relationship megőrzése `any` és declaration duplikálás nélkül.",
+          "studyNotes": "## Mi ez?\n\nA generic type vagy function type parametert kap, így az input-output relationship pontos marad. A utility type meglévő declarationt transformál.\n\n## Milyen problémát old meg?\n\nGeneric nélkül a reusable API gyakran `any`, broad union vagy duplicate type lesz.\n\n## Hogyan működik?\n\n- Type parametert akkor vezess be, ha ugyanaz az ismeretlen type több related pozícióban szerepel.\n- Constraint csak valódi implementation requirementre legyen.\n- Használd az inference-t.\n- Mechanical transformationhöz `Pick`, `Omit`, `Partial`, `Readonly`, `Record` használható.\n- Meaningful business concepthez named domain type kell.\n\n## Gyakori hibák\n\n- Csak egyszer használt generic parametert készíteni.\n- Olvashatatlan nested utility chainnel modellezni.\n- Update type-hoz vakon `Partial`-t használni.\n\n## Kulcsfogalmak\n\n- type parameter — placeholder type\n- constraint — type parameter követelménye\n- inference — compiler számolja a type argumentet\n- utility type — reusable type transformation"
+        }
+      }
+    },
+    {
+      "id": "ts_structural_typing",
+      "name": "Structural Typing",
+      "description": "Compatibility based on available members rather than nominal identity.",
+      "category": "core",
+      "importance": 3,
+      "relatedTopicIds": [
+        "ts_generics_utility_types",
+        "js_prototype_inheritance"
+      ],
+      "studyNotes": "## What is it?\n\nTypeScript is primarily structurally typed: compatibility depends on required members, not where a type was declared.\n\n## What problem does it solve?\n\nThis makes adapters and tests flexible, but domain identifiers with the same primitive shape can be mixed accidentally.\n\n## How it works\n\n- Interfaces describe capabilities rather than runtime ancestry.\n- Fresh object literals receive excess-property checks.\n- Use branded types or private members when nominal separation is required.\n- Runtime `instanceof` is separate from compile-time compatibility.\n- Keep public contracts minimal.\n\n## Common mistakes\n\n- Assuming `implements` changes runtime behaviour.\n- Expecting interfaces at runtime.\n- Mixing customer IDs and order IDs because both are strings.\n\n## Key terms\n\n- structural typing — compatibility by shape\n- nominal typing — compatibility by declared identity\n- excess-property check — fresh-object extra-field check\n- branded type — structural type with an identity marker",
+      "i18n": {
+        "hu": {
+          "name": "Structural Typing",
+          "description": "A compatibility member shape alapján dől el, nem declared identity alapján.",
+          "studyNotes": "## Mi ez?\n\nA TypeScript elsősorban structurally typed: a compatibility a required member shape-től függ, nem attól, hol deklarálták a type-ot.\n\n## Milyen problémát old meg?\n\nEz rugalmas adaptert és testet ad, de azonos primitive shape-ű domain ID-k véletlenül összekeverhetők.\n\n## Hogyan működik?\n\n- Az interface capabilityt ír le, nem runtime ancestryt.\n- Fresh object literal excess-property checket kap.\n- Nominal separationhöz branded type vagy private member használható.\n- Runtime `instanceof` különbözik a compile-time compatibilitytől.\n- Public contract legyen minimális.\n\n## Gyakori hibák\n\n- Azt hinni, hogy `implements` runtime behaviourt ad.\n- Interface checket runtime-ban várni.\n- Customer ID-t és order ID-t összekeverni, mert mindkettő string.\n\n## Kulcsfogalmak\n\n- structural typing — shape alapú compatibility\n- nominal typing — declared identity alapú compatibility\n- excess-property check — fresh object extra-field check\n- branded type — identity markerrel ellátott structural type"
+        }
+      }
+    },
+    {
+      "id": "ts_runtime_validation",
+      "name": "TypeScript and Runtime Validation",
+      "description": "Validating untrusted data before treating it as a typed internal value.",
+      "category": "core",
+      "importance": 5,
+      "relatedTopicIds": [
+        "ts_strict_unknown_any_never",
+        "js_modules_bundling"
+      ],
+      "studyNotes": "## What is it?\n\nTypeScript types disappear at compile time. HTTP, storage, queues, environment variables, and third-party data still require runtime validation.\n\n## What problem does it solve?\n\nCasting JSON to an interface only silences the compiler; it does not prove the data is valid.\n\n## How it works\n\n- Accept external data as `unknown`.\n- Validate shape, types, ranges, formats, and cross-field rules.\n- Map validated DTOs into internal domain models.\n- Return structured boundary errors.\n- Version and test schemas as contracts.\n\n## Common mistakes\n\n- Using `as SomeType` as validation.\n- Validating HTTP but trusting queues or environment variables.\n- Sharing one type across DTO, persistence, and domain layers.\n\n## Key terms\n\n- runtime validation — checking values while the program runs\n- DTO — boundary data shape\n- schema — machine-readable validation contract\n- type assertion — compiler instruction with no runtime check",
+      "i18n": {
+        "hu": {
+          "name": "TypeScript és Runtime Validation",
+          "description": "Untrusted data ellenőrzése a typed internal domainbe kerülés előtt.",
+          "studyNotes": "## Mi ez?\n\nA TypeScript type compile során eltűnik. HTTP-ből, storage-ból, queue-ból, environment variable-ből vagy third-party source-ból érkező data runtime validationt igényel.\n\n## Milyen problémát old meg?\n\nJSON interface-re castolása csak a compilert hallgattatja el; a data validityjét nem bizonyítja.\n\n## Hogyan működik?\n\n- External data `unknown` legyen.\n- Validáld a shape-et, type-ot, range-et, formatot és cross-field rule-t.\n- Validated DTO-ból készíts internal domain modelt.\n- Structured boundary errort adj.\n- A schema contract, ezért versionölni és tesztelni kell.\n\n## Gyakori hibák\n\n- `as SomeType` használata validation helyett.\n- HTTP-t validálni, queue-t vagy environment variable-t vakon elhinni.\n- Ugyanazt a type-ot használni DTO, persistence és domain layeren.\n\n## Kulcsfogalmak\n\n- runtime validation — real value ellenőrzése futás közben\n- DTO — boundary data shape\n- schema — machine-readable validation contract\n- type assertion — runtime check nélküli compiler instruction"
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "js_closure_lifecycle_001",
+      "title": "Closure state and lifecycle",
+      "prompt": "A callback continues to read old state and also keeps a large object alive after the feature is closed. Explain how closures can cause both problems and how you would fix them.",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "js_closures",
+        "js_memory_gc_leaks"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain lexical capture, distinguish stale logical state from retained memory, then describe cleanup or a clearer data flow.",
+      "expectedPoints": [
+        {
+          "id": "js_closure_capture",
+          "label": "Explains lexical capture",
+          "description": "The callback keeps access to bindings from its creation environment; it does not automatically receive fresh logical state.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "lexical environment",
+            "closure captures bindings",
+            "created in outer scope",
+            "retains access"
+          ]
+        },
+        {
+          "id": "js_closure_stale",
+          "label": "Explains stale state",
+          "description": "Identifies an older render or logical state and suggests explicit parameters, correct dependencies, or a current reference.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "stale closure",
+            "explicit parameter",
+            "latest state",
+            "dependency list",
+            "current reference"
+          ]
+        },
+        {
+          "id": "js_closure_memory",
+          "label": "Explains retained memory",
+          "description": "Recognizes that listeners, timers, or caches can keep the closure and its referenced object graph reachable.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "event listener",
+            "timer",
+            "retained reference",
+            "object graph",
+            "memory leak"
+          ]
+        },
+        {
+          "id": "js_closure_cleanup",
+          "label": "Adds lifecycle cleanup",
+          "description": "Removes listeners, cancels timers, clears caches, or restructures ownership when the feature closes.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "remove listener",
+            "cancel timer",
+            "clear cache",
+            "cleanup",
+            "release reference"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "js_closure_followup_factory",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give a positive example where a closure is the cleanest design.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Closure state és lifecycle",
+          "prompt": "Egy callback régi state-et olvas, és a feature bezárása után is életben tart egy nagy objectet. Hogyan okozhat closure mindkét problémát, és hogyan javítanád?",
+          "answerStructureHint": "Lexical capture, stale logical state és retained memory szétválasztása, majd cleanup vagy tisztább data flow.",
+          "expectedPoints": {
+            "js_closure_capture": {
+              "label": "Elmagyarázza a lexical capture-t",
+              "description": "A callback a létrehozási environment bindingjaihoz fér hozzá; nem kap automatikusan friss logical state-et."
+            },
+            "js_closure_stale": {
+              "label": "Elmagyarázza a stale state-et",
+              "description": "Régi render vagy logical state esetén explicit parameter, megfelelő dependency vagy current reference kerül elő."
+            },
+            "js_closure_memory": {
+              "label": "Elmagyarázza a retained memoryt",
+              "description": "Listener, timer vagy cache életben tarthatja a closure-t és a hozzá tartozó object graphet."
+            },
+            "js_closure_cleanup": {
+              "label": "Lifecycle cleanupot ad",
+              "description": "Listener removal, timer cancellation, cache clearing vagy ownership átalakítás szerepel."
+            }
+          },
+          "followUps": {
+            "js_closure_followup_factory": "Mondj pozitív példát, amikor closure a legtisztább design."
+          }
+        }
+      }
+    },
+    {
+      "id": "js_hoisting_review_001",
+      "title": "Reviewing a hoisting bug",
+      "prompt": "A module reads one variable before its declaration and gets a ReferenceError, while an older variable in similar code produced undefined. Explain the difference without saying JavaScript simply moves lines to the top.",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "js_hoisting_tdz",
+        "js_scope_execution_context"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare binding creation and initialization for var, let/const, classes, function declarations, and function expressions.",
+      "expectedPoints": [
+        {
+          "id": "js_hoist_binding",
+          "label": "Separates binding creation from initialization",
+          "description": "Bindings are prepared before execution but become usable under different initialization rules.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "binding creation",
+            "initialization",
+            "before execution",
+            "declaration processing"
+          ]
+        },
+        {
+          "id": "js_hoist_var",
+          "label": "Explains var behaviour",
+          "description": "`var` is function-scoped and initialized to undefined at scope entry.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "var initialized to undefined",
+            "function scoped",
+            "early access returns undefined",
+            "scope entry"
+          ]
+        },
+        {
+          "id": "js_hoist_tdz_point",
+          "label": "Explains the TDZ",
+          "description": "`let`, `const`, and classes cannot be accessed until their declaration initializes them.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "temporal dead zone",
+            "let const",
+            "referenceerror",
+            "before initialization"
+          ]
+        },
+        {
+          "id": "js_hoist_functions",
+          "label": "Distinguishes function forms",
+          "description": "Function declarations initialize early; function expressions follow their variable binding.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "function declaration",
+            "function expression",
+            "call before declaration",
+            "variable rules"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "js_hoist_followup_module",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How does module scope reduce accidental global-variable problems?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hoisting bug felülvizsgálata",
+          "prompt": "Egy module declaration előtt olvas egy variable-t és ReferenceErrort kap, míg hasonló régi code `undefined`-ot adott. Magyarázd el a különbséget anélkül, hogy azt mondanád, a JavaScript felmozgatja a sorokat.",
+          "answerStructureHint": "Binding creation és initialization összehasonlítása `var`, `let/const`, class és function formák esetén.",
+          "expectedPoints": {
+            "js_hoist_binding": {
+              "label": "Elkülöníti a binding creationt és initializationt",
+              "description": "A binding execution előtt létrejön, de a declarationök eltérő szabály szerint válnak használhatóvá."
+            },
+            "js_hoist_var": {
+              "label": "Elmagyarázza a `var` működését",
+              "description": "A `var` function-scoped és scope entrykor `undefined`-dal initialized."
+            },
+            "js_hoist_tdz_point": {
+              "label": "Elmagyarázza a TDZ-t",
+              "description": "A `let`, `const` és class initialization előtt nem érhető el."
+            },
+            "js_hoist_functions": {
+              "label": "Elkülöníti a function formákat",
+              "description": "A function declaration korán initialized, a function expression a variable szabályait követi."
+            }
+          },
+          "followUps": {
+            "js_hoist_followup_module": "Hogyan csökkenti a module scope az accidental global variable problémát?"
+          }
+        }
+      }
+    },
+    {
+      "id": "js_this_callback_001",
+      "title": "A method loses its this value",
+      "prompt": "An object method works when called directly but fails when passed as a callback. Why, and what fixes would you consider?",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "js_this_binding"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain call-site binding first, then compare bind, wrapper functions, and arrow-function design.",
+      "expectedPoints": [
+        {
+          "id": "js_this_callsite",
+          "label": "Explains call-site binding",
+          "description": "A regular function receiver comes from how it is called, and the callback call no longer has the original receiver.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "call site",
+            "receiver",
+            "method call",
+            "plain function call",
+            "loses this"
+          ]
+        },
+        {
+          "id": "js_this_bind",
+          "label": "Offers explicit binding",
+          "description": "Uses `bind` when a stable receiver must be preserved.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "bind",
+            "explicit binding",
+            "bound function",
+            "stable receiver"
+          ]
+        },
+        {
+          "id": "js_this_wrapper",
+          "label": "Offers an explicit wrapper",
+          "description": "Uses a wrapper callback that calls the method through the object.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "wrapper function",
+            "call object method",
+            "preserve receiver",
+            "arrow callback"
+          ]
+        },
+        {
+          "id": "js_this_tradeoff",
+          "label": "Discusses arrow-function trade-offs",
+          "description": "Explains lexical this without claiming arrow functions are universally better methods.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "lexical this",
+            "arrow function",
+            "prototype method",
+            "trade off"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "js_this_followup_bind",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What are the trade-offs of binding every instance method in a constructor?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy method elveszíti a `this` értékét",
+          "prompt": "Egy object method direct call esetén működik, callbackként átadva viszont elbukik. Miért, és milyen javításokat mérlegelnél?",
+          "answerStructureHint": "Először call-site binding, majd `bind`, wrapper function és arrow-function trade-off.",
+          "expectedPoints": {
+            "js_this_callsite": {
+              "label": "Elmagyarázza a call-site bindingot",
+              "description": "Regular function receiverét a call style adja; callback callnál már nincs meg az eredeti object receiver."
+            },
+            "js_this_bind": {
+              "label": "Explicit bindingot javasol",
+              "description": "Stabil receiver megőrzéséhez `bind` használatát említi."
+            },
+            "js_this_wrapper": {
+              "label": "Explicit wrappert javasol",
+              "description": "A wrapper az objecten keresztül hívja a methodot, így a receiver egyértelmű."
+            },
+            "js_this_tradeoff": {
+              "label": "Arrow-function trade-offot ismer",
+              "description": "Elmagyarázza a lexical `this`-t, de nem állítja, hogy arrow minden methodhoz jobb."
+            }
+          },
+          "followUps": {
+            "js_this_followup_bind": "Mi a trade-offja annak, ha minden instance methodot constructorban bindolunk?"
+          }
+        }
+      }
+    },
+    {
+      "id": "js_collection_choice_001",
+      "title": "Choosing Object, Map, Set, or WeakMap",
+      "prompt": "You need a fixed user record, a dynamic cache keyed by objects, and a collection of unique selected IDs. Choose the appropriate JavaScript collections and justify each choice.",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "js_object_map_set_weak",
+        "js_memory_gc_leaks"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Match each requirement to record shape, key type, membership semantics, serialization, and lifetime.",
+      "expectedPoints": [
+        {
+          "id": "js_col_record",
+          "label": "Chooses Object for the record",
+          "description": "Uses an object for fixed named fields and straightforward JSON representation.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "fixed shape",
+            "plain object",
+            "record",
+            "json serialization"
+          ]
+        },
+        {
+          "id": "js_col_cache",
+          "label": "Chooses WeakMap for the object-keyed cache",
+          "description": "Uses WeakMap when entries should disappear with the key object lifetime.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "weakmap",
+            "object keyed cache",
+            "garbage collection",
+            "does not retain key"
+          ]
+        },
+        {
+          "id": "js_col_unique",
+          "label": "Chooses Set for unique IDs",
+          "description": "Uses Set for membership and deduplication.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "set",
+            "unique values",
+            "membership",
+            "deduplication"
+          ]
+        },
+        {
+          "id": "js_col_limits",
+          "label": "Mentions collection limitations",
+          "description": "Notes that WeakMap is not enumerable and Map requires explicit JSON conversion.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "weakmap not iterable",
+            "no size",
+            "map json conversion",
+            "limitations"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "js_col_followup_map",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would a regular Map be better than WeakMap for the cache?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Object, Map, Set vagy WeakMap választása",
+          "prompt": "Kell egy fixed user record, object key-jű dynamic cache és unique selected ID collection. Válaszd ki a megfelelő JavaScript collectionöket, és indokold.",
+          "answerStructureHint": "Record shape, key type, membership semantics, serialization és lifetime alapján válassz.",
+          "expectedPoints": {
+            "js_col_record": {
+              "label": "Objectet választ a recordhoz",
+              "description": "Fixed named field és egyszerű JSON representation miatt plain objectet használ."
+            },
+            "js_col_cache": {
+              "label": "WeakMapet választ az object-keyed cache-hez",
+              "description": "A cache entry az object lifetime-jával együtt eltűnhet, és nem tartja életben a key-t."
+            },
+            "js_col_unique": {
+              "label": "Setet választ unique ID-khoz",
+              "description": "Membership és deduplication miatt Setet használ."
+            },
+            "js_col_limits": {
+              "label": "Megemlíti a limitationöket",
+              "description": "A WeakMap nem enumerable és nincs size; a Map explicit JSON conversiont igényel."
+            }
+          },
+          "followUps": {
+            "js_col_followup_map": "Mikor lenne regular Map jobb választás a cache-hez, mint WeakMap?"
+          }
+        }
+      }
+    },
+    {
+      "id": "js_equality_boundary_001",
+      "title": "Equality and coercion at an input boundary",
+      "prompt": "A form treats empty string, zero, false, null, and undefined as the same missing value. Explain why this is dangerous and how you would validate the input.",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "js_equality_coercion",
+        "js_value_reference"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate strict equality, truthiness, and nullish checks, then define explicit parsing and validation rules.",
+      "expectedPoints": [
+        {
+          "id": "js_eq_truthy",
+          "label": "Explains truthiness risk",
+          "description": "Recognizes that broad falsy checks collapse valid zero, false, and empty-string cases.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "truthiness",
+            "falsy values",
+            "zero is valid",
+            "false is valid",
+            "empty string"
+          ]
+        },
+        {
+          "id": "js_eq_strict",
+          "label": "Uses explicit comparison",
+          "description": "Prefers strict equality and explicit nullish checks for the intended semantics.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "strict equality",
+            "explicit comparison",
+            "null undefined",
+            "nullish check"
+          ]
+        },
+        {
+          "id": "js_eq_parse",
+          "label": "Parses external data explicitly",
+          "description": "Separates string input from numeric or boolean domain values through parsing and validation.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "parse input",
+            "runtime validation",
+            "numeric string",
+            "boolean parsing",
+            "boundary"
+          ]
+        },
+        {
+          "id": "js_eq_error",
+          "label": "Returns meaningful validation errors",
+          "description": "Distinguishes missing, malformed, and out-of-range values.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "missing value",
+            "malformed input",
+            "out of range",
+            "structured validation error"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "js_eq_followup_loose",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Is there any reasonable use of `x == null`?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Equality és coercion egy input boundaryn",
+          "prompt": "Egy form az empty string, zero, false, null és undefined értékeket ugyanannak a missing value-nak kezeli. Miért veszélyes ez, és hogyan validálnád?",
+          "answerStructureHint": "Strict equality, truthiness és nullish check szétválasztása, majd explicit parsing és validation.",
+          "expectedPoints": {
+            "js_eq_truthy": {
+              "label": "Elmagyarázza a truthiness kockázatát",
+              "description": "A broad falsy check valid zero, false és empty-string eseteket is összemos."
+            },
+            "js_eq_strict": {
+              "label": "Explicit comparisont használ",
+              "description": "Strict equalityt és célzott nullish checket használ a kívánt semanticshez."
+            },
+            "js_eq_parse": {
+              "label": "Explicit parse-olja az external data-t",
+              "description": "A string inputot parsing és validation után alakítja numeric vagy boolean domain value-vá."
+            },
+            "js_eq_error": {
+              "label": "Meaningful validation errort ad",
+              "description": "Elkülöníti a missing, malformed és out-of-range value-t."
+            }
+          },
+          "followUps": {
+            "js_eq_followup_loose": "Van-e ésszerű használata az `x == null` formának?"
+          }
+        }
+      }
+    },
+    {
+      "id": "js_mutation_bug_001",
+      "title": "A shallow copy still changes the original",
+      "prompt": "A developer copies an object with spread, changes a nested field, and unexpectedly changes the original state too. Explain why and propose a safe update.",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "js_value_reference",
+        "js_immutability_copying"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain reference aliasing and shallow depth, then copy only the changed path.",
+      "expectedPoints": [
+        {
+          "id": "js_mut_shallow",
+          "label": "Explains shallow copy depth",
+          "description": "Spread creates a new top-level object but nested references remain shared.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "shallow copy",
+            "nested reference",
+            "shared object",
+            "top level only"
+          ]
+        },
+        {
+          "id": "js_mut_alias",
+          "label": "Explains aliasing",
+          "description": "Both outer objects still reach the same nested object.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "same nested object",
+            "alias",
+            "shared reference",
+            "mutation affects original"
+          ]
+        },
+        {
+          "id": "js_mut_update",
+          "label": "Proposes a path copy",
+          "description": "Creates new objects along the changed path and reuses unchanged subtrees.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "copy changed path",
+            "nested spread",
+            "structural sharing",
+            "immutable update"
+          ]
+        },
+        {
+          "id": "js_mut_tradeoff",
+          "label": "Avoids blind deep cloning",
+          "description": "Notes the cost and semantic limitations of full deep clones.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "avoid deep clone",
+            "structuredclone",
+            "performance cost",
+            "special object types"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "js_mut_followup_ownership",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is direct mutation acceptable and simpler?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "A shallow copy mégis módosítja az original state-et",
+          "prompt": "A developer spreaddel másol egy objectet, módosít egy nested fieldet, és az original state is megváltozik. Miért, és mi a safe update?",
+          "answerStructureHint": "Shared reference és shallow depth, majd csak a changed path másolása.",
+          "expectedPoints": {
+            "js_mut_shallow": {
+              "label": "Elmagyarázza a shallow copy depth-et",
+              "description": "A spread új top-level objectet készít, de a nested reference továbbra is közös."
+            },
+            "js_mut_alias": {
+              "label": "Elmagyarázza az aliasingot",
+              "description": "Mindkét outer object ugyanazt a nested objectet éri el."
+            },
+            "js_mut_update": {
+              "label": "Path copyt javasol",
+              "description": "A changed path mentén készít új objecteket, az unchanged subtree-ket reuse-olja."
+            },
+            "js_mut_tradeoff": {
+              "label": "Nem javasol vak deep clone-t",
+              "description": "Megemlíti a full deep clone costját és semantic limitationjeit."
+            }
+          },
+          "followUps": {
+            "js_mut_followup_ownership": "Mikor elfogadható és egyszerűbb a direct mutation?"
+          }
+        }
+      }
+    },
+    {
+      "id": "js_event_loop_freeze_001",
+      "title": "The UI freezes despite async syntax",
+      "prompt": "A browser function is declared async but performs a large synchronous transformation before its first await. The page freezes. Explain why and how you would redesign it.",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "js_event_loop",
+        "js_promises_async_await"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate async syntax from parallel CPU work, then discuss chunking, workers, and measurement.",
+      "expectedPoints": [
+        {
+          "id": "js_loop_sync",
+          "label": "Explains synchronous execution before await",
+          "description": "The function runs synchronously on the main thread until an actual suspension point.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "before first await",
+            "runs synchronously",
+            "main thread",
+            "call stack"
+          ]
+        },
+        {
+          "id": "js_loop_cpu",
+          "label": "Explains that async is not parallel CPU execution",
+          "description": "CPU-heavy work still blocks the event loop.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "async does not make parallel",
+            "cpu heavy",
+            "blocks event loop",
+            "ui freeze"
+          ]
+        },
+        {
+          "id": "js_loop_fix",
+          "label": "Proposes an appropriate redesign",
+          "description": "Moves work to a Web Worker or splits it into smaller tasks.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "web worker",
+            "split into chunks",
+            "yield to event loop",
+            "offload cpu"
+          ]
+        },
+        {
+          "id": "js_loop_measure",
+          "label": "Measures the effect",
+          "description": "Uses long-task or performance profiling instead of guessing.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "performance profile",
+            "long task",
+            "event loop lag",
+            "measure responsiveness"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "js_loop_followup_microtask",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can repeatedly scheduling more microtasks still starve rendering?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Az UI async syntax mellett is lefagy",
+          "prompt": "Egy browser function `async`, de az első `await` előtt nagy synchronous transformationt futtat. A page lefagy. Miért, és hogyan terveznéd át?",
+          "answerStructureHint": "Async syntax és parallel CPU work szétválasztása, majd chunking, worker és measurement.",
+          "expectedPoints": {
+            "js_loop_sync": {
+              "label": "Elmagyarázza az `await` előtti synchronous futást",
+              "description": "A function az első valódi suspension pointig main threaden fut."
+            },
+            "js_loop_cpu": {
+              "label": "Elmagyarázza, hogy async nem parallel CPU execution",
+              "description": "A CPU-heavy work továbbra is blokkolja az event loopot."
+            },
+            "js_loop_fix": {
+              "label": "Megfelelő redesign-t javasol",
+              "description": "Web Workerbe teszi, vagy kisebb taskokra bontja a worköt."
+            },
+            "js_loop_measure": {
+              "label": "Méri a hatást",
+              "description": "Performance profile, long-task vagy responsiveness signal alapján dönt."
+            }
+          },
+          "followUps": {
+            "js_loop_followup_microtask": "Miért starvingolhatja a renderinget a folyamatosan új microtaskot schedule-ölő code?"
+          }
+        }
+      }
+    },
+    {
+      "id": "js_promise_aggregation_001",
+      "title": "Fetching several independent dependencies",
+      "prompt": "A page needs data from four independent APIs. Sometimes one optional API fails. Compare sequential await, Promise.all, and Promise.allSettled, then choose a design.",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "js_promises_async_await",
+        "js_async_composition"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Start with dependency relationships, then choose concurrency and failure semantics for required versus optional data.",
+      "expectedPoints": [
+        {
+          "id": "js_prom_independent",
+          "label": "Identifies independent work",
+          "description": "Runs independent calls concurrently instead of waiting sequentially.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "independent operations",
+            "run concurrently",
+            "avoid sequential await",
+            "parallel requests"
+          ]
+        },
+        {
+          "id": "js_prom_all",
+          "label": "Explains Promise.all",
+          "description": "Uses Promise.all when every result is required and fail-fast semantics are correct.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "promise.all",
+            "all required",
+            "fail fast",
+            "one rejection"
+          ]
+        },
+        {
+          "id": "js_prom_settled",
+          "label": "Explains allSettled",
+          "description": "Uses allSettled or separate handling when optional results may fail.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "allsettled",
+            "inspect every outcome",
+            "optional dependency",
+            "partial result"
+          ]
+        },
+        {
+          "id": "js_prom_cancel",
+          "label": "Mentions cancellation and timeout",
+          "description": "Notes that group rejection does not cancel underlying work.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "does not cancel",
+            "abortcontroller",
+            "timeout",
+            "cancel requests"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "js_prom_followup_limit",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would the design change if there were 5,000 items instead of four APIs?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Több independent dependency lekérése",
+          "prompt": "Egy page négy independent API adatait használja. Egy optional API néha elbukik. Hasonlítsd össze a sequential await, `Promise.all` és `Promise.allSettled` megoldást, majd válassz designt.",
+          "answerStructureHint": "Dependency relationship, concurrency és failure semantics required és optional data esetén.",
+          "expectedPoints": {
+            "js_prom_independent": {
+              "label": "Felismeri az independent worköt",
+              "description": "Az independent callokat concurrent futtatja, nem sequential awaiteli."
+            },
+            "js_prom_all": {
+              "label": "Elmagyarázza a `Promise.all` működését",
+              "description": "Akkor használja, ha minden result required és fail-fast kell."
+            },
+            "js_prom_settled": {
+              "label": "Elmagyarázza az `allSettled` használatát",
+              "description": "Optional failure esetén minden outcome-ot külön vizsgál, és megtartja a required data-t."
+            },
+            "js_prom_cancel": {
+              "label": "Megemlíti a cancellationt és timeoutot",
+              "description": "A group rejection nem cancelöli az underlying requesteket."
+            }
+          },
+          "followUps": {
+            "js_prom_followup_limit": "Hogyan változna a design, ha négy API helyett 5000 itemet kellene feldolgozni?"
+          }
+        }
+      }
+    },
+    {
+      "id": "js_memory_leak_001",
+      "title": "Investigating gradual browser memory growth",
+      "prompt": "A single-page application becomes slower after hours of navigation, and memory never returns to its earlier level. How would you investigate likely JavaScript leaks?",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "js_memory_gc_leaks",
+        "js_closures",
+        "js_object_map_set_weak"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Confirm the trend, inspect retained paths, then check lifecycle owners such as listeners, timers, subscriptions, and caches.",
+      "expectedPoints": [
+        {
+          "id": "js_mem_trend",
+          "label": "Confirms a real growth trend",
+          "description": "Repeats navigation and observes memory after collection instead of relying on one sample.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "memory trend",
+            "repeat navigation",
+            "after garbage collection",
+            "baseline comparison"
+          ]
+        },
+        {
+          "id": "js_mem_profile",
+          "label": "Uses memory tooling",
+          "description": "Compares heap snapshots or allocation profiles and follows retained paths.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "heap snapshot",
+            "allocation profile",
+            "retained path",
+            "compare snapshots"
+          ]
+        },
+        {
+          "id": "js_mem_sources",
+          "label": "Checks common lifecycle leaks",
+          "description": "Inspects listeners, timers, subscriptions, detached DOM, closures, and unbounded caches.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "event listeners",
+            "timers",
+            "subscriptions",
+            "detached dom",
+            "unbounded cache",
+            "closures"
+          ]
+        },
+        {
+          "id": "js_mem_fix",
+          "label": "Fixes ownership and bounds",
+          "description": "Adds cleanup, cancellation, bounded caches, or weak collections where appropriate.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "cleanup",
+            "cancel subscription",
+            "bounded cache",
+            "weakmap",
+            "release references"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "js_mem_followup_weak",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why is WeakMap not a universal replacement for Map in leak prevention?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Fokozatos browser memory growth vizsgálata",
+          "prompt": "Egy single-page application több óra navigation után lassul, és a memory nem tér vissza a korábbi szintre. Hogyan vizsgálnád a JavaScript leaket?",
+          "answerStructureHint": "Trend igazolása, retained path, majd listener, timer, subscription és cache lifecycle.",
+          "expectedPoints": {
+            "js_mem_trend": {
+              "label": "Igazolja a valódi growth trendet",
+              "description": "Ismételt navigation és GC utáni állapot alapján dönt, nem egyetlen sample-ből."
+            },
+            "js_mem_profile": {
+              "label": "Memory toolingot használ",
+              "description": "Heap snapshotot vagy allocation profile-t hasonlít össze, és retained pathot keres."
+            },
+            "js_mem_sources": {
+              "label": "Tipikus lifecycle leaket vizsgál",
+              "description": "Listener, timer, subscription, detached DOM, closure és unbounded cache szerepel."
+            },
+            "js_mem_fix": {
+              "label": "Ownershipot és limitet javít",
+              "description": "Cleanup, cancellation, bounded cache vagy megfelelő weak collection kerül be."
+            }
+          },
+          "followUps": {
+            "js_mem_followup_weak": "Miért nem univerzális Map-helyettesítő a WeakMap leak prevention célra?"
+          }
+        }
+      }
+    },
+    {
+      "id": "js_debounce_throttle_001",
+      "title": "Debounce or throttle",
+      "prompt": "Choose between debounce and throttle for a search field, scroll-position updates, and drag feedback. Explain timing and cleanup concerns.",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "js_debounce_throttle",
+        "js_event_loop"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Choose by whether the final value or continuous bounded feedback matters, then mention edges, cancellation, and stale work.",
+      "expectedPoints": [
+        {
+          "id": "js_dt_search",
+          "label": "Uses debounce for search",
+          "description": "Waits for a quiet period when only the latest text matters.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "debounce search",
+            "quiet period",
+            "latest value",
+            "avoid repeated api calls"
+          ]
+        },
+        {
+          "id": "js_dt_scroll",
+          "label": "Uses throttle for continuous updates",
+          "description": "Limits scroll or drag feedback while movement continues.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "throttle scroll",
+            "drag updates",
+            "limit frequency",
+            "continuous feedback"
+          ]
+        },
+        {
+          "id": "js_dt_edges",
+          "label": "Discusses leading and trailing execution",
+          "description": "Chooses whether the first, last, or both calls should run.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "leading edge",
+            "trailing edge",
+            "first call",
+            "final call"
+          ]
+        },
+        {
+          "id": "js_dt_cleanup",
+          "label": "Handles cleanup and stale requests",
+          "description": "Cancels pending callbacks and aborts or ignores obsolete network results.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "cancel pending",
+            "cleanup",
+            "abort stale request",
+            "ignore stale response"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "js_dt_followup_render",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can recreating the debounced function on every render break the intended behaviour?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Debounce vagy throttle",
+          "prompt": "Válassz debounce vagy throttle megoldást search fieldhez, scroll-position update-hez és drag feedbackhez. Magyarázd el a timingot és cleanupot.",
+          "answerStructureHint": "Final value vagy continuous bounded feedback, majd edges, cancellation és stale work.",
+          "expectedPoints": {
+            "js_dt_search": {
+              "label": "Debounce-ot használ searchhöz",
+              "description": "Quiet period után fut, amikor csak a latest text számít."
+            },
+            "js_dt_scroll": {
+              "label": "Throttle-t használ continuous update-hez",
+              "description": "Scroll vagy drag alatt hasznos frequencyre korlátozza a feedbacket."
+            },
+            "js_dt_edges": {
+              "label": "Beszél leading és trailing executionről",
+              "description": "Eldönti, hogy az első, utolsó vagy mindkét call fusson."
+            },
+            "js_dt_cleanup": {
+              "label": "Kezeli a cleanupot és stale requestet",
+              "description": "Pending callbacket cancelöl, obsolete network resultot abortol vagy ignorál."
+            }
+          },
+          "followUps": {
+            "js_dt_followup_render": "Miért törheti el a behaviourt, ha minden renderben új debounced function készül?"
+          }
+        }
+      }
+    },
+    {
+      "id": "ts_boundary_validation_001",
+      "title": "TypeScript at an API boundary",
+      "prompt": "A team parses external JSON and immediately casts it to an internal interface. Why is this unsafe, and how would you design the boundary?",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "ts_runtime_validation",
+        "ts_strict_unknown_any_never"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain type erasure, accept unknown, validate the external DTO, then map into the domain model.",
+      "expectedPoints": [
+        {
+          "id": "ts_bound_erasure",
+          "label": "Explains type erasure",
+          "description": "TypeScript types and assertions do not validate runtime JSON.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "types erased",
+            "runtime json",
+            "type assertion no validation",
+            "compile time only"
+          ]
+        },
+        {
+          "id": "ts_bound_unknown",
+          "label": "Accepts untrusted data as unknown",
+          "description": "Uses unknown rather than any so values must be narrowed.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "unknown",
+            "untrusted data",
+            "narrow before use",
+            "avoid any"
+          ]
+        },
+        {
+          "id": "ts_bound_schema",
+          "label": "Adds runtime validation",
+          "description": "Checks shape, types, formats, ranges, and cross-field rules.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "runtime validation",
+            "schema",
+            "zod",
+            "json schema",
+            "field validation"
+          ]
+        },
+        {
+          "id": "ts_bound_mapping",
+          "label": "Separates DTO and domain model",
+          "description": "Maps validated boundary data into an internal model.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "dto",
+            "domain model",
+            "mapping",
+            "boundary type",
+            "internal type"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ts_bound_followup_output",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Should responses leaving your service also be runtime-validated? When is that worth the cost?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "TypeScript egy API boundaryn",
+          "prompt": "A team external JSON-t parse-ol, majd azonnal internal interface-re castolja. Miért unsafe, és hogyan terveznéd meg a boundaryt?",
+          "answerStructureHint": "Type erasure, `unknown`, external DTO runtime validation, majd domain mapping.",
+          "expectedPoints": {
+            "ts_bound_erasure": {
+              "label": "Elmagyarázza a type erasure-t",
+              "description": "A TypeScript type és assertion runtime JSON-t nem validál; csak compile-time segítség."
+            },
+            "ts_bound_unknown": {
+              "label": "Untrusted data-t `unknown`-ként fogad",
+              "description": "`any` helyett `unknown` miatt narrowing szükséges."
+            },
+            "ts_bound_schema": {
+              "label": "Runtime validationt ad",
+              "description": "Shape, type, format, range és cross-field rule ellenőrzött."
+            },
+            "ts_bound_mapping": {
+              "label": "Elkülöníti a DTO-t és domain modelt",
+              "description": "Validated boundary data-ból internal model készül."
+            }
+          },
+          "followUps": {
+            "ts_bound_followup_output": "A service-ből kifelé menő response-t is runtime-validálnád? Mikor éri meg?"
+          }
+        }
+      }
+    },
+    {
+      "id": "ts_state_model_001",
+      "title": "Modeling request state safely",
+      "prompt": "A UI state has optional data, error, loading, and completed flags, and impossible combinations keep appearing. Redesign the type.",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "ts_unions_discriminated",
+        "ts_strict_unknown_any_never"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Replace unrelated optionals and booleans with explicit variants, a discriminant, and exhaustive handling.",
+      "expectedPoints": [
+        {
+          "id": "ts_state_variants",
+          "label": "Defines explicit valid variants",
+          "description": "Creates idle, loading, success, and error states with only valid fields.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "idle loading success error",
+            "explicit variants",
+            "valid states",
+            "separate types"
+          ]
+        },
+        {
+          "id": "ts_state_discriminant",
+          "label": "Adds a discriminant",
+          "description": "Uses a stable literal status field to narrow the union.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "discriminated union",
+            "status field",
+            "literal type",
+            "narrowing"
+          ]
+        },
+        {
+          "id": "ts_state_exhaustive",
+          "label": "Handles variants exhaustively",
+          "description": "Uses switch and never-style checking so new states cannot be ignored.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "exhaustive switch",
+            "never check",
+            "all variants",
+            "compiler catches"
+          ]
+        },
+        {
+          "id": "ts_state_domain",
+          "label": "Keeps state semantics honest",
+          "description": "Avoids contradictory success, error, and loading combinations unless explicitly required.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "invalid state impossible",
+            "honest state",
+            "no conflicting flags",
+            "domain semantics"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ts_state_followup_refresh",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you model refreshing while old successful data remains visible?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Request state safe modellezése",
+          "prompt": "Egy UI state optional data, error, loading és completed flaget tartalmaz, ezért impossible combinationök jelennek meg. Tervezd újra a type-ot.",
+          "answerStructureHint": "Unrelated optional és boolean helyett explicit variant, discriminant és exhaustive handling.",
+          "expectedPoints": {
+            "ts_state_variants": {
+              "label": "Explicit valid variantokat definiál",
+              "description": "Idle, loading, success és error state készül, csak az adott state-ben valid fielddel."
+            },
+            "ts_state_discriminant": {
+              "label": "Discriminantet ad",
+              "description": "Stabil literal `status` field alapján narrowolható a union."
+            },
+            "ts_state_exhaustive": {
+              "label": "Exhaustive módon kezeli a variantokat",
+              "description": "Switch és `never` check miatt új state nem marad csendben kezeletlen."
+            },
+            "ts_state_domain": {
+              "label": "Őszinte state semantics-et tart",
+              "description": "Nem enged egymásnak ellentmondó success, error és loading state-et."
+            }
+          },
+          "followUps": {
+            "ts_state_followup_refresh": "Hogyan modelleznéd a refresh state-et, amikor a régi successful data továbbra is látható?"
+          }
+        }
+      }
+    },
+    {
+      "id": "ts_generic_review_001",
+      "title": "Reviewing an over-generic API",
+      "prompt": "A helper has several generic parameters, nested utility types, and still needs assertions. How would you decide whether the generic design is justified?",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "ts_generics_utility_types",
+        "ts_structural_typing"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Look for a real type relationship, simplify constraints and inference, and prefer named domain types when meaning matters.",
+      "expectedPoints": [
+        {
+          "id": "ts_gen_relationship",
+          "label": "Looks for a real relationship",
+          "description": "Keeps a generic only when it preserves a meaningful input-output or stored-value relationship.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "type relationship",
+            "input output",
+            "same type",
+            "generic justified"
+          ]
+        },
+        {
+          "id": "ts_gen_inference",
+          "label": "Prefers inference and minimal constraints",
+          "description": "Removes unnecessary parameters and constraints.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "type inference",
+            "minimal constraint",
+            "remove generic parameter",
+            "simplify"
+          ]
+        },
+        {
+          "id": "ts_gen_domain",
+          "label": "Uses named domain types when appropriate",
+          "description": "Replaces opaque utility chains with a named type when the result has business meaning.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "named type",
+            "domain meaning",
+            "avoid nested utility types",
+            "readability"
+          ]
+        },
+        {
+          "id": "ts_gen_assertions",
+          "label": "Treats assertions as a warning",
+          "description": "Investigates why the implementation cannot prove its generic contract.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "type assertion warning",
+            "unsafe cast",
+            "implementation cannot prove",
+            "redesign contract"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ts_gen_followup_once",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why is a type parameter used only once often unnecessary?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy túl generic API felülvizsgálata",
+          "prompt": "Egy helper több generic parametert, nested utility type-ot és még type assertiont is használ. Hogyan döntöd el, hogy indokolt-e a generic design?",
+          "answerStructureHint": "Valódi type relationship, egyszerű constraint és inference, business meaningnél named type.",
+          "expectedPoints": {
+            "ts_gen_relationship": {
+              "label": "Valódi relationshipet keres",
+              "description": "Generic csak akkor marad, ha meaningful input-output vagy stored-value type kapcsolatot őriz."
+            },
+            "ts_gen_inference": {
+              "label": "Inference-t és minimális constraintet preferál",
+              "description": "Felesleges type parametert és constraintet eltávolít."
+            },
+            "ts_gen_domain": {
+              "label": "Szükség esetén named domain type-ot használ",
+              "description": "Opaque utility chain helyett business meaninggel rendelkező named type készül."
+            },
+            "ts_gen_assertions": {
+              "label": "Warningként kezeli az assertiont",
+              "description": "Megvizsgálja, miért nem tudja az implementation bizonyítani a generic contractot."
+            }
+          },
+          "followUps": {
+            "ts_gen_followup_once": "Miért gyakran felesleges az a type parameter, amely csak egyszer szerepel?"
+          }
+        }
+      }
+    },
+    {
+      "id": "js_module_loading_001",
+      "title": "Module format and loading strategy",
+      "prompt": "A browser application mixes CommonJS packages, ES modules, dynamic imports, and many small chunks. What would you review?",
+      "roles": [
+        "frontend_architect",
+        "fullstack_developer",
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "js_modules_bundling"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate module format from bundling, then review interop, tree shaking, side effects, and chunk boundaries.",
+      "expectedPoints": [
+        {
+          "id": "js_mod_formats",
+          "label": "Separates module formats from bundling",
+          "description": "ESM and CommonJS are module systems; a bundler produces deployable assets.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "esm",
+            "commonjs",
+            "module system",
+            "bundler",
+            "not the same"
+          ]
+        },
+        {
+          "id": "js_mod_interop",
+          "label": "Reviews compatibility and interop",
+          "description": "Checks runtime and package entry-point compatibility.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "interop",
+            "package exports",
+            "runtime compatibility",
+            "entry point"
+          ]
+        },
+        {
+          "id": "js_mod_tree",
+          "label": "Reviews tree shaking and side effects",
+          "description": "Checks static imports and side-effect metadata before expecting unused-code removal.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "tree shaking",
+            "static imports",
+            "side effects",
+            "unused exports"
+          ]
+        },
+        {
+          "id": "js_mod_chunks",
+          "label": "Reviews chunk boundaries",
+          "description": "Balances lazy loading against request overhead and duplicated dependencies.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 5,
+            "frontend_architect": 5,
+            "backend_architect": 4,
+            "solution_architect": 3
+          },
+          "acceptedSignals": [
+            "dynamic import",
+            "code splitting",
+            "chunk overhead",
+            "duplicate dependencies",
+            "route level"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "js_mod_followup_dynamic",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When can dynamic import make performance worse instead of better?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Module format és loading strategy",
+          "prompt": "Egy browser application CommonJS package-eket, ES module-okat, dynamic importot és sok apró chunkot kever. Mit vizsgálnál felül?",
+          "answerStructureHint": "Module format és bundling különválasztása, majd interop, tree shaking, side effect és chunk boundary.",
+          "expectedPoints": {
+            "js_mod_formats": {
+              "label": "Elkülöníti a module formatot és bundlingot",
+              "description": "Az ESM és CommonJS module system; a bundler deployolható assetet készít."
+            },
+            "js_mod_interop": {
+              "label": "Compatibilityt és interopot vizsgál",
+              "description": "Runtime és package entry-point compatibilityt ellenőriz."
+            },
+            "js_mod_tree": {
+              "label": "Tree shakinget és side effectet vizsgál",
+              "description": "Static import és side-effect metadata alapján vár unused-code removal-t."
+            },
+            "js_mod_chunks": {
+              "label": "Chunk boundaryt vizsgál",
+              "description": "Lazy loadingot request overhead és duplicated dependency ellenében mérlegel."
+            }
+          },
+          "followUps": {
+            "js_mod_followup_dynamic": "Mikor ronthat a performance-en a dynamic import ahelyett, hogy javítaná?"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,2364 @@
+{
+  "id": "architecture_system_design_rebuild",
+  "name": "Architecture and System Design",
+  "description": "Architecture reasoning, requirements, boundaries, architecture styles, domain modelling, workflow coordination, and decision documentation.",
+  "sources": [
+    "system_design",
+    "dennemeyer_system_design_100_tema_peldakkal_mobile_hu",
+    "dennemeyer_hirdetes_kulcsszavak_reszletes_mobile_hu",
+    "Luxair_interju_QA_gyujtemeny",
+    "Luxair_Interview_Terms_Glossary_HU"
+  ],
+  "topics": [
+    {
+      "id": "arch_system_design_process",
+      "name": "System Design Process",
+      "description": "A repeatable way to move from an unclear problem to a justified and operable design.",
+      "category": "architecture",
+      "importance": 5,
+      "relatedTopicIds": [
+        "arch_requirements_nfrs",
+        "arch_quality_attributes",
+        "arch_architecture_decisions"
+      ],
+      "studyNotes": "## What is it?\n\nSystem design is not choosing a database and drawing boxes as quickly as possible. It is a decision process: clarify what the system must do, identify the important constraints, estimate the difficult parts, choose a design, and explain why its trade-offs fit the requirement.\n\n## What problem does it solve?\n\nVague prompts hide the decisions that actually shape the architecture. A notification system for ten thousand internal users is a different problem from one for hundreds of millions of mobile devices. Starting with technology often produces a detailed answer to the wrong question.\n\n## How it works\n\n- Clarify users, core use cases, scope, and what is explicitly out of scope.\n- Ask for traffic, data size, latency, availability, consistency, security, and compliance needs.\n- Estimate peak load and identify likely bottlenecks.\n- Define APIs, data ownership, main components, and the critical request or event flows.\n- Discuss failure modes, observability, deployment, and data migration.\n- State alternatives and why the chosen design is sufficient without unnecessary complexity.\n\n## Common mistakes\n\n- Drawing an architecture before clarifying the requirement.\n- Optimizing every dimension even when the business does not need it.\n- Listing technologies without explaining responsibilities or data flow.\n- Ignoring operation, failure handling, and migration.\n\n## Key terms\n\n- scope — What the design includes and excludes.\n- constraint — A condition that limits possible solutions.\n- critical path — The operations that must complete before the user receives the required result.\n- trade-off — A benefit gained by accepting a cost or limitation.",
+      "i18n": {
+        "hu": {
+          "name": "System Design Folyamat",
+          "description": "Egy követhető módszer, amely a homályos feladatból indokolt és üzemeltethető architecture-t készít.",
+          "studyNotes": "## Mi ez?\n\nA system design nem azzal kezdődik, hogy gyorsan kiválasztunk egy database-t és rajzolunk néhány boxot. Először azt kell tisztázni, mit kell a rendszernek megoldania, mekkora terhelésre készül, mi kritikus a business számára, és milyen hibákat kell kibírnia. Csak ezután érdemes technológiáról dönteni.\n\n## Milyen problémát old meg?\n\nEgy rövid interjúfeladat sok fontos részletet nem mond ki. Teljesen más architecture kell tízezer belső userhez, mint több százmillió mobil klienshez. Ha rögtön technológiából indulunk ki, könnyen egy részletes, de rossz problémára adott megoldás születik.\n\n## Hogyan működik?\n\n- Tisztázd a usereket, a core use case-eket, a scope-ot és azt is, mi nem része a feladatnak.\n- Kérdezz rá a trafficra, data volume-ra, latencyre, availabilityre, consistencyre, securityre és compliance-re.\n- Becsüld meg a peak loadot, és keresd meg a várható bottleneckeket.\n- Határozd meg az API-kat, data ownershipöt, fő komponenseket és a kritikus request vagy event flow-kat.\n- Mondd el, mi történik failure, deployment és data migration közben.\n- Mutass alternatívát, és indokold, miért elég a választott megoldás fölösleges complexity nélkül.\n\n## Gyakori hibák\n\n- A requirement tisztázása előtt architecture-t rajzolni.\n- Minden dimenziót maximálisan optimalizálni business indok nélkül.\n- Technológiákat felsorolni felelősségek és data flow nélkül.\n- Az operationt, failure handlinget és migrationt kihagyni.\n\n## Kulcsfogalmak\n\n- scope — Amit a design lefed, illetve tudatosan nem fed le.\n- constraint — Olyan feltétel, amely korlátozza a lehetséges megoldásokat.\n- critical path — Azok a lépések, amelyeknek a szükséges user response előtt be kell fejeződniük.\n- trade-off — Előny, amelyért valamilyen költséget vagy korlátozást elfogadunk."
+        }
+      }
+    },
+    {
+      "id": "arch_requirements_nfrs",
+      "name": "Functional and Non-Functional Requirements",
+      "description": "Separating system behaviour from the quality constraints that shape its architecture.",
+      "category": "architecture",
+      "importance": 5,
+      "relatedTopicIds": [
+        "arch_system_design_process",
+        "arch_quality_attributes",
+        "arch_architecture_decisions"
+      ],
+      "studyNotes": "## What is it?\n\nFunctional requirements describe what users or other systems must be able to do. Non-functional requirements, or NFRs, describe the qualities and constraints under which that behaviour must work, such as latency, availability, throughput, security, auditability, and recovery time.\n\n## What problem does it solve?\n\nA requirement such as 'build a renewal API' is not enough to choose an architecture. The same API may be a low-traffic internal tool or a legally critical external platform. The NFRs determine whether simple synchronous processing is enough or whether the design needs queues, replication, strict audit, multi-region recovery, or stronger isolation.\n\n## How it works\n\n- Turn vague quality words into measurable targets and time windows.\n- Ask which user journeys are critical and which may degrade.\n- Separate average traffic from peaks and growth expectations.\n- Clarify consistency, retention, privacy, audit, and regulatory needs.\n- Identify recovery objectives such as RTO and RPO.\n- Resolve conflicts explicitly because stronger availability, consistency, or security usually increases cost and complexity.\n\n## Common mistakes\n\n- Treating NFRs as documentation added after the design.\n- Accepting words such as fast or highly available without numbers.\n- Giving every feature the same availability and consistency target.\n- Ignoring data retention, audit, and recovery requirements.\n\n## Key terms\n\n- functional requirement — A behaviour or capability the system must provide.\n- NFR — A quality attribute or operating constraint.\n- RTO — Maximum acceptable recovery time after disruption.\n- RPO — Maximum acceptable amount of data loss measured in time.",
+      "i18n": {
+        "hu": {
+          "name": "Functional és Non-Functional Requirements",
+          "description": "Különválasztja, mit kell tudnia a rendszernek, és milyen quality constraint mellett kell működnie.",
+          "studyNotes": "## Mi ez?\n\nA functional requirement azt mondja meg, mit tudjon a rendszer: például lehessen renewal requestet indítani és lekérdezni a státuszát. A non-functional requirement, vagy NFR azt mondja meg, milyen minőségben működjön: mennyi legyen a latency, mekkora availability kell, mennyi trafficot bírjon, hogyan auditálható, és mennyi data loss fogadható el.\n\n## Milyen problémát old meg?\n\nA „kell egy renewal API” mondatból még nem lehet architecture-t választani. Lehet egy ritkán használt belső tool, de lehet jogilag kritikus external platform is. Az NFR dönti el, hogy elég-e egy egyszerű synchronous flow, vagy kell queue, replication, szigorú audit, multi-region recovery vagy erősebb isolation.\n\n## Hogyan működik?\n\n- A homályos quality szavakból készíts mérhető targetet és időablakot.\n- Tisztázd, mely user journey kritikus, és melyik működhet degraded mode-ban.\n- Különítsd el az average trafficot a peaktől és a várható növekedéstől.\n- Kérdezz rá consistencyre, retentionre, privacyra, auditra és regulationre.\n- Határozd meg a recovery targeteket, például RTO-t és RPO-t.\n- Mondd ki a konfliktusokat: a magasabb availability, consistency vagy security általában több költséget és complexityt jelent.\n\n## Gyakori hibák\n\n- Az NFR-t utólagos dokumentációnak tekinteni.\n- A „fast” vagy „highly available” szót számok nélkül elfogadni.\n- Minden feature-höz ugyanazt az availability és consistency targetet adni.\n- A retention, audit és recovery követelményeket kihagyni.\n\n## Kulcsfogalmak\n\n- functional requirement — A rendszer által nyújtandó viselkedés vagy capability.\n- NFR — Quality attribute vagy operating constraint.\n- RTO — A disruption után elfogadható maximális recovery time.\n- RPO — Időben kifejezett maximális elfogadható data loss."
+        }
+      }
+    },
+    {
+      "id": "arch_quality_attributes",
+      "name": "Architecture Quality Attributes and Trade-offs",
+      "description": "Using measurable qualities to compare designs instead of searching for one universally best architecture.",
+      "category": "architecture",
+      "importance": 5,
+      "relatedTopicIds": [
+        "arch_requirements_nfrs",
+        "arch_architecture_decisions",
+        "arch_coupling_cohesion"
+      ],
+      "studyNotes": "## What is it?\n\nArchitecture quality attributes are properties such as performance, scalability, availability, security, maintainability, testability, deployability, and cost. A design is good when it balances the attributes that matter for the actual product, not when it maximizes all of them.\n\n## What problem does it solve?\n\nArchitecture decisions move pressure from one dimension to another. Synchronous replication may improve consistency but increase latency. Microservices may improve team autonomy but increase operational work. Caching may improve reads but create invalidation and staleness problems. Without explicit priorities, teams debate preferences instead of requirements.\n\n## How it works\n\n- Rank quality attributes by business importance.\n- Attach scenarios and measurable targets to them.\n- Compare alternatives against the same scenarios.\n- Identify who pays each cost: users, developers, operators, or the business.\n- Prefer the simplest option that satisfies the most important targets.\n- Revisit the decision when traffic, team structure, or business risk changes.\n\n## Common mistakes\n\n- Calling a technology scalable or secure without a scenario.\n- Presenting a design as having only benefits.\n- Optimizing rare failure cases while hurting normal operation.\n- Ignoring organisational and operational costs.\n\n## Key terms\n\n- quality attribute — A measurable property of system behaviour.\n- fitness function — An automated or reviewable check that an architectural property still holds.\n- scenario — A concrete condition used to evaluate a quality attribute.\n- operational cost — Ongoing work required to run and support a design.",
+      "i18n": {
+        "hu": {
+          "name": "Architecture Quality Attributes és Trade-offok",
+          "description": "Mérhető quality szempontok alapján hasonlítja össze a designokat, nem egy univerzálisan legjobb megoldást keres.",
+          "studyNotes": "## Mi ez?\n\nAz architecture quality attribute olyan tulajdonság, mint performance, scalability, availability, security, maintainability, testability, deployability vagy cost. Egy design nem attól jó, hogy mindegyiket maximalizálja, hanem attól, hogy az adott product számára fontos szempontokat megfelelően egyensúlyozza.\n\n## Milyen problémát old meg?\n\nMinden architecture döntés valahol előnyt, máshol költséget hoz. A synchronous replication javíthatja a consistencyt, de növeli a latencyt. A microservices növelheti a team autonomy-t, de több operational munkát kér. A cache gyorsíthatja a readet, de staleness és invalidation problémát hoz. Prioritás nélkül a team követelmények helyett preferenciákról vitázik.\n\n## Hogyan működik?\n\n- Rangsorold a quality attribute-okat business fontosság szerint.\n- Adj hozzájuk konkrét scenario-t és mérhető targetet.\n- Ugyanazon scenario-k alapján hasonlítsd össze az alternatívákat.\n- Mondd ki, ki fizeti a költséget: user, developer, operator vagy a business.\n- A legegyszerűbb olyan megoldást válaszd, amely teljesíti a fontos targeteket.\n- Traffic, team structure vagy business risk változásakor vizsgáld felül a döntést.\n\n## Gyakori hibák\n\n- Egy technológiát scenario nélkül scalable-nek vagy secure-nek nevezni.\n- Csak előnyöket felsorolni, költségeket nem.\n- Ritka failure case-re optimalizálni a normál működés rovására.\n- Az organisational és operational costot kihagyni.\n\n## Kulcsfogalmak\n\n- quality attribute — A rendszer viselkedésének mérhető tulajdonsága.\n- fitness function — Automatikus vagy review-alapú ellenőrzés, hogy egy architecture property továbbra is teljesül-e.\n- scenario — Konkrét helyzet, amelyben egy quality attribute értékelhető.\n- operational cost — A design futtatásához és támogatásához szükséges folyamatos munka."
+        }
+      }
+    },
+    {
+      "id": "arch_architecture_decisions",
+      "name": "Architecture Decision Records and Design Documents",
+      "description": "Capturing context, alternatives, trade-offs, and consequences so architectural decisions remain understandable.",
+      "category": "architecture",
+      "importance": 4,
+      "relatedTopicIds": [
+        "arch_system_design_process",
+        "arch_requirements_nfrs",
+        "arch_quality_attributes"
+      ],
+      "studyNotes": "## What is it?\n\nA design document explains a proposed system or change before implementation. An Architecture Decision Record, or ADR, captures one important decision: its context, considered options, chosen option, and consequences. The goal is not paperwork but preserving the reasoning that code alone cannot show.\n\n## What problem does it solve?\n\nMonths later, a team often remembers what was built but not why. A future engineer may remove a limit, replace a database, or merge services without knowing which failure mode or constraint the original decision addressed. Repeating the discussion also wastes time.\n\n## How it works\n\n- Keep the document decision-oriented and proportionate to risk.\n- State the problem, scope, requirements, and constraints.\n- Show the important flows and ownership boundaries.\n- Compare realistic alternatives, including doing nothing.\n- Record consequences, risks, migration, observability, and rollback.\n- Give the decision an owner and status, and supersede it explicitly when conditions change.\n\n## Common mistakes\n\n- Writing a long technology description without a decision.\n- Documenting only the selected option.\n- Hiding uncertainty and unresolved questions.\n- Letting documents become stale without ownership or status.\n\n## Key terms\n\n- ADR — A short record of one architectural decision.\n- design document — A proposal covering a broader change or system.\n- consequence — A positive or negative effect accepted with the decision.\n- superseded — Replaced by a newer decision while history remains visible.",
+      "i18n": {
+        "hu": {
+          "name": "Architecture Decision Record és Design Document",
+          "description": "Megőrzi a contextet, alternatívákat, trade-offokat és következményeket, hogy később is érthető legyen a döntés.",
+          "studyNotes": "## Mi ez?\n\nA design document egy rendszer vagy nagyobb change javaslatát írja le implementation előtt. Az Architecture Decision Record, vagy ADR egy fontos döntést rögzít: mi volt a context, milyen opciók voltak, mit választottunk, és milyen következményeket fogadunk el. A cél nem a paperwork, hanem annak megőrzése, amit a code önmagában nem tud elmondani.\n\n## Milyen problémát old meg?\n\nNéhány hónap múlva a team gyakran emlékszik arra, mi épült, de arra már nem, miért. Egy későbbi engineer eltávolíthat egy limitet, lecserélhet egy database-t vagy összevonhat service-eket anélkül, hogy tudná, milyen constraint vagy failure mode miatt született az eredeti döntés. Ugyanazt a vitát újra lefolytatni is pazarlás.\n\n## Hogyan működik?\n\n- A dokumentum legyen decision-oriented, és a kockázathoz arányos hosszúságú.\n- Írd le a problémát, scope-ot, requirementeket és constraintekeket.\n- Mutasd meg a fontos flow-kat és ownership boundaryket.\n- Hasonlíts össze reális alternatívákat, a „nem változtatunk” opciót is.\n- Rögzítsd a consequence-eket, riskeket, migrationt, observabilityt és rollbacket.\n- Legyen owner és status; változó feltételeknél új döntés explicit supersede-elje a régit.\n\n## Gyakori hibák\n\n- Hosszú technológialeírást írni valódi döntés nélkül.\n- Csak a kiválasztott opciót dokumentálni.\n- Elrejteni a bizonytalanságot és nyitott kérdéseket.\n- Owner és status nélkül elavulni hagyni a dokumentumot.\n\n## Kulcsfogalmak\n\n- ADR — Egyetlen architecture döntés rövid feljegyzése.\n- design document — Egy nagyobb change vagy rendszer javaslata.\n- consequence — A döntéssel elfogadott pozitív vagy negatív hatás.\n- superseded — Új döntés által lecserélt, de historyként megőrzött állapot."
+        }
+      }
+    },
+    {
+      "id": "arch_coupling_cohesion",
+      "name": "Coupling and Cohesion",
+      "description": "Designing components that depend on each other as little as practical while keeping related behaviour together.",
+      "category": "architecture",
+      "importance": 5,
+      "relatedTopicIds": [
+        "arch_service_boundaries_ddd",
+        "arch_modular_monolith",
+        "arch_microservices"
+      ],
+      "studyNotes": "## What is it?\n\nCoupling describes how strongly components depend on each other. Cohesion describes how closely the responsibilities inside one component belong together. Good boundaries aim for low coupling between components and high cohesion inside them.\n\n## What problem does it solve?\n\nA change in one service should not require coordinated changes in five others. Tight coupling appears through shared databases, leaked internal schemas, synchronous call chains, shared release cycles, or knowledge of another component's workflow. Low cohesion creates large modules that change for unrelated reasons.\n\n## How it works\n\n- Communicate through explicit APIs or event contracts.\n- Hide implementation and storage details behind the boundary.\n- Keep data ownership clear and avoid cross-service table access.\n- Group behaviour that changes for the same business reason.\n- Minimize chatty communication and temporal coupling.\n- Measure coupling through coordinated deployments, shared ownership, and change blast radius, not only imports.\n\n## Common mistakes\n\n- Calling asynchronous communication automatically loosely coupled.\n- Sharing a database while claiming independent services.\n- Splitting cohesive business behaviour into many tiny network calls.\n- Reducing code-level coupling while retaining organisational release coupling.\n\n## Key terms\n\n- coupling — The degree of dependency between components.\n- cohesion — How strongly responsibilities inside a component belong together.\n- temporal coupling — Components must be available or act at the same time.\n- blast radius — How widely a change or failure can spread.",
+      "i18n": {
+        "hu": {
+          "name": "Coupling és Cohesion",
+          "description": "A kapcsolódó behavior együtt marad, miközben a komponensek közötti szükségtelen dependency csökken.",
+          "studyNotes": "## Mi ez?\n\nA coupling azt mutatja meg, mennyire függ két komponens egymástól. A cohesion azt, hogy egy komponensen belül mennyire tartoznak össze a felelősségek. Jó boundary esetén a komponensek között alacsony a coupling, egy komponensen belül pedig magas a cohesion.\n\n## Milyen problémát old meg?\n\nEgy service módosítása ne követelje meg további öt service összehangolt release-ét. Tight coupling lehet shared database, kiszivárgó belső schema, hosszú synchronous call chain, közös release cycle vagy a másik service belső workflow-jának ismerete. Low cohesion esetén egy nagy module teljesen eltérő okokból változik.\n\n## Hogyan működik?\n\n- Explicit API vagy event contracton keresztül kommunikálj.\n- A boundary mögött rejtsd el az implementation és storage detailt.\n- Legyen egyértelmű data ownership; más service ne olvassa közvetlenül a táblákat.\n- Az ugyanazon business okból változó behavior kerüljön egy helyre.\n- Csökkentsd a chatty kommunikációt és temporal couplingot.\n- A couplingot coordinated deployment, shared ownership és change blast radius alapján is nézd, ne csak importok alapján.\n\n## Gyakori hibák\n\n- Az async kommunikációt automatikusan loose couplingnak tekinteni.\n- Shared database mellett independent service-ekről beszélni.\n- Egy összetartozó business behavior-t sok apró network callra bontani.\n- Csak code-level couplingot csökkenteni, miközben a release coupling megmarad.\n\n## Kulcsfogalmak\n\n- coupling — A komponensek közötti dependency erőssége.\n- cohesion — Mennyire tartoznak össze egy komponens felelősségei.\n- temporal coupling — A komponenseknek ugyanabban az időben kell elérhetőnek vagy aktívnak lenniük.\n- blast radius — Milyen messzire terjedhet egy change vagy failure hatása."
+        }
+      }
+    },
+    {
+      "id": "arch_layered_clean_hexagonal",
+      "name": "Layered, Clean, and Hexagonal Architecture",
+      "description": "Separating business policy from delivery, storage, frameworks, and external systems.",
+      "category": "architecture",
+      "importance": 4,
+      "relatedTopicIds": [
+        "arch_coupling_cohesion",
+        "arch_solid",
+        "arch_modular_monolith"
+      ],
+      "studyNotes": "## What is it?\n\nLayered, Clean, and Hexagonal Architecture are related ways to keep business logic independent from replaceable technical details. The API framework, database, message broker, and third-party clients sit at the edges; application and domain rules remain at the centre.\n\n## What problem does it solve?\n\nWhen controllers contain business rules, ORM entities become the domain model, and external SDK calls appear everywhere, testing and change become difficult. Replacing a provider or running a use case without HTTP requires rewriting the core logic.\n\n## How it works\n\n- Keep delivery code responsible for protocol concerns and input mapping.\n- Put use-case coordination in an application layer.\n- Keep domain rules independent of frameworks where their complexity justifies it.\n- Define ports or interfaces for database and external dependencies.\n- Implement adapters at the edge.\n- Make source-code dependencies point toward policy rather than infrastructure.\n\n## Common mistakes\n\n- Creating many empty layers for a trivial CRUD service.\n- Allowing every layer to access the database directly.\n- Treating the domain layer as a collection of data-only objects.\n- Confusing runtime call direction with source-code dependency direction.\n\n## Key terms\n\n- port — An interface through which the core uses or exposes a capability.\n- adapter — Technical implementation of a port.\n- use case — Application operation that coordinates a business goal.\n- dependency rule — Code dependencies point toward the core policy.",
+      "i18n": {
+        "hu": {
+          "name": "Layered, Clean és Hexagonal Architecture",
+          "description": "A business policyt elválasztja a delivery, storage, framework és external system részletektől.",
+          "studyNotes": "## Mi ez?\n\nA Layered, Clean és Hexagonal Architecture rokon megközelítések. A céljuk, hogy a business logic ne függjön közvetlenül a cserélhető technikai részletektől. Az API framework, database, message broker és third-party client a széleken marad, az application és domain rule pedig belül.\n\n## Milyen problémát old meg?\n\nHa a controller business rule-okat tartalmaz, az ORM entity lesz a domain model, és external SDK callok jelennek meg mindenhol, a testing és a változtatás nehézzé válik. Egy provider cseréje vagy ugyanazon use case HTTP nélküli futtatása a core logic átírását kéri.\n\n## Hogyan működik?\n\n- A delivery code foglalkozzon protocol concernnel és input mappinggel.\n- A use case koordináció kerüljön application layerbe.\n- A komplex domain rule maradjon framework-független.\n- Database és external dependency számára definiálj portot vagy interface-t.\n- A technikai implementation legyen adapter a széleken.\n- A source-code dependency a policy felé mutasson, ne az infrastructure felé.\n\n## Gyakori hibák\n\n- Egyszerű CRUD service-hez sok üres layert létrehozni.\n- Minden layerből közvetlen database access-t engedni.\n- A domain layert csak data-only objectek gyűjteményének tekinteni.\n- A runtime call directiont összekeverni a source-code dependency directionnel.\n\n## Kulcsfogalmak\n\n- port — Interface, amelyen keresztül a core capabilityt használ vagy tesz elérhetővé.\n- adapter — Egy port technikai implementationje.\n- use case — Application operation, amely egy business célt koordinál.\n- dependency rule — A code dependency a core policy felé mutat."
+        }
+      }
+    },
+    {
+      "id": "arch_solid",
+      "name": "SOLID Principles",
+      "description": "Five design principles that help keep object-oriented modules changeable and testable when applied pragmatically.",
+      "category": "architecture",
+      "importance": 4,
+      "relatedTopicIds": [
+        "arch_layered_clean_hexagonal",
+        "arch_coupling_cohesion",
+        "arch_modular_monolith"
+      ],
+      "studyNotes": "## What is it?\n\nSOLID groups five principles: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion. They are heuristics for managing change and dependencies, not rules that require one class per method or an interface for everything.\n\n## What problem does it solve?\n\nLarge modules that change for unrelated reasons, subclasses that violate expectations, broad interfaces, and business logic tied directly to infrastructure make systems hard to extend and test. SOLID provides language for recognizing these design pressures.\n\n## How it works\n\n- Give a module one coherent reason to change rather than one tiny task.\n- Extend stable behaviour through explicit variation points instead of editing many callers.\n- Make implementations preserve the contract expected by their consumers.\n- Expose focused interfaces designed for consumers.\n- Let policy depend on abstractions while technical details implement them.\n- Apply the principle only when actual change pressure justifies the abstraction.\n\n## Common mistakes\n\n- Interpreting Single Responsibility as one method per class.\n- Creating interfaces for every class before a second implementation or test need exists.\n- Using inheritance where composition is clearer.\n- Following a principle mechanically while making the design harder to understand.\n\n## Key terms\n\n- SRP — A module should have one coherent reason to change.\n- LSP — Subtypes must preserve the expectations of the base contract.\n- ISP — Consumers should not depend on operations they do not use.\n- DIP — High-level policy depends on abstractions, not concrete technical details.",
+      "i18n": {
+        "hu": {
+          "name": "SOLID Principles",
+          "description": "Öt design principle, amelyet pragmatikusan használva a module-ok könnyebben változtathatók és tesztelhetők.",
+          "studyNotes": "## Mi ez?\n\nA SOLID öt principle gyűjtőneve: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation és Dependency Inversion. Ezek a change és dependency kezeléséhez adnak irányt. Nem azt jelentik, hogy minden method külön classba kerüljön, vagy minden class elé interface kell.\n\n## Milyen problémát old meg?\n\nA több, egymástól független okból változó nagy module, a contractot megszegő subclass, a túl széles interface és az infrastructure-höz kötött business logic nehezen bővíthető és tesztelhető. A SOLID segít ezeket a design pressure-öket felismerni és megnevezni.\n\n## Hogyan működik?\n\n- Egy module-nak egy összetartozó reason to change legyen, ne feltétlenül egyetlen apró taskja.\n- Stabil behavior mellé explicit variation pointot adj, ne sok callert módosíts.\n- Az implementation tartsa meg a consumer által elvárt contractot.\n- A consumer igényeire szabott, fókuszált interface-t használj.\n- A policy abstractiontól függjön, a technical detail implementálja azt.\n- Csak valódi change pressure esetén fizess az abstraction complexityért.\n\n## Gyakori hibák\n\n- A Single Responsibilityt egy method per class szabályként értelmezni.\n- Minden classhoz interface-t készíteni valós második implementation vagy test need nélkül.\n- Inheritance-t használni, amikor composition tisztább lenne.\n- Mechanikusan követni a principlet, miközben a design nehezebben érthető lesz.\n\n## Kulcsfogalmak\n\n- SRP — Egy module-nak egy összetartozó reason to change-e legyen.\n- LSP — A subtype nem sértheti meg a base contract elvárásait.\n- ISP — A consumer ne függjön olyan operationtől, amelyet nem használ.\n- DIP — A high-level policy abstractiontól, ne konkrét technical detailtől függjön."
+        }
+      }
+    },
+    {
+      "id": "arch_modular_monolith",
+      "name": "Monolith and Modular Monolith",
+      "description": "A single deployable application with deliberate internal boundaries and lower distributed-system cost.",
+      "category": "architecture",
+      "importance": 5,
+      "relatedTopicIds": [
+        "arch_microservices",
+        "arch_coupling_cohesion",
+        "arch_layered_clean_hexagonal"
+      ],
+      "studyNotes": "## What is it?\n\nA monolith is deployed as one application. A modular monolith keeps that operational simplicity while organizing the code into explicit business modules with controlled dependencies and ownership. It is not the same as an unstructured codebase.\n\n## What problem does it solve?\n\nSmall teams and changing domains often pay the costs of microservices before they receive the benefits. Network failure, distributed data consistency, many pipelines, and cross-service debugging may slow delivery more than a shared deployment does.\n\n## How it works\n\n- Define modules around business capabilities, not technical folders.\n- Give each module a public interface and hide internal data and implementation.\n- Enforce dependency direction with tooling or tests.\n- Keep module-owned tables or schemas even inside one database where practical.\n- Use in-process calls or local events while keeping boundaries explicit.\n- Extract a service later only when independent scaling, ownership, risk, or deployment creates real value.\n\n## Common mistakes\n\n- Calling any single deployment a badly designed monolith.\n- Creating modules that freely access each other’s tables.\n- Using an internal event bus to hide uncontrolled dependencies.\n- Splitting into services before the domain boundaries are understood.\n\n## Key terms\n\n- monolith — One deployable application unit.\n- modular monolith — One deployment with enforced internal business boundaries.\n- module API — The supported entry points exposed by one module.\n- service extraction — Moving a module into an independently deployed service.",
+      "i18n": {
+        "hu": {
+          "name": "Monolith és Modular Monolith",
+          "description": "Egyetlen deployable application, tudatos belső boundarykkel és alacsonyabb distributed-system költséggel.",
+          "studyNotes": "## Mi ez?\n\nA monolith egyetlen applicationként deployolható. A modular monolith megtartja ezt az operational egyszerűséget, de a code-ot explicit business module-okra bontja, kontrollált dependencykkel és ownershippel. Nem ugyanaz, mint egy rendezetlen codebase.\n\n## Milyen problémát old meg?\n\nKis team és még változó domain esetén a microservices költsége gyakran hamarabb jelenik meg, mint az előnye. Network failure, distributed consistency, sok pipeline és cross-service debugging lassíthatja a deliveryt, miközben az egyetlen deployment még nem valódi bottleneck.\n\n## Hogyan működik?\n\n- Business capability köré szervezd a module-okat, ne technikai foldertípusok köré.\n- Minden module-nak legyen public interface-e, belső data és implementation detailje rejtett maradjon.\n- Toolinggal vagy testtel enforce-old a dependency directiont.\n- Egy database-en belül is legyen egyértelmű module-owned table vagy schema.\n- Használhatsz in-process callt vagy local eventet, de a boundary maradjon explicit.\n- Csak akkor extractálj service-t, ha independent scaling, ownership, risk vagy deployment valódi értéket ad.\n\n## Gyakori hibák\n\n- Minden single deploymentet rossz monolithnak nevezni.\n- Olyan module-okat létrehozni, amelyek szabadon olvassák egymás tábláit.\n- Internal event busszal elrejteni a kontrollálatlan dependencyket.\n- A domain boundary megértése előtt service-ekre bontani.\n\n## Kulcsfogalmak\n\n- monolith — Egy deployable application unit.\n- modular monolith — Egy deployment enforce-olt belső business boundarykkel.\n- module API — Egy module támogatott entry pointjai.\n- service extraction — Egy module külön deployolható service-szé alakítása."
+        }
+      }
+    },
+    {
+      "id": "arch_microservices",
+      "name": "Microservices Architecture",
+      "description": "Independently deployable services aligned with business capabilities and team ownership.",
+      "category": "architecture",
+      "importance": 5,
+      "relatedTopicIds": [
+        "arch_modular_monolith",
+        "arch_service_boundaries_ddd",
+        "arch_conway"
+      ],
+      "studyNotes": "## What is it?\n\nMicroservices architecture splits a system into independently deployable services aligned with business capabilities. Each service has clear ownership, a stable contract, and authority over its data. The point is independent change and operation, not making every service small.\n\n## What problem does it solve?\n\nA large shared codebase and release train can block teams when unrelated changes must be coordinated and components need different scaling or reliability policies. Microservices can reduce that coordination, but they replace in-process complexity with network, data, deployment, and observability complexity.\n\n## How it works\n\n- Draw boundaries around cohesive business capabilities.\n- Give one team end-to-end ownership of each service.\n- Keep the service independently deployable and observable.\n- Let it own its data rather than sharing tables.\n- Use contracts that allow internal implementation to change.\n- Accept distributed failure, eventual consistency, and operational automation as part of the architecture.\n- Split only when the independence is valuable enough to pay these costs.\n\n## Common mistakes\n\n- Defining a microservice by line count.\n- Creating many services with one shared database and release process.\n- Ignoring the platform and observability investment.\n- Splitting a small team across more services than it can own.\n\n## Key terms\n\n- independent deployment — A service can be released without coordinated releases of unrelated services.\n- data ownership — One service controls writes and schema for its data.\n- service autonomy — A service can evolve and operate within its contract.\n- distributed monolith — Many deployed services that still require coordinated change.",
+      "i18n": {
+        "hu": {
+          "name": "Microservices Architecture",
+          "description": "Business capability és team ownership köré szervezett, independently deployable service-ek.",
+          "studyNotes": "## Mi ez?\n\nA microservices architecture a rendszert independently deployable service-ekre bontja, business capabilityk mentén. Minden service-nek egyértelmű ownerje, stabil contractja és saját data authorityje van. A cél az independent change és operation, nem az, hogy minden service apró legyen.\n\n## Milyen problémát old meg?\n\nEgy nagy közös codebase és release train blokkolhatja a teameket, ha független változtatásokat is össze kell hangolni, vagy eltérő scaling és reliability policy kell. A microservices csökkentheti ezt a koordinációt, de az in-process complexity helyére network, data, deployment és observability complexity kerül.\n\n## Hogyan működik?\n\n- Cohesive business capability köré húzd a boundaryket.\n- Egy team kapjon end-to-end ownershipöt egy service fölött.\n- A service legyen independently deployable és observable.\n- Saját data felett rendelkezzen, ne shared table-t használjon.\n- A contract engedje meg a belső implementation változását.\n- A distributed failure, eventual consistency és operational automation a design része.\n- Csak akkor bonts, ha az independence elég értékes ahhoz, hogy megérje ezeket a költségeket.\n\n## Gyakori hibák\n\n- Line count alapján definiálni a microservice-t.\n- Sok service-t létrehozni shared database-szel és közös release process-szel.\n- Kihagyni a platform és observability befektetést.\n- Egy kis teamre több service-t osztani, mint amennyit valóban tud ownolni.\n\n## Kulcsfogalmak\n\n- independent deployment — Egy service unrelated service-ek coordinated release-e nélkül deployolható.\n- data ownership — Egy service irányítja a saját data write-ját és schemáját.\n- service autonomy — A service a contractján belül önállóan fejlődhet és működhet.\n- distributed monolith — Sok külön deployolt service, amelyek továbbra is coordinated change-et igényelnek."
+        }
+      }
+    },
+    {
+      "id": "arch_service_boundaries_ddd",
+      "name": "Service Boundaries with Domain-Driven Design",
+      "description": "Finding service boundaries from business language, invariants, ownership, and change patterns.",
+      "category": "architecture",
+      "importance": 4,
+      "relatedTopicIds": [
+        "arch_microservices",
+        "arch_ddd_building_blocks",
+        "arch_conway"
+      ],
+      "studyNotes": "## What is it?\n\nDomain-Driven Design, or DDD, helps organize software around business concepts and rules. In architecture, bounded contexts identify places where a model and language are internally consistent. These contexts are useful candidates for module or service boundaries.\n\n## What problem does it solve?\n\nSplitting by technical layer or database table creates services that must coordinate for every business action. A Renewal is not merely a row; it has states, deadlines, authorization rules, and relationships to payment and documents. Boundaries should reflect where those rules and meanings belong.\n\n## How it works\n\n- Learn the domain language with business experts.\n- Identify business capabilities, invariants, and workflows.\n- Notice where the same word has a different meaning in another area.\n- Define bounded contexts with explicit models and contracts.\n- Align ownership, data, and deployment where independence is needed.\n- Describe relationships between contexts rather than pretending all models are identical.\n- Start coarse-grained and split only when change or ownership justifies it.\n\n## Common mistakes\n\n- Treating every entity as its own service.\n- Using DDD terminology without working with domain experts.\n- Creating one enterprise-wide canonical model for concepts that differ by context.\n- Choosing boundaries only from the current database schema.\n\n## Key terms\n\n- bounded context — A boundary within which one domain model and language are consistent.\n- ubiquitous language — Shared language used by domain experts and developers.\n- business capability — A meaningful outcome the organisation can perform.\n- context map — Description of relationships between bounded contexts.",
+      "i18n": {
+        "hu": {
+          "name": "Service Boundaryk Domain-Driven Design alapján",
+          "description": "Business language, invariant, ownership és change pattern alapján keres service boundaryt.",
+          "studyNotes": "## Mi ez?\n\nA Domain-Driven Design, vagy DDD a software-t business fogalmak és rule-ok köré szervezi. Architecture szinten a bounded context jelöli azt a határt, amelyen belül egy model és language következetes. Ezek jó jelöltek lehetnek module vagy service boundarynek.\n\n## Milyen problémát old meg?\n\nHa technical layer vagy database table alapján bontunk, egyetlen business action sok service összehangolását igényli. A Renewal nem csak egy row: state-jei, deadline-jai, authorization rule-jai és paymenthez vagy documenthez kapcsolódó szabályai vannak. A boundarynek azt kell követnie, hol élnek ezek a jelentések és rule-ok.\n\n## Hogyan működik?\n\n- Domain expertekkel tanuld meg a business language-et.\n- Azonosítsd a business capabilityket, invariantokat és workflow-kat.\n- Figyeld meg, hol változik ugyanannak a szónak a jelentése.\n- Definiálj bounded contexteket explicit modellel és contracttal.\n- Ahol independence kell, igazítsd hozzá az ownershipöt, data-t és deploymentet.\n- Írd le a contextegységek kapcsolatát, ne erőltesd rájuk ugyanazt a global modelt.\n- Indulj coarse-grained módon, és csak change vagy ownership indokkal bonts tovább.\n\n## Gyakori hibák\n\n- Minden entityből külön service-t készíteni.\n- DDD szavakat használni domain expertekkel való munka nélkül.\n- Egyetlen enterprise-wide canonical modelt erőltetni eltérő contextegységekre.\n- Csak a jelenlegi database schema alapján boundaryt választani.\n\n## Kulcsfogalmak\n\n- bounded context — Határ, amelyen belül egy domain model és language következetes.\n- ubiquitous language — Domain expert és developer által közösen használt language.\n- business capability — A szervezet által végrehajtható értelmes business outcome.\n- context map — A bounded contextek kapcsolatának leírása."
+        }
+      }
+    },
+    {
+      "id": "arch_ddd_building_blocks",
+      "name": "DDD Building Blocks",
+      "description": "Entities, value objects, aggregates, repositories, and domain services used to express domain rules.",
+      "category": "architecture",
+      "importance": 3,
+      "relatedTopicIds": [
+        "arch_service_boundaries_ddd",
+        "arch_layered_clean_hexagonal",
+        "arch_cqrs"
+      ],
+      "studyNotes": "## What is it?\n\nDDD building blocks help express business rules in the model. Entities have identity across time. Value objects are defined by their values. An aggregate is a consistency boundary with an aggregate root. Repositories provide access to aggregates, and domain services hold domain behaviour that does not naturally belong to one object.\n\n## What problem does it solve?\n\nA data-only model pushes rules into controllers, services, and database scripts. The same invariant is then checked inconsistently in several places. DDD building blocks give a place for state transitions and invariants when the domain is complex enough to need them.\n\n## How it works\n\n- Model a concept as an entity only when identity and lifecycle matter.\n- Use immutable value objects for concepts such as Money, DateRange, or Address.\n- Keep one transactionally consistent cluster inside an aggregate.\n- Modify internal aggregate state through the root.\n- Keep aggregates small enough for concurrency and performance.\n- Use repositories as domain-oriented collection abstractions, not generic wrappers for every query.\n- Use domain services only for genuine domain operations spanning concepts.\n\n## Common mistakes\n\n- Turning every database table into an entity.\n- Building very large aggregates that lock unrelated work.\n- Using repositories as thin generic CRUD wrappers.\n- Adding a domain service for logic that clearly belongs to an entity or value object.\n\n## Key terms\n\n- entity — Domain object with identity and lifecycle.\n- value object — Immutable concept defined by its values.\n- aggregate — Transactional consistency boundary around related domain objects.\n- aggregate root — The entry point that protects an aggregate’s invariants.",
+      "i18n": {
+        "hu": {
+          "name": "DDD Building Blocks",
+          "description": "Entity, value object, aggregate, repository és domain service segítségével fejezi ki a domain rule-okat.",
+          "studyNotes": "## Mi ez?\n\nA DDD building blockok segítenek a business rule-okat a modelben kifejezni. Az entitynek időben megmaradó identityje van. A value objectot az értékei határozzák meg. Az aggregate egy consistency boundary aggregate roottal. A repository aggregate-ek elérését adja, a domain service pedig olyan domain behaviort tart, amely nem illik természetesen egyetlen objecthez.\n\n## Milyen problémát old meg?\n\nA data-only model a rule-okat controllerbe, service-be és database scriptbe tolja. Ugyanazt az invariantot több helyen, eltérően ellenőrzik. Ha a domain elég komplex, a DDD building blockok explicit helyet adnak a state transitionnek és invariantnak.\n\n## Hogyan működik?\n\n- Csak akkor legyen valami entity, ha az identity és lifecycle számít.\n- Money, DateRange vagy Address jellegű fogalomhoz használj immutable value objectet.\n- Egy transactionally consistent csoport maradjon egy aggregate-ben.\n- A belső state-et az aggregate rooton keresztül módosítsd.\n- Az aggregate maradjon elég kicsi concurrency és performance szempontból.\n- A repository domain-oriented collection abstraction legyen, ne minden queryhez generic wrapper.\n- Domain service csak valódi, több conceptet érintő domain operationhöz kell.\n\n## Gyakori hibák\n\n- Minden database table-ből entityt készíteni.\n- Óriási aggregate-et építeni, amely unrelated munkát lockol.\n- Repositoryt vékony generic CRUD wrapperként használni.\n- Domain service-be tenni azt a logicot, amely egy entityhez vagy value objecthez tartozik.\n\n## Kulcsfogalmak\n\n- entity — Identityvel és lifecycle-lal rendelkező domain object.\n- value object — Értékei által meghatározott immutable concept.\n- aggregate — Kapcsolódó domain objectek transactional consistency boundaryje.\n- aggregate root — Az aggregate invariantjait védő entry point."
+        }
+      }
+    },
+    {
+      "id": "arch_conway",
+      "name": "Conway’s Law and Team Boundaries",
+      "description": "Understanding that system structure tends to mirror the communication structure of the organisation building it.",
+      "category": "architecture",
+      "importance": 3,
+      "relatedTopicIds": [
+        "arch_service_boundaries_ddd",
+        "arch_microservices",
+        "arch_architecture_decisions"
+      ],
+      "studyNotes": "## What is it?\n\nConway’s Law observes that organisations tend to design systems that mirror their communication structures. A central integration team often produces a central integration layer; teams organised by technical layer often produce handoffs between frontend, backend, and database work.\n\n## What problem does it solve?\n\nAn architecture diagram can assign independent services, but independence is not real if five teams must approve each change or one platform team owns all integration logic. Technical boundaries that the organisation cannot own become coordination bottlenecks.\n\n## How it works\n\n- Examine who communicates and coordinates for a typical change.\n- Align teams with end-to-end business capabilities where possible.\n- Give teams the skills and authority to own build, deploy, and operation.\n- Keep platform responsibilities as self-service capabilities rather than ticket queues.\n- Use an inverse Conway manoeuvre when deliberately changing team structure to support desired architecture.\n- Treat ownership and communication cost as architecture inputs.\n\n## Common mistakes\n\n- Drawing service boundaries without assigning sustainable ownership.\n- Creating a central team through which every service change must pass.\n- Assuming organisational problems can be solved only with technology.\n- Giving a team ownership without the permissions or operational skills to exercise it.\n\n## Key terms\n\n- Conway’s Law — System structure tends to reflect organisational communication.\n- inverse Conway manoeuvre — Changing team structure to encourage a desired architecture.\n- stream-aligned team — Team owning a continuous business flow end to end.\n- platform team — Team providing reusable self-service capabilities to other teams.",
+      "i18n": {
+        "hu": {
+          "name": "Conway’s Law és Team Boundaryk",
+          "description": "A rendszer struktúrája gyakran leképezi az azt építő szervezet kommunikációs struktúráját.",
+          "studyNotes": "## Mi ez?\n\nConway’s Law szerint a szervezetek olyan rendszereket terveznek, amelyek hasonlítanak a saját kommunikációs struktúrájukra. Egy central integration team gyakran central integration layert épít. Technical layer szerint szervezett teameknél pedig frontend, backend és database handoffok jelennek meg a deliveryben.\n\n## Milyen problémát old meg?\n\nAz architecture diagramon lehetnek independent service-ek, de ez nem valódi independence, ha minden change öt team approvalját kéri, vagy egyetlen platform team birtokol minden integration logicot. Az organisational ownership nélkül rajzolt technical boundary koordinációs bottleneck lesz.\n\n## Hogyan működik?\n\n- Nézd meg, egy tipikus change során kiknek kell kommunikálniuk és koordinálniuk.\n- Ahol lehet, end-to-end business capabilityhez igazítsd a teameket.\n- A team kapjon skillt és authorityt buildre, deployra és operationre.\n- A platform self-service capabilityt adjon, ne ticket queue legyen.\n- Inverse Conway manoeuvre-rel tudatosan lehet team structure-t alakítani a kívánt architecture támogatására.\n- Az ownership és communication cost legyen architecture input.\n\n## Gyakori hibák\n\n- Fenntartható ownership nélkül service boundaryt rajzolni.\n- Olyan central teamet létrehozni, amelyen minden service change átmegy.\n- Organisational problémát kizárólag technológiával megoldani próbálni.\n- Ownershipöt adni permission és operational skill nélkül.\n\n## Kulcsfogalmak\n\n- Conway’s Law — A system structure gyakran az organisational communicationt tükrözi.\n- inverse Conway manoeuvre — A team structure tudatos módosítása a kívánt architecture elősegítésére.\n- stream-aligned team — Egy business flow-t end-to-end ownoló team.\n- platform team — Más teameknek reusable self-service capabilityt nyújtó team."
+        }
+      }
+    },
+    {
+      "id": "arch_soa_esb",
+      "name": "SOA and Enterprise Service Bus",
+      "description": "Service-oriented integration with shared contracts and, often, a central bus for routing, transformation, and orchestration.",
+      "category": "architecture",
+      "importance": 1,
+      "relatedTopicIds": [
+        "arch_microservices",
+        "arch_api_gateway",
+        "arch_orchestration_choreography"
+      ],
+      "studyNotes": "## What is it?\n\nService-Oriented Architecture, or SOA, organizes capabilities as services with contracts and governance. An Enterprise Service Bus, or ESB, is one possible integration backbone that routes, transforms, mediates protocols, and sometimes orchestrates flows. SOA is an architectural style; an ESB is a technical product or pattern.\n\n## What problem does it solve?\n\nLarge enterprises have many legacy and vendor systems using different protocols and data formats. A shared integration layer can reduce point-to-point connections and centralize governance. The same layer becomes a bottleneck when business logic, ownership, and every change accumulate there.\n\n## How it works\n\n- Use explicit service contracts and governance.\n- Let the ESB handle protocol mediation, routing, and transformation where centralisation brings value.\n- Keep business ownership clear and avoid turning the bus into the domain model.\n- Measure runtime criticality and team queueing around the shared layer.\n- Separate enterprise reuse from forced synchronous coupling.\n- Modernisation may keep useful contracts and governance while moving logic toward owned services.\n\n## Common mistakes\n\n- Saying SOA always requires an ESB.\n- Treating the ESB as the place for all business logic.\n- Dismissing central integration even when legacy or compliance constraints justify it.\n- Confusing a central technical layer with clear business ownership.\n\n## Key terms\n\n- SOA — Architecture style based on services, contracts, and governance.\n- ESB — Central integration backbone for routing, mediation, and transformation.\n- protocol mediation — Translating between communication protocols.\n- smart pipes — Transport containing significant routing or business behaviour.",
+      "i18n": {
+        "hu": {
+          "name": "SOA és Enterprise Service Bus",
+          "description": "Service-oriented integration shared contractokkal és gyakran central busszal routinghoz, transformationhöz és orchestrationhöz.",
+          "studyNotes": "## Mi ez?\n\nA Service-Oriented Architecture, vagy SOA capabilityket contracttal és governance-szel rendelkező service-ekbe szervez. Az Enterprise Service Bus, vagy ESB egy lehetséges integration backbone, amely routingot, transformationt, protocol mediationt és néha orchestrationt végez. A SOA architecture style, az ESB pedig technical product vagy pattern.\n\n## Milyen problémát old meg?\n\nNagy enterprise környezetben sok legacy és vendor system használ eltérő protocolt és data formatot. Egy shared integration layer csökkentheti a point-to-point kapcsolatokat és központosíthatja a governance-t. Ugyanez a layer bottleneck lesz, ha business logic, ownership és minden change ott halmozódik fel.\n\n## Hogyan működik?\n\n- Használj explicit service contractot és governance-t.\n- Az ESB protocol mediationt, routingot és transformationt végezzen ott, ahol a centralisation értéket ad.\n- A business ownership maradjon egyértelmű; a bus ne váljon domain modellé.\n- Mérd a shared layer runtime criticalityjét és a körülötte kialakuló team queue-t.\n- Az enterprise reuse-t különítsd el a kényszerű synchronous couplingtól.\n- Modernisation során a hasznos contract és governance megmaradhat, miközben a logic owned service-ekbe kerül.\n\n## Gyakori hibák\n\n- Azt mondani, hogy a SOA mindig ESB-t igényel.\n- Minden business logicot az ESB-be tenni.\n- Central integrationt elutasítani akkor is, ha legacy vagy compliance constraint indokolja.\n- A central technical layert clear business ownershipnek tekinteni.\n\n## Kulcsfogalmak\n\n- SOA — Service-ekre, contractokra és governance-re épülő architecture style.\n- ESB — Routingot, mediationt és transformationt végző central integration backbone.\n- protocol mediation — Kommunikációs protocolok közötti átalakítás.\n- smart pipes — Jelentős routing vagy business behaviort tartalmazó transport layer."
+        }
+      }
+    },
+    {
+      "id": "arch_api_gateway",
+      "name": "API Gateway",
+      "description": "A controlled edge entry point for routing, authentication, traffic policy, and API-level operational concerns.",
+      "category": "architecture",
+      "importance": 4,
+      "relatedTopicIds": [
+        "arch_soa_esb",
+        "arch_microservices",
+        "arch_coupling_cohesion"
+      ],
+      "studyNotes": "## What is it?\n\nAn API Gateway is an entry point in front of backend services. It may terminate TLS, authenticate requests, enforce rate limits and quotas, route traffic, transform limited protocol details, and provide consistent logging or request IDs.\n\n## What problem does it solve?\n\nExposing every internal service directly gives clients too much topology knowledge and duplicates edge policies. A gateway provides one controlled boundary. It becomes a new risk when business workflows and domain transformations accumulate there, effectively turning it into a mini-ESB.\n\n## How it works\n\n- Keep edge concerns central: TLS, authentication, routing, quotas, and request limits.\n- Use service-level authorization as well; the gateway is not the only security boundary.\n- Keep domain decisions and long-running orchestration in owned services.\n- Design for high availability because the gateway is on many critical paths.\n- Propagate trace and identity context safely.\n- Version and test route or policy changes like application code.\n\n## Common mistakes\n\n- Putting business logic and database access in the gateway.\n- Assuming gateway authentication removes the need for service authorization.\n- Allowing a single gateway team to block every product change.\n- Ignoring timeout and payload limits at the edge.\n\n## Key terms\n\n- edge concern — Cross-cutting behaviour applied where traffic enters the system.\n- TLS termination — Decrypting HTTPS at a controlled proxy or gateway.\n- quota — Allowed usage for a consumer over a period.\n- backend-for-frontend — Client-specific edge service that shapes APIs for one frontend.",
+      "i18n": {
+        "hu": {
+          "name": "API Gateway",
+          "description": "Kontrollált edge entry point routinghoz, authenticationhöz, traffic policyhoz és API-level operational concernökhöz.",
+          "studyNotes": "## Mi ez?\n\nAz API Gateway a backend service-ek előtti entry point. Végezhet TLS terminationt, request authenticationt, rate limitet és quotát, routingot, korlátozott protocol transformationt, valamint egységes loggingot vagy request ID kezelést.\n\n## Milyen problémát old meg?\n\nHa minden internal service közvetlenül elérhető, a client túl sok topology detailt ismer, és minden service újra implementálja az edge policykat. A gateway egy kontrollált boundaryt ad. Viszont új kockázatot teremt, ha business workflow és domain transformation halmozódik benne, mert mini-ESB-vé válik.\n\n## Hogyan működik?\n\n- Centralizáld az edge concernt: TLS, authentication, routing, quota és request limit.\n- Service-level authorization továbbra is kell; a gateway nem az egyetlen security boundary.\n- Domain decision és long-running orchestration owned service-ben maradjon.\n- High availabilityre tervezd, mert sok critical path része.\n- Trace és identity contextet biztonságosan propagálj.\n- A route és policy change-et application code-hoz hasonlóan versionöld és teszteld.\n\n## Gyakori hibák\n\n- Business logicot és database access-t tenni a gatewaybe.\n- Azt feltételezni, hogy gateway authentication után service authorization nem kell.\n- Egyetlen gateway teammel minden product change-et blokkolni.\n- Edge timeoutot és payload limitet figyelmen kívül hagyni.\n\n## Kulcsfogalmak\n\n- edge concern — A rendszerbe belépő trafficnál alkalmazott cross-cutting behavior.\n- TLS termination — A HTTPS dekódolása kontrollált proxyban vagy gatewayben.\n- quota — Egy consumer számára adott időszakban engedélyezett usage.\n- backend-for-frontend — Egy frontend igényeire szabott client-specific edge service."
+        }
+      }
+    },
+    {
+      "id": "arch_event_driven",
+      "name": "Event-Driven Architecture",
+      "description": "Communicating completed facts through events so producers and consumers can evolve and operate more independently.",
+      "category": "architecture",
+      "importance": 4,
+      "relatedTopicIds": [
+        "arch_orchestration_choreography",
+        "arch_cqrs",
+        "arch_event_sourcing"
+      ],
+      "studyNotes": "## What is it?\n\nIn event-driven architecture, a component publishes an event describing a fact that has already happened, and interested consumers react independently. The producer does not call every consumer directly or wait for all secondary work to finish.\n\n## What problem does it solve?\n\nSynchronous fan-out makes one request depend on the latency and availability of many downstream systems. Events shorten the critical path, absorb spikes, and let new consumers subscribe without changing the producer. The cost is asynchronous failure, duplicates, ordering questions, and eventual consistency.\n\n## How it works\n\n- Publish stable business events with event ID, type, time, and version.\n- Keep producers unaware of individual consumers.\n- Make consumers idempotent and independently retryable.\n- Define ordering requirements only where business rules need them.\n- Monitor consumer lag, failures, and dead letters.\n- Use an outbox or equivalent mechanism when a database change and event must not diverge.\n- Communicate pending or delayed state honestly to users.\n\n## Common mistakes\n\n- Publishing database row dumps as business events.\n- Assuming event delivery is exactly once.\n- Using events for a step that must return an immediate answer.\n- Hiding eventual consistency from product and support teams.\n\n## Key terms\n\n- event — Immutable statement that something happened.\n- producer — Component that publishes an event.\n- consumer — Component that reacts to an event.\n- consumer lag — Delay between event publication and processing.",
+      "i18n": {
+        "hu": {
+          "name": "Event-Driven Architecture",
+          "description": "Megtörtént business facteket eventként közöl, hogy producer és consumer önállóbban változhasson és működhessen.",
+          "studyNotes": "## Mi ez?\n\nEvent-driven architecture esetén egy komponens eventet publikál egy már megtörtént factről, az érdeklődő consumerek pedig egymástól függetlenül reagálnak. A producer nem hív meg közvetlenül minden consumert, és nem várja meg az összes secondary work befejezését.\n\n## Milyen problémát old meg?\n\nA synchronous fan-out egy request latencyjét és availabilityjét sok downstream systemhez köti. Az event rövidíti a critical pathot, traffic spiket nyel el, és új consumer kapcsolódhat a producer módosítása nélkül. Az ára async failure, duplicate, ordering kérdés és eventual consistency.\n\n## Hogyan működik?\n\n- Stabil business eventet publikálj event ID-val, type-pal, time-mal és versionnel.\n- A producer ne ismerje az egyes consumereket.\n- A consumer legyen idempotent és önállóan retryolható.\n- Csak ott definiálj orderinget, ahol a business rule megköveteli.\n- Monitorozd a consumer lagot, failure-t és dead lettert.\n- Outbox vagy hasonló mechanizmus kell, ha a database change és event nem válhat szét.\n- A pending vagy delayed state legyen őszintén látható a user számára.\n\n## Gyakori hibák\n\n- Database row dumpot business eventként publikálni.\n- Exactly-once event deliveryt feltételezni.\n- Eventet használni olyan lépéshez, amelynek immediate answer kell.\n- Az eventual consistencyt elrejteni product és support elől.\n\n## Kulcsfogalmak\n\n- event — Immutable állítás arról, hogy valami megtörtént.\n- producer — Eventet publikáló komponens.\n- consumer — Eventre reagáló komponens.\n- consumer lag — Az event publication és processing közötti késés."
+        }
+      }
+    },
+    {
+      "id": "arch_orchestration_choreography",
+      "name": "Orchestration vs Choreography",
+      "description": "Two ways to coordinate multi-step workflows: a central coordinator or reactions to distributed events.",
+      "category": "architecture",
+      "importance": 3,
+      "relatedTopicIds": [
+        "arch_event_driven",
+        "arch_microservices",
+        "arch_coupling_cohesion"
+      ],
+      "studyNotes": "## What is it?\n\nOrchestration uses a coordinator that knows the workflow, invokes steps, stores progress, and handles compensation. Choreography lets services react to events and publish new events without one component owning the complete sequence.\n\n## What problem does it solve?\n\nA multi-service workflow needs clear progress and failure handling. A central coordinator makes the path visible but can concentrate logic and ownership. Choreography reduces direct control and coupling but makes the end-to-end flow, ordering, and debugging harder to understand.\n\n## How it works\n\n- Prefer orchestration for bounded, ordered, business-critical workflows with explicit state.\n- Prefer choreography for independent reactions across domains.\n- Keep the orchestrator focused on coordination rather than owning every domain rule.\n- Give choreographed events clear contracts, correlation, and idempotent consumers.\n- Define timeout, retry, compensation, and terminal states in either model.\n- Use tracing and workflow views so operators can see the end-to-end state.\n\n## Common mistakes\n\n- Using choreography to avoid naming an owner for a critical workflow.\n- Putting every domain rule in a central orchestrator.\n- Assuming events remove coupling rather than changing its form.\n- Designing no way to inspect or repair a stuck workflow.\n\n## Key terms\n\n- orchestrator — Coordinator controlling workflow progress.\n- choreography — Coordination through services reacting to events.\n- compensation — Business action that counteracts an earlier completed step.\n- workflow state — Recorded progress and outcome of a multi-step process.",
+      "i18n": {
+        "hu": {
+          "name": "Orchestration vs Choreography",
+          "description": "Két mód multi-step workflow koordinálására: central coordinator vagy distributed event reaction.",
+          "studyNotes": "## Mi ez?\n\nOrchestration esetén egy coordinator ismeri a workflow-t, meghívja a lépéseket, tárolja a progresszt és kezeli a compensationt. Choreography esetén a service-ek eventekre reagálnak és új eventeket publikálnak anélkül, hogy egy komponens birtokolná a teljes sequence-et.\n\n## Milyen problémát old meg?\n\nEgy multi-service workflow-nál látható progress és failure handling kell. A central coordinator érthetővé teszi a pathot, de logicot és ownershipöt koncentrálhat. A choreography csökkenti a direct controlt és bizonyos couplingot, de az end-to-end flow, ordering és debugging nehezebben látható.\n\n## Hogyan működik?\n\n- Bounded, ordered és business-critical workflow-hoz gyakran orchestration illik explicit state-tel.\n- Independent cross-domain reactionhöz gyakran choreography illik.\n- Az orchestrator koordináljon, ne birtokoljon minden domain rule-t.\n- Choreography esetén clear event contract, correlation és idempotent consumer kell.\n- Mindkét modellben definiáld a timeoutot, retryt, compensationt és terminal state-et.\n- Tracing és workflow view tegye láthatóvá az end-to-end state-et az operatornak.\n\n## Gyakori hibák\n\n- Choreographyval elkerülni egy critical workflow ownerének kijelölését.\n- Minden domain rule-t central orchestratorba tenni.\n- Azt feltételezni, hogy az event eltünteti a couplingot, nem csak átalakítja.\n- Stuck workflow inspect és repair lehetősége nélkül tervezni.\n\n## Kulcsfogalmak\n\n- orchestrator — A workflow progresszét irányító coordinator.\n- choreography — Eventekre reagáló service-ekkel történő koordináció.\n- compensation — Egy korábban sikeres step hatását üzletileg ellensúlyozó action.\n- workflow state — Egy multi-step process rögzített progressze és outcome-ja."
+        }
+      }
+    },
+    {
+      "id": "arch_cqrs",
+      "name": "CQRS",
+      "description": "Separating state-changing commands from read queries when their models or scaling needs genuinely differ.",
+      "category": "architecture",
+      "importance": 3,
+      "relatedTopicIds": [
+        "arch_event_driven",
+        "arch_event_sourcing",
+        "arch_service_boundaries_ddd"
+      ],
+      "studyNotes": "## What is it?\n\nCommand Query Responsibility Segregation, or CQRS, separates operations that change authoritative state from operations that read data. The write model protects business rules; read models can be shaped and denormalized for specific query needs.\n\n## What problem does it solve?\n\nA single model may become awkward when writes enforce complex invariants while reads need many high-volume search, dashboard, or reporting views. CQRS lets each side use a suitable shape. It also introduces synchronization, stale reads, projection failures, and more operational components.\n\n## How it works\n\n- Send commands to the authoritative write model.\n- Validate business rules before changing state.\n- Build read models from changes, often asynchronously.\n- Design projections around actual query patterns.\n- Expose lag and pending states where users may see stale data.\n- Make projections rebuildable and observable.\n- Start with logical separation; separate infrastructure only when scale or ownership requires it.\n\n## Common mistakes\n\n- Equating CQRS with event sourcing.\n- Creating two databases for simple CRUD without a measured need.\n- Allowing query endpoints to change authoritative state.\n- Ignoring projection lag and repair.\n\n## Key terms\n\n- command — Request to change state.\n- query — Request to read data without changing state.\n- read model — Data shaped for a specific query.\n- projection — Process that updates a read model from changes or events.",
+      "i18n": {
+        "hu": {
+          "name": "CQRS",
+          "description": "Különválasztja a state-changing commandot és a read queryt, amikor a model vagy scaling need ténylegesen eltér.",
+          "studyNotes": "## Mi ez?\n\nA Command Query Responsibility Segregation, vagy CQRS különválasztja az authoritative state-et módosító operationt az adatot olvasó operationtől. A write model védi a business rule-okat, a read model pedig egy konkrét queryhez denormalizált és optimalizált lehet.\n\n## Milyen problémát old meg?\n\nEgyetlen model kényelmetlenné válhat, ha a write komplex invariantokat enforce-ol, miközben a read oldalon sok nagy forgalmú search, dashboard vagy reporting view kell. A CQRS mindkét oldalnak megfelelő shape-et ad. Viszont synchronizationt, stale readet, projection failure-t és több operational komponenst hoz.\n\n## Hogyan működik?\n\n- A command az authoritative write modelhez menjen.\n- State change előtt enforce-old a business rule-okat.\n- A read modelt change-ből, gyakran async módon építsd.\n- A projection valódi query pattern köré készüljön.\n- Ha a user stale data-t láthat, mutasd a lagot vagy pending state-et.\n- A projection legyen rebuildable és observable.\n- Indulj logical separationnel; külön infrastructure csak scale vagy ownership indokkal kell.\n\n## Gyakori hibák\n\n- A CQRS-t az event sourcing szinonimájának tekinteni.\n- Egyszerű CRUDhoz két database-t készíteni mért need nélkül.\n- Query endpointból authoritative state-et módosítani.\n- Projection lagot és repairt kihagyni.\n\n## Kulcsfogalmak\n\n- command — State változtatását kérő operation.\n- query — State módosítása nélküli read operation.\n- read model — Egy konkrét queryhez formált data.\n- projection — A read modelt change vagy event alapján frissítő process."
+        }
+      }
+    },
+    {
+      "id": "arch_event_sourcing",
+      "name": "Event Sourcing",
+      "description": "Storing an ordered history of domain events as the source of truth instead of only the latest state.",
+      "category": "architecture",
+      "importance": 2,
+      "relatedTopicIds": [
+        "arch_cqrs",
+        "arch_event_driven",
+        "arch_ddd_building_blocks"
+      ],
+      "studyNotes": "## What is it?\n\nEvent sourcing stores state changes as an ordered sequence of domain events. Current state is rebuilt by replaying those events or by loading a snapshot and applying later events. The event stream, rather than a mutable current-state row, is the source of truth.\n\n## What problem does it solve?\n\nSome domains need a complete, explainable history and the ability to reconstruct how a state was reached. Event sourcing can support audit, temporal queries, and new projections. It also makes schema evolution, privacy deletion, debugging, and operational tooling substantially harder.\n\n## How it works\n\n- Define events as immutable business facts.\n- Append events with optimistic concurrency to protect stream order.\n- Rebuild aggregates from their stream, using snapshots where replay becomes expensive.\n- Build read projections for queries.\n- Version events and support upcasting or compatible readers.\n- Design for replay, duplicate handling, and projection recovery.\n- Use it only where the history itself has business value.\n\n## Common mistakes\n\n- Using event sourcing only because events already exist.\n- Treating technical logs as domain events.\n- Changing or deleting old events casually.\n- Ignoring event versioning, replay cost, and privacy obligations.\n\n## Key terms\n\n- event stream — Ordered events belonging to one aggregate or subject.\n- snapshot — Stored aggregate state used to shorten replay.\n- upcasting — Converting an old event representation when it is read.\n- projection — Derived read state built from events.",
+      "i18n": {
+        "hu": {
+          "name": "Event Sourcing",
+          "description": "A legutóbbi state helyett az ordered domain event historyt tárolja source of truthként.",
+          "studyNotes": "## Mi ez?\n\nEvent sourcing esetén a state change-ek ordered domain event sequence-ként tárolódnak. A current state az eventek replayéből, vagy snapshot és későbbi eventek alkalmazásából épül fel. A source of truth nem egy módosítható current-state row, hanem az event stream.\n\n## Milyen problémát old meg?\n\nBizonyos domainekben fontos a teljes, megmagyarázható history és annak rekonstruálása, hogyan jutott a rendszer egy state-be. Event sourcing segíthet auditnál, temporal querynél és új projection építésénél. Cserébe az event schema evolution, privacy deletion, debugging és operational tooling lényegesen nehezebb.\n\n## Hogyan működik?\n\n- Az event immutable business fact legyen.\n- Optimistic concurrencyvel appendeld, hogy a stream order védett maradjon.\n- Az aggregate-et a streamből rebuildeld; nagy replay costnál használj snapshotot.\n- Queryhez read projectiont építs.\n- Versionöld az eventet, és támogass compatible readert vagy upcastingot.\n- Tervezz replayre, duplicate kezelésre és projection recoveryre.\n- Csak akkor használd, ha maga a history business értéket képvisel.\n\n## Gyakori hibák\n\n- Csak azért event sourcingot használni, mert a rendszerben már vannak eventek.\n- Technical logot domain eventnek tekinteni.\n- Régi eventet könnyelműen módosítani vagy törölni.\n- Event versioninget, replay costot és privacy obligationt figyelmen kívül hagyni.\n\n## Kulcsfogalmak\n\n- event stream — Egy aggregate-hez vagy subjecthez tartozó ordered eventek.\n- snapshot — Replay rövidítésére tárolt aggregate state.\n- upcasting — Régi event representation átalakítása read közben.\n- projection — Eventekből származtatott read state."
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "arch_design_renewal_platform_001",
+      "title": "Designing a renewal platform from an unclear prompt",
+      "prompt": "You are asked to design a platform where customers submit trademark renewals, pay fees, receive documents, and track status. The prompt contains no scale or reliability numbers. How do you start?",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "arch_system_design_process",
+        "arch_requirements_nfrs",
+        "arch_quality_attributes"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Clarify scope and critical journeys, make NFRs measurable, estimate load, then propose components and failure handling.",
+      "expectedPoints": [
+        {
+          "id": "arch_renewal_scope",
+          "label": "Clarifies the functional scope",
+          "description": "Identifies actors, renewal lifecycle, payment, documents, status, notifications, and what is outside the first design.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "clarify actors",
+            "renewal lifecycle",
+            "payment flow",
+            "status tracking",
+            "out of scope"
+          ]
+        },
+        {
+          "id": "arch_renewal_nfr",
+          "label": "Makes NFRs explicit",
+          "description": "Asks for traffic, peak load, latency, availability, consistency, audit, retention, and regulatory needs.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "peak traffic",
+            "latency target",
+            "availability target",
+            "audit requirement",
+            "retention requirement",
+            "consistency requirement"
+          ]
+        },
+        {
+          "id": "arch_renewal_critical",
+          "label": "Separates critical and optional paths",
+          "description": "Keeps payment and renewal correctness explicit while allowing notifications or reporting to be asynchronous.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "critical path",
+            "payment correctness",
+            "notifications async",
+            "reporting async",
+            "pending state"
+          ]
+        },
+        {
+          "id": "arch_renewal_design",
+          "label": "Builds a justified high-level design",
+          "description": "Defines APIs, ownership, data, workflow, integrations, and observability only after the requirements.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "api contract",
+            "data ownership",
+            "workflow state",
+            "integration boundaries",
+            "observability"
+          ]
+        },
+        {
+          "id": "arch_renewal_risk",
+          "label": "Names failure and migration risks",
+          "description": "Covers retries, idempotency, external provider failure, reconciliation, rollout, and recovery.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "idempotency",
+            "provider failure",
+            "reconciliation",
+            "rollback plan",
+            "recovery objective"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_renewal_followup_payment",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you keep payment inside the synchronous request path? What information determines that decision?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Renewal platform tervezése homályos feladatból",
+          "prompt": "Egy platformot kell tervezned, ahol az ügyfelek trademark renewal requestet küldenek, díjat fizetnek, dokumentumot kapnak és státuszt követnek. A feladat nem ad scale vagy reliability számokat. Hogyan kezdesz?",
+          "answerStructureHint": "Először scope és critical journey, utána mérhető NFR, load estimate, majd komponensek és failure handling.",
+          "expectedPoints": {
+            "arch_renewal_scope": {
+              "label": "Tisztázza a functional scope-ot",
+              "description": "Azonosítja az actorokat, renewal lifecycle-t, paymentet, documentet, statust, notificationt és az első designon kívüli részeket."
+            },
+            "arch_renewal_nfr": {
+              "label": "Explicit NFR-eket kér",
+              "description": "Trafficra, peak loadra, latencyre, availabilityre, consistencyre, auditra, retentionre és regulationre kérdez rá."
+            },
+            "arch_renewal_critical": {
+              "label": "Elkülöníti a critical és optional pathot",
+              "description": "A payment és renewal correctness explicit marad, notification és reporting mehet async módon."
+            },
+            "arch_renewal_design": {
+              "label": "Indokolt high-level designt épít",
+              "description": "Requirement után definiál API-t, ownershipöt, data-t, workflow-t, integrationt és observabilityt."
+            },
+            "arch_renewal_risk": {
+              "label": "Failure és migration risket nevez meg",
+              "description": "Retry, idempotency, external provider failure, reconciliation, rollout és recovery szerepel."
+            }
+          },
+          "followUps": {
+            "arch_renewal_followup_payment": "A paymentet a synchronous request pathban tartanád? Milyen információ dönti ezt el?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_nfr_tradeoff_001",
+      "title": "Choosing an availability target",
+      "prompt": "A product manager asks for 99.99% availability for every feature of an internal application. How would you challenge and refine that requirement?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "arch_requirements_nfrs",
+        "arch_quality_attributes",
+        "arch_architecture_decisions"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Turn the request into user journeys and measurable targets, explain cost, differentiate criticality, and document the decision.",
+      "expectedPoints": [
+        {
+          "id": "arch_nfr_journeys",
+          "label": "Breaks the system into user journeys",
+          "description": "Separates critical operations from optional or recoverable features instead of assigning one target to everything.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "critical user journey",
+            "feature criticality",
+            "optional feature",
+            "different availability targets"
+          ]
+        },
+        {
+          "id": "arch_nfr_measure",
+          "label": "Makes the target measurable",
+          "description": "Defines success, measurement point, time window, planned maintenance, and dependency treatment.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "define success",
+            "measurement window",
+            "planned maintenance",
+            "dependency failures",
+            "service level indicator"
+          ]
+        },
+        {
+          "id": "arch_nfr_cost",
+          "label": "Explains the cost curve",
+          "description": "Connects a stricter target to redundancy, operational staffing, testing, and recovery investment.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "redundancy cost",
+            "on call coverage",
+            "multi region cost",
+            "recovery investment",
+            "testing cost"
+          ]
+        },
+        {
+          "id": "arch_nfr_alternative",
+          "label": "Proposes a proportionate alternative",
+          "description": "Uses a lower target or graceful degradation for non-critical paths while protecting the core flow.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "graceful degradation",
+            "tiered slo",
+            "core flow",
+            "proportionate target"
+          ]
+        },
+        {
+          "id": "arch_nfr_record",
+          "label": "Records ownership and review",
+          "description": "Documents the accepted target, rationale, owner, and conditions for revisiting it.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "document decision",
+            "decision owner",
+            "review trigger",
+            "adr"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_nfr_followup_math",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Roughly how much monthly downtime is allowed by 99.9% and 99.99% availability?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Availability target megválasztása",
+          "prompt": "A product manager 99.99% availabilityt kér egy belső application minden feature-éhez. Hogyan kérdőjeleznéd meg és pontosítanád ezt a requirementet?",
+          "answerStructureHint": "Bontsd user journeykre, tedd mérhetővé, mutasd meg a costot, különítsd el a criticalityt, majd dokumentáld a döntést.",
+          "expectedPoints": {
+            "arch_nfr_journeys": {
+              "label": "User journeykre bontja a rendszert",
+              "description": "A critical operationt elkülöníti az optional vagy recoverable feature-től, nem ad mindennek egy targetet."
+            },
+            "arch_nfr_measure": {
+              "label": "Mérhetővé teszi a targetet",
+              "description": "Definiálja a success-t, measurement pointot, time window-t, planned maintenance-t és dependency treatmentet."
+            },
+            "arch_nfr_cost": {
+              "label": "Elmagyarázza a cost növekedését",
+              "description": "A szigorúbb targetet redundancyhoz, operational staffinghez, testinghez és recovery investmenthez köti."
+            },
+            "arch_nfr_alternative": {
+              "label": "Arányos alternatívát javasol",
+              "description": "Non-critical pathhoz alacsonyabb targetet vagy graceful degradationt használ, miközben a core flow védett."
+            },
+            "arch_nfr_record": {
+              "label": "Rögzíti az ownershipöt és review-t",
+              "description": "Dokumentálja a targetet, rationale-t, ownert és a felülvizsgálat feltételeit."
+            }
+          },
+          "followUps": {
+            "arch_nfr_followup_math": "Körülbelül mennyi havi downtime fér bele 99.9% és 99.99% availability mellett?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_monolith_microservices_001",
+      "title": "Modular monolith or microservices?",
+      "prompt": "A six-person team is building a new business application whose domain is still changing. Some stakeholders want microservices from day one. What would you recommend and why?",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "design_review"
+      ],
+      "topicIds": [
+        "arch_modular_monolith",
+        "arch_microservices",
+        "arch_coupling_cohesion",
+        "arch_conway"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Compare the independence benefit with team size, domain uncertainty, operational cost, and an extraction path.",
+      "expectedPoints": [
+        {
+          "id": "arch_mm_context",
+          "label": "Uses team and domain context",
+          "description": "Recognizes that a small team and unstable boundaries reduce the immediate value of independent services.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "six person team",
+            "domain still changing",
+            "uncertain boundaries",
+            "small team"
+          ]
+        },
+        {
+          "id": "arch_mm_modular",
+          "label": "Recommends enforced modularity",
+          "description": "Proposes a modular monolith with business modules, public interfaces, controlled dependencies, and data ownership.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "modular monolith",
+            "business modules",
+            "module api",
+            "controlled dependencies",
+            "data ownership"
+          ]
+        },
+        {
+          "id": "arch_mm_costs",
+          "label": "Names microservice costs",
+          "description": "Covers distributed failure, pipelines, observability, data consistency, network latency, and ownership overhead.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "distributed failure",
+            "many pipelines",
+            "observability cost",
+            "data consistency",
+            "network latency"
+          ]
+        },
+        {
+          "id": "arch_mm_extract",
+          "label": "Keeps a future extraction path",
+          "description": "Defines criteria such as independent scaling, ownership, risk, or release pressure for later extraction.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "extract later",
+            "independent scaling",
+            "ownership boundary",
+            "deployment pressure",
+            "clear criteria"
+          ]
+        },
+        {
+          "id": "arch_mm_counter",
+          "label": "Acknowledges exceptions",
+          "description": "States conditions where early microservices may still be justified, such as strict isolation or established platform capability.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "strict isolation",
+            "existing platform",
+            "independent teams",
+            "regulatory boundary"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_mm_followup_enforce",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you enforce module boundaries so the modular monolith does not become a big ball of mud?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Modular monolith vagy microservices?",
+          "prompt": "Egy hatfős team új business applicationt épít, miközben a domain boundaryk még változnak. Néhány stakeholder az első naptól microservices-t akar. Mit javasolnál, és miért?",
+          "answerStructureHint": "Hasonlítsd össze az independence értékét a team size-zal, domain uncertaintyvel, operational costtal és extraction pathszal.",
+          "expectedPoints": {
+            "arch_mm_context": {
+              "label": "Figyelembe veszi a team és domain contextet",
+              "description": "Felismeri, hogy kis team és instabil boundary mellett az independent service azonnali értéke alacsonyabb."
+            },
+            "arch_mm_modular": {
+              "label": "Enforce-olt modularityt javasol",
+              "description": "Business module-okkal, public interface-szel, kontrollált dependencyvel és data ownershippel modular monolithot javasol."
+            },
+            "arch_mm_costs": {
+              "label": "Megnevezi a microservices költségeit",
+              "description": "Distributed failure, pipeline, observability, data consistency, network latency és ownership overhead szerepel."
+            },
+            "arch_mm_extract": {
+              "label": "Fenntartja a későbbi extraction lehetőségét",
+              "description": "Independent scaling, ownership, risk vagy release pressure alapján későbbi extraction criteriát ad."
+            },
+            "arch_mm_counter": {
+              "label": "Elismeri a kivételeket",
+              "description": "Megnevez olyan feltételt, ahol early microservices indokolt lehet, például strict isolation vagy meglévő platform capability."
+            }
+          },
+          "followUps": {
+            "arch_mm_followup_enforce": "Hogyan enforce-olnád a module boundaryket, hogy a modular monolith ne váljon big ball of muddá?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_service_boundary_001",
+      "title": "Drawing service boundaries for a booking domain",
+      "prompt": "A proposed design has separate BookingValidation, BookingStatus, BookingEmailTrigger, and BookingDatabase services. Review the boundaries and propose a better approach.",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "design_review",
+        "system_design"
+      ],
+      "topicIds": [
+        "arch_service_boundaries_ddd",
+        "arch_microservices",
+        "arch_ddd_building_blocks",
+        "arch_coupling_cohesion"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Look for business capability, invariants, ownership, data, and change patterns rather than technical tasks.",
+      "expectedPoints": [
+        {
+          "id": "arch_bound_smell",
+          "label": "Recognizes technical-task fragmentation",
+          "description": "Explains that the proposed services split one cohesive booking capability into chatty, tightly coordinated steps.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "technical task split",
+            "chatty services",
+            "same business capability",
+            "tight coordination",
+            "distributed monolith"
+          ]
+        },
+        {
+          "id": "arch_bound_domain",
+          "label": "Uses domain concepts and invariants",
+          "description": "Finds a Booking or Reservation bounded context and identifies rules that should remain together.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "bounded context",
+            "booking invariant",
+            "domain language",
+            "business capability",
+            "aggregate"
+          ]
+        },
+        {
+          "id": "arch_bound_data",
+          "label": "Defines data ownership",
+          "description": "Keeps booking state under one authority rather than exposing a database service or shared tables.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "data ownership",
+            "no database service",
+            "single authority",
+            "private schema"
+          ]
+        },
+        {
+          "id": "arch_bound_external",
+          "label": "Separates truly independent capabilities",
+          "description": "Treats notification or payment as separate only when ownership, lifecycle, scaling, and failure policies justify it.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "notification separate",
+            "payment separate",
+            "independent lifecycle",
+            "separate ownership",
+            "different scaling"
+          ]
+        },
+        {
+          "id": "arch_bound_coarse",
+          "label": "Starts coarse-grained",
+          "description": "Recommends a coarse-grained Booking service or module and extracts later based on evidence.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "coarse grained service",
+            "start modular",
+            "extract later",
+            "evidence based split"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_bound_followup_shareddb",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What problems remain if these services are deployed separately but all share the same booking tables?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Service boundaryk egy booking domainben",
+          "prompt": "A javasolt design külön BookingValidation, BookingStatus, BookingEmailTrigger és BookingDatabase service-t tartalmaz. Review-zd a boundaryket, és javasolj jobb megközelítést.",
+          "answerStructureHint": "Technikai task helyett business capability, invariant, ownership, data és change pattern alapján gondolkodj.",
+          "expectedPoints": {
+            "arch_bound_smell": {
+              "label": "Felismeri a technical-task fragmentationt",
+              "description": "Elmagyarázza, hogy a design egy cohesive booking capabilityt chatty, szorosan koordinált step-ekre bont."
+            },
+            "arch_bound_domain": {
+              "label": "Domain conceptet és invariantot használ",
+              "description": "Booking vagy Reservation bounded contextet keres, és együtt tartja a hozzá tartozó rule-okat."
+            },
+            "arch_bound_data": {
+              "label": "Data ownershipöt definiál",
+              "description": "A booking state egy authority alatt marad, nincs database service vagy shared table exposure."
+            },
+            "arch_bound_external": {
+              "label": "Csak valóban independent capabilityt választ le",
+              "description": "Notification vagy payment akkor külön, ha ownership, lifecycle, scaling és failure policy indokolja."
+            },
+            "arch_bound_coarse": {
+              "label": "Coarse-grained módon indul",
+              "description": "Booking service-t vagy module-t javasol, amely evidence alapján később extractálható."
+            }
+          },
+          "followUps": {
+            "arch_bound_followup_shareddb": "Milyen problémák maradnak, ha ezek külön deployolt service-ek, de ugyanazokat a booking table-öket használják?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_clean_review_001",
+      "title": "Reviewing a controller-heavy service",
+      "prompt": "An Express controller validates input, contains pricing rules, writes SQL, calls a payment SDK, and formats every error. How would you restructure it?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "arch_layered_clean_hexagonal",
+        "arch_solid",
+        "arch_coupling_cohesion"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Separate delivery, application, domain policy, and adapters while avoiding empty abstraction.",
+      "expectedPoints": [
+        {
+          "id": "arch_clean_delivery",
+          "label": "Keeps the controller as delivery code",
+          "description": "Leaves protocol parsing, authentication context, validation result mapping, and response formatting at the edge.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "thin controller",
+            "protocol concerns",
+            "response mapping",
+            "request parsing",
+            "delivery layer"
+          ]
+        },
+        {
+          "id": "arch_clean_usecase",
+          "label": "Introduces a use-case boundary",
+          "description": "Moves workflow coordination into an application service or use case.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "application service",
+            "use case",
+            "workflow coordination",
+            "business operation"
+          ]
+        },
+        {
+          "id": "arch_clean_domain",
+          "label": "Places pricing rules in the domain",
+          "description": "Keeps business invariants and pricing behaviour independent from Express and the payment SDK.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "domain rules",
+            "pricing policy",
+            "framework independent",
+            "business invariant"
+          ]
+        },
+        {
+          "id": "arch_clean_ports",
+          "label": "Uses ports and adapters",
+          "description": "Defines interfaces for persistence and payment, implemented by SQL and SDK adapters.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "repository port",
+            "payment port",
+            "adapter",
+            "dependency inversion"
+          ]
+        },
+        {
+          "id": "arch_clean_pragmatic",
+          "label": "Avoids abstraction for its own sake",
+          "description": "Keeps the number of layers proportional to complexity and change pressure.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "avoid overengineering",
+            "proportionate layers",
+            "simple design",
+            "real change pressure"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_clean_followup_tx",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where would you place the database transaction boundary in this design?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Controller-heavy service review-ja",
+          "prompt": "Egy Express controller inputot validál, pricing rule-okat tartalmaz, SQL-t ír, payment SDK-t hív és minden errort maga formáz. Hogyan strukturálnád át?",
+          "answerStructureHint": "Válaszd szét a delivery, application, domain policy és adapter felelősséget, de kerüld az üres abstractiont.",
+          "expectedPoints": {
+            "arch_clean_delivery": {
+              "label": "A controller delivery code marad",
+              "description": "Protocol parsing, auth context, validation result mapping és response formatting marad az edge-en."
+            },
+            "arch_clean_usecase": {
+              "label": "Use-case boundaryt vezet be",
+              "description": "A workflow coordination application service-be vagy use case-be kerül."
+            },
+            "arch_clean_domain": {
+              "label": "A pricing rule a domainbe kerül",
+              "description": "A business invariant és pricing behavior Express- és payment SDK-független marad."
+            },
+            "arch_clean_ports": {
+              "label": "Portot és adaptert használ",
+              "description": "Persistence és payment számára interface készül, SQL és SDK adapter implementálja."
+            },
+            "arch_clean_pragmatic": {
+              "label": "Elkerüli az öncélú abstractiont",
+              "description": "A layer count a complexityhez és change pressure-höz arányos marad."
+            }
+          },
+          "followUps": {
+            "arch_clean_followup_tx": "Hol helyeznéd el a database transaction boundaryt ebben a designban?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_soa_microservices_001",
+      "title": "SOA, ESB, and microservices",
+      "prompt": "Explain the difference between SOA and microservices, and why an ESB can become both a technical and organisational bottleneck.",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "arch_soa_esb",
+        "arch_microservices",
+        "arch_conway",
+        "arch_coupling_cohesion"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Separate the architecture style from the product, compare where integration logic lives, and give a balanced trade-off.",
+      "expectedPoints": [
+        {
+          "id": "arch_soa_style",
+          "label": "Separates SOA from ESB",
+          "description": "States that SOA is an architecture style while an ESB is one possible integration backbone.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "soa is architecture style",
+            "esb is integration backbone",
+            "not the same",
+            "service contracts"
+          ]
+        },
+        {
+          "id": "arch_soa_logic",
+          "label": "Compares where integration logic lives",
+          "description": "Contrasts central routing and transformation with service-owned logic and lightweight transport.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "central integration logic",
+            "smart endpoints",
+            "dumb pipes",
+            "routing transformation",
+            "service owned logic"
+          ]
+        },
+        {
+          "id": "arch_soa_bottleneck",
+          "label": "Explains the bottleneck",
+          "description": "Shows how runtime criticality and a central team queue couple changes, deployments, and ownership.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "single critical path",
+            "central team bottleneck",
+            "coordinated changes",
+            "business logic accumulates",
+            "deployment coupling"
+          ]
+        },
+        {
+          "id": "arch_soa_balanced",
+          "label": "Gives a balanced view",
+          "description": "Acknowledges that central mediation and governance may still fit legacy or compliance-heavy environments.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "legacy systems",
+            "compliance governance",
+            "protocol mediation",
+            "central layer can fit"
+          ]
+        },
+        {
+          "id": "arch_soa_conway",
+          "label": "Connects the choice to organisation",
+          "description": "Explains how team structure can create or reinforce the centralised architecture.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "conway law",
+            "central integration team",
+            "organisation mirrors architecture",
+            "ownership structure"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_soa_followup_gateway",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you stop an API Gateway from gradually becoming a new ESB?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "SOA, ESB és microservices",
+          "prompt": "Magyarázd el a SOA és microservices különbségét, valamint azt, miért válhat az ESB technikai és organisational bottleneckké is.",
+          "answerStructureHint": "Különítsd el az architecture style-t a producttól, hasonlítsd össze, hol él az integration logic, és adj balanced trade-offot.",
+          "expectedPoints": {
+            "arch_soa_style": {
+              "label": "Elkülöníti a SOA-t az ESB-től",
+              "description": "A SOA architecture style, az ESB egy lehetséges integration backbone."
+            },
+            "arch_soa_logic": {
+              "label": "Összehasonlítja az integration logic helyét",
+              "description": "Central routing és transformation áll szemben a service-owned logic és lightweight transport megközelítéssel."
+            },
+            "arch_soa_bottleneck": {
+              "label": "Elmagyarázza a bottlenecket",
+              "description": "A runtime criticality és central team queue coordinated change-et, deployment couplingot és ownership problémát okoz."
+            },
+            "arch_soa_balanced": {
+              "label": "Balanced képet ad",
+              "description": "Elismeri, hogy legacy vagy compliance-heavy környezetben central mediation és governance indokolt lehet."
+            },
+            "arch_soa_conway": {
+              "label": "A döntést az organisationhöz köti",
+              "description": "Elmagyarázza, hogyan hozhat létre vagy erősíthet meg a team structure centralised architecture-t."
+            }
+          },
+          "followUps": {
+            "arch_soa_followup_gateway": "Hogyan akadályoznád meg, hogy egy API Gateway fokozatosan új ESB-vé váljon?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_gateway_review_001",
+      "title": "An API Gateway is becoming a mini-ESB",
+      "prompt": "The API Gateway now contains customer-specific mappings, booking workflow decisions, database lookups, and retry logic. Review the design and propose a safer boundary.",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "design_review",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "arch_api_gateway",
+        "arch_soa_esb",
+        "arch_coupling_cohesion"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Identify edge concerns, move domain behaviour to owned services, preserve policy consistency, and plan migration.",
+      "expectedPoints": [
+        {
+          "id": "arch_gw_smell",
+          "label": "Identifies misplaced domain logic",
+          "description": "Explains that workflow decisions, database access, and customer-specific business mapping exceed normal edge concerns.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "business logic in gateway",
+            "database lookup",
+            "workflow decision",
+            "customer specific mapping",
+            "mini esb"
+          ]
+        },
+        {
+          "id": "arch_gw_edge",
+          "label": "Defines the gateway boundary",
+          "description": "Keeps TLS, authentication, routing, quotas, request limits, and common telemetry at the edge.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "tls termination",
+            "authentication",
+            "routing",
+            "rate limit",
+            "request limits",
+            "telemetry"
+          ]
+        },
+        {
+          "id": "arch_gw_move",
+          "label": "Moves behaviour to owned services",
+          "description": "Places business mapping and workflow logic in services with clear domain ownership and tests.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "move to service",
+            "domain ownership",
+            "application service",
+            "testable mapping",
+            "service contract"
+          ]
+        },
+        {
+          "id": "arch_gw_security",
+          "label": "Keeps defence in depth",
+          "description": "Retains service-level authorization and validation rather than trusting only the gateway.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "service authorization",
+            "defence in depth",
+            "boundary validation",
+            "do not trust gateway only"
+          ]
+        },
+        {
+          "id": "arch_gw_migrate",
+          "label": "Migrates incrementally",
+          "description": "Extracts rules with contract tests, traffic comparison, monitoring, and rollback.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "incremental extraction",
+            "contract tests",
+            "shadow traffic",
+            "monitoring",
+            "rollback"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_gw_followup_bff",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would a Backend-for-Frontend change your answer? Which logic may belong there?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Az API Gateway mini-ESB-vé válik",
+          "prompt": "Az API Gateway már customer-specific mappinget, booking workflow decisiont, database lookupot és retry logicot is tartalmaz. Review-zd a designt, és javasolj biztonságosabb boundaryt.",
+          "answerStructureHint": "Azonosítsd az edge concernt, mozgasd a domain behaviort owned service-be, tartsd meg a policy consistencyt, és tervezz migrationt.",
+          "expectedPoints": {
+            "arch_gw_smell": {
+              "label": "Felismeri a rossz helyen lévő domain logicot",
+              "description": "A workflow decision, database access és customer-specific business mapping túlmutat a normál edge concernön."
+            },
+            "arch_gw_edge": {
+              "label": "Definiálja a gateway boundaryt",
+              "description": "TLS, authentication, routing, quota, request limit és common telemetry marad az edge-en."
+            },
+            "arch_gw_move": {
+              "label": "Owned service-be mozgatja a behaviort",
+              "description": "A business mapping és workflow logic clear domain ownershippel és testtel rendelkező service-be kerül."
+            },
+            "arch_gw_security": {
+              "label": "Megtartja a defence in depth-et",
+              "description": "Service-level authorization és validation továbbra is kell, nem csak a gatewayben bízik."
+            },
+            "arch_gw_migrate": {
+              "label": "Incremental migrationt tervez",
+              "description": "Contract testtel, traffic comparisonnel, monitoringgal és rollbackkel extractálja a rule-okat."
+            }
+          },
+          "followUps": {
+            "arch_gw_followup_bff": "Változtatna-e a válaszodon egy Backend-for-Frontend? Milyen logic tartozhat oda?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_orchestration_booking_001",
+      "title": "Orchestration or choreography for a booking workflow",
+      "prompt": "A booking process reserves inventory, authorizes payment, creates a ticket, updates loyalty, and sends notifications. Would you use orchestration or choreography?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "system_design"
+      ],
+      "topicIds": [
+        "arch_orchestration_choreography",
+        "arch_event_driven",
+        "arch_microservices"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Separate the critical ordered workflow from independent reactions, then cover state, compensation, and observability.",
+      "expectedPoints": [
+        {
+          "id": "arch_orch_critical",
+          "label": "Identifies the critical ordered steps",
+          "description": "Treats inventory, payment, and ticket creation as a workflow whose order and outcome must be explicit.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "critical workflow",
+            "ordered steps",
+            "inventory payment ticket",
+            "explicit outcome",
+            "business transaction"
+          ]
+        },
+        {
+          "id": "arch_orch_choice",
+          "label": "Justifies orchestration for the core",
+          "description": "Uses a coordinator for the bounded critical workflow when progress, compensation, and debugging matter.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "orchestrated saga",
+            "central coordinator",
+            "workflow state",
+            "compensation",
+            "easier debugging"
+          ]
+        },
+        {
+          "id": "arch_orch_events",
+          "label": "Uses choreography for independent reactions",
+          "description": "Moves loyalty and notifications to events when they do not gate booking confirmation.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "loyalty event",
+            "notifications async",
+            "independent consumers",
+            "booking created event",
+            "not critical path"
+          ]
+        },
+        {
+          "id": "arch_orch_domain",
+          "label": "Keeps domain rules with services",
+          "description": "Ensures the orchestrator coordinates but payment and inventory services own their rules.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "orchestrator coordinates",
+            "domain rules in service",
+            "service ownership",
+            "not god orchestrator"
+          ]
+        },
+        {
+          "id": "arch_orch_ops",
+          "label": "Designs operability",
+          "description": "Includes correlation, timeout, retry, terminal states, workflow inspection, and repair.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "correlation id",
+            "timeout retry",
+            "terminal state",
+            "workflow dashboard",
+            "manual repair"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_orch_followup_failure",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Payment succeeds but ticket creation fails. What state and compensation would you design?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Orchestration vagy choreography egy booking workflow-hoz",
+          "prompt": "Egy booking process inventoryt reserve-ol, paymentet authorize-ol, ticketet hoz létre, loyaltyt frissít és notificationt küld. Orchestrationt vagy choreographyt használnál?",
+          "answerStructureHint": "Különítsd el a critical ordered workflow-t az independent reactionöktől, majd térj ki state-re, compensationre és observabilityre.",
+          "expectedPoints": {
+            "arch_orch_critical": {
+              "label": "Azonosítja a critical ordered stepeket",
+              "description": "Az inventory, payment és ticket creation explicit orderrel és outcome-mal rendelkező workflow."
+            },
+            "arch_orch_choice": {
+              "label": "A core flow-hoz indokolja az orchestrationt",
+              "description": "Coordinator kezeli a bounded critical workflow progresszét, compensationjét és debuggingját."
+            },
+            "arch_orch_events": {
+              "label": "Independent reactionhöz choreographyt használ",
+              "description": "Loyalty és notification eventre kerül, ha nem gate-eli a booking confirmationt."
+            },
+            "arch_orch_domain": {
+              "label": "A domain rule a service-ben marad",
+              "description": "Az orchestrator koordinál, de payment és inventory service ownolja a saját rule-jait."
+            },
+            "arch_orch_ops": {
+              "label": "Operabilityt tervez",
+              "description": "Correlation, timeout, retry, terminal state, workflow inspection és repair szerepel."
+            }
+          },
+          "followUps": {
+            "arch_orch_followup_failure": "A payment sikerül, de a ticket creation elbukik. Milyen state-et és compensationt terveznél?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_cqrs_portfolio_001",
+      "title": "When CQRS is justified",
+      "prompt": "A portfolio system has complex renewal rules on writes and several high-volume dashboards and search views. Would CQRS help?",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "system_design"
+      ],
+      "topicIds": [
+        "arch_cqrs",
+        "arch_event_driven",
+        "arch_service_boundaries_ddd"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Explain the write/read mismatch, propose the simplest CQRS form, and own projection lag and recovery.",
+      "expectedPoints": [
+        {
+          "id": "arch_cqrs_fit",
+          "label": "Identifies a real read/write mismatch",
+          "description": "Shows that complex write invariants and differently shaped high-volume reads can justify separate models.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "complex write rules",
+            "high volume reads",
+            "different query shapes",
+            "read write mismatch"
+          ]
+        },
+        {
+          "id": "arch_cqrs_models",
+          "label": "Separates command and query responsibilities",
+          "description": "Keeps authoritative state and rules on the write side and creates query-specific read models.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "command model",
+            "query model",
+            "authoritative write",
+            "read model",
+            "denormalized view"
+          ]
+        },
+        {
+          "id": "arch_cqrs_consistency",
+          "label": "Owns eventual consistency",
+          "description": "Explains projection lag, pending states, freshness expectations, and user-visible consequences.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "eventual consistency",
+            "projection lag",
+            "stale read",
+            "pending state",
+            "freshness"
+          ]
+        },
+        {
+          "id": "arch_cqrs_recovery",
+          "label": "Makes projections operable",
+          "description": "Includes idempotent updates, checkpoints, monitoring, replay, and rebuild.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "idempotent projection",
+            "checkpoint",
+            "replay events",
+            "rebuild projection",
+            "monitor lag"
+          ]
+        },
+        {
+          "id": "arch_cqrs_scope",
+          "label": "Avoids unnecessary infrastructure",
+          "description": "Notes that CQRS can start as logical separation and does not require event sourcing or two databases.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "logical separation",
+            "no event sourcing required",
+            "same database possible",
+            "start simple"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_cqrs_followup_missed",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "A projection misses events and becomes inconsistent. How do you detect and rebuild it?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mikor indokolt a CQRS?",
+          "prompt": "Egy portfolio system write oldalán komplex renewal rule-ok vannak, miközben több nagy forgalmú dashboard és search view kell. Segítene a CQRS?",
+          "answerStructureHint": "Mutasd meg a write/read mismatch-et, javasold a legegyszerűbb CQRS formát, és vállald a projection lagot és recoveryt.",
+          "expectedPoints": {
+            "arch_cqrs_fit": {
+              "label": "Valódi read/write mismatch-et azonosít",
+              "description": "A complex write invariant és eltérő shape-ű high-volume read indokolhat separate modelt."
+            },
+            "arch_cqrs_models": {
+              "label": "Elkülöníti a command és query responsibilityt",
+              "description": "Az authoritative state és rule a write oldalon marad, a queryhez külön read model készül."
+            },
+            "arch_cqrs_consistency": {
+              "label": "Vállalja az eventual consistencyt",
+              "description": "Projection lag, pending state, freshness expectation és user-visible következmény szerepel."
+            },
+            "arch_cqrs_recovery": {
+              "label": "Operable projectiont tervez",
+              "description": "Idempotent update, checkpoint, monitoring, replay és rebuild kerül elő."
+            },
+            "arch_cqrs_scope": {
+              "label": "Kerüli a fölösleges infrastructure-t",
+              "description": "A CQRS indulhat logical separationnel, és nem követel event sourcingot vagy két database-t."
+            }
+          },
+          "followUps": {
+            "arch_cqrs_followup_missed": "Egy projection eventeket veszít és inconsistent lesz. Hogyan detektálnád és rebuildelnéd?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_event_sourcing_001",
+      "title": "Should a payment ledger use event sourcing?",
+      "prompt": "A team proposes event sourcing for a payment ledger because audit history is important. Evaluate the decision.",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "design_review"
+      ],
+      "topicIds": [
+        "arch_event_sourcing",
+        "arch_cqrs",
+        "arch_ddd_building_blocks",
+        "arch_architecture_decisions"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Establish whether history is the source of business truth, then cover concurrency, projections, evolution, privacy, and alternatives.",
+      "expectedPoints": [
+        {
+          "id": "arch_es_value",
+          "label": "Tests whether event history has business value",
+          "description": "Distinguishes a true need to reconstruct financial state from merely needing an audit log.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "reconstruct state",
+            "business history",
+            "audit log alternative",
+            "history is source of truth"
+          ]
+        },
+        {
+          "id": "arch_es_model",
+          "label": "Defines events and stream boundaries",
+          "description": "Uses immutable domain facts, aggregate streams, and optimistic concurrency.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "immutable domain events",
+            "event stream",
+            "aggregate boundary",
+            "optimistic concurrency"
+          ]
+        },
+        {
+          "id": "arch_es_reads",
+          "label": "Plans read models and reconciliation",
+          "description": "Builds projections for queries and explains how they are checked, replayed, and repaired.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "read projection",
+            "replay",
+            "rebuild",
+            "reconciliation",
+            "projection lag"
+          ]
+        },
+        {
+          "id": "arch_es_evolution",
+          "label": "Owns event evolution and compliance",
+          "description": "Covers event versioning, upcasting, retention, encryption, and deletion obligations.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "event versioning",
+            "upcasting",
+            "retention",
+            "privacy deletion",
+            "encryption"
+          ]
+        },
+        {
+          "id": "arch_es_cost",
+          "label": "Compares simpler alternatives",
+          "description": "Considers a conventional ledger with immutable entries and audit log if full event sourcing adds no value.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "append only ledger",
+            "audit log",
+            "simpler alternative",
+            "avoid unnecessary complexity"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_es_followup_correction",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you correct a historical mistake if old events must remain immutable?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Kell-e event sourcing egy payment ledgerhez?",
+          "prompt": "A team event sourcingot javasol egy payment ledgerhez, mert fontos az audit history. Értékeld a döntést.",
+          "answerStructureHint": "Vizsgáld meg, hogy a history maga business source of truth-e, majd térj ki concurrencyre, projectionre, evolutionre, privacyra és alternatívára.",
+          "expectedPoints": {
+            "arch_es_value": {
+              "label": "Megvizsgálja a history business értékét",
+              "description": "Különbséget tesz a financial state rekonstruálása és egy egyszerű audit log igénye között."
+            },
+            "arch_es_model": {
+              "label": "Definiálja az eventet és stream boundaryt",
+              "description": "Immutable domain factet, aggregate streamet és optimistic concurrencyt használ."
+            },
+            "arch_es_reads": {
+              "label": "Read modelt és reconciliationt tervez",
+              "description": "Projectiont épít, és elmagyarázza annak check, replay és repair módját."
+            },
+            "arch_es_evolution": {
+              "label": "Vállalja az event evolutiont és compliance-t",
+              "description": "Event versioning, upcasting, retention, encryption és deletion obligation szerepel."
+            },
+            "arch_es_cost": {
+              "label": "Egyszerűbb alternatívát is összehasonlít",
+              "description": "Append-only ledger és audit log is felmerül, ha a full event sourcing nem ad elég értéket."
+            }
+          },
+          "followUps": {
+            "arch_es_followup_correction": "Hogyan javítanál egy historical mistake-et, ha a régi eventek immutable-ek maradnak?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_adr_001",
+      "title": "Writing an architecture decision record",
+      "prompt": "Your team must choose between a managed message broker and operating one itself. What should the ADR contain?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "arch_architecture_decisions",
+        "arch_quality_attributes",
+        "arch_requirements_nfrs"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Capture context and constraints, compare options against scenarios, record consequences, ownership, migration, and review triggers.",
+      "expectedPoints": [
+        {
+          "id": "arch_adr_context",
+          "label": "States context and decision scope",
+          "description": "Explains the workloads, current pain, constraints, assumptions, and what the decision does not cover.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "decision context",
+            "scope",
+            "constraints",
+            "assumptions",
+            "out of scope"
+          ]
+        },
+        {
+          "id": "arch_adr_options",
+          "label": "Compares realistic options",
+          "description": "Includes managed, self-operated, and possibly no-change options using the same criteria.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "managed option",
+            "self hosted option",
+            "do nothing option",
+            "same criteria",
+            "alternatives"
+          ]
+        },
+        {
+          "id": "arch_adr_attributes",
+          "label": "Evaluates quality and operational trade-offs",
+          "description": "Covers availability, throughput, latency, security, compliance, skills, support, lock-in, and cost.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "availability",
+            "security compliance",
+            "operational skills",
+            "vendor lock in",
+            "total cost",
+            "support model"
+          ]
+        },
+        {
+          "id": "arch_adr_consequences",
+          "label": "Records consequences and risks",
+          "description": "States accepted limitations, failure modes, migration steps, rollback, and observability.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "accepted consequences",
+            "failure modes",
+            "migration plan",
+            "rollback",
+            "observability"
+          ]
+        },
+        {
+          "id": "arch_adr_owner",
+          "label": "Defines ownership and review",
+          "description": "Records owner, status, date, decision trigger, and conditions that would cause reconsideration.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "decision owner",
+            "adr status",
+            "review trigger",
+            "supersede decision"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_adr_followup_cost",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you avoid comparing only the infrastructure invoice and missing the operational cost?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Architecture Decision Record írása",
+          "prompt": "A teamnek managed message broker és saját üzemeltetés között kell választania. Mit tartalmazzon az ADR?",
+          "answerStructureHint": "Rögzítsd a contextet és constraintet, ugyanazon scenario-k alapján hasonlítsd az opciókat, majd írd le a consequence-et, ownershipöt, migrationt és review triggert.",
+          "expectedPoints": {
+            "arch_adr_context": {
+              "label": "Leírja a contextet és decision scope-ot",
+              "description": "Workload, current pain, constraint, assumption és out-of-scope rész szerepel."
+            },
+            "arch_adr_options": {
+              "label": "Reális opciókat hasonlít össze",
+              "description": "Managed, self-operated és szükség esetén no-change opció ugyanazon criteria alapján jelenik meg."
+            },
+            "arch_adr_attributes": {
+              "label": "Quality és operational trade-offot értékel",
+              "description": "Availability, throughput, latency, security, compliance, skill, support, lock-in és cost szerepel."
+            },
+            "arch_adr_consequences": {
+              "label": "Rögzíti a consequence-et és risket",
+              "description": "Accepted limitation, failure mode, migration, rollback és observability kerül a dokumentumba."
+            },
+            "arch_adr_owner": {
+              "label": "Ownershipöt és review-t definiál",
+              "description": "Owner, status, date és reconsideration condition szerepel."
+            }
+          },
+          "followUps": {
+            "arch_adr_followup_cost": "Hogyan kerülnéd el, hogy csak az infrastructure invoice-t hasonlítsd össze, az operational costot pedig kihagyd?"
+          }
+        }
+      }
+    },
+    {
+      "id": "arch_conway_001",
+      "title": "Architecture and team structure",
+      "prompt": "A central integration team must approve and deploy every change across twelve domain teams. What architecture and organisational risks do you see?",
+      "roles": [
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "design_review",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "arch_conway",
+        "arch_microservices",
+        "arch_soa_esb",
+        "arch_coupling_cohesion"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Connect the approval queue to Conway’s Law, identify false service autonomy, and propose ownership plus platform changes.",
+      "expectedPoints": [
+        {
+          "id": "arch_conway_bottleneck",
+          "label": "Identifies the coordination bottleneck",
+          "description": "Explains that one approval and deployment queue limits delivery across all domains.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "central approval queue",
+            "deployment bottleneck",
+            "all teams wait",
+            "coordination cost"
+          ]
+        },
+        {
+          "id": "arch_conway_law",
+          "label": "Connects it to Conway’s Law",
+          "description": "Shows how the central team encourages a centralised integration architecture and shared critical path.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "conway law",
+            "central architecture",
+            "organisation mirrors system",
+            "shared critical path"
+          ]
+        },
+        {
+          "id": "arch_conway_autonomy",
+          "label": "Recognizes false autonomy",
+          "description": "Notes that separately deployed services are not autonomous if one team controls their integrations and releases.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "false autonomy",
+            "coordinated release",
+            "central ownership",
+            "distributed monolith"
+          ]
+        },
+        {
+          "id": "arch_conway_change",
+          "label": "Proposes end-to-end ownership",
+          "description": "Moves domain-specific logic and operations toward stream-aligned teams with explicit contracts.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "end to end ownership",
+            "stream aligned team",
+            "domain team owns",
+            "explicit contract"
+          ]
+        },
+        {
+          "id": "arch_conway_platform",
+          "label": "Reframes the platform team",
+          "description": "Keeps reusable self-service tooling, standards, and guardrails without becoming a ticket gate.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "self service platform",
+            "golden path",
+            "guardrails",
+            "not ticket queue",
+            "shared tooling"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "arch_conway_followup_governance",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you preserve security and integration standards without restoring the same central approval bottleneck?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Architecture és team structure",
+          "prompt": "Egy central integration teamnek kell approve-olnia és deployolnia minden change-et tizenkét domain team számára. Milyen architecture és organisational risket látsz?",
+          "answerStructureHint": "Kösd az approval queue-t Conway’s Law-hoz, azonosítsd a false service autonomy-t, majd javasolj ownership és platform változást.",
+          "expectedPoints": {
+            "arch_conway_bottleneck": {
+              "label": "Felismeri a coordination bottlenecket",
+              "description": "Egyetlen approval és deployment queue korlátozza minden domain deliveryjét."
+            },
+            "arch_conway_law": {
+              "label": "Conway’s Law-hoz köti",
+              "description": "A central team centralised integration architecture-t és shared critical pathot erősít."
+            },
+            "arch_conway_autonomy": {
+              "label": "Felismeri a false autonomy-t",
+              "description": "A külön deployolt service sem autonomous, ha minden integrationt és release-t egy team irányít."
+            },
+            "arch_conway_change": {
+              "label": "End-to-end ownershipöt javasol",
+              "description": "Domain-specific logic és operation stream-aligned teamhez kerül explicit contracttal."
+            },
+            "arch_conway_platform": {
+              "label": "Újradefiniálja a platform teamet",
+              "description": "Reusable self-service toolingot, standardot és guardrailt ad ticket gate nélkül."
+            }
+          },
+          "followUps": {
+            "arch_conway_followup_governance": "Hogyan tartanád meg a security és integration standardokat anélkül, hogy visszaépítenéd ugyanazt a central approval bottlenecket?"
+          }
+        }
+      }
+    }
+  ]
+}
