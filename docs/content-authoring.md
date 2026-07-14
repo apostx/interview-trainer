@@ -75,8 +75,9 @@ only picks up content after a release — dev mode hot-reloads instantly.
 ```
 
 `importance` is optional for backward compatibility. When at least one topic
-has it, an "Importance" filter appears in Study (Essentials only / 4+ / 3+ /
-2+ / All); topics WITHOUT a rating only show under "All". Rate honestly and
+has it, an "Importance" filter appears in Study and Practice — a multi-select
+of levels 5…1 plus "Unrated"; topics WITHOUT a rating only show when nothing
+(or "Unrated") is selected. Rate honestly and
 relative to the whole bank — if everything is a 5, the filter is useless.
 Rough guide: 5 = a first-round staple (HTTP basics, Big-O, core language
 features); 4 = expected from the target role; 3 = commonly asked; 2 =

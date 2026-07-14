@@ -9,18 +9,15 @@ import {
   buttonPrimary,
   buttonSecondary,
 } from "@/components/ui";
-import type { InterviewSession, Topic, UserSettings } from "@/core/models";
-import { ROLE_LABELS } from "@/core/models";
+import type { InterviewSession, Topic } from "@/core/models";
 import { syncSeedTopics } from "@/core/storage/db";
 import {
-  getSettings,
   getTopicsById,
   listDuePracticeItems,
   listRecentSessions,
 } from "@/core/storage/repositories";
 
 type DashboardData = {
-  settings: UserSettings;
   sessions: InterviewSession[];
   dueCount: number;
   topicsById: Map<string, Topic>;
@@ -33,13 +30,12 @@ export default function DashboardPage() {
     (async () => {
       await syncSeedTopics();
       const nowIso = new Date().toISOString();
-      const [settings, sessions, dueItems, topicsById] = await Promise.all([
-        getSettings(),
+      const [sessions, dueItems, topicsById] = await Promise.all([
         listRecentSessions(5),
         listDuePracticeItems(nowIso),
         getTopicsById(),
       ]);
-      setData({ settings, sessions, dueCount: dueItems.length, topicsById });
+      setData({ sessions, dueCount: dueItems.length, topicsById });
     })();
   }, []);
 
@@ -51,7 +47,7 @@ export default function DashboardPage() {
     );
   }
 
-  const { settings, sessions, dueCount, topicsById } = data;
+  const { sessions, dueCount, topicsById } = data;
   const weakTopicIds = [
     ...new Set(sessions.flatMap((s) => s.weakTopicIds)),
   ].slice(0, 3);
@@ -81,7 +77,7 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-2xl px-4 py-6 sm:py-8">
       <PageHeader
         title="Dashboard"
-        subtitle={`Target role: ${ROLE_LABELS[settings.targetRole]}`}
+        subtitle="What to practice next, based on your recent sessions."
       />
 
       <Card className="mb-4">

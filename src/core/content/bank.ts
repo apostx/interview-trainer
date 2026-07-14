@@ -90,3 +90,9 @@ function loadVersions(): ContentVersion[] {
 
 /** Alternate content banks for the dev-mode switcher (empty in normal use). */
 export const contentVersions: ContentVersion[] = loadVersions();
+
+/** All selectable banks: Live first, then the alternate versions. */
+export const allBanks: ContentVersion[] = [
+  { label: "Live", bank: liveBank },
+  ...contentVersions,
+];

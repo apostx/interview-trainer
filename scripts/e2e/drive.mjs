@@ -194,18 +194,6 @@ async function main() {
     log("⚠️", "Practice queue empty right after a session with missing criticals — unexpected");
   }
 
-  // ---- 7. Unknown topic intake
-  await page.goto(BASE + "/topics/new/");
-  await page.getByLabel("Topic name").fill("Event Sourcing Test");
-  await page.getByRole("button", { name: "Add topic & create learning cards" }).click();
-  await page.waitForURL(/\/practice/);
-  const dueAfterIntake = await page.getByText(/card(s)? due/).textContent();
-  log("✅", `Unknown topic intake: redirected to practice, queue now "${dueAfterIntake.trim()}" (4 learning cards added)`);
-
-  await page.goto(BASE + "/topics/");
-  await page.getByText("Event Sourcing Test", { exact: true }).first().waitFor();
-  log("✅", "Topic library lists the new topic (status Unknown)");
-
   // ---- Study view: browse material without being quizzed
   // Content-agnostic: the checks derive names/counts from whatever content is
   // loaded, so a full content rebuild cannot break them.
@@ -289,14 +277,14 @@ async function main() {
 
   // ---- 8. Settings persistence
   await page.goto(BASE + "/settings/");
-  await page.getByLabel("Target role").selectOption("solution_architect");
+  await page.getByLabel("Speech-to-text engine").selectOption("web_speech");
   await page.getByRole("button", { name: "Save settings" }).click();
   await page.getByText("Saved ✓").waitFor();
   await page.reload();
-  const roleVal = await page.getByLabel("Target role").inputValue();
-  log(roleVal === "solution_architect" ? "🔍" : "❌", `Settings persist across reload (target role = ${roleVal})`);
+  const engineVal = await page.getByLabel("Speech-to-text engine").inputValue();
+  log(engineVal === "web_speech" ? "🔍" : "❌", `Settings persist across reload (speech engine = ${engineVal})`);
   // restore
-  await page.getByLabel("Target role").selectOption("backend_developer");
+  await page.getByLabel("Speech-to-text engine").selectOption("whisper");
   await page.getByRole("button", { name: "Save settings" }).click();
 
   // ---- 9. Mobile viewport

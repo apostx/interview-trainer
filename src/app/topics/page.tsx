@@ -1,11 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import {
   Card,
   PageHeader,
-  buttonPrimary,
   selectCompact,
 } from "@/components/ui";
 import type { Topic, TopicStatus } from "@/core/models";
@@ -65,11 +63,6 @@ export default function TopicsPage() {
       <PageHeader
         title="Topic library"
         subtitle="Track what you can already explain and what still needs work."
-        action={
-          <Link href="/topics/new" className={buttonPrimary}>
-            Add topic
-          </Link>
-        }
       />
 
       <Card className="mb-6">

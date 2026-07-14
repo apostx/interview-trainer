@@ -9,12 +9,10 @@ import {
   labelBase,
 } from "@/components/ui";
 import type {
-  InterviewRole,
   SpeechEngine,
   SpeechModelSize,
   UserSettings,
 } from "@/core/models";
-import { ROLE_LABELS, ROLE_TRACKS } from "@/core/models";
 import { getSettings, saveSettings } from "@/core/storage/repositories";
 
 export default function SettingsPage() {
@@ -52,26 +50,6 @@ export default function SettingsPage() {
       />
 
       <Card className="flex flex-col gap-5">
-        <div>
-          <label className={labelBase} htmlFor="target-role">
-            Target role
-          </label>
-          <select
-            id="target-role"
-            className={inputBase}
-            value={settings.targetRole}
-            onChange={(e) =>
-              update({ targetRole: e.target.value as InterviewRole })
-            }
-          >
-            {ROLE_TRACKS.map((r) => (
-              <option key={r} value={r}>
-                {ROLE_LABELS[r]}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <div>
           <label className={labelBase} htmlFor="speech-engine">
             Speech-to-text engine

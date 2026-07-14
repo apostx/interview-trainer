@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AnswerCapture } from "@/components/AnswerCapture";
 import { RubricChecklist } from "@/components/RubricChecklist";
@@ -10,8 +10,30 @@ import {
   PageHeader,
   buttonPrimary,
   buttonSecondary,
+  selectCompact,
 } from "@/components/ui";
+import {
+  CheckboxDropdown,
+  DevVersionSwitcher,
+  IMPORTANCE_LEVELS,
+  importanceSummary,
+} from "@/components/filters";
+import { allBanks, liveBank } from "@/core/content/bank";
+import {
+  groupSources,
+  topicIdsMatch,
+  topicMetaMaps,
+} from "@/core/content/topicFilters";
+import {
+  loadFilterPrefs,
+  parseImpParam,
+  parseSourceParam,
+  patchUrl,
+  saveFilterPrefs,
+  type RoleFilter,
+} from "@/core/services/filterPrefs";
 import type { PracticeItem, UserSettings } from "@/core/models";
+import { ROLE_LABELS, ROLE_TRACKS } from "@/core/models";
 import { matchRubric, matchRubricItem, type RubricMatchResult } from "@/core/services/rubricMatcher";
 import {
   combineStatuses,
@@ -43,6 +65,89 @@ export default function PracticePage() {
   const [match, setMatch] = useState<RubricMatchResult | null>(null);
   const [savedCount, setSavedCount] = useState(0);
 
+  // The same filters as Study, shared through the persisted prefs and
+  // mirrored in the URL — practice what you scoped your studying to.
+  const [roleFilter, setRoleState] = useState<RoleFilter>("all");
+  const [selectedSources, setSourcesState] = useState<string[]>([]);
+  const [selectedImp, setImpState] = useState<string[]>([]);
+  const [devMode, setDevMode] = useState(false);
+  const [versionLabel, setVersionLabelState] = useState("Live");
+
+  // Practice items only carry topic ids; role/source/importance are resolved
+  // through the active bank's topics (alternate version in dev mode).
+  const activeBank =
+    allBanks.find((b) => b.label === versionLabel)?.bank ?? liveBank;
+  const meta = useMemo(() => topicMetaMaps(activeBank), [activeBank]);
+  const sourceGroups = useMemo(
+    () => groupSources(activeBank.contentSources),
+    [activeBank],
+  );
+
+  useEffect(() => {
+    const syncUrl = () => {
+      const p = new URLSearchParams(window.location.search);
+      setRoleState((p.get("role") as RoleFilter | null) ?? "all");
+      setSourcesState(parseSourceParam(p.get("source")));
+      setImpState(parseImpParam(p.get("imp")));
+      setDevMode(p.get("dev") === "1");
+      setVersionLabelState(p.get("ver") ?? "Live");
+    };
+    const init = () => {
+      const p = new URLSearchParams(window.location.search);
+      const prefs = loadFilterPrefs();
+      const patch: Record<string, string | null> = {};
+      if (!p.has("role") && prefs.role && prefs.role !== "all")
+        patch.role = prefs.role;
+      if (!p.has("source") && prefs.sources?.length)
+        patch.source = prefs.sources.join(",");
+      if (!p.has("imp") && prefs.imp?.length) patch.imp = prefs.imp.join(",");
+      if (!p.has("dev") && prefs.dev) patch.dev = "1";
+      if (!p.has("ver") && prefs.ver && prefs.ver !== "Live")
+        patch.ver = prefs.ver;
+      if (Object.keys(patch).length > 0) patchUrl(patch);
+      if (p.get("dev") === "1") saveFilterPrefs({ dev: true });
+      if (p.has("ver")) saveFilterPrefs({ ver: p.get("ver") ?? "Live" });
+      syncUrl();
+    };
+    init();
+    window.addEventListener("popstate", syncUrl);
+    return () => window.removeEventListener("popstate", syncUrl);
+  }, []);
+
+  const setRoleFilter = (role: RoleFilter) => {
+    setRoleState(role);
+    patchUrl({ role: role === "all" ? null : role });
+    saveFilterPrefs({ role });
+  };
+  const setSelectedSources = (sources: string[]) => {
+    setSourcesState(sources);
+    patchUrl({ source: sources.length > 0 ? sources.join(",") : null });
+    saveFilterPrefs({ sources });
+  };
+  const setSelectedImp = (levels: string[]) => {
+    setImpState(levels);
+    patchUrl({ imp: levels.length > 0 ? levels.join(",") : null });
+    saveFilterPrefs({ imp: levels });
+  };
+  const setVersion = (label: string) => {
+    setVersionLabelState(label);
+    patchUrl({ ver: label === "Live" ? null : label });
+    saveFilterPrefs({ ver: label });
+  };
+  const exitDevMode = () => {
+    setDevMode(false);
+    setVersionLabelState("Live");
+    patchUrl({ dev: null, ver: null });
+    saveFilterPrefs({ dev: false, ver: "Live" });
+  };
+  const clearFilters = () => {
+    setRoleState("all");
+    setSourcesState([]);
+    setImpState([]);
+    patchUrl({ role: null, source: null, imp: null });
+    saveFilterPrefs({ role: "all", sources: [], imp: [] });
+  };
+
   const reload = useCallback(async () => {
     const nowIso = new Date().toISOString();
     const [items, s] = await Promise.all([
@@ -69,7 +174,13 @@ export default function PracticePage() {
     );
   }
 
-  const current = due[0];
+  const queue = due.filter((item) =>
+    topicIdsMatch(item.topicIds, meta, roleFilter, selectedSources, selectedImp),
+  );
+  const current = queue[0];
+  const filteredOut = due.length - queue.length;
+  const filtersActive =
+    roleFilter !== "all" || selectedSources.length > 0 || selectedImp.length > 0;
 
   async function submitAnswer(text: string) {
     if (!current) return;
@@ -116,24 +227,114 @@ export default function PracticePage() {
       <PageHeader
         title="Practice queue"
         subtitle={
-          due.length > 0
-            ? `${due.length} card${due.length === 1 ? "" : "s"} due · answer, then rate yourself`
+          queue.length > 0
+            ? `${queue.length} card${queue.length === 1 ? "" : "s"} due · answer, then rate yourself`
             : undefined
         }
       />
 
-      {due.length === 0 ? (
+      {due.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-secondary">Role</span>
+            <select
+              className={selectCompact}
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+              aria-label="Role filter"
+            >
+              <option value="all">All roles</option>
+              {ROLE_TRACKS.map((r) => (
+                <option key={r} value={r}>
+                  {ROLE_LABELS[r]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-secondary">Source</span>
+            <CheckboxDropdown
+              ariaLabel="Source filter"
+              allLabel="All sources"
+              summary={
+                selectedSources.length === 0
+                  ? "All sources"
+                  : selectedSources.length === 1
+                    ? (activeBank.contentSources.find(
+                        (s) => s.id === selectedSources[0],
+                      )?.name ?? "1 source")
+                    : `${selectedSources.length} sources`
+              }
+              groups={sourceGroups}
+              selected={selectedSources}
+              onChange={setSelectedSources}
+            />
+          </div>
+
+          {meta.hasImportance && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-secondary">
+                Importance
+              </span>
+              <CheckboxDropdown
+                ariaLabel="Importance filter"
+                allLabel="All topics"
+                summary={importanceSummary(selectedImp)}
+                groups={[["", IMPORTANCE_LEVELS]]}
+                selected={selectedImp}
+                onChange={setSelectedImp}
+              />
+            </div>
+          )}
+
+          {filteredOut > 0 && (
+            <span className="text-xs text-muted">
+              {filteredOut} card{filteredOut === 1 ? "" : "s"} hidden by the
+              filters
+            </span>
+          )}
+        </div>
+      )}
+
+      {devMode && (
+        <DevVersionSwitcher
+          versionLabel={versionLabel}
+          onSelect={setVersion}
+          onExit={exitDevMode}
+        />
+      )}
+
+      {queue.length === 0 ? (
         <EmptyState
-          title={savedCount > 0 ? "All done for today 🎉" : "Nothing due"}
+          title={
+            due.length > 0
+              ? "Nothing due with these filters"
+              : savedCount > 0
+                ? "All done for today 🎉"
+                : "Nothing due"
+          }
           description={
-            savedCount > 0
-              ? `You reviewed ${savedCount} card${savedCount === 1 ? "" : "s"}. Weak points from your sessions will show up here on their review date.`
-              : "Practice cards are generated when you miss critical points in a session, or when you add a new topic."
+            due.length > 0
+              ? `${due.length} due card${due.length === 1 ? "" : "s"} fall outside the current filters.`
+              : savedCount > 0
+                ? `You reviewed ${savedCount} card${savedCount === 1 ? "" : "s"}. Weak points from your sessions will show up here on their review date.`
+                : "Practice cards are generated when you miss critical points in a session."
           }
           action={
-            <Link href="/setup" className={buttonPrimary}>
-              Start a session
-            </Link>
+            due.length > 0 && filtersActive ? (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className={buttonPrimary}
+              >
+                Show all due cards
+              </button>
+            ) : (
+              <Link href="/setup" className={buttonPrimary}>
+                Start a session
+              </Link>
+            )
           }
         />
       ) : (

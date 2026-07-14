@@ -2,9 +2,24 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, ModeBadge, PageHeader, buttonGhost, inputBase, selectCompact } from "@/components/ui";
-import type { InterviewRole, LangCode, QuestionCard, Topic } from "@/core/models";
+import type { LangCode, QuestionCard, Topic } from "@/core/models";
 import { ROLE_LABELS, ROLE_TRACKS, TRACK_MEMBER_ROLES } from "@/core/models";
-import { contentVersions, liveBank } from "@/core/content/bank";
+import { allBanks, liveBank } from "@/core/content/bank";
+import {
+  CheckboxDropdown,
+  DevVersionSwitcher,
+  IMPORTANCE_LEVELS,
+  importanceSummary,
+} from "@/components/filters";
+import { importanceToken } from "@/core/content/topicFilters";
+import {
+  loadFilterPrefs,
+  parseImpParam,
+  parseSourceParam,
+  patchUrl,
+  saveFilterPrefs,
+  type RoleFilter,
+} from "@/core/services/filterPrefs";
 import {
   availableLanguages,
   DEFAULT_LANG,
@@ -35,31 +50,24 @@ const CATEGORY_LABELS: Record<Topic["category"], string> = {
   core: "Core Engineering",
 };
 
-const LANG_STORAGE_KEY = "study-lang";
+// Pre-prefs versions stored the reading language under this key.
+const LEGACY_LANG_KEY = "study-lang";
 
-// The live bank plus any alternate versions (content/versions/<label>/),
-// selectable in dev mode (?dev=1) to compare content banks for quality.
-const ALL_BANKS: { label: string; bank: typeof liveBank }[] = [
-  { label: "Live", bank: liveBank },
-  ...contentVersions,
-];
-
-type RoleFilter = InterviewRole | "all";
-type SourceFilter = string; // "all" or a source id
-
-/** Role and source filters apply per card; a topic shows if any card survives. */
+/** Role and source filters apply per card; a topic shows if any card survives.
+ * An empty `selectedSources` means "all sources". */
 function cardMatchesFilters(
   card: QuestionCard,
   role: RoleFilter,
-  source: SourceFilter,
+  selectedSources: string[],
   sources: Map<string, string[]>,
 ): boolean {
   if (role !== "all") {
     const members = TRACK_MEMBER_ROLES[role] ?? [role];
     if (!card.roles.some((r) => members.includes(r))) return false;
   }
-  if (source !== "all" && !sources.get(card.id)?.includes(source)) {
-    return false;
+  if (selectedSources.length > 0) {
+    const cardSources = sources.get(card.id) ?? [];
+    if (!selectedSources.some((s) => cardSources.includes(s))) return false;
   }
   return true;
 }
@@ -180,6 +188,21 @@ function LanguagePicker({
   );
 }
 
+/** Summary text for the source dropdown ("All sources" / a name / "N sources"). */
+function sourceSummary(
+  selected: string[],
+  sourceGroups: [string, { id: string; name: string }[]][],
+): string {
+  if (selected.length === 0) return "All sources";
+  if (selected.length === 1)
+    return (
+      sourceGroups
+        .flatMap(([, entries]) => entries)
+        .find((s) => s.id === selected[0])?.name ?? "1 source"
+    );
+  return `${selected.length} sources`;
+}
+
 function PdfButtons({
   generating,
   onGenerate,
@@ -212,15 +235,15 @@ function PdfButtons({
 // Reads the Study view state out of the current query string.
 function readUrlState() {
   const p = new URLSearchParams(window.location.search);
-  const imp = Number(p.get("imp"));
   return {
     topicId: p.get("topic"),
     role: (p.get("role") as RoleFilter | null) ?? null,
-    source: p.get("source") ?? "all",
+    sources: parseSourceParam(p.get("source")),
     query: p.get("q") ?? "",
+    lang: p.get("lang"),
     dev: p.get("dev") === "1",
     version: p.get("ver") ?? "Live",
-    minImportance: imp >= 1 && imp <= 5 ? imp : null,
+    imp: parseImpParam(p.get("imp")),
   };
 }
 
@@ -232,18 +255,18 @@ export default function StudyPage() {
   // query changes after a reload + back navigation.
   const [selectedTopicId, setTopicId] = useState<string | null>(null);
   const [roleParam, setRoleParam] = useState<RoleFilter | null>(null);
-  const [selectedSource, setSourceState] = useState<SourceFilter>("all");
+  const [selectedSources, setSourcesState] = useState<string[]>([]);
   const [query, setQueryState] = useState("");
   const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
   const [devMode, setDevMode] = useState(false);
   const [versionLabel, setVersionLabelState] = useState("Live");
-  const [minImportance, setMinImportanceState] = useState<number | null>(null);
+  const [selectedImp, setImpState] = useState<string[]>([]);
   const [generating, setGenerating] = useState<StudyPdfFormat | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
 
   // The active content bank (Live, or an alternate version picked in dev mode).
   const activeBank =
-    ALL_BANKS.find((b) => b.label === versionLabel)?.bank ?? liveBank;
+    allBanks.find((b) => b.label === versionLabel)?.bank ?? liveBank;
 
   // Everything the view lists is derived from the active bank, so switching
   // versions swaps the whole Study content at once.
@@ -274,29 +297,47 @@ export default function StudyPage() {
     return { cardsByTopicId, studyTopics, sourceGroups, languages, hasImportance };
   }, [activeBank]);
 
-  // Study reading language is a preference (persisted), not view navigation,
-  // so it lives in localStorage rather than the URL.
+  // The reading language is both shareable (URL) and a preference (prefs).
   const setLang = (l: LangCode) => {
     setLangState(l);
-    localStorage.setItem(LANG_STORAGE_KEY, l);
+    patchUrl({ lang: l === DEFAULT_LANG ? null : l });
+    saveFilterPrefs({ lang: l });
   };
 
-  // On mount, load the persisted language and read the URL; then re-read the
-  // URL whenever the user navigates with the browser back/forward buttons.
+  // On mount, fill URL params missing from the address bar with the persisted
+  // prefs (so filters survive navigating away and back), then read the URL;
+  // re-read it whenever the user uses the browser back/forward buttons.
   useEffect(() => {
     const syncUrl = () => {
       const s = readUrlState();
       setTopicId(s.topicId);
       setRoleParam(s.role);
-      setSourceState(s.source);
+      setSourcesState(s.sources);
       setQueryState(s.query);
+      if (s.lang) setLangState(s.lang);
       setDevMode(s.dev);
       setVersionLabelState(s.version);
-      setMinImportanceState(s.minImportance);
+      setImpState(s.imp);
     };
     const init = () => {
-      const saved = localStorage.getItem(LANG_STORAGE_KEY);
-      if (saved) setLangState(saved);
+      const p = new URLSearchParams(window.location.search);
+      const prefs = loadFilterPrefs();
+      const patch: Record<string, string | null> = {};
+      if (!p.has("role") && prefs.role) patch.role = prefs.role;
+      if (!p.has("source") && prefs.sources?.length)
+        patch.source = prefs.sources.join(",");
+      if (!p.has("imp") && prefs.imp?.length) patch.imp = prefs.imp.join(",");
+      if (!p.has("lang")) {
+        const l = prefs.lang ?? localStorage.getItem(LEGACY_LANG_KEY);
+        if (l && l !== DEFAULT_LANG) patch.lang = l;
+      }
+      if (!p.has("dev") && prefs.dev) patch.dev = "1";
+      if (!p.has("ver") && prefs.ver && prefs.ver !== "Live")
+        patch.ver = prefs.ver;
+      if (Object.keys(patch).length > 0) patchUrl(patch);
+      // A dev link someone sent me should stick like my own choice would.
+      if (p.get("dev") === "1") saveFilterPrefs({ dev: true });
+      if (p.has("ver")) saveFilterPrefs({ ver: p.get("ver") ?? "Live" });
       syncUrl();
     };
     init();
@@ -306,17 +347,28 @@ export default function StudyPage() {
 
   const setVersion = (label: string) => {
     setVersionLabelState(label);
-    writeUrl({ ver: label === "Live" ? null : label });
+    patchUrl({ ver: label === "Live" ? null : label });
+    saveFilterPrefs({ ver: label });
   };
 
-  const setMinImportance = (value: number | null) => {
-    setMinImportanceState(value);
-    writeUrl({ imp: value === null ? null : String(value) });
+  const exitDevMode = () => {
+    setDevMode(false);
+    setVersionLabelState("Live");
+    patchUrl({ dev: null, ver: null });
+    saveFilterPrefs({ dev: false, ver: "Live" });
   };
 
-  // Topics without an importance rating only show in the "All" view.
+  const setSelectedImp = (levels: string[]) => {
+    setImpState(levels);
+    patchUrl({ imp: levels.length > 0 ? levels.join(",") : null });
+    saveFilterPrefs({ imp: levels });
+  };
+
+  // Empty selection = all topics (rated or not); otherwise a topic must be at
+  // one of the selected levels ("u" = unrated).
   const passesImportance = (topic: Topic) =>
-    minImportance === null || (topic.importance ?? 0) >= minImportance;
+    selectedImp.length === 0 ||
+    selectedImp.includes(importanceToken(topic.importance));
 
   // The role filter defaults to the user's target role until they pick one
   // (an explicit choice — including "all" — is written to the URL and wins).
@@ -333,36 +385,23 @@ export default function StudyPage() {
 
   const selectedRole: RoleFilter = roleParam ?? defaultRole;
 
-  // Writes the given params to the URL, dropping any set to null/"". Filters
-  // replace the entry (view state); opening/closing a topic pushes one (so the
-  // back button returns to the list).
-  function writeUrl(patch: Record<string, string | null>, push = false) {
-    const params = new URLSearchParams(window.location.search);
-    for (const [key, value] of Object.entries(patch)) {
-      if (value === null || value === "") params.delete(key);
-      else params.set(key, value);
-    }
-    const qs = params.toString();
-    const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
-    if (push) window.history.pushState(null, "", url);
-    else window.history.replaceState(null, "", url);
-  }
-
   const setQuery = (q: string) => {
     setQueryState(q);
-    writeUrl({ q: q || null });
+    patchUrl({ q: q || null });
   };
   const setSelectedRole = (role: RoleFilter) => {
     setRoleParam(role);
-    writeUrl({ role });
+    patchUrl({ role });
+    saveFilterPrefs({ role });
   };
-  const setSelectedSource = (source: SourceFilter) => {
-    setSourceState(source);
-    writeUrl({ source: source === "all" ? null : source });
+  const setSelectedSources = (sources: string[]) => {
+    setSourcesState(sources);
+    patchUrl({ source: sources.length > 0 ? sources.join(",") : null });
+    saveFilterPrefs({ sources });
   };
   const setSelectedTopicId = (id: string | null) => {
     setTopicId(id);
-    writeUrl({ topic: id }, true);
+    patchUrl({ topic: id }, true);
   };
 
   async function generatePdf(format: StudyPdfFormat, scope: StudyPdfScope) {
@@ -385,27 +424,35 @@ export default function StudyPage() {
 
   const matchingCardsOfTopic = (topicId: string) =>
     (cardsByTopicId.get(topicId) ?? []).filter((c) =>
-      cardMatchesFilters(c, selectedRole, selectedSource, activeBank.sourcesByCardId),
+      cardMatchesFilters(c, selectedRole, selectedSources, activeBank.sourcesByCardId),
     );
 
   const roleLabel = selectedRole === "all" ? null : ROLE_LABELS[selectedRole];
   const sourceLabel =
-    selectedSource === "all"
+    selectedSources.length === 0
       ? null
-      : activeBank.contentSources.find((s) => s.id === selectedSource)?.name;
+      : selectedSources.length === 1
+        ? activeBank.contentSources.find((s) => s.id === selectedSources[0])?.name
+        : `${selectedSources.length} sources`;
   const importanceLabel =
-    minImportance === null
+    selectedImp.length === 0
       ? null
-      : minImportance === 5
-        ? "Essentials"
-        : `Importance ${minImportance}+`;
+      : selectedImp.length === 1
+        ? importanceSummary(selectedImp)
+        : `Importance ${[...selectedImp].sort().reverse().join(",")}`;
   const scopeName =
     [roleLabel, sourceLabel, importanceLabel].filter(Boolean).join(" · ") || null;
   const scopeSlug =
     [
       selectedRole === "all" ? null : selectedRole,
-      selectedSource === "all" ? null : selectedSource,
-      minImportance === null ? null : `imp${minImportance}`,
+      selectedSources.length === 0
+        ? null
+        : selectedSources.length === 1
+          ? selectedSources[0].replace(/[^a-zA-Z0-9_-]+/g, "-")
+          : `${selectedSources.length}src`,
+      selectedImp.length === 0
+        ? null
+        : `imp${[...selectedImp].sort().reverse().join("")}`,
     ]
       .filter(Boolean)
       .join("-") || "all";
@@ -577,59 +624,36 @@ export default function StudyPage() {
         ))}
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <label className="text-sm font-medium text-secondary" htmlFor="source-filter">
-          Source
-        </label>
-        <select
-          id="source-filter"
-          className={selectCompact}
-          value={selectedSource}
-          onChange={(e) => setSelectedSource(e.target.value)}
-        >
-          <option value="all">All sources</option>
-          {sourceGroups.map(([group, entries]) =>
-            group === "" ? (
-              entries.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))
-            ) : (
-              <optgroup key={group} label={group}>
-                {entries.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </optgroup>
-            ),
-          )}
-        </select>
+      {/* Each label+control pair is one flex unit, so the row wraps between
+          controls — a label can never end up on a different line than its
+          own select. */}
+      <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-secondary">Source</span>
+          <CheckboxDropdown
+            ariaLabel="Source filter"
+            allLabel="All sources"
+            summary={sourceSummary(selectedSources, sourceGroups)}
+            groups={sourceGroups}
+            selected={selectedSources}
+            onChange={setSelectedSources}
+          />
+        </div>
 
         {hasImportance && (
-          <>
-            <label
-              className="text-sm font-medium text-secondary"
-              htmlFor="importance-filter"
-            >
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-secondary">
               Importance
-            </label>
-            <select
-              id="importance-filter"
-              className={selectCompact}
-              value={minImportance ?? ""}
-              onChange={(e) =>
-                setMinImportance(e.target.value ? Number(e.target.value) : null)
-              }
-            >
-              <option value="">All topics</option>
-              <option value="5">Essentials only (5)</option>
-              <option value="4">High (4+)</option>
-              <option value="3">Medium (3+)</option>
-              <option value="2">Low (2+)</option>
-            </select>
-          </>
+            </span>
+            <CheckboxDropdown
+              ariaLabel="Importance filter"
+              allLabel="All topics"
+              summary={importanceSummary(selectedImp)}
+              groups={[["", IMPORTANCE_LEVELS]]}
+              selected={selectedImp}
+              onChange={setSelectedImp}
+            />
+          </div>
         )}
 
         <LanguagePicker
@@ -640,25 +664,12 @@ export default function StudyPage() {
         />
       </div>
 
-      {devMode && ALL_BANKS.length > 1 && (
-        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-hairline bg-background px-3 py-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted">
-            Dev · content version
-          </span>
-          <select
-            className={selectCompact}
-            value={versionLabel}
-            onChange={(e) => setVersion(e.target.value)}
-            aria-label="Content version"
-          >
-            {ALL_BANKS.map((b) => (
-              <option key={b.label} value={b.label}>
-                {b.label} ({b.bank.topics.filter((t) => t.studyNotes).length}{" "}
-                topics)
-              </option>
-            ))}
-          </select>
-        </div>
+      {devMode && (
+        <DevVersionSwitcher
+          versionLabel={versionLabel}
+          onSelect={setVersion}
+          onExit={exitDevMode}
+        />
       )}
 
       <input
