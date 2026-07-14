@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Card, ModeBadge, PageHeader, buttonGhost, buttonSecondary, inputBase, selectCompact } from "@/components/ui";
+import { Card, ModeBadge, PageHeader, buttonGhost, buttonSecondary, inputBase } from "@/components/ui";
 import type { LangCode, QuestionCard, Topic } from "@/core/models";
 import { ROLE_LABELS, ROLE_TRACKS, TRACK_MEMBER_ROLES } from "@/core/models";
 import { allBanks, liveBank } from "@/core/content/bank";
@@ -9,8 +9,10 @@ import {
   CheckboxDropdown,
   DevVersionSwitcher,
   IMPORTANCE_LEVELS,
+  LanguagePicker,
   importanceSummary,
 } from "@/components/filters";
+import { LearnView } from "@/components/study/LearnView";
 import { importanceToken } from "@/core/content/topicFilters";
 import {
   loadFilterPrefs,
@@ -23,7 +25,6 @@ import {
 import {
   availableLanguages,
   DEFAULT_LANG,
-  languageLabel,
   localizeCard,
   localizeTopic,
 } from "@/core/content/i18n";
@@ -153,40 +154,6 @@ function StudyCard({ card }: { card: QuestionCard }) {
   );
 }
 
-/** Study reading-language dropdown; renders nothing unless translations exist. */
-function LanguagePicker({
-  lang,
-  languages,
-  onChange,
-  className,
-}: {
-  lang: LangCode;
-  languages: LangCode[];
-  onChange: (lang: LangCode) => void;
-  className?: string;
-}) {
-  if (languages.length < 2) return null;
-  return (
-    <div className={`flex items-center gap-2 ${className ?? ""}`}>
-      <label className="text-sm font-medium text-secondary" htmlFor="lang-filter">
-        Language
-      </label>
-      <select
-        id="lang-filter"
-        className={selectCompact}
-        value={lang}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {languages.map((code) => (
-          <option key={code} value={code}>
-            {languageLabel(code)}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
 /** Summary text for the source dropdown ("All sources" / a name / "N sources"). */
 function sourceSummary(
   selected: string[],
@@ -243,6 +210,7 @@ function readUrlState() {
     dev: p.get("dev") === "1",
     version: p.get("ver") ?? "Live",
     imp: parseImpParam(p.get("imp")),
+    ui: p.get("ui") === "learn" ? "learn" : "classic",
   };
 }
 
@@ -260,6 +228,7 @@ export default function StudyPage() {
   const [devMode, setDevMode] = useState(false);
   const [versionLabel, setVersionLabelState] = useState("Live");
   const [selectedImp, setImpState] = useState<string[]>([]);
+  const [uiVariant, setUiVariantState] = useState("classic");
   const [generating, setGenerating] = useState<StudyPdfFormat | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
 
@@ -317,6 +286,7 @@ export default function StudyPage() {
       setDevMode(s.dev);
       setVersionLabelState(s.version);
       setImpState(s.imp);
+      setUiVariantState(s.ui);
     };
     const init = () => {
       const p = new URLSearchParams(window.location.search);
@@ -333,10 +303,13 @@ export default function StudyPage() {
       if (!p.has("dev") && prefs.dev) patch.dev = "1";
       if (!p.has("ver") && prefs.ver && prefs.ver !== "Live")
         patch.ver = prefs.ver;
+      if (!p.has("ui") && prefs.ui === "learn") patch.ui = "learn";
       if (Object.keys(patch).length > 0) patchUrl(patch);
       // A dev link someone sent me should stick like my own choice would.
       if (p.get("dev") === "1") saveFilterPrefs({ dev: true });
       if (p.has("ver")) saveFilterPrefs({ ver: p.get("ver") ?? "Live" });
+      if (p.has("ui"))
+        saveFilterPrefs({ ui: p.get("ui") === "learn" ? "learn" : "classic" });
       syncUrl();
     };
     init();
@@ -355,6 +328,12 @@ export default function StudyPage() {
     setVersionLabelState("Live");
     patchUrl({ dev: null, ver: null });
     saveFilterPrefs({ dev: false, ver: "Live" });
+  };
+
+  const setUiVariant = (ui: string) => {
+    setUiVariantState(ui);
+    patchUrl({ ui: ui === "learn" ? "learn" : null });
+    saveFilterPrefs({ ui });
   };
 
   const setSelectedImp = (levels: string[]) => {
@@ -417,6 +396,32 @@ export default function StudyPage() {
   // The chosen language may not exist in the active bank (e.g. after switching
   // to an untranslated version); fall back to English for display.
   const activeLang = languages.includes(lang) ? lang : DEFAULT_LANG;
+
+  // The alternate "Learning" UI variant (?ui=learn): recall-first reading in
+  // learning order. The classic view below stays the browsing/library UI.
+  if (uiVariant === "learn") {
+    return (
+      <LearnView
+        bank={activeBank}
+        lang={activeLang}
+        languages={languages}
+        onLangChange={setLang}
+        selectedTopicId={selectedTopicId}
+        onSelectTopic={setSelectedTopicId}
+        devControls={
+          devMode ? (
+            <DevVersionSwitcher
+              versionLabel={versionLabel}
+              onSelect={setVersion}
+              onExit={exitDevMode}
+              uiVariant={uiVariant}
+              onUiSelect={setUiVariant}
+            />
+          ) : null
+        }
+      />
+    );
+  }
 
   const matchingCardsOfTopic = (topicId: string) =>
     (cardsByTopicId.get(topicId) ?? []).filter((c) =>
@@ -665,6 +670,8 @@ export default function StudyPage() {
           versionLabel={versionLabel}
           onSelect={setVersion}
           onExit={exitDevMode}
+          uiVariant={uiVariant}
+          onUiSelect={setUiVariant}
         />
       )}
 

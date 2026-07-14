@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { allBanks } from "@/core/content/bank";
+import { languageLabel } from "@/core/content/i18n";
+import type { LangCode } from "@/core/models";
 import { selectCompact } from "@/components/ui";
 
 /** Importance levels for the multi-select filter ("u" = unrated topics). */
@@ -112,34 +114,52 @@ export function CheckboxDropdown({
   );
 }
 
-/** Dev-mode (?dev=1) bank switcher for comparing content versions. */
+/** Dev-mode (?dev=1) bank switcher for comparing content versions; the Study
+ * page also plugs its UI-variant switcher in via the optional props. */
 export function DevVersionSwitcher({
   versionLabel,
   onSelect,
   onExit,
+  uiVariant,
+  onUiSelect,
 }: {
   versionLabel: string;
   onSelect: (label: string) => void;
   onExit: () => void;
+  uiVariant?: string;
+  onUiSelect?: (ui: string) => void;
 }) {
-  if (allBanks.length < 2) return null;
+  if (allBanks.length < 2 && !onUiSelect) return null;
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-hairline bg-background px-3 py-2">
       <span className="text-xs font-semibold uppercase tracking-wide text-muted">
-        Dev · content version
+        Dev
       </span>
-      <select
-        className={selectCompact}
-        value={versionLabel}
-        onChange={(e) => onSelect(e.target.value)}
-        aria-label="Content version"
-      >
-        {allBanks.map((b) => (
-          <option key={b.label} value={b.label}>
-            {b.label} ({b.bank.topics.filter((t) => t.studyNotes).length} topics)
-          </option>
-        ))}
-      </select>
+      {allBanks.length > 1 && (
+        <select
+          className={selectCompact}
+          value={versionLabel}
+          onChange={(e) => onSelect(e.target.value)}
+          aria-label="Content version"
+        >
+          {allBanks.map((b) => (
+            <option key={b.label} value={b.label}>
+              {b.label} ({b.bank.topics.filter((t) => t.studyNotes).length} topics)
+            </option>
+          ))}
+        </select>
+      )}
+      {uiVariant !== undefined && onUiSelect && (
+        <select
+          className={selectCompact}
+          value={uiVariant}
+          onChange={(e) => onUiSelect(e.target.value)}
+          aria-label="Study UI variant"
+        >
+          <option value="classic">UI: Classic</option>
+          <option value="learn">UI: Learning</option>
+        </select>
+      )}
       <button
         type="button"
         onClick={onExit}
@@ -147,6 +167,40 @@ export function DevVersionSwitcher({
       >
         Exit dev mode
       </button>
+    </div>
+  );
+}
+
+/** Study reading-language dropdown; renders nothing unless translations exist. */
+export function LanguagePicker({
+  lang,
+  languages,
+  onChange,
+  className,
+}: {
+  lang: LangCode;
+  languages: LangCode[];
+  onChange: (lang: LangCode) => void;
+  className?: string;
+}) {
+  if (languages.length < 2) return null;
+  return (
+    <div className={`flex items-center gap-2 ${className ?? ""}`}>
+      <label className="text-sm font-medium text-secondary" htmlFor="lang-filter">
+        Language
+      </label>
+      <select
+        id="lang-filter"
+        className={selectCompact}
+        value={lang}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {languages.map((code) => (
+          <option key={code} value={code}>
+            {languageLabel(code)}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
