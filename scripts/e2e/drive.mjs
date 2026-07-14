@@ -36,6 +36,60 @@ async function main() {
   await page.screenshot({ path: `${SHOTS}/01-dashboard-empty.png` });
   log("✅", "Dashboard loads: next recommended practice + empty state");
 
+  // The live bank may legitimately be empty (content/packs cleared; the
+  // per-company banks live in content/versions and are studied via ?dev=1).
+  // The interview flow cannot generate sessions then, so the drive switches
+  // to the empty-bank scenario instead of failing.
+  await page.goto(BASE + "/study/?role=all");
+  await page.getByRole("heading", { name: "Study", exact: true }).waitFor();
+  const liveTopicCount = await page
+    .locator("section button", { hasText: /cards?$/ })
+    .count();
+  if (liveTopicCount === 0) {
+    log("⚠️", "Live bank is empty — running the empty-bank scenario (no interview flow)");
+    await page.getByText("This content bank is empty", { exact: false }).waitFor();
+    log("✅", "Study explains the empty live bank and points to dev mode");
+
+    // Version banks must still be selectable and render studyable topics.
+    await page.goto(BASE + "/study/?dev=1&role=all");
+    const versionSelect = page.getByLabel("Content version");
+    if (await versionSelect.isVisible().catch(() => false)) {
+      const labels = await versionSelect.locator("option").allTextContents();
+      const target = labels.find((l) => !l.startsWith("Live") && !/\(0 topics\)/.test(l));
+      if (target) {
+        await versionSelect.selectOption({ label: target });
+        await page.waitForTimeout(400);
+        const versionTopics = await page
+          .locator("section button", { hasText: /cards?$/ })
+          .count();
+        log(
+          versionTopics > 0 ? "✅" : "❌",
+          `Version bank "${target.trim()}" lists ${versionTopics} topics in Study`,
+        );
+        await page.locator("section button", { hasText: /cards?$/ }).first().click();
+        await page.getByText("A strong answer covers").first().waitFor();
+        log("✅", "Version-bank topic opens with its practice checks");
+        await page.screenshot({ path: `${SHOTS}/03-study-version-bank.png` });
+      } else {
+        log("⚠️", "No non-empty version bank found to check");
+      }
+    } else {
+      log("⚠️", "No version banks available — Study is fully empty");
+    }
+
+    // Setup degrades gracefully: no questions -> inline error, no crash.
+    await page.goto(BASE + "/setup/");
+    await page.getByRole("heading", { name: "Practice setup" }).waitFor();
+    await page.getByRole("button", { name: "Start Practice" }).click();
+    await page.getByText("No questions match this setup yet.", { exact: false }).waitFor();
+    log("✅", "Setup with an empty bank shows the inline error instead of crashing");
+
+    await runSettingsAndMobileChecks(page, browser);
+    return await finish(browser, errors);
+  }
+  await page.goto(BASE + "/");
+  await page.getByRole("heading", { name: "Dashboard" }).waitFor();
+
   // ---- 2. Setup: probe zero practice types (in Advanced settings)
   await page.getByRole("main").getByRole("link", { name: "Start Practice" }).first().click();
   await page.getByRole("heading", { name: "Practice setup" }).waitFor();
@@ -275,7 +329,12 @@ async function main() {
   await page.screenshot({ path: `${SHOTS}/18-study-print.png` });
   await page.screenshot({ path: `${SHOTS}/08-topics.png` });
 
-  // ---- 8. Settings persistence
+  await runSettingsAndMobileChecks(page, browser);
+  await finish(browser, errors);
+}
+
+// ---- Settings persistence + mobile viewport (both scenarios)
+async function runSettingsAndMobileChecks(page, browser) {
   await page.goto(BASE + "/settings/");
   await page.getByLabel("Speech-to-text engine").selectOption("web_speech");
   await page.getByRole("button", { name: "Save settings" }).click();
@@ -287,7 +346,6 @@ async function main() {
   await page.getByLabel("Speech-to-text engine").selectOption("whisper");
   await page.getByRole("button", { name: "Save settings" }).click();
 
-  // ---- 9. Mobile viewport
   const mobile = await (await browser.newContext({ viewport: { width: 375, height: 740 } })).newPage();
   await mobile.goto(BASE + "/");
   await mobile.getByRole("heading", { name: "Dashboard" }).waitFor();
@@ -299,7 +357,9 @@ async function main() {
   await mobile.screenshot({ path: `${SHOTS}/09-mobile-dashboard.png` });
   await mobile.goto(page.url().includes("session") ? page.url() : BASE + "/setup/");
   await mobile.screenshot({ path: `${SHOTS}/10-mobile-setup.png` });
+}
 
+async function finish(browser, errors) {
   console.log("\n--- PAGE ERRORS ---");
   console.log(errors.length ? errors.join("\n") : "(none)");
   console.log("\n--- SUMMARY ---");

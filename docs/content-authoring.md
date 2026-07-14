@@ -537,9 +537,14 @@ Content rules:
   scenario_discussion / troubleshooting for practical situations,
   system_design for design tasks.
 - Write everything in English.
-- Do NOT reuse or change any id from the inventory I pasted; new ids must not
-  collide with it. Where a concept already exists as a topic in the inventory,
-  reference it via relatedTopicIds instead of creating a duplicate topic.
+- Do NOT reuse or change any id from the inventory's PACK sections; new ids
+  must not collide with those. NEVER skip or thin a topic because a similar
+  concept appears somewhere in the inventory — every pack must be a complete,
+  self-contained bank for its own scope. The "seed topic ids" list is bare
+  taxonomy with NO educational content: you may reference those ids in
+  relatedTopicIds, and you may even define a topic with the same id to give
+  it full content (your definition wins), but their existence is never a
+  reason to leave a concept out.
 - Rate every topic's "importance" (1-5) by how often it comes up in real
   interviews for the target roles: 5 = a first-round staple asked almost
   always, 4 = expected from the role, 3 = commonly asked, 2 = occasional,

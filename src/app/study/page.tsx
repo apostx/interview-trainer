@@ -801,9 +801,11 @@ export default function StudyPage() {
       {visibleEntries.length === 0 && (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-sm text-secondary">
-            {searching
-              ? `Nothing matches "${query}".`
-              : "No topics match these filters."}
+            {studyTopics.length === 0
+              ? "This content bank is empty — switch to a content version in dev mode (?dev=1)."
+              : searching
+                ? `Nothing matches "${query}".`
+                : "No topics match these filters."}
           </p>
           {!searching && scopeName !== null && (
             <button
