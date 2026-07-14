@@ -2,7 +2,11 @@ import type { LangCode, QuestionCard, Topic } from "@/core/models";
 import { MODE_LABELS } from "@/core/models";
 import { allQuestions, allTopics } from "@/core/content/bank";
 import { DEFAULT_LANG, localizeCard, localizeTopic } from "@/core/content/i18n";
-import { parseStudyNotes } from "@/core/content/notes";
+import {
+  isTermsHeading,
+  parseKeyTerm,
+  parseStudyNotes,
+} from "@/core/content/notes";
 
 /**
  * Programmatic PDF export of the study material (pdfmake, fully client-side).
@@ -10,9 +14,16 @@ import { parseStudyNotes } from "@/core/content/notes";
  * it physically cannot fit one page), every category starts a new chapter
  * page, and the "phone" format uses a narrow page that reads comfortably
  * fitted to a phone screen. A table of contents links topics to pages.
+ *
+ * The "cards" format is different on purpose: a flashcard deck — one topic
+ * per phone-sized page, essentials only (name, definition, key terms), on
+ * the same warm paper with highlighter marks the Study view uses.
  */
 
-export type StudyPdfFormat = "a4" | "phone";
+export type StudyPdfFormat = "a4" | "phone" | "cards";
+
+/** Visual variant of the flashcard deck (5 candidate designs to pick from). */
+export type CardStyle = 1 | 2 | 3 | 4 | 5;
 
 /** Optional export scope: a filtered card set, one topic, or everything. */
 export type StudyPdfScope = {
@@ -29,6 +40,8 @@ export type StudyPdfScope = {
   /** Content bank to export (defaults to the live bank). */
   topics?: Topic[];
   questions?: QuestionCard[];
+  /** Flashcard deck design (cards format only; ?cards=1..5). */
+  cardStyle?: CardStyle;
 };
 
 const ACCENT = "#2a78d6";
@@ -434,6 +447,261 @@ export function buildStudyPdfDefinition(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Flashcard deck ("cards" format): one topic per phone-sized page, essentials
+// only — name, one-sentence definition, key terms. Five candidate designs.
+// ---------------------------------------------------------------------------
+
+type TermEntry = { term: string; def: string | null };
+
+function keyTerms(notes: string | undefined): TermEntry[] {
+  if (!notes) return [];
+  const out: TermEntry[] = [];
+  let inTerms = false;
+  for (const block of parseStudyNotes(notes)) {
+    if (block.type === "h") inTerms = isTermsHeading(block.text);
+    else if (inTerms && block.type === "ul")
+      out.push(...block.items.map(parseKeyTerm));
+  }
+  return out;
+}
+
+// Per-style palette; every style keeps the same information structure so the
+// comparison is purely visual.
+const CARD_STYLES = {
+  1: {
+    // "Paper & marker" — the Study reading surface: cream, highlighter, chips.
+    name: "Paper & marker",
+    bg: "#fdf8ec",
+    ink: "#262115",
+    soft: "#4c4636",
+    label: "#8a8264",
+    bodyLabel: "#8a8264",
+    titleBg: "#ffd84d",
+    titleColor: "#262115",
+    chips: ["#ffe483", "#ffcfae", "#c9ecd2", "#cde4fb"],
+    band: null,
+  },
+  2: {
+    // "Index card" — white card, red top rule, ruled-line feel.
+    name: "Index card",
+    bg: "#fffdf6",
+    ink: "#22222a",
+    soft: "#4b4b55",
+    label: "#9a9aa4",
+    bodyLabel: "#9a9aa4",
+    titleBg: null,
+    titleColor: "#c2372e",
+    chips: [],
+    band: { type: "rule", color: "#c2372e" },
+  },
+  3: {
+    // "Color block" — vivid warm header band, white body (Quizlet-like).
+    name: "Color block",
+    bg: "#ffffff",
+    ink: "#1e1e24",
+    soft: "#4c4c55",
+    label: "#ffffff",
+    bodyLabel: "#8b8b95",
+    titleBg: null,
+    titleColor: "#ffffff",
+    chips: ["#ffe483", "#ffcfae", "#c9ecd2", "#cde4fb"],
+    band: { type: "block", color: "#e8542f" },
+  },
+  4: {
+    // "Dark deck" — matches the app shell; terms on slate chips.
+    name: "Dark deck",
+    bg: "#17181c",
+    ink: "#f4f4f0",
+    soft: "#b9bec9",
+    label: "#7d828d",
+    bodyLabel: "#7d828d",
+    titleBg: "#3987e5",
+    titleColor: "#ffffff",
+    chips: ["#2b3648", "#3a2f45", "#243b31", "#40342a"],
+    band: null,
+  },
+  5: {
+    // "Minimal type" — pure white, big black type, generous whitespace.
+    name: "Minimal type",
+    bg: "#ffffff",
+    ink: "#111111",
+    soft: "#555555",
+    label: "#999999",
+    bodyLabel: "#999999",
+    titleBg: null,
+    titleColor: "#111111",
+    chips: [],
+    band: { type: "hairline", color: "#dddddd" },
+  },
+} as const;
+
+const CARD_PAGE = { width: 400, height: 600 };
+const CARD_MARGINS: [number, number, number, number] = [30, 34, 30, 40];
+const BAND_HEIGHT = 130;
+
+export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
+  const s = CARD_STYLES[scope.cardStyle ?? 1];
+  const lang = scope.lang ?? DEFAULT_LANG;
+  const bankTopics = scope.topics ?? allTopics;
+  const bankQuestions = scope.questions ?? allQuestions;
+
+  // Same scoping semantics as the study exports: an explicit card filter
+  // keeps the topics that own at least one matching card.
+  const cardIdSet = scope.cardIds ? new Set(scope.cardIds) : null;
+  const topicsWithCards = new Set(
+    (cardIdSet
+      ? bankQuestions.filter((q) => cardIdSet.has(q.id))
+      : bankQuestions
+    ).map((q) => q.topicIds[0]),
+  );
+  const deckTopics = bankTopics
+    .filter((t) => {
+      if (!topicsWithCards.has(t.id) && !t.studyNotes) return false;
+      if (cardIdSet && !topicsWithCards.has(t.id)) return false;
+      if (scope.topicId) return t.id === scope.topicId;
+      if (scope.category) return t.category === scope.category;
+      return true;
+    })
+    .map((topic) => ({ topic, loc: localizeTopic(topic, lang) }))
+    .sort(
+      (a, b) =>
+        a.topic.category.localeCompare(b.topic.category) ||
+        a.loc.name.localeCompare(b.loc.name),
+    );
+
+  const deckName = scope.name ?? null;
+  const hasBand = s.band?.type === "block";
+  const content: any[] = [
+    // Deck cover
+    {
+      stack: [
+        {
+          text: "INTERVIEW TRAINER",
+          fontSize: 10,
+          bold: true,
+          characterSpacing: 1.2,
+          color: hasBand ? s.label : s.label,
+          margin: [0, hasBand ? 30 : 170, 0, 8],
+        },
+        {
+          text: s.titleBg
+            ? [{ text: ` ${deckName ?? "Flashcards"} `, background: s.titleBg, color: s.titleColor }]
+            : { text: deckName ?? "Flashcards", color: hasBand ? s.titleColor : s.ink },
+          fontSize: 24,
+          bold: true,
+          lineHeight: 1.2,
+        },
+        {
+          text: `${deckTopics.length} card${deckTopics.length === 1 ? "" : "s"} · ${new Date().toLocaleDateString("en-GB")}`,
+          fontSize: 11,
+          color: hasBand ? s.ink : s.soft,
+          margin: [0, hasBand ? 120 : 10, 0, 0],
+        },
+      ],
+    },
+  ];
+
+  deckTopics.forEach(({ topic, loc }) => {
+    const terms = keyTerms(loc.studyNotes);
+    const stack: any[] = [
+      {
+        text: CATEGORY_LABELS[topic.category].toUpperCase(),
+        fontSize: 9,
+        bold: true,
+        characterSpacing: 1.1,
+        color: s.label,
+        margin: [0, 0, 0, 8],
+      },
+      {
+        text: s.titleBg
+          ? [{ text: ` ${loc.name} `, background: s.titleBg, color: s.titleColor }]
+          : { text: loc.name, color: s.band?.type === "block" ? s.titleColor : s.ink },
+        fontSize: 19,
+        bold: true,
+        lineHeight: 1.3,
+        margin: [0, 0, 0, s.band?.type === "block" ? 65 : 12],
+      },
+      ...(s.band?.type === "hairline"
+        ? [{ canvas: [{ type: "line", x1: 0, y1: 0, x2: 60, y2: 0, lineWidth: 2, lineColor: s.band.color }], margin: [0, 0, 0, 12] }]
+        : []),
+      {
+        text: loc.description,
+        fontSize: 14.5,
+        color: s.ink,
+        lineHeight: 1.4,
+      },
+    ];
+    if (terms.length > 0) {
+      stack.push({
+        text: "KEY TERMS",
+        fontSize: 9,
+        bold: true,
+        characterSpacing: 1.1,
+        color: s.bodyLabel,
+        margin: [0, 18, 0, 7],
+      });
+      for (const [j, t] of terms.entries()) {
+        stack.push({
+          text: [
+            s.chips.length > 0
+              ? { text: ` ${t.term} `, bold: true, background: s.chips[j % s.chips.length], color: s.ink }
+              : { text: t.term, bold: true, color: s.ink },
+            ...(t.def ? [{ text: `  ${t.def}`, color: s.soft }] : []),
+          ],
+          fontSize: 12.5,
+          lineHeight: 1.45,
+          margin: [0, 0, 0, 6],
+        });
+      }
+    }
+    content.push({ stack, pageBreak: "before" });
+  });
+
+  return {
+    pageSize: CARD_PAGE,
+    pageMargins: CARD_MARGINS,
+    defaultStyle: { fontSize: 12.5, lineHeight: 1.35 },
+    background: (currentPage: number, pageSize: any) => ({
+      canvas: [
+        { type: "rect", x: 0, y: 0, w: pageSize.width, h: pageSize.height, color: s.bg },
+        ...(s.band?.type === "block"
+          ? [{ type: "rect", x: 0, y: 0, w: pageSize.width, h: BAND_HEIGHT, color: s.band.color }]
+          : []),
+        ...(s.band?.type === "rule"
+          ? [
+              { type: "line", x1: 0, y1: 58, x2: pageSize.width, y2: 58, lineWidth: 2, lineColor: s.band.color },
+              ...Array.from({ length: 12 }, (_, k) => ({
+                type: "line",
+                x1: 0,
+                y1: 100 + k * 40,
+                x2: pageSize.width,
+                y2: 100 + k * 40,
+                lineWidth: 0.5,
+                lineColor: "#dfe5ef",
+              })),
+            ]
+          : []),
+      ],
+    }),
+    footer: (currentPage: number, pageCount: number) =>
+      currentPage === 1
+        ? undefined
+        : {
+            text: `${currentPage - 1} / ${pageCount - 1}`,
+            alignment: "center",
+            fontSize: 9,
+            color: s.bodyLabel,
+          },
+    info: {
+      title: deckName
+        ? `Interview Trainer — Flashcards — ${deckName}`
+        : "Interview Trainer — Flashcards",
+    },
+    content,
+  };
+}
+
 /** Generates and downloads the PDF in the browser (pdfmake loaded lazily). */
 export async function downloadStudyPdf(
   format: StudyPdfFormat,
@@ -446,8 +714,13 @@ export async function downloadStudyPdf(
   const fonts = (fontsModule as any).default ?? fontsModule;
   (pdfMake as any).addVirtualFileSystem(fonts);
   const slug = scope.slug ?? scope.topicId ?? scope.category ?? "all";
-  const name = `interview-trainer-study-${slug}-${format}.pdf`;
-  await (pdfMake as any)
-    .createPdf(buildStudyPdfDefinition(format, scope))
-    .download(name);
+  const definition =
+    format === "cards"
+      ? buildFlashcardsDefinition(scope)
+      : buildStudyPdfDefinition(format, scope);
+  const name =
+    format === "cards"
+      ? `interview-trainer-cards-${slug}.pdf`
+      : `interview-trainer-study-${slug}-${format}.pdf`;
+  await (pdfMake as any).createPdf(definition).download(name);
 }

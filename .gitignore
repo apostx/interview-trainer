@@ -43,3 +43,4 @@ next-env.d.ts
 # static export + e2e artifacts
 /out/
 /e2e-shots/
+cards-preview/

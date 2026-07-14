@@ -29,6 +29,7 @@ import {
 } from "@/core/content/i18n";
 import {
   downloadStudyPdf,
+  type CardStyle,
   type StudyPdfFormat,
   type StudyPdfScope,
 } from "@/core/pdf/studyPdf";
@@ -277,6 +278,14 @@ function PdfButtons({
       >
         {generating === "a4" ? "Generating…" : "PDF · A4"}
       </button>
+      <button
+        type="button"
+        disabled={generating !== null}
+        onClick={() => onGenerate("cards")}
+        className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm font-semibold hover:bg-background disabled:opacity-50"
+      >
+        {generating === "cards" ? "Generating…" : "PDF · cards"}
+      </button>
     </div>
   );
 }
@@ -454,7 +463,12 @@ export default function StudyPage() {
     setGenerating(format);
     setPdfError(null);
     try {
-      await downloadStudyPdf(format, scope);
+      // Flashcard design candidate, picked via ?cards=1..5 (default 1).
+      const style = Number(new URLSearchParams(window.location.search).get("cards"));
+      await downloadStudyPdf(format, {
+        ...scope,
+        cardStyle: (style >= 1 && style <= 5 ? style : 1) as CardStyle,
+      });
     } catch (e) {
       setPdfError(
         `PDF generation failed: ${e instanceof Error ? e.message : String(e)}`,
