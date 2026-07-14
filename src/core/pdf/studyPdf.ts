@@ -516,6 +516,36 @@ const CARD_STYLES = {
 const CARD_PAGE = { width: 400, height: 600 };
 const CARD_MARGINS: [number, number, number, number] = [30, 34, 30, 40];
 const BAND_HEIGHT = 130;
+// Safety margin: the estimator is approximate, and a card that misses by a
+// single line still spills — better to trim slightly too eagerly.
+const CARD_USABLE = CARD_PAGE.height - CARD_MARGINS[1] - CARD_MARGINS[3] - 40;
+
+// Rough height estimates (pt) for the card blocks, so a card never spills
+// onto a second page: when it would, "Why it matters" is dropped first
+// (definition + key terms are the flashcard core), then the terms tighten.
+function estLines(text: string, charsPerLine: number): number {
+  return Math.max(1, Math.ceil(text.length / charsPerLine));
+}
+
+function estimateFlashcard(
+  name: string,
+  definition: string,
+  problem: string | null,
+  terms: TermEntry[],
+  hasBand: boolean,
+): { total: number; whyHeight: number } {
+  let h = 22; // category label
+  h += estLines(name, 26) * 26 + (hasBand ? 65 : 12); // title + gap
+  h += estLines(definition, 44) * 19; // 13.5pt body
+  const whyHeight = problem ? 28 + estLines(problem, 48) * 18 : 0;
+  if (terms.length > 0) {
+    h += 34; // KEY TERMS label
+    for (const t of terms) {
+      h += estLines(`${t.term}  ${t.def ?? ""}`, 46) * 19 + 6;
+    }
+  }
+  return { total: h + whyHeight, whyHeight };
+}
 
 export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
   const s = CARD_STYLES[scope.cardStyle ?? 1];
@@ -585,7 +615,13 @@ export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
     // description, so the card leads with "What is it?" when it exists.
     const definition =
       sectionLead(loc.studyNotes, isDefinitionHeading) ?? loc.description;
-    const problem = sectionLead(loc.studyNotes, isProblemHeading);
+    let problem = sectionLead(loc.studyNotes, isProblemHeading);
+    const est = estimateFlashcard(loc.name, definition, problem, terms, hasBand);
+    if (est.total > CARD_USABLE) problem = null;
+    // Densest cards (long term lists) tighten instead of spilling.
+    const tight = est.total - est.whyHeight > CARD_USABLE;
+    const termSize = tight ? 11.5 : 12.5;
+    const termGap = tight ? 3 : 6;
     const stack: any[] = [
       {
         text: CATEGORY_LABELS[topic.category].toUpperCase(),
@@ -641,9 +677,9 @@ export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
               : { text: t.term, bold: true, color: s.ink },
             ...(t.def ? [{ text: `  ${t.def}`, color: s.soft }] : []),
           ],
-          fontSize: 12.5,
-          lineHeight: 1.45,
-          margin: [0, 0, 0, 6],
+          fontSize: termSize,
+          lineHeight: tight ? 1.3 : 1.45,
+          margin: [0, 0, 0, termGap],
         });
       }
     }
