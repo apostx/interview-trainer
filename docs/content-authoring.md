@@ -96,10 +96,9 @@ like reference metadata instead of teaching. Rules:
   of work at a time and decides what runs next."
 - The same applies to rubric `label`/`description` and follow-up prompts —
   every string a learner sees must survive being read out of context.
-- Write the studyContent fields and descriptions as prose FIRST (as if
-  writing a short textbook page), and only then wrap them into the JSON. Do
-  not let the JSON format shorten your sentences. (Never author new
-  studyNotes — that format is legacy.)
+- Write the studyContent fields and descriptions as clear teaching prose
+  before wrapping them in JSON. Do not let the JSON format shorten your
+  sentences. (Never author new studyNotes — that format is legacy.)
 - Generate in small batches (a handful of topics per request) so each topic
   gets real writing effort instead of a token-budget ration.
 
