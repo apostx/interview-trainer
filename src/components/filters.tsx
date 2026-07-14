@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { allBanks } from "@/core/content/bank";
 import { selectCompact } from "@/components/ui";
 
@@ -44,8 +45,27 @@ export function CheckboxDropdown({
         ? selected.filter((s) => s !== id)
         : [...selected, id],
     );
+  // A native <details> stays open on outside clicks; close it like a select.
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const onPointerDown = (e: PointerEvent) => {
+      const el = ref.current;
+      if (el?.open && e.target instanceof Node && !el.contains(e.target)) {
+        el.open = false;
+      }
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && ref.current?.open) ref.current.open = false;
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
   return (
-    <details className="relative">
+    <details ref={ref} className="relative">
       <summary
         className={`${selectCompact} max-w-56 cursor-pointer list-none select-none truncate [&::-webkit-details-marker]:hidden`}
         aria-label={ariaLabel}
