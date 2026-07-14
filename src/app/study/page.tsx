@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Card, ModeBadge, PageHeader, buttonGhost, inputBase, selectCompact } from "@/components/ui";
+import { Card, ModeBadge, PageHeader, buttonGhost, buttonSecondary, inputBase, selectCompact } from "@/components/ui";
 import type { LangCode, QuestionCard, Topic } from "@/core/models";
 import { ROLE_LABELS, ROLE_TRACKS, TRACK_MEMBER_ROLES } from "@/core/models";
 import { allBanks, liveBank } from "@/core/content/bank";
@@ -34,7 +34,6 @@ import {
 } from "@/core/pdf/studyPdf";
 import { parseStudyNotes } from "@/core/content/notes";
 import { normalizedIncludes } from "@/core/services/transcriptNormalizer";
-import { getSettings } from "@/core/storage/repositories";
 
 const CATEGORY_LABELS: Record<Topic["category"], string> = {
   frontend: "Frontend",
@@ -370,20 +369,10 @@ export default function StudyPage() {
     selectedImp.length === 0 ||
     selectedImp.includes(importanceToken(topic.importance));
 
-  // The role filter defaults to the user's target role until they pick one
-  // (an explicit choice — including "all" — is written to the URL and wins).
-  const [defaultRole, setDefaultRole] = useState<RoleFilter>("all");
-  useEffect(() => {
-    let cancelled = false;
-    getSettings().then((s) => {
-      if (!cancelled) setDefaultRole(s.targetRole);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const selectedRole: RoleFilter = roleParam ?? defaultRole;
+  // No implicit default: the role filter is "all" unless the URL or the
+  // saved prefs say otherwise. (It used to fall back to the last session's
+  // role, which silently emptied banks tagged for other roles.)
+  const selectedRole: RoleFilter = roleParam ?? "all";
 
   const setQuery = (q: string) => {
     setQueryState(q);
@@ -402,6 +391,13 @@ export default function StudyPage() {
   const setSelectedTopicId = (id: string | null) => {
     setTopicId(id);
     patchUrl({ topic: id }, true);
+  };
+  const clearFilters = () => {
+    setRoleParam("all");
+    setSourcesState([]);
+    setImpState([]);
+    patchUrl({ role: "all", source: null, imp: null });
+    saveFilterPrefs({ role: "all", sources: [], imp: [] });
   };
 
   async function generatePdf(format: StudyPdfFormat, scope: StudyPdfScope) {
@@ -682,11 +678,22 @@ export default function StudyPage() {
       />
 
       {visibleEntries.length === 0 && (
-        <p className="py-10 text-center text-sm text-secondary">
-          {searching
-            ? `Nothing matches "${query}".`
-            : "No topics match these filters."}
-        </p>
+        <div className="flex flex-col items-center gap-3 py-10 text-center">
+          <p className="text-sm text-secondary">
+            {searching
+              ? `Nothing matches "${query}".`
+              : "No topics match these filters."}
+          </p>
+          {!searching && scopeName !== null && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className={buttonSecondary}
+            >
+              Clear filters ({scopeName})
+            </button>
+          )}
+        </div>
       )}
 
       {[...byCategory.entries()]
