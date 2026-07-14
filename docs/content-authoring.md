@@ -78,7 +78,7 @@ only picks up content after a release — dev mode hot-reloads instantly.
                                         // Drives the Study "Importance" filter so the
                                         // learner can start with the essentials.
   "i18n": {                             // optional Study-only translations
-    "hu": { "name": "…", "studyNotes": "…" }  // any omitted field falls back to English
+    "hu": { "name": "…", "studyContent": { "mentalModel": "…" } }  // any omitted field falls back to English
   }
 }
 ```
@@ -96,9 +96,10 @@ like reference metadata instead of teaching. Rules:
   of work at a time and decides what runs next."
 - The same applies to rubric `label`/`description` and follow-up prompts —
   every string a learner sees must survive being read out of context.
-- Write the studyNotes and descriptions as prose FIRST (as if writing a short
-  textbook page), and only then wrap them into the JSON. Do not let the JSON
-  format shorten your sentences.
+- Write the studyContent fields and descriptions as prose FIRST (as if
+  writing a short textbook page), and only then wrap them into the JSON. Do
+  not let the JSON format shorten your sentences. (Never author new
+  studyNotes — that format is legacy.)
 - Generate in small batches (a handful of topics per request) so each topic
   gets real writing effort instead of a token-budget ration.
 
@@ -180,17 +181,26 @@ Section headings are rendered by the app (localized to the reading
 language); never write "## " headings inside the fields. Deterministic
 limits, enforced by `npm run content:check`:
 
-| field            | shape                | limits                                                                  |
-| ---------------- | -------------------- | ----------------------------------------------------------------------- |
-| `mentalModel`    | string               | required; ONE paragraph, 1–2 sentences, ≤300 chars                      |
-| `problem`        | string               | required; ≤600 chars                                                    |
-| `example`        | string               | required for new content; ONE concrete example, plain prose, ≤700 chars |
-| `howItWorks`     | string[]             | 2–5 steps, each ≤220 chars                                              |
-| `commonMistakes` | string[]             | 2–4 items, each ≤220 chars                                              |
-| `keyTerms`       | {term, definition}[] | 1–5 items; term ≤60, definition ≤220                                    |
+| field            | shape                | hard-validated limits                              |
+| ---------------- | -------------------- | -------------------------------------------------- |
+| `mentalModel`    | string               | required; ONE paragraph; ≤300 chars                |
+| `problem`        | string               | required; ≤600 chars                               |
+| `example`        | string               | ≤700 chars (see the required/optional note below)  |
+| `howItWorks`     | string[]             | 2–5 steps, each ≤220 chars                         |
+| `commonMistakes` | string[]             | 2–4 items, each ≤220 chars                         |
+| `keyTerms`       | {term, definition}[] | 1–5 items; term ≤60, definition ≤220               |
 
-Keep the whole English `studyContent` around 100–260 words — going over only
-warns, but treat it as a sign the page stopped being a first explanation.
+Everything in the table (plus the ban on "## " headings inside fields) is
+hard-validated by the schema. Two rules are softer on purpose:
+
+- "mentalModel is 1–2 sentences" is an authoring rule (sentence counting is
+  not implemented — only the single-paragraph and length limits are hard).
+- The whole English `studyContent` should stay around **100–260 words**;
+  above 260 `content:check` prints a warning, not an error — treat it as a
+  sign the page stopped being a first explanation.
+- `example` is **mandatory for newly authored content** (the prompt template
+  enforces it, and `content:check` warns when it is missing) but stays
+  schema-optional so mechanically migrated legacy content remains valid.
 
 Writing rules:
 
@@ -372,8 +382,9 @@ The intended workflow for growing or fixing content with *any* AI system
    file when modifying — the AI must always return the *whole* file, never
    a fragment).
 4. **Validate: `npm run content:check`.** It enforces the schema, id
-   uniqueness, reference integrity, and the studyNotes structure, and names
-   the exact file/path/expectation for anything wrong. Nothing invalid can
+   uniqueness, reference integrity, and the structured studyContent limits
+   (plus the legacy studyNotes structure where that format is still used),
+   and names the exact file/path/expectation for anything wrong. Nothing invalid can
    reach the app — a broken pack is skipped and reported, never crashes.
 5. Reload the app (or `npm run dev`) and review the result in the Study tab.
 
@@ -381,7 +392,10 @@ Rules the AI must follow when **modifying** existing content:
 
 - Never change existing `id` values — user progress (practice history,
   spaced repetition) is keyed to question/topic ids.
-- Keep every topic's `studyNotes` in the fixed structure below.
+- Author or regenerate educational content as `studyContent`; keep legacy
+  `studyNotes` only for backward compatibility (never write new ones).
+- When a topic has both, `studyContent` is authoritative — the app and the
+  PDF exports ignore the legacy string.
 - Prefer linking to an existing topic (`relatedTopicIds`, or reusing its id
   in `topicIds`) over creating a near-duplicate topic.
 - Keep `sources` accurate: list the `dataresource/` files (path without
@@ -415,7 +429,8 @@ separately.
   Once you have picked a winner, delete the version folders and release again
   to drop them from the bundle.
 - `npm run content:check` validates every version folder as its own bank
-  (schema, studyNotes structure), exactly like the live one. Version banks are
+  (schema, structured studyContent limits, or the legacy studyNotes structure
+  where used), exactly like the live one. Version banks are
   independent, so ids may repeat across versions (but must be unique within
   one).
 - Non-pack JSON files (an AI's audit summary, a manifest — anything without a
@@ -429,7 +444,10 @@ under `?dev=1` and copy the winner into `content/packs/`.
 ## AI prompt template
 
 Paste this into the AI chat (together with the `content:ids` output), fill
-in the placeholders, and save the output as `content/packs/<name>.json`:
+in the placeholders, and save the output as `content/packs/<name>.json`.
+**Batch small:** give the AI at most ~6 topics per request and merge the
+results yourself — long topic lists make models ration their writing effort
+per topic, which is exactly what produces flat, hard-to-read content:
 
 ````text
 You are generating a content pack for a technical interview trainer app.
@@ -535,10 +553,11 @@ Content rules:
   return the COMPLETE updated pack file — never a fragment or a diff — and
   keep all existing ids unchanged.
 
-Generate a pack now for these topics, with 3 questions per topic.
-Work in SMALL BATCHES: if the topic list is longer than ~6 topics, ask for
-it in parts instead of compressing your writing — every topic must get real
-writing effort, not a token-budget ration:
+This prompt is intended for a maximum of approximately six topics per
+generation batch. The caller is responsible for splitting larger work into
+multiple requests.
+
+Generate a pack now for these topics, with 3 questions per topic:
 
 TOPICS: <<< YOUR TOPIC LIST HERE, e.g. "Kubernetes basics, Service Mesh, OAuth2 flows" >>>
 TARGET ROLES: <<< e.g. "backend_developer and backend_architect" >>>

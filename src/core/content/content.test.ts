@@ -18,6 +18,20 @@ function isPackFile(raw: string): boolean {
   }
 }
 
+/** `example` is mandatory for newly authored studyContent but schema-optional
+ * (mechanically migrated legacy content has none); aggregated per pack so a
+ * freshly migrated bank does not print dozens of lines. */
+function warnMissingExamples(file: string, pack: ContentPack) {
+  const missing = pack.topics
+    .filter((t) => t.studyContent && !t.studyContent.example)
+    .map((t) => t.id);
+  if (missing.length > 0) {
+    console.warn(
+      `${file}: ${missing.length} topic(s) with studyContent but no example — allowed for mechanically migrated legacy content, but new content should include one: ${missing.join(", ")}`,
+    );
+  }
+}
+
 /** Every topic needs study material: structured `studyContent` (preferred —
  * field limits enforced by the schema) or legacy `studyNotes` in the fixed
  * heading structure. Shared by live packs and the dev-mode version banks. */
@@ -119,6 +133,7 @@ describe("content packs", () => {
       for (const topic of pack.topics) {
         assertStudyNotesStructure(file, topic);
       }
+      warnMissingExamples(file, pack);
     }
   });
 
@@ -210,6 +225,7 @@ describe.skipIf(versionFiles.length === 0)(
         for (const topic of result.data.topics) {
           assertStudyNotesStructure(file, topic);
         }
+        warnMissingExamples(file, result.data);
       },
     );
   },
