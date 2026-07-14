@@ -71,9 +71,16 @@ export function deriveBank(packs: ContentPack[], loadedPacks: LoadedPack[]): Ban
     }
   }
 
-  // Seed topics stay as shared taxonomy packs may reference; all questions
-  // come from the packs.
-  const topics = mergeById(seedTopics, packTopics, "topic", errors);
+  // Packs are the content authority: a pack topic (with studyNotes,
+  // importance, …) overrides the bare seed-taxonomy entry with the same id.
+  // The seed only fills ids no pack defines, so packs can keep referencing
+  // shared taxonomy ids. Duplicates BETWEEN packs still error.
+  const packMerged = mergeById<Topic>([], packTopics, "topic", errors);
+  const packTopicIds = new Set(packMerged.map((t) => t.id));
+  const topics = [
+    ...packMerged,
+    ...seedTopics.filter((t) => !packTopicIds.has(t.id)),
+  ];
   const questions = mergeById<QuestionCard>([], packQuestions, "question", errors);
   const sourcesByCardId = new Map<string, string[]>(
     questions.map((q) => [q.id, sourcesByQuestionId.get(q.id) ?? ["unknown"]]),
