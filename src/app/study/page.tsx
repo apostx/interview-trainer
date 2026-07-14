@@ -463,11 +463,11 @@ export default function StudyPage() {
     setGenerating(format);
     setPdfError(null);
     try {
-      // Flashcard design candidate, picked via ?cards=1..5 (default 1).
+      // Flashcard design candidate, picked via ?cards=1..3 (default 1).
       const style = Number(new URLSearchParams(window.location.search).get("cards"));
       await downloadStudyPdf(format, {
         ...scope,
-        cardStyle: (style >= 1 && style <= 5 ? style : 1) as CardStyle,
+        cardStyle: (style >= 1 && style <= 3 ? style : 1) as CardStyle,
       });
     } catch (e) {
       setPdfError(

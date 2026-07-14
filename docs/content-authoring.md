@@ -74,6 +74,25 @@ only picks up content after a release — dev mode hot-reloads instantly.
 }
 ```
 
+**Write every prose field for a learner, not for a database.** This is the
+most common failure mode when a whole bank is generated in one JSON pass: the
+model slips into telegram style ("Failing fast when a dependency repeatedly
+fails.") because it is filling short fields at scale, and the result reads
+like reference metadata instead of teaching. Rules:
+
+- `description`: one or two FULL sentences that teach the concept to someone
+  who has never heard of it — subject, verb, plain words. Bad: "Coordination
+  of the call stack, tasks, and rendering." Good: "The event loop is how
+  JavaScript juggles many pending tasks on a single thread: it runs one piece
+  of work at a time and decides what runs next."
+- The same applies to rubric `label`/`description` and follow-up prompts —
+  every string a learner sees must survive being read out of context.
+- Write the studyNotes and descriptions as prose FIRST (as if writing a short
+  textbook page), and only then wrap them into the JSON. Do not let the JSON
+  format shorten your sentences.
+- Generate in small batches (a handful of topics per request) so each topic
+  gets real writing effort instead of a token-budget ration.
+
 `importance` is optional for backward compatibility. When at least one topic
 has it, an "Importance" filter appears in Study and Practice — a multi-select
 of levels 5…1 plus "Unrated"; topics WITHOUT a rating only show when nothing
@@ -148,6 +167,11 @@ list is clearer than prose. (May be titled contextually, e.g.
 ```
 
 Aim for 150–400 words per topic.
+
+The flashcard PDF export ("PDF · cards") puts the FIRST paragraph of
+"What is it?" and of "What problem does it solve?" onto the topic's card,
+so each of those sections must open with a self-contained 1–3 sentence
+paragraph that works on its own.
 
 **Blank lines are required around every `## ` heading** — one blank line
 before it AND one blank line after it (including before the first `- ` bullet

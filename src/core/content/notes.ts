@@ -15,6 +15,33 @@ export function isTermsHeading(text: string): boolean {
   return /^(key terms|kulcsfogalmak)/i.test(text);
 }
 
+/** "What is it?" / "Mi ez?" heading. */
+export function isDefinitionHeading(text: string): boolean {
+  return /^(what is it|mi ez)\b/i.test(text);
+}
+
+/** "What problem does it solve?" / "Milyen problémát old meg?" heading. */
+export function isProblemHeading(text: string): boolean {
+  return /^(what problem|milyen probl)/i.test(text);
+}
+
+/**
+ * First paragraph of the section whose heading matches — the flashcard
+ * export prefers this teaching prose over the telegram-style description.
+ */
+export function sectionLead(
+  notes: string | undefined,
+  matches: (heading: string) => boolean,
+): string | null {
+  if (!notes) return null;
+  let inSection = false;
+  for (const block of parseStudyNotes(notes)) {
+    if (block.type === "h") inSection = matches(block.text);
+    else if (inSection) return block.type === "p" ? block.text : null;
+  }
+  return null;
+}
+
 /** "Common mistakes" / "Gyakori hibák" heading (gets the warning marker —
  * the one visually isolated element, which is what makes it memorable). */
 export function isMistakesHeading(text: string): boolean {

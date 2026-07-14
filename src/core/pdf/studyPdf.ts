@@ -3,9 +3,12 @@ import { MODE_LABELS } from "@/core/models";
 import { allQuestions, allTopics } from "@/core/content/bank";
 import { DEFAULT_LANG, localizeCard, localizeTopic } from "@/core/content/i18n";
 import {
+  isDefinitionHeading,
+  isProblemHeading,
   isTermsHeading,
   parseKeyTerm,
   parseStudyNotes,
+  sectionLead,
 } from "@/core/content/notes";
 
 /**
@@ -22,8 +25,8 @@ import {
 
 export type StudyPdfFormat = "a4" | "phone" | "cards";
 
-/** Visual variant of the flashcard deck (5 candidate designs to pick from). */
-export type CardStyle = 1 | 2 | 3 | 4 | 5;
+/** Visual variant of the flashcard deck (3 candidate designs to pick from). */
+export type CardStyle = 1 | 2 | 3;
 
 /** Optional export scope: a filtered card set, one topic, or everything. */
 export type StudyPdfScope = {
@@ -508,32 +511,6 @@ const CARD_STYLES = {
     chips: ["#ffe483", "#ffcfae", "#c9ecd2", "#cde4fb"],
     band: { type: "block", color: "#e8542f" },
   },
-  4: {
-    // "Dark deck" — matches the app shell; terms on slate chips.
-    name: "Dark deck",
-    bg: "#17181c",
-    ink: "#f4f4f0",
-    soft: "#b9bec9",
-    label: "#7d828d",
-    bodyLabel: "#7d828d",
-    titleBg: "#3987e5",
-    titleColor: "#ffffff",
-    chips: ["#2b3648", "#3a2f45", "#243b31", "#40342a"],
-    band: null,
-  },
-  5: {
-    // "Minimal type" — pure white, big black type, generous whitespace.
-    name: "Minimal type",
-    bg: "#ffffff",
-    ink: "#111111",
-    soft: "#555555",
-    label: "#999999",
-    bodyLabel: "#999999",
-    titleBg: null,
-    titleColor: "#111111",
-    chips: [],
-    band: { type: "hairline", color: "#dddddd" },
-  },
 } as const;
 
 const CARD_PAGE = { width: 400, height: 600 };
@@ -604,6 +581,11 @@ export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
 
   deckTopics.forEach(({ topic, loc }) => {
     const terms = keyTerms(loc.studyNotes);
+    // The studyNotes teaching prose reads far better than the one-line UI
+    // description, so the card leads with "What is it?" when it exists.
+    const definition =
+      sectionLead(loc.studyNotes, isDefinitionHeading) ?? loc.description;
+    const problem = sectionLead(loc.studyNotes, isProblemHeading);
     const stack: any[] = [
       {
         text: CATEGORY_LABELS[topic.category].toUpperCase(),
@@ -622,16 +604,26 @@ export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
         lineHeight: 1.3,
         margin: [0, 0, 0, s.band?.type === "block" ? 65 : 12],
       },
-      ...(s.band?.type === "hairline"
-        ? [{ canvas: [{ type: "line", x1: 0, y1: 0, x2: 60, y2: 0, lineWidth: 2, lineColor: s.band.color }], margin: [0, 0, 0, 12] }]
-        : []),
       {
-        text: loc.description,
-        fontSize: 14.5,
+        text: definition,
+        fontSize: 13.5,
         color: s.ink,
         lineHeight: 1.4,
       },
     ];
+    if (problem) {
+      stack.push(
+        {
+          text: "WHY IT MATTERS",
+          fontSize: 9,
+          bold: true,
+          characterSpacing: 1.1,
+          color: s.bodyLabel,
+          margin: [0, 14, 0, 5],
+        },
+        { text: problem, fontSize: 12.5, color: s.soft, lineHeight: 1.4 },
+      );
+    }
     if (terms.length > 0) {
       stack.push({
         text: "KEY TERMS",
