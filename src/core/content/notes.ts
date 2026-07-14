@@ -10,6 +10,15 @@ export type NoteBlock =
   | { type: "h"; text: string }
   | { type: "ul"; items: string[] };
 
+/** Whether a topic has educational material for the Study view — in either
+ * the structured (`studyContent`) or the legacy (`studyNotes`) format. */
+export function hasStudyMaterial(t: {
+  studyNotes?: string;
+  studyContent?: unknown;
+}): boolean {
+  return Boolean(t.studyContent ?? t.studyNotes);
+}
+
 /** "Key terms" / "Kulcsfogalmak" heading (its list renders as term cards). */
 export function isTermsHeading(text: string): boolean {
   return /^(key terms|kulcsfogalmak)/i.test(text);

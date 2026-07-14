@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "content:check": "vitest run src/core/content",
+    "content:migrate-study": "node scripts/migrate-study.mjs",
     "content:ids": "node scripts/content-ids.mjs",
     "postbuild": "node scripts/flatten-rsc-export.mjs",
     "release:content": "node scripts/release-content.mjs",

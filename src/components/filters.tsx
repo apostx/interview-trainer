@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { allBanks } from "@/core/content/bank";
+import { hasStudyMaterial } from "@/core/content/notes";
 import { selectCompact } from "@/components/ui";
 
 /** Importance levels for the multi-select filter ("u" = unrated topics). */
@@ -136,7 +137,7 @@ export function DevVersionSwitcher({
       >
         {allBanks.map((b) => (
           <option key={b.label} value={b.label}>
-            {b.label} ({b.bank.topics.filter((t) => t.studyNotes).length} topics)
+            {b.label} ({b.bank.topics.filter(hasStudyMaterial).length} topics)
           </option>
         ))}
       </select>

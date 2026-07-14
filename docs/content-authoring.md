@@ -62,7 +62,16 @@ only picks up content after a release — dev mode hot-reloads instantly.
                                     // architecture | cloud | security | database |
                                     // devops | observability | soft_technical | core
   "relatedTopicIds": ["event_driven"], // optional
-  "studyNotes": "Educational prose for the Study view. Paragraphs separated by\nblank lines (\\n\\n); lines starting with \"- \" become bullet lists; a line\nstarting with \"## \" becomes a subheading.",  // optional but strongly encouraged
+  "studyContent": {                    // PREFERRED: structured study material
+    "mentalModel": "1-2 plain sentences with the central idea (max 300 chars).",
+    "problem": "What goes wrong without the concept (max 600 chars).",
+    "example": "One concrete, easy-to-follow example (max 700 chars).",
+    "howItWorks": ["2-5 simple steps.", "Each step max 220 chars."],
+    "commonMistakes": ["2-4 misunderstandings.", "Each max 220 chars."],
+    "keyTerms": [{ "term": "max 60 chars", "definition": "max 220 chars" }]
+  },
+  // "studyNotes": "LEGACY free-form prose — superseded by studyContent; do
+  //                not author new content this way (see below)",
   "importance": 4,                      // optional, 1–5: how essential for interviews
                                         // (5 = asked in almost every relevant interview,
                                         //  3 = commonly comes up, 1 = niche/rare).
@@ -112,7 +121,12 @@ like — anything you omit shows the English original. English is the base and
 is never a key. When at least one translation exists, a language selector
 appears in the Study view (and the exported PDF follows the choice).
 
-- **Topic** `i18n[lang]`: `name`, `description`, `studyNotes` (all optional).
+- **Topic** `i18n[lang]`: `name`, `description`, `studyContent`, and (legacy)
+  `studyNotes` — all optional. Inside a translated `studyContent`, scalar
+  fields fall back to English per field; a provided ARRAY replaces the
+  complete English array (arrays are never merged by index — translate a
+  list fully or leave it out entirely). Section headings are localized by
+  the app, so translations contain no headings.
 - **Question** `i18n[lang]`: `title`, `prompt`, `answerStructureHint`,
   `expectedPoints` (an object keyed by the rubric item's `id` → `{ label,
   description }`), and `followUps` (keyed by the follow-up's `id` → translated
@@ -120,6 +134,19 @@ appears in the Study view (and the exported PDF follows the choice).
   runs in English).
 
 ```jsonc
+// on a topic:
+"i18n": {
+  "hu": {
+    "name": "…", "description": "…",
+    "studyContent": {
+      "mentalModel": "…", "problem": "…", "example": "…",
+      "howItWorks": ["…", "…"],          // replaces the whole English array
+      "commonMistakes": ["…", "…"],
+      "keyTerms": [{ "term": "…", "definition": "…" }]
+    }
+  }
+}
+
 // on a question card:
 "i18n": {
   "hu": {
@@ -137,48 +164,116 @@ parts ("Caching & Invalidation") are one concept; grab-bags like
 and connect them with `relatedTopicIds`. Notes may reference neighboring
 topics, but must not explain them.
 
-`studyNotes` is what makes the Study section educational: a well-written
-explanation of the topic that someone can *learn from*, with the question
-cards rendered below it as practice checks.
+### Study content (`studyContent`) — the educational core
 
-**Every topic's notes MUST follow this fixed structure**, in simple, plain
-English — written for a developer who does NOT yet know the topic (no
-insider shorthand, no clever one-liners that only make sense if you already
-understand it; jargon is explained the moment it appears):
+`studyContent` is what makes the Study section educational: the structured
+material a learner reads, with the question cards rendered below it as
+practice checks.
 
+**PEDAGOGICAL SIMPLICITY IS MORE IMPORTANT THAN COMPLETENESS.** The Study
+page exists to create a clear FIRST mental model, not to document every
+production mechanism, metric, protocol, edge case, or implementation
+variation. Interview-specific depth already belongs in the question cards,
+expectedPoints, followUps, and related topics.
+
+Section headings are rendered by the app (localized to the reading
+language); never write "## " headings inside the fields. Deterministic
+limits, enforced by `npm run content:check`:
+
+| field            | shape                | limits                                                                  |
+| ---------------- | -------------------- | ----------------------------------------------------------------------- |
+| `mentalModel`    | string               | required; ONE paragraph, 1–2 sentences, ≤300 chars                      |
+| `problem`        | string               | required; ≤600 chars                                                    |
+| `example`        | string               | required for new content; ONE concrete example, plain prose, ≤700 chars |
+| `howItWorks`     | string[]             | 2–5 steps, each ≤220 chars                                              |
+| `commonMistakes` | string[]             | 2–4 items, each ≤220 chars                                              |
+| `keyTerms`       | {term, definition}[] | 1–5 items; term ≤60, definition ≤220                                    |
+
+Keep the whole English `studyContent` around 100–260 words — going over only
+warns, but treat it as a sign the page stopped being a first explanation.
+
+Writing rules:
+
+- The `mentalModel` must be understandable without any prior topic-specific
+  knowledge. Start with "X means…" or "X happens when…" where natural.
+- Use ONE concrete example, not several unrelated ones.
+- Introduce only the technical terms needed to understand the central idea,
+  and explain every one of them in plain language. Never explain an
+  unfamiliar term with another unfamiliar term.
+- One idea per sentence; prefer short sentences.
+- Keep `howItWorks` to 2–5 simple steps; no implementation details that
+  belong in another topic; no information repeated across sections.
+- `keyTerms` may contain only terms necessary for understanding THIS page.
+- Question cards provide interview depth; `studyContent` provides initial
+  understanding.
+
+Example — a simple topic:
+
+```jsonc
+"studyContent": {
+  "mentalModel": "Idempotency means an operation can run twice with the same effect as running it once.",
+  "problem": "Networks retry: a payment request may be sent again after a timeout even though the first attempt succeeded. Without idempotency, retries create duplicates — double charges, double emails.",
+  "example": "A client sends POST /payments with an Idempotency-Key header. The server stores the key with the result; when the same key arrives again, it returns the stored result instead of charging twice.",
+  "howItWorks": [
+    "The client attaches a unique key to the operation.",
+    "The server remembers which keys it has already processed.",
+    "A repeated key returns the first result instead of running again."
+  ],
+  "commonMistakes": [
+    "Assuming a retried request is harmless because it usually works.",
+    "Generating a new key on every retry, which defeats the purpose."
+  ],
+  "keyTerms": [
+    { "term": "idempotency key", "definition": "a client-provided unique id that lets the server detect a repeated request" }
+  ]
+}
 ```
-## What is it?
-2-4 plain sentences defining the thing.
 
-## What problem does it solve?
-Why it exists; what goes wrong without it.
+Example — a potentially complex topic (Backpressure), kept at
+first-understanding level:
 
-## How it works
-The mechanism / main parts / decision logic, with "- " bullets where a
-list is clearer than prose. (May be titled contextually, e.g.
-"## How it works" plus an extra subsection, but starts here.)
-
-## Common mistakes
-- 2-4 bullets: the misunderstandings and weak answers interviewers hear
-
-## Key terms
-- term — one-line plain definition
-- term — one-line plain definition
+```jsonc
+"studyContent": {
+  "mentalModel": "Backpressure means that a busy part of the system tells the sender to slow down. It is used when work arrives faster than the system can safely process it.",
+  "problem": "Imagine that an API can handle 100 requests per second but receives 500. If it accepts everything, waiting work keeps growing, responses become slower, and the service may eventually fail.",
+  "example": "A message consumer reads from a queue at its own pace. When the queue is full, producers get an error and retry later, instead of the consumer drowning in unread messages.",
+  "howItWorks": [
+    "The receiver signals how much work it can accept right now.",
+    "The sender slows down, waits, or gets a rejection.",
+    "Work that cannot be accepted fails fast instead of piling up invisibly."
+  ],
+  "commonMistakes": [
+    "Calling any rate limit backpressure — backpressure is a signal from the receiver back to the sender.",
+    "Using an unbounded queue as the overload strategy: it hides the problem until memory runs out."
+  ],
+  "keyTerms": [
+    { "term": "bounded queue", "definition": "a queue with a maximum capacity, so overload becomes visible instead of hidden" }
+  ]
+}
 ```
 
-Aim for 150–400 words per topic.
+Note what the Backpressure example does NOT mention: demand windows,
+credits, consumer lag, bounded concurrency, backoff, jitter, intake control,
+flow-control protocols. Terms like these enter only when a topic genuinely
+requires them or a deeper related topic covers them.
 
-The flashcard PDF export ("PDF · cards") puts the FIRST paragraph of
-"What is it?" and of "What problem does it solve?" onto the topic's card,
-so each of those sections must open with a self-contained 1–3 sentence
-paragraph that works on its own.
+### Legacy `studyNotes` (transitional — do not author new content this way)
 
-**Blank lines are required around every `## ` heading** — one blank line
-before it AND one blank line after it (including before the first `- ` bullet
-underneath). A heading glued to the text above or to the bullets below renders
-as literal `## ` text instead of a heading, and `content:check` rejects it.
-In JSON this means the `studyNotes` string uses `\n\n` before and after each
-`## ` marker, e.g. `"…prose.\n\n## How it works\n\n- first bullet…"`.
+Old packs store the same material as one free-form string with `## `
+headings ("## What is it?", "## What problem does it solve?", "## How it
+works", "## Common mistakes", "## Key terms" — blank lines required around
+every heading). It still renders, validates, and exports (the flashcard PDF
+extracts the first paragraphs of the known sections), but it is superseded:
+**when a topic has both, the app uses `studyContent`** and ignores the
+string.
+
+`npm run content:migrate-study` mechanically moves well-structured legacy
+notes into `studyContent` (add `-- --dry-run` to preview): it never rewrites
+or discards prose, keeps `studyNotes` in place, migrates every translation
+together with the base (or fails the whole topic so a translated reader
+never silently falls back to English), and reports each topic that does not
+fit the structured limits so it can be rewritten or regenerated. Migrated
+content is NOT automatically pedagogically good — plan a rewrite pass.
 
 Questions may also reference **existing seed topic ids** (see
 `src/core/seed/topics.ts`), e.g. `api_design`, `caching`, `message_queue`,
@@ -351,7 +446,14 @@ The JSON must follow this exact structure (all ids snake_case):
     { "id": "...", "name": "...", "description": "...",
       "category": "<frontend|backend|fullstack|architecture|cloud|security|database|devops|observability|soft_technical|core>",
       "relatedTopicIds": [],
-      "studyNotes": "## What is it?\\n\\n<plain definition>\\n\\n## What problem does it solve?\\n\\n<why it exists>\\n\\n## How it works\\n\\n<mechanism; '- ' lines become bullets>\\n\\n## Common mistakes\\n\\n- <misunderstanding or weak answer>\\n\\n## Key terms\\n\\n- <term> — <one-line definition>",
+      "studyContent": {
+        "mentalModel": "<1-2 plain sentences with the central idea; max 300 chars>",
+        "problem": "<what goes wrong without it; max 600 chars>",
+        "example": "<ONE concrete, easy-to-follow example; max 700 chars>",
+        "howItWorks": ["<2-5 simple steps, each max 220 chars>"],
+        "commonMistakes": ["<2-4 misunderstandings, each max 220 chars>"],
+        "keyTerms": [{ "term": "<max 60 chars>", "definition": "<plain, max 220 chars>" }]
+      },
       "importance": <1-5: how essential for interviews; 5 = asked almost always, 3 = common, 1 = niche> }
   ],
   "questions": [
@@ -387,18 +489,32 @@ Content rules:
 - acceptedSignals: 4-8 short phrases (1-4 words) a candidate would plausibly
   SAY out loud, including synonyms and paraphrases of the concept — not only
   the jargon term. All lowercase.
-- Every topic MUST have studyNotes: a 150-400 word plain-English explanation
-  written for someone who does NOT yet know the topic. Fixed structure:
-  "## What is it?" (plain definition), "## What problem does it solve?",
-  "## How it works" (mechanism, bullets welcome), "## Common mistakes"
-  (2-4 bullets of misunderstandings/weak answers), "## Key terms"
-  ("- term — one-line definition" bullets). Simple sentences; explain jargon
-  the moment it appears; no insider one-liners. Paragraphs separated by \n\n.
-  The questions are practice checks *under* the notes.
-- CRITICAL formatting: put \n\n BEFORE and AFTER every "## " heading (also
-  between a heading and the first "- " bullet under it). A heading without a
-  blank line on both sides renders as literal "## " text and is rejected by
-  content:check. Example: "…prose.\n\n## How it works\n\n- first bullet".
+- Every topic MUST have studyContent. PEDAGOGICAL SIMPLICITY IS MORE
+  IMPORTANT THAN COMPLETENESS: the Study page creates a clear FIRST mental
+  model; interview depth belongs in the question cards and follow-ups.
+  Target 100-260 words total per topic.
+- studyContent rules:
+  - mentalModel: understandable with NO prior topic knowledge; start with
+    "X means…" or "X happens when…" where natural; 1-2 sentences, one
+    paragraph, max 300 chars.
+  - problem: what goes wrong without the concept, concretely; max 600 chars.
+  - example: exactly ONE concrete, easy-to-follow example in plain prose;
+    max 700 chars.
+  - howItWorks: 2-5 simple steps, each max 220 chars.
+  - commonMistakes: 2-4 items, each max 220 chars.
+  - keyTerms: 1-5 items; ONLY the terms needed to understand this page;
+    term max 60 chars, definition max 220 chars, plain language.
+  - NO "## " headings inside any field (the app renders localized headings).
+  - Introduce only the technical terms needed for the central idea; explain
+    each in plain words; never explain an unfamiliar term with another
+    unfamiliar term; one idea per sentence; nothing repeated across sections.
+- Before returning the JSON, do a SIMPLIFICATION PASS over every topic:
+  - remove details not needed for first understanding;
+  - replace abstract phrases with concrete wording;
+  - split any sentence carrying more than one new idea;
+  - check that a junior developer could explain the concept after one
+    reading;
+  - rewrite any sentence that depends on a concept you did not explain.
 - Every question needs 1-2 followUps that probe the most likely gap.
 - Mix the modes: concept_check for definitions, tradeoff_decision for X-vs-Y,
   scenario_discussion / troubleshooting for practical situations,
@@ -419,7 +535,10 @@ Content rules:
   return the COMPLETE updated pack file — never a fragment or a diff — and
   keep all existing ids unchanged.
 
-Generate a pack now for these topics, with 3 questions per topic:
+Generate a pack now for these topics, with 3 questions per topic.
+Work in SMALL BATCHES: if the topic list is longer than ~6 topics, ask for
+it in parts instead of compressing your writing — every topic must get real
+writing effort, not a token-budget ration:
 
 TOPICS: <<< YOUR TOPIC LIST HERE, e.g. "Kubernetes basics, Service Mesh, OAuth2 flows" >>>
 TARGET ROLES: <<< e.g. "backend_developer and backend_architect" >>>
@@ -448,10 +567,15 @@ Rules:
 - Do NOT change any id, any English text, or any structural field. Translation
   is purely additive.
 - For each TOPIC, add an "i18n" object keyed by the language code, e.g. "hu":
-  { "name": "...", "description": "...", "studyNotes": "..." }. Translate the
-  studyNotes fully, KEEPING the exact section structure and blank lines:
-  each "## " heading stays on its own line with a blank line before it (only
-  the heading text is translated, e.g. "## What is it?" -> "## Mi ez?").
+  { "name": "...", "description": "...", "studyContent": { ... } }. Translate
+  every studyContent field; arrays (howItWorks, commonMistakes, keyTerms)
+  must be translated COMPLETELY or omitted entirely — a provided array
+  replaces the whole English array. Do NOT put section headings into the
+  fields (the app renders localized headings). English technical terms stay
+  in English where developers use them untranslated.
+  Legacy packs that still use "studyNotes" strings: translate those fully,
+  keeping the exact "## " section structure and blank lines (only the
+  heading text is translated, e.g. "## What is it?" -> "## Mi ez?").
 - For each QUESTION, add an "i18n" object keyed by the language code with any
   of: "title", "prompt", "answerStructureHint",
   "expectedPoints" (an object keyed by each rubric item's id ->

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, ModeBadge, PageHeader, buttonGhost, buttonSecondary, inputBase, selectCompact } from "@/components/ui";
-import type { LangCode, QuestionCard, Topic } from "@/core/models";
+import type { LangCode, QuestionCard, StudyContent, Topic } from "@/core/models";
 import { ROLE_LABELS, ROLE_TRACKS, TRACK_MEMBER_ROLES } from "@/core/models";
 import { allBanks, liveBank } from "@/core/content/bank";
 import {
@@ -26,6 +26,8 @@ import {
   languageLabel,
   localizeCard,
   localizeTopic,
+  studySectionLabel,
+  type StudySection,
 } from "@/core/content/i18n";
 import {
   downloadStudyPdf,
@@ -34,6 +36,7 @@ import {
   type StudyPdfScope,
 } from "@/core/pdf/studyPdf";
 import {
+  hasStudyMaterial,
   isMistakesHeading,
   isTermsHeading,
   parseKeyTerm,
@@ -85,6 +88,96 @@ function cardMatchesQuery(card: QuestionCard, query: string): boolean {
 
 const CHIP_CLASSES = ["bg-chip-1", "bg-chip-2", "bg-chip-3", "bg-chip-4"];
 
+/**
+ * The study material renders on a warm "paper" surface with highlighter-style
+ * headings and flashcard-like key terms: reading research favours dark text
+ * on a light background, and selective vivid colour aids attention/encoding.
+ */
+function PaperSurface({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mb-6 rounded-2xl border border-paper-line bg-paper px-5 py-6 text-paper-ink shadow-sm sm:px-7">
+      <div className="flex max-w-prose flex-col gap-4">{children}</div>
+    </div>
+  );
+}
+
+function MarkerHeading({ text, warn }: { text: string; warn?: boolean }) {
+  return (
+    <h2 className="mt-3 text-base font-bold first:mt-0">
+      <span
+        className={`${warn ? "bg-marker-warn" : "bg-marker"} -mx-1 rounded-sm box-decoration-clone px-1.5 py-0.5`}
+      >
+        {text}
+      </span>
+    </h2>
+  );
+}
+
+function PaperText({ text }: { text: string }) {
+  return <p className="text-[15px] leading-relaxed text-paper-soft">{text}</p>;
+}
+
+function PaperList({ items }: { items: string[] }) {
+  return (
+    <ul className="flex list-disc flex-col gap-1.5 pl-5 marker:text-paper-soft">
+      {items.map((item, j) => (
+        <li key={j} className="text-[15px] leading-relaxed text-paper-soft">
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function TermChips({ terms }: { terms: { term: string; def: string | null }[] }) {
+  return (
+    <dl className="grid gap-2 sm:grid-cols-2">
+      {terms.map(({ term, def }, j) => (
+        <div
+          key={j}
+          className={`${CHIP_CLASSES[j % CHIP_CLASSES.length]} rounded-lg px-3 py-2 shadow-sm`}
+        >
+          <dt className="text-sm font-bold">{term}</dt>
+          {def && <dd className="mt-0.5 text-sm leading-snug">{def}</dd>}
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/** Structured study content: the app renders the localized section labels. */
+function StudyContentBlocks({
+  content,
+  lang,
+}: {
+  content: StudyContent;
+  lang: LangCode;
+}) {
+  const label = (s: StudySection) => studySectionLabel(s, lang);
+  return (
+    <PaperSurface>
+      <MarkerHeading text={label("mentalModel")} />
+      <PaperText text={content.mentalModel} />
+      <MarkerHeading text={label("problem")} />
+      <PaperText text={content.problem} />
+      {content.example && (
+        <>
+          <MarkerHeading text={label("example")} />
+          <PaperText text={content.example} />
+        </>
+      )}
+      <MarkerHeading text={label("howItWorks")} />
+      <PaperList items={content.howItWorks} />
+      <MarkerHeading text={label("commonMistakes")} warn />
+      <PaperList items={content.commonMistakes} />
+      <MarkerHeading text={label("keyTerms")} />
+      <TermChips
+        terms={content.keyTerms.map((k) => ({ term: k.term, def: k.definition }))}
+      />
+    </PaperSurface>
+  );
+}
+
 // Annotates each block with whether it sits in the key-terms section (whose
 // lists render as term cards instead of bullets).
 function annotateBlocks(notes: string) {
@@ -95,63 +188,23 @@ function annotateBlocks(notes: string) {
   });
 }
 
-/**
- * The study material renders on a warm "paper" surface with highlighter-style
- * headings and flashcard-like key terms: reading research favours dark text
- * on a light background, and selective vivid colour aids attention/encoding.
- */
+/** Legacy free-form notes (kept until every pack migrates to studyContent). */
 function StudyNotes({ notes }: { notes: string }) {
   const rendered = annotateBlocks(notes).map(({ block, inTerms }, i) => {
     if (block.type === "h") {
-      const mark = isMistakesHeading(block.text) ? "bg-marker-warn" : "bg-marker";
       return (
-        <h2 key={i} className="mt-3 text-base font-bold first:mt-0">
-          <span className={`${mark} -mx-1 rounded-sm box-decoration-clone px-1.5 py-0.5`}>
-            {block.text}
-          </span>
-        </h2>
+        <MarkerHeading key={i} text={block.text} warn={isMistakesHeading(block.text)} />
       );
     }
     if (block.type === "p") {
-      return (
-        <p key={i} className="text-[15px] leading-relaxed text-paper-soft">
-          {block.text}
-        </p>
-      );
+      return <PaperText key={i} text={block.text} />;
     }
     if (inTerms) {
-      return (
-        <dl key={i} className="grid gap-2 sm:grid-cols-2">
-          {block.items.map((item, j) => {
-            const { term, def } = parseKeyTerm(item);
-            return (
-              <div
-                key={j}
-                className={`${CHIP_CLASSES[j % CHIP_CLASSES.length]} rounded-lg px-3 py-2 shadow-sm`}
-              >
-                <dt className="text-sm font-bold">{term}</dt>
-                {def && <dd className="mt-0.5 text-sm leading-snug">{def}</dd>}
-              </div>
-            );
-          })}
-        </dl>
-      );
+      return <TermChips key={i} terms={block.items.map(parseKeyTerm)} />;
     }
-    return (
-      <ul key={i} className="flex list-disc flex-col gap-1.5 pl-5 marker:text-paper-soft">
-        {block.items.map((item, j) => (
-          <li key={j} className="text-[15px] leading-relaxed text-paper-soft">
-            {item}
-          </li>
-        ))}
-      </ul>
-    );
+    return <PaperList key={i} items={block.items} />;
   });
-  return (
-    <div className="mb-6 rounded-2xl border border-paper-line bg-paper px-5 py-6 text-paper-ink shadow-sm sm:px-7">
-      <div className="flex max-w-prose flex-col gap-4">{rendered}</div>
-    </div>
-  );
+  return <PaperSurface>{rendered}</PaperSurface>;
 }
 
 function StudyCard({ card }: { card: QuestionCard }) {
@@ -339,7 +392,7 @@ export default function StudyPage() {
       }
     }
     const studyTopics = activeBank.topics.filter(
-      (t) => cardsByTopicId.has(t.id) || t.studyNotes,
+      (t) => cardsByTopicId.has(t.id) || hasStudyMaterial(t),
     );
     const groups = new Map<string, { id: string; name: string }[]>();
     for (const src of activeBank.contentSources) {
@@ -561,7 +614,11 @@ export default function StudyPage() {
             {pdfError}
           </p>
         )}
-        {t.studyNotes && <StudyNotes notes={t.studyNotes} />}
+        {t.studyContent ? (
+          <StudyContentBlocks content={t.studyContent} lang={activeLang} />
+        ) : (
+          t.studyNotes && <StudyNotes notes={t.studyNotes} />
+        )}
         {cards.length > 0 && (
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
             Practice checks
@@ -597,7 +654,7 @@ export default function StudyPage() {
       (e) =>
         e.cards.length > 0 ||
         (!searching &&
-          e.topic.studyNotes &&
+          hasStudyMaterial(e.topic) &&
           (cardsByTopicId.get(e.topic.id) ?? []).length === 0),
     )
     // Search deliberately looks across everything; otherwise the importance

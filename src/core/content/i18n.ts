@@ -1,4 +1,10 @@
-import type { LangCode, QuestionCard, Topic } from "@/core/models";
+import type {
+  LangCode,
+  QuestionCard,
+  StudyContent,
+  StudyContentTranslation,
+  Topic,
+} from "@/core/models";
 
 /**
  * Applies Study-only translations with per-field English fallback. English
@@ -42,10 +48,62 @@ export function availableLanguages(
   return [DEFAULT_LANG, ...[...set].sort()];
 }
 
+/** App-owned section labels for structured study content. The headings are
+ * rendered by the UI/PDF (never stored in content); unknown languages fall
+ * back to English. */
+export type StudySection =
+  | "mentalModel"
+  | "problem"
+  | "example"
+  | "howItWorks"
+  | "commonMistakes"
+  | "keyTerms";
+
+const STUDY_SECTION_LABELS: Record<string, Record<StudySection, string>> = {
+  en: {
+    mentalModel: "What is it?",
+    problem: "What problem does it solve?",
+    example: "Example",
+    howItWorks: "How it works",
+    commonMistakes: "Common mistakes",
+    keyTerms: "Key terms",
+  },
+  hu: {
+    mentalModel: "Mi ez?",
+    problem: "Milyen problémát old meg?",
+    example: "Példa",
+    howItWorks: "Hogyan működik?",
+    commonMistakes: "Gyakori hibák",
+    keyTerms: "Kulcsfogalmak",
+  },
+};
+
+export function studySectionLabel(section: StudySection, lang: LangCode): string {
+  return (STUDY_SECTION_LABELS[lang] ?? STUDY_SECTION_LABELS.en)[section];
+}
+
+/** Scalars fall back per field; a provided translated array replaces the
+ * complete English array (arrays are never merged by index). */
+function mergeStudyContent(
+  base: StudyContent | undefined,
+  tr: StudyContentTranslation | undefined,
+): StudyContent | undefined {
+  if (!base || !tr) return base;
+  return {
+    mentalModel: tr.mentalModel ?? base.mentalModel,
+    problem: tr.problem ?? base.problem,
+    example: tr.example ?? base.example,
+    howItWorks: tr.howItWorks ?? base.howItWorks,
+    commonMistakes: tr.commonMistakes ?? base.commonMistakes,
+    keyTerms: tr.keyTerms ?? base.keyTerms,
+  };
+}
+
 export type LocalizedTopic = {
   name: string;
   description: string;
   studyNotes?: string;
+  studyContent?: StudyContent;
 };
 
 export function localizeTopic(topic: Topic, lang: LangCode): LocalizedTopic {
@@ -54,6 +112,7 @@ export function localizeTopic(topic: Topic, lang: LangCode): LocalizedTopic {
     name: tr?.name ?? topic.name,
     description: tr?.description ?? topic.description,
     studyNotes: tr?.studyNotes ?? topic.studyNotes,
+    studyContent: mergeStudyContent(topic.studyContent, tr?.studyContent),
   };
 }
 

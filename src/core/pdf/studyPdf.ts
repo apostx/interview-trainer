@@ -1,8 +1,15 @@
-import type { LangCode, QuestionCard, Topic } from "@/core/models";
+import type { LangCode, QuestionCard, StudyContent, Topic } from "@/core/models";
 import { MODE_LABELS } from "@/core/models";
 import { allQuestions, allTopics } from "@/core/content/bank";
-import { DEFAULT_LANG, localizeCard, localizeTopic } from "@/core/content/i18n";
 import {
+  DEFAULT_LANG,
+  localizeCard,
+  localizeTopic,
+  studySectionLabel,
+  type StudySection,
+} from "@/core/content/i18n";
+import {
+  hasStudyMaterial,
   isDefinitionHeading,
   isProblemHeading,
   isTermsHeading,
@@ -181,6 +188,48 @@ function notesBlocks(notes: string, base: number): any[] {
   return out;
 }
 
+/** Structured study content rendered with app-generated localized headings,
+ * mirroring the legacy notesBlocks look (heading glued to its first block). */
+function structuredBlocks(sc: StudyContent, lang: LangCode, base: number): any[] {
+  const h = (key: StudySection) => ({
+    text: studySectionLabel(key, lang),
+    fontSize: base + 1,
+    bold: true,
+    color: INK,
+    margin: [0, 6, 0, 2],
+  });
+  const p = (text: string) => ({
+    text,
+    fontSize: base - 0.5,
+    color: BODY,
+    margin: [0, 0, 0, 4],
+    lineHeight: 1.35,
+  });
+  const ul = (items: string[]) => ({
+    ul: items.map((item) => ({
+      text: item,
+      fontSize: base - 0.5,
+      color: BODY,
+      margin: [0, 0, 0, 2],
+    })),
+    markerColor: MUTED,
+    margin: [2, 0, 0, 4],
+  });
+  const sections: [any, any][] = [
+    [h("mentalModel"), p(sc.mentalModel)],
+    [h("problem"), p(sc.problem)],
+    ...(sc.example ? [[h("example"), p(sc.example)] as [any, any]] : []),
+    [h("howItWorks"), ul(sc.howItWorks)],
+    [h("commonMistakes"), ul(sc.commonMistakes)],
+    [h("keyTerms"), ul(sc.keyTerms.map((k) => `${k.term} — ${k.definition}`))],
+  ];
+  // A section heading can never sit alone at the bottom of a page.
+  return sections.map(([heading, block]) => ({
+    stack: [heading, block],
+    unbreakable: true,
+  }));
+}
+
 function cardBox(card: QuestionCard, g: Geometry): any {
   const base = g.base;
   const inner: any[] = [
@@ -271,7 +320,7 @@ export function buildStudyPdfDefinition(
     }
   }
   const studyTopics = bankTopics.filter((t) => {
-    if (!cardsByTopicId.has(t.id) && !t.studyNotes) return false;
+    if (!cardsByTopicId.has(t.id) && !hasStudyMaterial(t)) return false;
     if (cardIdSet && !cardsByTopicId.has(t.id)) return false;
     if (scope.topicId) return t.id === scope.topicId;
     if (scope.category) return t.category === scope.category;
@@ -394,7 +443,11 @@ export function buildStudyPdfDefinition(
           ? [{ text: loc.description, fontSize: base - 1, color: MUTED, margin: [0, 0, 0, 4] }]
           : []),
       ];
-      const notes = loc.studyNotes ? notesBlocks(loc.studyNotes, base) : [];
+      const notes = loc.studyContent
+        ? structuredBlocks(loc.studyContent, lang, base)
+        : loc.studyNotes
+          ? notesBlocks(loc.studyNotes, base)
+          : [];
       // The topic header travels with the first notes block, so a topic name
       // can never end a page while its material starts the next.
       content.push({
@@ -564,7 +617,7 @@ export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
   );
   const deckTopics = bankTopics
     .filter((t) => {
-      if (!topicsWithCards.has(t.id) && !t.studyNotes) return false;
+      if (!topicsWithCards.has(t.id) && !hasStudyMaterial(t)) return false;
       if (cardIdSet && !topicsWithCards.has(t.id)) return false;
       if (scope.topicId) return t.id === scope.topicId;
       if (scope.category) return t.category === scope.category;
@@ -610,12 +663,17 @@ export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
   ];
 
   deckTopics.forEach(({ topic, loc }) => {
-    const terms = keyTerms(loc.studyNotes);
-    // The studyNotes teaching prose reads far better than the one-line UI
-    // description, so the card leads with "What is it?" when it exists.
+    // Structured content feeds the card directly; legacy notes fall back to
+    // extracting the first paragraphs of the known sections.
+    const sc = loc.studyContent;
+    const terms = sc
+      ? sc.keyTerms.map((k) => ({ term: k.term, def: k.definition }))
+      : keyTerms(loc.studyNotes);
     const definition =
-      sectionLead(loc.studyNotes, isDefinitionHeading) ?? loc.description;
-    let problem = sectionLead(loc.studyNotes, isProblemHeading);
+      sc?.mentalModel ??
+      sectionLead(loc.studyNotes, isDefinitionHeading) ??
+      loc.description;
+    let problem = sc?.problem ?? sectionLead(loc.studyNotes, isProblemHeading);
     const est = estimateFlashcard(loc.name, definition, problem, terms, hasBand);
     if (est.total > CARD_USABLE) problem = null;
     // Densest cards (long term lists) tighten instead of spilling.

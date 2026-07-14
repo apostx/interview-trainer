@@ -8,10 +8,25 @@
 /** BCP-47-ish language code: "hu", "de", "pt-BR". */
 export type LangCode = string;
 
+/**
+ * Translation of structured study content. Scalars fall back to English
+ * per field; a provided array REPLACES the complete English array (arrays
+ * are never merged by index).
+ */
+export type StudyContentTranslation = {
+  mentalModel?: string;
+  problem?: string;
+  example?: string;
+  howItWorks?: string[];
+  commonMistakes?: string[];
+  keyTerms?: { term: string; definition: string }[];
+};
+
 export type TopicTranslation = {
   name?: string;
   description?: string;
   studyNotes?: string;
+  studyContent?: StudyContentTranslation;
 };
 
 export type CardTranslation = {

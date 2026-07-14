@@ -65,6 +65,50 @@ const langCodeSchema = z
   .string()
   .regex(/^[a-z]{2}(-[A-Z]{2})?$/, 'use a language code like "hu" or "pt-BR"');
 
+// Structured study content: deterministic simplicity limits. Headings are
+// rendered by the app, so "## " markers are banned inside the fields.
+const plainProse = (max: number) =>
+  z
+    .string()
+    .min(1)
+    .max(max)
+    .refine((s) => !s.includes("## "), {
+      message: "no '## ' markdown headings inside structured fields",
+    });
+
+const studyKeyTermSchema = z.object({
+  term: plainProse(60),
+  definition: plainProse(220),
+});
+
+export const studyContentSchema = z.object({
+  mentalModel: plainProse(300).refine((s) => !s.includes("\n\n"), {
+    message: "mentalModel must be a single paragraph",
+  }),
+  problem: plainProse(600),
+  // Required for new content (the authoring prompt enforces it); optional in
+  // the schema so mechanically migrated legacy notes stay valid.
+  example: plainProse(700).optional(),
+  howItWorks: z.array(plainProse(220)).min(2).max(5),
+  commonMistakes: z.array(plainProse(220)).min(2).max(4),
+  keyTerms: z.array(studyKeyTermSchema).min(1).max(5),
+});
+
+// Translations get ~30% length slack (Hungarian runs longer than English).
+// Scalars fall back per field; a provided array replaces the English array.
+const studyContentI18nSchema = z.object({
+  mentalModel: plainProse(400).optional(),
+  problem: plainProse(800).optional(),
+  example: plainProse(900).optional(),
+  howItWorks: z.array(plainProse(280)).min(2).max(5).optional(),
+  commonMistakes: z.array(plainProse(280)).min(2).max(4).optional(),
+  keyTerms: z
+    .array(z.object({ term: plainProse(80), definition: plainProse(280) }))
+    .min(1)
+    .max(5)
+    .optional(),
+});
+
 // Study-only translations. Every field is optional and falls back to English.
 const topicI18nSchema = z.record(
   langCodeSchema,
@@ -72,6 +116,7 @@ const topicI18nSchema = z.record(
     name: z.string().min(1).optional(),
     description: z.string().optional(),
     studyNotes: z.string().optional(),
+    studyContent: studyContentI18nSchema.optional(),
   }),
 );
 
@@ -134,9 +179,11 @@ export const packTopicSchema = z.object({
   description: z.string().default(""),
   category: categoryEnum,
   relatedTopicIds: z.array(z.string()).default([]),
-  /** Educational prose for the Study view: paragraphs separated by blank
-   * lines, "- " lines become bullet lists. */
+  /** Legacy educational prose: paragraphs separated by blank lines, "- "
+   * lines become bullet lists. Superseded by `studyContent`. */
   studyNotes: z.string().optional(),
+  /** Structured educational content (preferred; see docs/content-authoring.md). */
+  studyContent: studyContentSchema.optional(),
   /** Interview essentiality, 5 = asked almost always … 1 = niche. Optional
    * for backward compatibility; drives the Study importance filter. */
   importance: z

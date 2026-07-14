@@ -18,9 +18,32 @@ function isPackFile(raw: string): boolean {
   }
 }
 
-/** The fixed studyNotes structure every topic must follow (shared by the live
- * packs and the dev-mode version banks). */
+/** Every topic needs study material: structured `studyContent` (preferred —
+ * field limits enforced by the schema) or legacy `studyNotes` in the fixed
+ * heading structure. Shared by live packs and the dev-mode version banks. */
 function assertStudyNotesStructure(file: string, topic: ContentPack["topics"][number]) {
+  if (topic.studyContent) {
+    // Structure and limits came from the schema; the preferred total length
+    // is a soft guideline, so oversized content only warns.
+    const sc = topic.studyContent;
+    const words = [
+      sc.mentalModel,
+      sc.problem,
+      sc.example ?? "",
+      ...sc.howItWorks,
+      ...sc.commonMistakes,
+      ...sc.keyTerms.map((k) => `${k.term} ${k.definition}`),
+    ]
+      .join(" ")
+      .split(/\s+/)
+      .filter(Boolean).length;
+    if (words > 260) {
+      console.warn(
+        `${file}: topic "${topic.id}" studyContent is ${words} words — prefer 100–260 (simplicity over completeness)`,
+      );
+    }
+    return;
+  }
   const notes = topic.studyNotes ?? "";
   expect(
     notes.startsWith("## What is it?"),
