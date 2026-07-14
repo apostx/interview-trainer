@@ -1,0 +1,2748 @@
+{
+  "id": "felix_giorgetti_nodejs_interview",
+  "name": "Félix Giorgetti Node.js Interview Preparation",
+  "description": "Targeted spoken technical interview questions based only on the Experienced Node.js Developer job advertisement: Node.js, APIs, data stores, messaging, event-driven systems, production troubleshooting, CI/CD, serverless, legacy .NET integration, and ownership.",
+  "sources": [
+    "felix_giorgetti_experienced_nodejs_developer_job_ad"
+  ],
+  "topics": [
+    {
+      "id": "fg_nodejs_runtime_concurrency",
+      "name": "Node.js Runtime Concurrency",
+      "description": "How Node.js handles concurrent work with the event loop, asynchronous I/O, and worker threads.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "js_event_loop",
+        "scalability",
+        "background_jobs"
+      ],
+      "studyNotes": "## What is it?\n\nNode.js runs JavaScript on a main thread and uses an event loop to coordinate many operations. Network and file operations can continue outside the JavaScript call stack, so one process can keep many requests in flight without creating one thread per request. This is concurrency, not automatic parallel execution of JavaScript.\n\n## What problem does it solve?\n\nThis model is efficient for I/O-heavy services, but it becomes fragile when code blocks the main thread. A long CPU calculation, synchronous file operation, or very large JSON parse can delay every request handled by that process. Interviewers want to know whether you understand both the strength and the limit of Node.js.\n\n## How it works\n\nThe call stack runs JavaScript until it is empty. Completed timers, I/O callbacks, and promise continuations are scheduled for later processing. Promise callbacks use the microtask queue and normally run before the next timer or I/O phase.\n\nUse asynchronous APIs for I/O. Split or move CPU-heavy work to worker threads, a job queue, or another service. Run multiple Node.js processes or containers to use multiple CPU cores and provide isolation. Measure event-loop delay because low CPU usage alone does not prove that the service is responsive.\n\n## Common mistakes\n\n- Saying Node.js is single-threaded and therefore handles only one request at a time\n- Assuming async code makes CPU-heavy work non-blocking\n- Using synchronous filesystem or crypto APIs in request handlers\n- Adding more promises without measuring event-loop delay\n\n## Key terms\n\n- event loop — scheduler that keeps processing ready JavaScript work\n- non-blocking I/O — I/O that does not hold the JavaScript thread while waiting\n- microtask — high-priority continuation used by promises\n- worker thread — separate thread for CPU-heavy JavaScript work\n- event-loop delay — time ready work waits before JavaScript can run",
+      "importance": 5
+    },
+    {
+      "id": "fg_nodejs_memory_diagnostics",
+      "name": "Node.js Memory Diagnostics",
+      "description": "A practical method for finding memory leaks and excessive memory use in long-running Node.js services.",
+      "category": "observability",
+      "relatedTopicIds": [
+        "observability",
+        "production_readiness",
+        "error_handling"
+      ],
+      "studyNotes": "## What is it?\n\nNode.js memory diagnostics is the process of finding why a service keeps using more memory or is killed with an out-of-memory error. A leak means objects remain reachable even though the application no longer needs them. High memory use is not always a leak; it may also come from large buffers, traffic spikes, or an undersized limit.\n\n## What problem does it solve?\n\nA leaking service becomes slower because garbage collection works harder, then restarts or crashes. Blindly increasing the memory limit may only delay the failure. A structured investigation helps distinguish a real leak from normal caching, temporary load, or native memory outside the JavaScript heap.\n\n## How it works\n\nStart with a timeline: process RSS, JavaScript heap used, heap limit, request rate, and garbage-collection activity. Reproduce the growth under controlled load when possible. Take heap snapshots at comparable points and compare retained objects and retaining paths.\n\nCommon causes include unbounded maps, caches without eviction, event listeners never removed, timers, closures that retain large objects, unresolved promises, and buffers held by streams. Check listener counts and cache cardinality. Use allocation profiling for code that steadily creates retained objects. Verify the fix with the same load and a soak test rather than only observing one restart.\n\n## Common mistakes\n\n- Calling every temporary memory spike a leak\n- Looking only at heap used and ignoring RSS or buffers\n- Taking one heap snapshot with nothing to compare\n- Increasing the memory limit without finding the retaining reference\n\n## Key terms\n\n- heap snapshot — captured graph of JavaScript objects and references\n- retaining path — reference chain that keeps an object alive\n- RSS — total resident memory used by the process\n- garbage collection — automatic recovery of unreachable memory\n- soak test — sustained test that reveals slow growth over time",
+      "importance": 4
+    },
+    {
+      "id": "fg_nodejs_performance_diagnostics",
+      "name": "Node.js Performance Diagnostics",
+      "description": "How to isolate latency and throughput bottlenecks in a Node.js service.",
+      "category": "observability",
+      "relatedTopicIds": [
+        "observability",
+        "slo_sla",
+        "sql_performance",
+        "scaling_fundamentals"
+      ],
+      "studyNotes": "## What is it?\n\nNode.js performance diagnostics is a measurement-driven process for explaining slow responses, low throughput, high CPU, or event-loop stalls. It separates symptoms from causes across the application, database, network, and dependencies.\n\n## What problem does it solve?\n\nWithout a method, teams often optimize the wrong layer or add servers to hide an inefficient query. A useful investigation identifies which requests are affected, where time is spent, and whether the limit is CPU, I/O, contention, capacity, or an external dependency.\n\n## How it works\n\nBegin with user-facing latency percentiles, error rate, traffic, and saturation. Compare p50, p95, and p99 rather than relying on averages. Use request traces to break total latency into database calls, external APIs, queue waits, and application work.\n\nFor Node.js, measure event-loop delay, CPU profiles, garbage-collection pauses, heap pressure, and active handles. For databases, inspect query plans, indexes, lock waits, and connection-pool usage. Reproduce the issue with representative payloads and concurrency. Change one thing, measure again, and confirm that the improvement helps the original service-level objective without creating a new bottleneck.\n\n## Common mistakes\n\n- Optimizing code before locating where time is spent\n- Using average latency and hiding slow tail requests\n- Running unrealistic load tests with tiny payloads\n- Scaling horizontally while a shared database is already saturated\n\n## Key terms\n\n- latency percentile — threshold below which a percentage of requests finish\n- saturation — resource operating near its useful capacity\n- CPU profile — sample showing where processor time is spent\n- distributed trace — request timeline across services\n- event-loop delay — wait before ready JavaScript work can execute",
+      "importance": 5
+    },
+    {
+      "id": "fg_messaging_pattern_selection",
+      "name": "Messaging Pattern Selection",
+      "description": "Choosing between queues, publish-subscribe, topics, and request-reply messaging.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "message_queue",
+        "event_driven",
+        "sync_vs_async",
+        "async_fanout"
+      ],
+      "studyNotes": "## What is it?\n\nMessaging patterns describe how producers and consumers exchange work or information. A queue normally distributes each message to one worker. Publish-subscribe sends the same event to multiple interested consumers. Request-reply asks for a response through messaging, while topics route messages by a key or subject.\n\n## What problem does it solve?\n\nChoosing the wrong pattern creates hidden coupling, duplicate work, or missing consumers. For example, a business event placed on a competing-consumer queue may reach only one service even though several services need it. Request-reply over a broker can also reproduce synchronous coupling with extra complexity.\n\n## How it works\n\nStart from the business meaning. Use a work queue when one of several workers should complete a task. Use publish-subscribe when each subscriber needs its own copy of an event. Use topics or routing keys when subscribers need filtered subsets.\n\nDecide whether the sender needs an immediate answer. Synchronous request-reply is simpler for short, required interactions. Asynchronous messaging is useful for buffering, fan-out, and independent availability, but requires correlation identifiers, retries, duplicate handling, and observability. Also define ownership: a command asks one owner to do something, while an event states that something already happened.\n\n## Common mistakes\n\n- Treating a queue and publish-subscribe as interchangeable\n- Using asynchronous request-reply for every service call\n- Publishing commands as if they were neutral business events\n- Ignoring duplicate delivery and correlation\n\n## Key terms\n\n- queue — channel where one consumer handles each message\n- publish-subscribe — each subscription receives its own event copy\n- topic — named or keyed route for related messages\n- command — request for one owner to perform an action\n- event — fact that something has already happened",
+      "importance": 5
+    },
+    {
+      "id": "fg_broker_selection",
+      "name": "Message Broker Selection",
+      "description": "How workload and operational needs influence a choice between NATS, RabbitMQ, and Kafka.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "message_queue",
+        "event_driven",
+        "scalability",
+        "reliability"
+      ],
+      "studyNotes": "## What is it?\n\nMessage broker selection means matching a communication platform to the required behavior rather than choosing by popularity. NATS, RabbitMQ, and Kafka overlap, but their strongest use cases and operational models differ.\n\n## What problem does it solve?\n\nA poor choice can make retention, routing, replay, or scaling unnecessarily difficult. Interviewers usually do not expect product trivia. They expect clear decision criteria and awareness that configuration, persistence mode, and managed services can change the trade-offs.\n\n## How it works\n\nNATS is often chosen for lightweight, low-latency messaging and simple subjects. JetStream adds persistence, replay, and stronger delivery features. RabbitMQ is strong for work queues, acknowledgements, flexible routing through exchanges, and per-message workflows. Kafka is a distributed append-only log designed for high-throughput event streams, retained history, replay, and partitioned consumer groups.\n\nCompare required retention, replay, routing complexity, ordering scope, throughput, message size, delivery guarantees, operational skill, and ecosystem integration. Also ask whether the company already operates one platform successfully. The best technology is often the one that meets the requirement with the lowest total operational risk.\n\n## Common mistakes\n\n- Claiming one broker is always faster or always better\n- Choosing Kafka for a small task queue only because it scales\n- Ignoring retention and replay requirements\n- Comparing product names without discussing workload\n\n## Key terms\n\n- subject — NATS routing name\n- exchange — RabbitMQ routing component\n- partition — ordered Kafka log segment\n- consumer group — consumers sharing partitions\n- retention — how long messages remain available",
+      "importance": 4
+    },
+    {
+      "id": "fg_message_delivery_semantics",
+      "name": "Message Delivery Semantics",
+      "description": "At-most-once, at-least-once, and effectively-once processing in distributed messaging.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "idempotency_retries",
+        "retry_strategies",
+        "message_queue",
+        "distributed_transactions"
+      ],
+      "studyNotes": "## What is it?\n\nDelivery semantics describe what can happen when a broker or consumer fails around message processing. At-most-once can lose messages but avoids redelivery. At-least-once avoids loss by retrying, so duplicates are possible. Exactly-once is usually limited to a defined system boundary and is often implemented as effectively-once business behavior.\n\n## What problem does it solve?\n\nFailures can occur after a side effect but before the acknowledgement reaches the broker. The broker then redelivers a message that may already have changed a database or called another service. A correct design assumes this uncertainty instead of treating duplicates as exceptional.\n\n## How it works\n\nFor at-least-once delivery, make handlers idempotent. Use a stable message or operation identifier and store processed identifiers or enforce a unique business constraint. Commit the side effect and deduplication record in the same local transaction when possible. Acknowledge only after successful processing.\n\nRetries need limits, backoff, and classification of transient versus permanent errors. For database changes plus event publishing, use an outbox pattern rather than an unsafe dual write. Explain the exact boundary when using the phrase exactly-once; a broker guarantee does not automatically cover external databases or APIs.\n\n## Common mistakes\n\n- Promising exactly-once across every external system\n- Acknowledging before the business transaction completes\n- Retrying non-idempotent operations without a key\n- Treating duplicate messages as a broker bug\n\n## Key terms\n\n- at-most-once — no redelivery, with possible loss\n- at-least-once — retry on uncertainty, with possible duplicates\n- idempotency key — stable identifier used to suppress repeated effects\n- acknowledgement — consumer confirmation that processing succeeded\n- effectively-once — duplicate delivery with one business outcome",
+      "importance": 5
+    },
+    {
+      "id": "fg_message_ordering_partitioning",
+      "name": "Message Ordering",
+      "description": "How partitions and keys provide limited ordering in distributed event systems.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "event_driven",
+        "scalability",
+        "message_queue"
+      ],
+      "studyNotes": "## What is it?\n\nMessage ordering is the guarantee that consumers observe related events in a defined sequence. Distributed brokers rarely provide one global order at unlimited scale. They normally guarantee order only within a queue, partition, subject, or consumer stream.\n\n## What problem does it solve?\n\nBusiness processes can break when an update is handled before a creation event or when two changes to the same entity are applied in reverse order. At the same time, forcing every event through one ordered channel can become a throughput bottleneck.\n\n## How it works\n\nDefine what must be ordered. Usually events for the same customer, order, or account need order, while unrelated entities can be processed independently. Use that entity identifier as a partition or routing key so related events reach the same ordered stream.\n\nConsumers should still handle duplicates and delayed events. Add event versions, sequence numbers, or timestamps when the domain needs stale-update detection. Repartitioning and increasing consumer parallelism can change assignment, so understand the broker's behavior during rebalancing. Avoid global ordering unless the business truly requires it, because one partition limits parallelism and availability.\n\n## Common mistakes\n\n- Assuming a broker guarantees global order by default\n- Using a random partition key for entity updates\n- Equating delivery order with exactly-once processing\n- Forcing one partition without discussing throughput\n\n## Key terms\n\n- partition key — value that selects the ordered stream\n- sequence number — monotonic value used to detect stale events\n- rebalance — reassignment of partitions between consumers\n- per-key ordering — order guaranteed only for one routing key\n- global ordering — one sequence for all events",
+      "importance": 4
+    },
+    {
+      "id": "fg_dead_letter_handling",
+      "name": "Dead-Letter Handling",
+      "description": "How to isolate, inspect, and recover messages that repeatedly fail processing.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "message_queue",
+        "retry_strategies",
+        "observability",
+        "error_handling"
+      ],
+      "studyNotes": "## What is it?\n\nDead-letter handling moves messages that cannot be processed after an allowed number of attempts into a separate queue or stream. These messages are often called poison messages because retrying them forever blocks progress or wastes resources.\n\n## What problem does it solve?\n\nA dead-letter queue prevents infinite retry loops, but it is not a complete solution. Failed messages still represent lost business progress. The team needs enough context to understand the failure, correct the cause, and safely replay or compensate.\n\n## How it works\n\nClassify errors before retrying. Temporary dependency failures may succeed with exponential backoff and jitter. Validation errors, missing required data, or an unsupported schema are usually permanent until something changes. After the retry limit, preserve the original payload, message identifier, error reason, attempt count, timestamps, and relevant trace identifiers.\n\nAlert on dead-letter growth and age, not only individual messages. Provide a controlled replay path that retains idempotency and avoids flooding the recovered dependency. Some cases need a business compensation rather than replay. Access to payloads must follow security and privacy rules.\n\n## Common mistakes\n\n- Using a dead-letter queue as permanent storage\n- Retrying every error with the same policy\n- Replaying messages without idempotency protection\n- Creating a dead-letter queue without monitoring or ownership\n\n## Key terms\n\n- poison message — message that repeatedly fails processing\n- dead-letter queue — isolated destination for failed messages\n- retry budget — maximum attempts or elapsed retry time\n- replay — controlled reprocessing of stored failed messages\n- compensation — business action that corrects an incomplete workflow",
+      "importance": 4
+    },
+    {
+      "id": "fg_event_schema_evolution",
+      "name": "Event Schema Evolution",
+      "description": "How to change event contracts without breaking independent producers and consumers.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "event_driven",
+        "api_versioning",
+        "api_contract_design",
+        "migration_strategy"
+      ],
+      "studyNotes": "## What is it?\n\nEvent schema evolution is the controlled change of fields, meanings, and versions in messages that may be stored or consumed by independently deployed services. Events live longer than a normal function call and may be replayed months later.\n\n## What problem does it solve?\n\nBreaking a schema can stop consumers, corrupt projections, or make historical replay impossible. Producers and consumers are often deployed at different times, so the contract must tolerate a period when old and new versions coexist.\n\n## How it works\n\nPrefer additive changes: add optional fields with safe defaults and keep existing meanings stable. Consumers should ignore fields they do not understand and handle missing optional fields. Do not silently reuse a field with a new meaning.\n\nFor incompatible changes, publish a new event type or explicit major version and migrate consumers gradually. A schema registry and compatibility checks in CI can enforce rules. Contract tests verify representative producer and consumer expectations. Include metadata such as event type, version, identifier, occurrence time, and correlation identifier. Keep business events focused on stable domain facts rather than exposing an internal database row.\n\n## Common mistakes\n\n- Renaming or deleting a field because all current consumers were updated\n- Changing the meaning of an existing field without a new version\n- Assuming only the latest event version will ever be replayed\n- Publishing raw database entities as permanent contracts\n\n## Key terms\n\n- backward compatibility — new consumer can read older events\n- forward compatibility — old consumer tolerates newer events\n- schema registry — shared store and compatibility gate for schemas\n- upcaster — code that converts an older event representation\n- contract test — automated check of producer-consumer expectations",
+      "importance": 5
+    },
+    {
+      "id": "fg_serverless_function_tradeoffs",
+      "name": "Serverless Function Trade-offs",
+      "description": "When Azure Functions or similar serverless compute is useful and when another runtime is safer.",
+      "category": "cloud",
+      "relatedTopicIds": [
+        "cloud",
+        "scalability",
+        "deployment",
+        "cost_tradeoffs"
+      ],
+      "studyNotes": "## What is it?\n\nA serverless function is code executed on demand while the cloud provider manages the underlying servers and scaling. Azure Functions can be triggered by HTTP requests, timers, queues, events, and other Azure services. Serverless removes server management, not application architecture or operational responsibility.\n\n## What problem does it solve?\n\nFunctions are attractive for bursty workloads, event handlers, scheduled jobs, and small integration components. They can be a poor fit for long-running work, strict low-latency requirements, large stateful processes, or workloads with steady high utilization.\n\n## How it works\n\nEvaluate trigger type, execution limits, concurrency, cold-start tolerance, networking, state, observability, and cost at expected traffic. Keep handlers stateless and move durable state to a database, queue, or workflow service. Make event-triggered functions idempotent because retries are normal.\n\nCold starts can be reduced with suitable plans or pre-warmed capacity, but this changes cost. Durable Functions can coordinate multi-step workflows, though they add platform-specific behavior. Compare a function with a container or long-running service based on total lifecycle: deployment, debugging, scaling, local development, and operational ownership.\n\n## Common mistakes\n\n- Assuming serverless means free or infinitely scalable\n- Keeping important state in function memory\n- Ignoring cold starts and execution limits\n- Using one large function as a hidden monolith\n\n## Key terms\n\n- trigger — event that starts a function invocation\n- cold start — startup delay for a new execution environment\n- stateless handler — invocation that does not rely on local memory\n- consumption plan — pay-per-use execution model\n- durable workflow — persisted coordination of function steps",
+      "importance": 3
+    },
+    {
+      "id": "fg_ci_cd_release_safety",
+      "name": "CI/CD Release Safety",
+      "description": "Building a delivery pipeline that catches defects and supports controlled deployment and rollback.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deployment",
+        "production_readiness",
+        "testing_strategy",
+        "observability"
+      ],
+      "studyNotes": "## What is it?\n\nCI/CD release safety is the set of automated checks and deployment controls that move a change from commit to production with known risk. Continuous integration validates small changes frequently. Continuous delivery keeps a releasable artifact ready and uses a repeatable process to deploy it.\n\n## What problem does it solve?\n\nA pipeline that only builds code is not enough. Backend releases can fail because of incompatible APIs, unsafe database migrations, missing configuration, or behavior that appears only under real traffic. Safe delivery limits the blast radius and makes recovery fast.\n\n## How it works\n\nBuild one immutable artifact and promote the same artifact through environments. Typical gates include linting, unit tests, integration tests, contract tests, dependency scanning, and configuration validation. Apply database changes with backward-compatible expand-and-contract steps.\n\nUse health checks and post-deployment metrics. Gradual strategies such as canary or blue-green releases expose only part of the traffic first. Define automatic or manual rollback criteria, but remember that a database migration may require a forward fix instead of code rollback. Record who deployed what and keep secrets outside the artifact.\n\n## Common mistakes\n\n- Rebuilding a different artifact for each environment\n- Treating successful deployment as proof of correct behavior\n- Deploying a breaking schema change before compatible code\n- Planning rollback without considering data changes\n\n## Key terms\n\n- immutable artifact — unchanged build promoted between environments\n- canary release — small traffic share receives the new version first\n- blue-green — switch traffic between two complete environments\n- quality gate — automated condition required before promotion\n- expand-contract — staged backward-compatible schema migration",
+      "importance": 4
+    },
+    {
+      "id": "fg_legacy_component_integration",
+      "name": "Legacy Component Integration",
+      "description": "How to maintain and gradually replace components written in another platform such as .NET.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "api_integration",
+        "migration_strategy",
+        "microservices",
+        "api_contract_design"
+      ],
+      "studyNotes": "## What is it?\n\nLegacy component integration connects a modern service to an existing component that cannot be replaced immediately. The component may use another language, framework, database, protocol, or deployment process. The goal is safe cooperation while reducing coupling and migration risk.\n\n## What problem does it solve?\n\nA rewrite is rarely an instant replacement. Existing behavior may be poorly documented, and business users still depend on it. Directly sharing internal classes or database tables creates tight coupling and makes both systems harder to change.\n\n## How it works\n\nStart by documenting the current contract, data ownership, failure modes, and operational limits. Prefer a stable boundary such as REST, messaging, or a small adapter service. Validate inputs and translate between internal models at the boundary.\n\nUse the strangler pattern when replacing functionality gradually: route one capability at a time to the new implementation while the old component continues handling the rest. Add characterization tests around existing behavior before changing it. Monitor both paths and provide a rollback route. Shared databases should be a temporary compromise with explicit ownership, because schema changes otherwise coordinate every deployment.\n\n## Common mistakes\n\n- Starting a full rewrite without understanding existing behavior\n- Sharing one database and calling the systems independent\n- Leaking platform-specific models through the public contract\n- Migrating all traffic at once without comparison or rollback\n\n## Key terms\n\n- adapter — boundary translating one interface or model to another\n- strangler pattern — incremental replacement around a legacy system\n- characterization test — test that records current behavior\n- anti-corruption layer — translation that protects a new domain model\n- data ownership — service responsible for changing a data set",
+      "importance": 3
+    },
+    {
+      "id": "fg_technical_debt_prioritization",
+      "name": "Technical Debt Prioritization",
+      "description": "How to identify and reduce technical debt according to business and production risk.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "risk_management",
+        "production_readiness",
+        "testing_strategy",
+        "cost_tradeoffs"
+      ],
+      "studyNotes": "## What is it?\n\nTechnical debt is the future cost created by a design, implementation, or operational shortcut. Some debt is a deliberate trade-off made to deliver sooner. Other debt appears through changing requirements, weak ownership, or repeated local fixes.\n\n## What problem does it solve?\n\nA team cannot remove every imperfection. Treating all cleanup as equally urgent creates endless refactoring, while ignoring debt increases incident risk and slows every later change. Prioritization connects technical work to measurable consequences.\n\n## How it works\n\nDescribe the debt in terms of impact: production failures, security exposure, delivery delay, support cost, or inability to scale. Estimate likelihood, severity, and how often engineers touch the affected area. Track a small set of concrete items rather than a vague cleanup backlog.\n\nFix critical risk immediately. For recurring friction, reserve capacity or include the improvement in the next feature that touches the area. Use incremental refactoring with tests instead of large rewrites when possible. Communicate the trade-off in plain language and state what happens if the work is delayed. Verify the result through fewer incidents, shorter lead time, or reduced operational effort.\n\n## Common mistakes\n\n- Calling every disliked implementation technical debt\n- Asking for a rewrite without measurable impact\n- Hiding debt until it causes an incident\n- Refactoring without tests or a safe migration path\n\n## Key terms\n\n- principal — continuing cost paid because debt remains\n- interest — repeated extra effort caused by the debt\n- risk matrix — likelihood and impact used for prioritization\n- incremental refactoring — small behavior-preserving improvements\n- lead time — time from change request to production",
+      "importance": 3
+    },
+    {
+      "id": "fg_project_ownership_delivery",
+      "name": "Project Ownership",
+      "description": "Taking a backend change from unclear requirements through production operation and maintenance.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "requirements_clarification",
+        "design_documentation",
+        "deployment",
+        "observability"
+      ],
+      "studyNotes": "## What is it?\n\nProject ownership means being responsible for the outcome of a change, not only for writing code. It covers understanding the problem, choosing a proportionate design, coordinating dependencies, delivering safely, and supporting the result in production.\n\n## What problem does it solve?\n\nFeatures fail when assumptions remain hidden, operational work is postponed, or teams hand problems to each other. Ownership creates a clear path from a business need to a maintained service with measurable behavior.\n\n## How it works\n\nClarify users, expected behavior, constraints, failure cases, security needs, data ownership, and non-functional requirements. Write down important decisions and alternatives. Split delivery into small milestones and identify external teams or systems early.\n\nDuring implementation, use tests, reviews, contract checks, and observable logging and metrics. Plan data migration, deployment, rollback, documentation, and support ownership before release. After deployment, verify real behavior against acceptance criteria and production metrics. Communicate risks early and propose options rather than waiting for perfect information. Ownership also means saying when a requirement is unsafe or unnecessarily complex.\n\n## Common mistakes\n\n- Equating ownership with doing every task alone\n- Starting implementation before resolving key assumptions\n- Considering the work finished when the pull request merges\n- Reporting a risk without proposing options or next steps\n\n## Key terms\n\n- acceptance criteria — observable conditions that define success\n- non-functional requirement — quality constraint such as latency or reliability\n- decision record — short explanation of a technical choice\n- operational ownership — responsibility after deployment\n- blast radius — scope affected when a change fails",
+      "importance": 4
+    }
+  ],
+  "questions": [
+    {
+      "id": "fg_node_event_loop_001",
+      "title": "Node.js under concurrent load",
+      "prompt": "How can a Node.js process handle many concurrent requests if JavaScript runs on one main thread?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "fg_nodejs_runtime_concurrency",
+        "js_event_loop"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Explain asynchronous I/O, the event loop, what still blocks, and how to use multiple cores.",
+      "expectedPoints": [
+        {
+          "id": "fg_nel_io",
+          "label": "Explains asynchronous I/O",
+          "description": "I/O waits outside the JavaScript call stack while the process can handle other ready work.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "asynchronous io",
+            "non blocking io",
+            "io outside javascript",
+            "many requests in flight",
+            "does not wait"
+          ]
+        },
+        {
+          "id": "fg_nel_loop",
+          "label": "Explains the event loop",
+          "description": "The event loop schedules ready callbacks and promise continuations on the main JavaScript thread.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "event loop",
+            "callback queue",
+            "microtask queue",
+            "runs ready callbacks",
+            "main thread"
+          ]
+        },
+        {
+          "id": "fg_nel_limits",
+          "label": "Names blocking limits",
+          "description": "CPU-heavy or synchronous work blocks progress and should be moved, split, or isolated.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "blocks the event loop",
+            "cpu heavy",
+            "synchronous api",
+            "worker threads",
+            "job queue",
+            "separate service"
+          ]
+        },
+        {
+          "id": "fg_nel_cores",
+          "label": "Uses processes or containers for cores",
+          "description": "Multiple processes or replicas use multiple cores and improve isolation.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "multiple processes",
+            "cluster",
+            "multiple replicas",
+            "one process per core",
+            "horizontal scaling"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_node_event_loop_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What metrics would show that the event loop is becoming a bottleneck?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_node_blocking_work_001",
+      "title": "CPU-heavy work in a request handler",
+      "prompt": "A Node.js endpoint performs a CPU-heavy calculation and other requests become slow. How would you redesign it?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_nodejs_runtime_concurrency",
+        "background_jobs",
+        "backpressure"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 50,
+      "answerStructureHint": "Confirm the bottleneck, then compare worker threads, background jobs, another service, and flow control.",
+      "expectedPoints": [
+        {
+          "id": "fg_nbw_measure",
+          "label": "Confirms the cause with measurement",
+          "description": "Uses CPU profiling and event-loop delay rather than assuming the calculation is the cause.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "cpu profile",
+            "event loop delay",
+            "measure first",
+            "flame graph",
+            "reproduce under load"
+          ]
+        },
+        {
+          "id": "fg_nbw_offload",
+          "label": "Moves CPU work off the main thread",
+          "description": "Uses worker threads, a background queue, or a separate compute service.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "worker threads",
+            "background job",
+            "job queue",
+            "separate service",
+            "offload cpu"
+          ]
+        },
+        {
+          "id": "fg_nbw_async",
+          "label": "Designs asynchronous completion",
+          "description": "Returns a job identifier or status and avoids holding an HTTP request open for long work.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "job id",
+            "poll status",
+            "callback",
+            "webhook",
+            "asynchronous response"
+          ]
+        },
+        {
+          "id": "fg_nbw_capacity",
+          "label": "Controls capacity and backpressure",
+          "description": "Limits concurrency and protects the system from more work than it can process.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "concurrency limit",
+            "backpressure",
+            "queue depth",
+            "rate limit",
+            "capacity"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_node_blocking_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would you choose a worker thread instead of a separate service?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_node_memory_leak_001",
+      "title": "Diagnosing a Node.js memory leak",
+      "prompt": "A long-running Node.js service uses more memory every day and eventually restarts. How would you investigate it?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "fg_nodejs_memory_diagnostics",
+        "observability",
+        "production_readiness"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Separate heap from total memory, gather a timeline, compare snapshots, find retaining references, and verify with a soak test.",
+      "expectedPoints": [
+        {
+          "id": "fg_nml_metrics",
+          "label": "Builds a memory timeline",
+          "description": "Correlates heap, RSS, garbage collection, traffic, and restarts over time.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "heap used",
+            "rss",
+            "garbage collection",
+            "memory timeline",
+            "traffic correlation",
+            "restart pattern"
+          ]
+        },
+        {
+          "id": "fg_nml_snapshots",
+          "label": "Compares heap snapshots",
+          "description": "Takes comparable snapshots and examines growing object types and retaining paths.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "heap snapshot",
+            "compare snapshots",
+            "retaining path",
+            "allocation profile",
+            "growing objects"
+          ]
+        },
+        {
+          "id": "fg_nml_causes",
+          "label": "Checks common retention causes",
+          "description": "Looks for unbounded caches, listeners, timers, closures, unresolved work, or buffers.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "unbounded cache",
+            "event listeners",
+            "timers",
+            "closures",
+            "unresolved promises",
+            "buffers"
+          ]
+        },
+        {
+          "id": "fg_nml_verify",
+          "label": "Verifies the fix under sustained load",
+          "description": "Repeats the reproduction and runs a soak test to prove memory stabilizes.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "soak test",
+            "same load",
+            "memory stabilizes",
+            "verify the fix",
+            "long running test"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_node_memory_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you distinguish a JavaScript heap leak from large Buffer or native memory usage?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_node_latency_001",
+      "title": "Diagnosing rising API latency",
+      "prompt": "An API's p95 latency doubled after a release, but average CPU is still low. How would you find the cause?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "fg_nodejs_performance_diagnostics",
+        "observability",
+        "slo_sla"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Compare before and after, use percentiles and traces, inspect event-loop delay and dependencies, then verify one change at a time.",
+      "expectedPoints": [
+        {
+          "id": "fg_nlat_scope",
+          "label": "Scopes the regression",
+          "description": "Identifies affected endpoints, versions, time window, traffic, payload, and error changes.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "compare before after",
+            "affected endpoints",
+            "release correlation",
+            "payload size",
+            "traffic level",
+            "error rate"
+          ]
+        },
+        {
+          "id": "fg_nlat_trace",
+          "label": "Breaks latency into components",
+          "description": "Uses traces and dependency timing to locate database, network, queue, or application delay.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "distributed tracing",
+            "dependency latency",
+            "database time",
+            "external api",
+            "request breakdown"
+          ]
+        },
+        {
+          "id": "fg_nlat_node",
+          "label": "Checks Node.js-specific signals",
+          "description": "Examines event-loop delay, garbage collection, CPU profiles, active handles, and connection pools.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "event loop delay",
+            "gc pause",
+            "cpu profile",
+            "active handles",
+            "connection pool"
+          ]
+        },
+        {
+          "id": "fg_nlat_tail",
+          "label": "Uses tail percentiles and validation",
+          "description": "Focuses on p95/p99 and confirms the fix against the original SLO.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "p95",
+            "p99",
+            "tail latency",
+            "service level objective",
+            "measure again"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_node_latency_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can low average CPU still coexist with high latency in Node.js?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_async_errors_001",
+      "title": "Async error handling in a backend service",
+      "prompt": "How do you structure error handling for promises and async/await in a Node.js API?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "promise_error_handling",
+        "error_handling",
+        "api_contract_design"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Cover propagation, boundary handling, consistent error responses, logging, and process-level failures.",
+      "expectedPoints": [
+        {
+          "id": "fg_ae_propagation",
+          "label": "Explains async error propagation",
+          "description": "Rejected promises must be awaited or returned so errors reach a catch or framework boundary.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "await the promise",
+            "return the promise",
+            "try catch",
+            "rejection propagates",
+            "unhandled rejection"
+          ]
+        },
+        {
+          "id": "fg_ae_boundary",
+          "label": "Handles errors at clear boundaries",
+          "description": "Central middleware maps internal errors to stable HTTP responses without exposing secrets.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "error middleware",
+            "central handler",
+            "status code",
+            "stable error shape",
+            "do not expose stack"
+          ]
+        },
+        {
+          "id": "fg_ae_classify",
+          "label": "Classifies expected and unexpected errors",
+          "description": "Separates validation, not-found, conflict, dependency, and programming failures.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "validation error",
+            "not found",
+            "conflict",
+            "dependency failure",
+            "programming error"
+          ]
+        },
+        {
+          "id": "fg_ae_observe",
+          "label": "Logs context and preserves failure policy",
+          "description": "Uses correlation data and decides whether an unrecoverable process state should restart.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "correlation id",
+            "structured logging",
+            "error cause",
+            "graceful shutdown",
+            "restart process"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_async_errors_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What is dangerous about catching an error and returning a fallback value without logging or rethrowing it?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_rest_contract_001",
+      "title": "Designing a maintainable REST API",
+      "prompt": "What makes a REST API maintainable for internal and external consumers?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "design_review"
+      ],
+      "topicIds": [
+        "rest",
+        "api_contract_design",
+        "api_versioning",
+        "error_handling"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss resource design, HTTP semantics, validation, stable contracts, compatibility, and documentation.",
+      "expectedPoints": [
+        {
+          "id": "fg_rc_resources",
+          "label": "Uses clear resource and HTTP semantics",
+          "description": "Chooses stable resource names, methods, status codes, and idempotent behavior.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "resource oriented",
+            "http methods",
+            "status codes",
+            "idempotent put",
+            "clear endpoints"
+          ]
+        },
+        {
+          "id": "fg_rc_contract",
+          "label": "Defines and validates the contract",
+          "description": "Documents request, response, errors, pagination, and validation with a machine-readable specification.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "openapi",
+            "request validation",
+            "response schema",
+            "error contract",
+            "pagination contract"
+          ]
+        },
+        {
+          "id": "fg_rc_compat",
+          "label": "Plans compatibility",
+          "description": "Uses additive changes, deprecation, versioning only when needed, and consumer communication.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "backward compatible",
+            "additive change",
+            "deprecation",
+            "versioning",
+            "consumer migration"
+          ]
+        },
+        {
+          "id": "fg_rc_ops",
+          "label": "Includes operational concerns",
+          "description": "Covers authentication, authorization, rate limiting, tracing, and timeouts.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "authentication",
+            "authorization",
+            "rate limiting",
+            "correlation id",
+            "timeout"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_rest_contract_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give an example of an API change that looks harmless but can break an existing consumer.",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_graphql_backend_001",
+      "title": "GraphQL trade-offs and the N+1 problem",
+      "prompt": "When would GraphQL be useful, and how would you prevent a GraphQL API from overloading the backend?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "graphql",
+        "sql_performance",
+        "api_design"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 50,
+      "answerStructureHint": "State the benefit, then discuss N+1, batching, query limits, authorization, caching, and when REST is simpler.",
+      "expectedPoints": [
+        {
+          "id": "fg_gql_fit",
+          "label": "Explains when GraphQL fits",
+          "description": "Highlights client-selected fields, graph traversal, and reducing multiple client round trips.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "client selected fields",
+            "single endpoint",
+            "graph data",
+            "reduce round trips",
+            "multiple clients"
+          ]
+        },
+        {
+          "id": "fg_gql_n1",
+          "label": "Prevents N+1 queries",
+          "description": "Uses batching and per-request caching, such as DataLoader, and verifies database behavior.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "n plus one",
+            "dataloader",
+            "batch queries",
+            "per request cache",
+            "query count"
+          ]
+        },
+        {
+          "id": "fg_gql_limits",
+          "label": "Controls query cost",
+          "description": "Applies depth, complexity, pagination, timeout, and rate controls.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "depth limit",
+            "complexity limit",
+            "pagination",
+            "query timeout",
+            "rate limit"
+          ]
+        },
+        {
+          "id": "fg_gql_tradeoff",
+          "label": "Recognizes operational trade-offs",
+          "description": "Mentions field-level authorization, caching difficulty, monitoring, and cases where REST is simpler.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "field authorization",
+            "caching harder",
+            "query observability",
+            "rest is simpler",
+            "persisted queries"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_graphql_backend_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why is a resolver that looks simple in code still able to generate hundreds of SQL queries?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_sql_nosql_choice_001",
+      "title": "Choosing SQL or NoSQL",
+      "prompt": "How would you choose between PostgreSQL, MongoDB, and Redis for a new backend feature?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "sql_vs_nosql",
+        "sql",
+        "nosql",
+        "caching"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 50,
+      "answerStructureHint": "Start with access patterns and consistency, then compare relational constraints, document flexibility, and Redis use cases.",
+      "expectedPoints": [
+        {
+          "id": "fg_snc_requirements",
+          "label": "Starts from data requirements",
+          "description": "Considers access patterns, relationships, consistency, transactions, scale, and query evolution.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "access patterns",
+            "data relationships",
+            "consistency",
+            "transactions",
+            "query requirements",
+            "scale"
+          ]
+        },
+        {
+          "id": "fg_snc_postgres",
+          "label": "Explains PostgreSQL strengths",
+          "description": "Uses relational constraints, joins, transactions, and flexible querying for core durable data.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "relational data",
+            "foreign keys",
+            "joins",
+            "acid transactions",
+            "flexible queries"
+          ]
+        },
+        {
+          "id": "fg_snc_mongo",
+          "label": "Explains MongoDB strengths and limits",
+          "description": "Fits aggregate documents and evolving shape but still requires indexing and consistency design.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "document model",
+            "aggregate",
+            "schema flexibility",
+            "indexes",
+            "embedding"
+          ]
+        },
+        {
+          "id": "fg_snc_redis",
+          "label": "Positions Redis correctly",
+          "description": "Uses Redis for cache, ephemeral state, counters, locks, or fast access, not by default as the only durable database.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "cache",
+            "ephemeral data",
+            "ttl",
+            "counters",
+            "distributed lock",
+            "in memory"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_sql_nosql_choice_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What data would make you reject MongoDB even if the schema changes frequently?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_slow_database_endpoint_001",
+      "title": "A slow database-backed endpoint",
+      "prompt": "A list endpoint becomes slow as the table grows. What would you inspect and change?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "sql_performance",
+        "indexes",
+        "pagination_strategies",
+        "connection_pooling"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Measure the query, inspect its plan and indexes, reduce work and payload, choose pagination, then check pool and lock pressure.",
+      "expectedPoints": [
+        {
+          "id": "fg_sde_measure",
+          "label": "Inspects the real query and plan",
+          "description": "Uses slow-query data and EXPLAIN to identify scans, joins, sorts, and row estimates.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "explain analyze",
+            "query plan",
+            "slow query log",
+            "sequential scan",
+            "row estimates"
+          ]
+        },
+        {
+          "id": "fg_sde_index",
+          "label": "Designs indexes from predicates and ordering",
+          "description": "Adds or adjusts selective indexes and validates write and storage cost.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "composite index",
+            "where clause",
+            "order by",
+            "selectivity",
+            "covering index"
+          ]
+        },
+        {
+          "id": "fg_sde_data",
+          "label": "Reduces rows and payload",
+          "description": "Uses projection, bounded page size, and suitable cursor pagination instead of loading everything.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "select needed columns",
+            "page size",
+            "cursor pagination",
+            "keyset pagination",
+            "avoid offset"
+          ]
+        },
+        {
+          "id": "fg_sde_runtime",
+          "label": "Checks contention and pool health",
+          "description": "Examines locks, transaction duration, pool saturation, and downstream serialization.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "lock wait",
+            "long transaction",
+            "pool saturation",
+            "connection timeout",
+            "serialization cost"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_slow_database_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can adding an index make some workloads worse?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_outbox_integration_001",
+      "title": "Updating a database and publishing an event",
+      "prompt": "A service must save an order and publish OrderCreated. How do you avoid a state where only one of those actions succeeds?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "system_design"
+      ],
+      "topicIds": [
+        "outbox_pattern",
+        "db_transactions",
+        "event_driven",
+        "fg_message_delivery_semantics"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Explain the dual-write problem, transactional outbox, relay, retries, idempotent consumers, and monitoring.",
+      "expectedPoints": [
+        {
+          "id": "fg_ob_dual",
+          "label": "Identifies the dual-write problem",
+          "description": "A database commit and broker publish cannot normally be one atomic local operation.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "dual write",
+            "one succeeds",
+            "not atomic",
+            "database and broker",
+            "partial failure"
+          ]
+        },
+        {
+          "id": "fg_ob_pattern",
+          "label": "Uses a transactional outbox",
+          "description": "Writes the business change and outbox record in one database transaction.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "transactional outbox",
+            "same transaction",
+            "outbox table",
+            "commit together",
+            "local transaction"
+          ]
+        },
+        {
+          "id": "fg_ob_relay",
+          "label": "Publishes reliably from the outbox",
+          "description": "A relay polls or streams committed outbox rows, publishes, and records completion with retries.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "outbox relay",
+            "cdc",
+            "polling publisher",
+            "mark published",
+            "retry publish"
+          ]
+        },
+        {
+          "id": "fg_ob_consumer",
+          "label": "Handles duplicate delivery and operations",
+          "description": "Consumers are idempotent, and backlog, failures, and age are monitored.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "idempotent consumer",
+            "duplicate event",
+            "outbox backlog",
+            "monitor age",
+            "deduplication"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_outbox_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What failure can still create a duplicate event even with an outbox pattern?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_messaging_patterns_001",
+      "title": "Queue, publish-subscribe, or request-reply",
+      "prompt": "Compare queue-based work distribution, publish-subscribe, and request-reply messaging. When would you use each?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_messaging_pattern_selection",
+        "message_queue",
+        "event_driven"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe who receives each message, whether a reply is required, and the coupling and failure implications.",
+      "expectedPoints": [
+        {
+          "id": "fg_mp_queue",
+          "label": "Explains queue semantics",
+          "description": "One competing consumer handles each task, enabling work distribution and buffering.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "one consumer",
+            "competing consumers",
+            "work queue",
+            "load distribution",
+            "buffer work"
+          ]
+        },
+        {
+          "id": "fg_mp_pubsub",
+          "label": "Explains publish-subscribe",
+          "description": "Each independent subscription receives an event copy for fan-out.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "each subscriber",
+            "fan out",
+            "event copy",
+            "multiple consumers",
+            "independent subscription"
+          ]
+        },
+        {
+          "id": "fg_mp_reply",
+          "label": "Explains request-reply",
+          "description": "A requester correlates a response and accepts temporal coupling or timeout handling.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "correlation id",
+            "reply subject",
+            "response message",
+            "timeout",
+            "temporal coupling"
+          ]
+        },
+        {
+          "id": "fg_mp_meaning",
+          "label": "Distinguishes commands and events",
+          "description": "A command targets an owner; an event announces a completed fact.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "command",
+            "event",
+            "one owner",
+            "fact happened",
+            "business meaning"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_messaging_patterns_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What goes wrong if a business event is placed on one competing-consumer queue but three services need it?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_broker_choice_001",
+      "title": "Choosing NATS, RabbitMQ, or Kafka",
+      "prompt": "How would you choose between NATS, RabbitMQ, and Kafka for an integration platform?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "design_review"
+      ],
+      "topicIds": [
+        "fg_broker_selection",
+        "message_queue",
+        "event_driven"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Compare retention, replay, routing, ordering, throughput, delivery, and operational cost before naming a platform.",
+      "expectedPoints": [
+        {
+          "id": "fg_bc_criteria",
+          "label": "Starts with workload criteria",
+          "description": "Asks about retention, replay, routing, ordering, throughput, latency, and operations.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "retention",
+            "replay",
+            "routing",
+            "ordering",
+            "throughput",
+            "operational cost"
+          ]
+        },
+        {
+          "id": "fg_bc_nats",
+          "label": "Positions NATS",
+          "description": "Uses NATS for lightweight subject-based low-latency messaging and mentions JetStream for persistence.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "nats",
+            "subjects",
+            "low latency",
+            "jetstream",
+            "lightweight messaging"
+          ]
+        },
+        {
+          "id": "fg_bc_rabbit",
+          "label": "Positions RabbitMQ",
+          "description": "Uses RabbitMQ for work queues, acknowledgements, and flexible exchange routing.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "rabbitmq",
+            "work queues",
+            "acknowledgements",
+            "exchange routing",
+            "routing keys"
+          ]
+        },
+        {
+          "id": "fg_bc_kafka",
+          "label": "Positions Kafka",
+          "description": "Uses Kafka for retained high-throughput streams, partitioned ordering, consumer groups, and replay.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "kafka",
+            "append only log",
+            "consumer groups",
+            "partitions",
+            "event replay",
+            "retained stream"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_broker_choice_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why might Kafka be a poor choice for a small low-volume task queue?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_delivery_guarantees_001",
+      "title": "Duplicates and delivery guarantees",
+      "prompt": "What do at-most-once, at-least-once, and exactly-once mean, and how would you design a payment-like consumer?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "fg_message_delivery_semantics",
+        "idempotency_retries",
+        "retry_strategies"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Define the semantics, explain the acknowledgement failure window, and design idempotency around a stable operation key.",
+      "expectedPoints": [
+        {
+          "id": "fg_dg_defs",
+          "label": "Defines the delivery semantics",
+          "description": "Correctly distinguishes possible loss, possible duplicates, and limited exactly-once boundaries.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "at most once",
+            "at least once",
+            "possible duplicates",
+            "possible loss",
+            "exactly once boundary"
+          ]
+        },
+        {
+          "id": "fg_dg_window",
+          "label": "Explains the acknowledgement failure window",
+          "description": "Processing may succeed before the acknowledgement, causing redelivery.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "ack lost",
+            "processed before ack",
+            "redelivery",
+            "failure window",
+            "uncertain outcome"
+          ]
+        },
+        {
+          "id": "fg_dg_idem",
+          "label": "Designs idempotent processing",
+          "description": "Uses a stable operation identifier and atomic deduplication or a unique business constraint.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "idempotency key",
+            "deduplication table",
+            "unique constraint",
+            "same transaction",
+            "processed message id"
+          ]
+        },
+        {
+          "id": "fg_dg_retry",
+          "label": "Adds a bounded retry policy",
+          "description": "Classifies errors, backs off, and sends permanent failures to controlled handling.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "exponential backoff",
+            "retry limit",
+            "transient error",
+            "dead letter",
+            "poison message"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_delivery_guarantees_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why does a broker's exactly-once feature not automatically make an external HTTP payment call exactly once?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_message_ordering_001",
+      "title": "Preserving order without losing scalability",
+      "prompt": "Events for the same account must be processed in order, but different accounts should run in parallel. How would you design the routing?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "system_design"
+      ],
+      "topicIds": [
+        "fg_message_ordering_partitioning",
+        "event_driven",
+        "scalability"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 50,
+      "answerStructureHint": "Define the ordering scope, use the account as a key, keep one ordered stream per key, and handle duplicates and stale events.",
+      "expectedPoints": [
+        {
+          "id": "fg_mo_scope",
+          "label": "Defines per-entity ordering",
+          "description": "Limits the guarantee to events for the same account instead of requesting global order.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "per account order",
+            "per key ordering",
+            "same entity",
+            "not global order",
+            "ordering scope"
+          ]
+        },
+        {
+          "id": "fg_mo_key",
+          "label": "Uses a stable partition or routing key",
+          "description": "Routes the same account to the same partition or ordered consumer stream.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "partition key",
+            "account id",
+            "same partition",
+            "routing key",
+            "ordered stream"
+          ]
+        },
+        {
+          "id": "fg_mo_parallel",
+          "label": "Preserves parallelism across keys",
+          "description": "Different accounts are distributed across partitions and consumers.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "parallel across accounts",
+            "multiple partitions",
+            "consumer group",
+            "horizontal scaling",
+            "independent keys"
+          ]
+        },
+        {
+          "id": "fg_mo_safety",
+          "label": "Handles stale and repeated events",
+          "description": "Uses sequence or version checks and idempotent processing.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "sequence number",
+            "entity version",
+            "stale event",
+            "idempotent",
+            "duplicate event"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_message_ordering_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What trade-off appears if all events are forced through one partition?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_dead_letter_001",
+      "title": "Handling poison messages",
+      "prompt": "A consumer keeps failing on the same message and blocks useful work. What should the retry and dead-letter flow look like?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "fg_dead_letter_handling",
+        "retry_strategies",
+        "observability"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 50,
+      "answerStructureHint": "Classify the error, retry transient failures with limits, preserve diagnostics, alert, and provide safe replay or compensation.",
+      "expectedPoints": [
+        {
+          "id": "fg_dl_classify",
+          "label": "Classifies retryable errors",
+          "description": "Distinguishes transient failures from permanent validation or schema failures.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "transient error",
+            "permanent error",
+            "validation failure",
+            "schema error",
+            "retryable"
+          ]
+        },
+        {
+          "id": "fg_dl_policy",
+          "label": "Uses bounded backoff",
+          "description": "Applies attempt or time limits with backoff and jitter instead of an infinite loop.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "retry limit",
+            "exponential backoff",
+            "jitter",
+            "retry budget",
+            "max attempts"
+          ]
+        },
+        {
+          "id": "fg_dl_context",
+          "label": "Preserves diagnostic context",
+          "description": "Stores payload reference, error, attempts, timestamps, and trace identifiers.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "error reason",
+            "attempt count",
+            "trace id",
+            "original payload",
+            "timestamp"
+          ]
+        },
+        {
+          "id": "fg_dl_recover",
+          "label": "Owns monitoring and recovery",
+          "description": "Alerts on age and volume and supports throttled, idempotent replay or compensation.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "dead letter alert",
+            "message age",
+            "safe replay",
+            "throttle replay",
+            "compensation"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_dead_letter_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why should replay use a controlled tool instead of simply moving every message back at once?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_event_contract_001",
+      "title": "Evolving an event contract",
+      "prompt": "You need to rename a required field in an event consumed by several independently deployed services. How would you roll out the change?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "design_review"
+      ],
+      "topicIds": [
+        "fg_event_schema_evolution",
+        "api_versioning",
+        "api_contract_design"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Avoid the direct rename, introduce an additive transition or a new version, migrate consumers, and keep replay compatibility.",
+      "expectedPoints": [
+        {
+          "id": "fg_ec_break",
+          "label": "Recognizes the direct rename as breaking",
+          "description": "Old consumers and historical events still expect the original field.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "breaking change",
+            "old consumers",
+            "historical events",
+            "cannot rename directly",
+            "replay"
+          ]
+        },
+        {
+          "id": "fg_ec_transition",
+          "label": "Uses an additive migration",
+          "description": "Publishes both fields or adds an optional replacement while consumers migrate.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "additive change",
+            "both fields",
+            "optional field",
+            "dual publish",
+            "migration window"
+          ]
+        },
+        {
+          "id": "fg_ec_version",
+          "label": "Uses a new version for incompatible meaning",
+          "description": "Introduces a new event type or major version if compatibility cannot be preserved.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "new event version",
+            "new event type",
+            "major version",
+            "upcaster",
+            "compatibility"
+          ]
+        },
+        {
+          "id": "fg_ec_gates",
+          "label": "Adds schema and contract checks",
+          "description": "Uses registry rules, contract tests, and consumer communication before removing old support.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "schema registry",
+            "contract tests",
+            "compatibility check",
+            "consumer migration",
+            "deprecation"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_event_contract_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What metadata would you include in every event envelope?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_event_driven_design_001",
+      "title": "Designing an event-driven integration",
+      "prompt": "A new customer registration must update billing, CRM, analytics, and email systems. How would you design the integration?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "event_driven",
+        "async_fanout",
+        "fg_messaging_pattern_selection",
+        "fg_message_delivery_semantics"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 75,
+      "answerStructureHint": "Clarify required versus optional outcomes, publish a stable event, isolate subscribers, and cover retries, idempotency, ordering, and observability.",
+      "expectedPoints": [
+        {
+          "id": "fg_edd_requirements",
+          "label": "Separates required and optional outcomes",
+          "description": "Clarifies what must finish before registration succeeds and what may be eventually consistent.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "required outcome",
+            "eventual consistency",
+            "before response",
+            "optional consumer",
+            "failure policy"
+          ]
+        },
+        {
+          "id": "fg_edd_event",
+          "label": "Publishes a stable business event",
+          "description": "Uses a CustomerRegistered fact with a clear owner, schema, identifier, and version.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "business event",
+            "customer registered",
+            "event id",
+            "schema version",
+            "clear owner"
+          ]
+        },
+        {
+          "id": "fg_edd_fanout",
+          "label": "Creates independent subscriptions",
+          "description": "Each downstream system has isolated consumption, retry, and scaling behavior.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "independent subscriptions",
+            "fan out",
+            "consumer isolation",
+            "separate retry",
+            "scale independently"
+          ]
+        },
+        {
+          "id": "fg_edd_reliability",
+          "label": "Covers distributed failure modes",
+          "description": "Uses outbox, idempotency, dead-letter handling, tracing, and backlog monitoring.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "outbox",
+            "idempotent consumer",
+            "dead letter",
+            "correlation id",
+            "consumer lag",
+            "backlog"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_event_driven_design_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you do if billing must succeed before registration is considered complete?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_microservice_integration_001",
+      "title": "Synchronous or asynchronous service integration",
+      "prompt": "Two microservices need to exchange data. How do you decide between a REST call and asynchronous messaging?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "sync_vs_async",
+        "microservices",
+        "api_integration",
+        "event_driven"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare immediacy, consistency, availability, coupling, buffering, failure handling, and operational complexity.",
+      "expectedPoints": [
+        {
+          "id": "fg_msi_sync",
+          "label": "Explains synchronous fit",
+          "description": "Uses REST when an immediate response is required and the dependency can be part of the request path.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "immediate response",
+            "request path",
+            "simple call",
+            "strong consistency",
+            "http timeout"
+          ]
+        },
+        {
+          "id": "fg_msi_async",
+          "label": "Explains asynchronous fit",
+          "description": "Uses messaging for buffering, fan-out, independent availability, and eventual consistency.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "buffering",
+            "fan out",
+            "eventual consistency",
+            "decouple availability",
+            "traffic spike"
+          ]
+        },
+        {
+          "id": "fg_msi_failures",
+          "label": "Discusses failure behavior",
+          "description": "Covers timeouts and circuit breakers for sync, retries and duplicates for async.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "timeout",
+            "circuit breaker",
+            "retry",
+            "duplicate delivery",
+            "dead letter"
+          ]
+        },
+        {
+          "id": "fg_msi_contract",
+          "label": "Maintains ownership and contracts",
+          "description": "Avoids shared databases and defines stable API or event contracts.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "data ownership",
+            "no shared database",
+            "api contract",
+            "event schema",
+            "service boundary"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_microservice_integration_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Can asynchronous messaging still create tight coupling? Give an example.",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_serverless_azure_001",
+      "title": "When Azure Functions are a good fit",
+      "prompt": "For what kinds of backend components would you choose Azure Functions, and when would you prefer a long-running service?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_serverless_function_tradeoffs",
+        "cloud",
+        "cost_tradeoffs"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 50,
+      "answerStructureHint": "Compare triggers, traffic shape, latency, execution duration, state, operations, and cost.",
+      "expectedPoints": [
+        {
+          "id": "fg_sa_fit",
+          "label": "Identifies suitable function workloads",
+          "description": "Mentions bursty event handlers, timers, queue consumers, and small integration tasks.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "bursty workload",
+            "event handler",
+            "queue trigger",
+            "timer trigger",
+            "integration task"
+          ]
+        },
+        {
+          "id": "fg_sa_limits",
+          "label": "Recognizes unsuitable workloads",
+          "description": "Calls out long-running, stateful, predictable high-load, or strict low-latency work.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "long running",
+            "stateful workload",
+            "strict latency",
+            "steady high load",
+            "execution limit"
+          ]
+        },
+        {
+          "id": "fg_sa_runtime",
+          "label": "Designs for function behavior",
+          "description": "Keeps handlers stateless, idempotent, observable, and tolerant of retries and cold starts.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "stateless",
+            "idempotent",
+            "cold start",
+            "retry",
+            "distributed tracing"
+          ]
+        },
+        {
+          "id": "fg_sa_cost",
+          "label": "Compares total operational cost",
+          "description": "Considers plans, pre-warming, networking, debugging, vendor coupling, and team experience.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 3,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "consumption plan",
+            "pre warmed",
+            "networking",
+            "vendor lock in",
+            "operational cost"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_serverless_azure_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How could a queue-triggered function accidentally process the same message more than once?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_cicd_backend_001",
+      "title": "A safe CI/CD pipeline for backend services",
+      "prompt": "What stages and controls would you put in a CI/CD pipeline for Node.js services and message consumers?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "design_review"
+      ],
+      "topicIds": [
+        "fg_ci_cd_release_safety",
+        "deployment",
+        "testing_strategy",
+        "production_readiness"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Build once, validate at several levels, manage configuration and migrations, deploy gradually, observe, and recover.",
+      "expectedPoints": [
+        {
+          "id": "fg_cd_artifact",
+          "label": "Builds and promotes one artifact",
+          "description": "Produces an immutable versioned artifact and promotes it through environments.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "immutable artifact",
+            "build once",
+            "versioned image",
+            "promote artifact",
+            "same artifact"
+          ]
+        },
+        {
+          "id": "fg_cd_gates",
+          "label": "Uses layered quality gates",
+          "description": "Includes unit, integration, contract, security, and content or configuration validation.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "unit tests",
+            "integration tests",
+            "contract tests",
+            "security scan",
+            "quality gate",
+            "configuration validation"
+          ]
+        },
+        {
+          "id": "fg_cd_migration",
+          "label": "Handles compatibility and migrations",
+          "description": "Uses backward-compatible API, event, and database changes with staged rollout.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "backward compatible",
+            "expand contract",
+            "schema migration",
+            "event compatibility",
+            "deprecation"
+          ]
+        },
+        {
+          "id": "fg_cd_release",
+          "label": "Limits blast radius and recovers",
+          "description": "Uses health checks, canary or blue-green deployment, metrics, and explicit rollback criteria.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "canary",
+            "blue green",
+            "health check",
+            "rollback criteria",
+            "post deploy metrics"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_cicd_backend_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can rolling back application code be unsafe after a database migration?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_production_incident_001",
+      "title": "Handling a production incident",
+      "prompt": "A message consumer is falling behind and customers report delayed updates. Walk through your response.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "experience_deep_dive"
+      ],
+      "topicIds": [
+        "production_readiness",
+        "observability",
+        "fg_nodejs_performance_diagnostics",
+        "fg_dead_letter_handling"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Stabilize impact, inspect lag and saturation, find the bottleneck, communicate, recover safely, and follow up.",
+      "expectedPoints": [
+        {
+          "id": "fg_pi_stabilize",
+          "label": "Stabilizes customer impact",
+          "description": "Assesses severity, pauses harmful changes, limits intake or scales safe capacity, and defines ownership.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "assess severity",
+            "incident owner",
+            "pause deployment",
+            "limit intake",
+            "scale consumers",
+            "customer impact"
+          ]
+        },
+        {
+          "id": "fg_pi_diagnose",
+          "label": "Uses broker and service signals",
+          "description": "Checks consumer lag, throughput, errors, retries, partitions, CPU, event-loop delay, and dependencies.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "consumer lag",
+            "queue depth",
+            "error rate",
+            "retry storm",
+            "event loop delay",
+            "dependency latency"
+          ]
+        },
+        {
+          "id": "fg_pi_recover",
+          "label": "Recovers without creating more damage",
+          "description": "Fixes or rolls forward, controls replay, preserves ordering, and watches backlog drain.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "controlled replay",
+            "drain backlog",
+            "roll forward",
+            "preserve ordering",
+            "throttle recovery"
+          ]
+        },
+        {
+          "id": "fg_pi_followup",
+          "label": "Communicates and prevents recurrence",
+          "description": "Provides status updates, records a timeline, and creates measured corrective actions.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "status updates",
+            "incident timeline",
+            "root cause",
+            "postmortem",
+            "corrective action"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_production_incident_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would make simply adding more consumer replicas ineffective?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_dotnet_component_001",
+      "title": "Maintaining a .NET component from a Node.js team",
+      "prompt": "Your Node.js service depends on an existing .NET/C# component that also needs maintenance. How would you approach the boundary and reduce risk?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "design_review"
+      ],
+      "topicIds": [
+        "fg_legacy_component_integration",
+        "api_integration",
+        "migration_strategy"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Understand the current behavior, stabilize the contract, add tests and observability, then improve or replace incrementally.",
+      "expectedPoints": [
+        {
+          "id": "fg_dc_understand",
+          "label": "Maps the existing behavior and ownership",
+          "description": "Documents interfaces, data ownership, dependencies, deployment, and failure modes before changing it.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "document behavior",
+            "data ownership",
+            "failure modes",
+            "dependencies",
+            "deployment process"
+          ]
+        },
+        {
+          "id": "fg_dc_boundary",
+          "label": "Creates a stable boundary",
+          "description": "Uses an API, message contract, or adapter rather than sharing internal classes or uncontrolled database access.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "stable api",
+            "message contract",
+            "adapter",
+            "anti corruption layer",
+            "avoid shared database"
+          ]
+        },
+        {
+          "id": "fg_dc_safety",
+          "label": "Adds tests and observability",
+          "description": "Uses characterization and contract tests plus logs, metrics, and tracing around the component.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "characterization tests",
+            "contract tests",
+            "structured logs",
+            "metrics",
+            "distributed tracing"
+          ]
+        },
+        {
+          "id": "fg_dc_migrate",
+          "label": "Improves incrementally",
+          "description": "Uses a strangler approach, small ownership transfers, comparison, and rollback instead of a blind rewrite.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "strangler pattern",
+            "incremental migration",
+            "route gradually",
+            "rollback",
+            "avoid rewrite"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_dotnet_component_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is keeping the .NET component a better decision than rewriting it in Node.js?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_technical_debt_001",
+      "title": "Prioritizing technical debt",
+      "prompt": "How do you decide which technical debt to fix when feature work is also urgent?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "experience_deep_dive",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_technical_debt_prioritization",
+        "risk_management",
+        "production_readiness"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Translate debt into impact, rank risk and frequency, choose incremental action, and communicate the consequence of delay.",
+      "expectedPoints": [
+        {
+          "id": "fg_td_impact",
+          "label": "Expresses debt as measurable impact",
+          "description": "Connects it to incidents, security, delivery delay, support cost, or scaling limits.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "incident risk",
+            "security risk",
+            "delivery delay",
+            "support cost",
+            "scaling limit",
+            "measurable impact"
+          ]
+        },
+        {
+          "id": "fg_td_rank",
+          "label": "Ranks by risk and frequency",
+          "description": "Considers likelihood, severity, how often the area changes, and the cost of waiting.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "likelihood and impact",
+            "frequency of change",
+            "cost of delay",
+            "risk matrix",
+            "recurring friction"
+          ]
+        },
+        {
+          "id": "fg_td_action",
+          "label": "Chooses proportionate remediation",
+          "description": "Fixes urgent risk now and uses incremental refactoring or feature-linked cleanup for the rest.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "fix critical now",
+            "incremental refactoring",
+            "boy scout rule",
+            "include with feature",
+            "reserve capacity"
+          ]
+        },
+        {
+          "id": "fg_td_communicate",
+          "label": "Communicates options and verifies value",
+          "description": "Explains trade-offs in business terms and checks whether incidents or lead time improve.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "business impact",
+            "trade off",
+            "lead time",
+            "fewer incidents",
+            "verify improvement"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_technical_debt_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give an example of technical debt you would deliberately accept for a limited time.",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_project_ownership_001",
+      "title": "Taking a feature from requirements to production",
+      "prompt": "What does project ownership look like when you take a backend feature from an initial request through production and maintenance?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "experience_deep_dive",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "fg_project_ownership_delivery",
+        "requirements_clarification",
+        "design_documentation",
+        "deployment"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Clarify outcomes and constraints, design and coordinate, deliver in safe increments, prepare operations, and verify production results.",
+      "expectedPoints": [
+        {
+          "id": "fg_po_clarify",
+          "label": "Clarifies the problem and success criteria",
+          "description": "Identifies users, acceptance criteria, edge cases, NFRs, and unresolved assumptions.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "acceptance criteria",
+            "edge cases",
+            "non functional requirements",
+            "clarify assumptions",
+            "business outcome"
+          ]
+        },
+        {
+          "id": "fg_po_design",
+          "label": "Makes and communicates design decisions",
+          "description": "Documents contracts, ownership, alternatives, risks, and dependencies with the team.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "design document",
+            "api contract",
+            "data ownership",
+            "alternatives",
+            "risk",
+            "dependencies"
+          ]
+        },
+        {
+          "id": "fg_po_delivery",
+          "label": "Plans safe incremental delivery",
+          "description": "Splits work, coordinates external teams, tests, reviews, migrates, and deploys gradually.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "small milestones",
+            "code review",
+            "testing",
+            "migration plan",
+            "gradual rollout",
+            "team coordination"
+          ]
+        },
+        {
+          "id": "fg_po_operate",
+          "label": "Owns production behavior",
+          "description": "Adds observability and documentation, verifies outcomes after release, and responds to issues.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "monitor after release",
+            "logging and metrics",
+            "runbook",
+            "production support",
+            "verify outcome"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_project_ownership_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How do you handle a requirement that is still ambiguous but the deadline cannot move?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "fg_code_review_docs_001",
+      "title": "Code review and technical documentation",
+      "prompt": "What do you look for in a backend code review, and what documentation should accompany a new integration?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "experience_deep_dive"
+      ],
+      "topicIds": [
+        "testing_strategy",
+        "design_documentation",
+        "production_readiness",
+        "api_contract_design"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Review correctness and design, failure handling and security, tests and operations, then document contracts and deployment.",
+      "expectedPoints": [
+        {
+          "id": "fg_cr_correct",
+          "label": "Reviews correctness and maintainability",
+          "description": "Checks behavior, edge cases, readability, boundaries, and unnecessary complexity.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "correctness",
+            "edge cases",
+            "readability",
+            "service boundaries",
+            "unnecessary complexity"
+          ]
+        },
+        {
+          "id": "fg_cr_failure",
+          "label": "Reviews failure and security behavior",
+          "description": "Checks validation, authorization, timeouts, retries, idempotency, and secret handling.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "input validation",
+            "authorization",
+            "timeouts",
+            "idempotency",
+            "secret handling",
+            "error handling"
+          ]
+        },
+        {
+          "id": "fg_cr_tests",
+          "label": "Reviews evidence and operations",
+          "description": "Looks for proportionate tests, observability, migration safety, and deployment impact.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "unit tests",
+            "integration tests",
+            "observability",
+            "migration safety",
+            "deployment impact"
+          ]
+        },
+        {
+          "id": "fg_cr_docs",
+          "label": "Documents the integration contract",
+          "description": "Provides API or event schemas, examples, error behavior, dependencies, configuration, and runbooks.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "backend_architect": 5
+          },
+          "acceptedSignals": [
+            "openapi",
+            "event schema",
+            "error responses",
+            "configuration",
+            "deployment steps",
+            "runbook"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_code_review_docs_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you give review feedback when the code works but the design creates long-term coupling?",
+          "expectedPoints": []
+        }
+      ]
+    }
+  ]
+}

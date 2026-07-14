@@ -1,0 +1,3659 @@
+{
+  "id": "redspher_fullstack_interview",
+  "name": "Redspher Full-Stack Developer Interview",
+  "description": "A targeted spoken-answer question pack based only on the advertised TypeScript, React, Node.js, AWS, REST, CI/CD, AI, agent, MCP, automation, business-oriented development, and legacy integration expectations.",
+  "topics": [
+    {
+      "id": "redspher_typescript",
+      "name": "TypeScript for Production Systems",
+      "description": "Using TypeScript to design maintainable full-stack applications and protect runtime boundaries.",
+      "category": "fullstack",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nTypeScript is JavaScript with a type system added on top. It helps developers describe the expected shape of values, function inputs, return values, objects, and application states. These checks run while the code is being developed and built. The final program still runs as JavaScript.\n\nIn a full-stack application, TypeScript can be used in the browser, in Node.js services, and in shared tooling. It is especially useful when several parts of a system exchange structured data.\n\n## What problem does it solve?\n\nLarge JavaScript applications can fail because one part of the code expects a value in a different form from the value another part provides. TypeScript catches many of these mistakes before the program reaches production. It also makes code easier to understand because important assumptions are written down as types.\n\nTypeScript does not guarantee that external data is valid. Data from an API, database, file, user, or third-party service can still have the wrong shape at runtime. A reliable application therefore combines TypeScript with runtime validation at system boundaries.\n\n## How it works\n\nDevelopers define types for domain objects, API contracts, component properties, function parameters, and return values. The TypeScript compiler checks whether the code uses those values consistently.\n\nUseful techniques include discriminated unions for modeling a fixed set of states, generics for reusable type-safe code, and narrow public interfaces for modules. External data should be checked with a runtime schema before it is converted into an internal domain model.\n\nFrontend and backend projects may share explicit API contracts, but they should not normally share internal database entities or framework-specific models. Schema-generated types from OpenAPI or GraphQL can reduce duplication while keeping the contract clear.\n\n## Common mistakes\n\nA common mistake is believing that a TypeScript interface validates incoming JSON. Interfaces disappear when the code is compiled, so malformed external data can still enter the application.\n\nOther mistakes include using `any` to bypass the type system, creating very broad types with many optional fields, exposing backend internals to the frontend, and adding complex generic types that make simple code difficult to understand.\n\nTypes should represent real business rules where practical, but they should not replace clear runtime checks, tests, or simple code.\n\n## Key terms\n\n- **Static type checking:** Checking type consistency before the program runs.\n- **Runtime validation:** Checking real data while the program is running.\n- **Discriminated union:** A union of object types identified by a common field such as `status`.\n- **DTO:** A data transfer object used to move data across a boundary.\n- **Domain model:** An internal representation of business concepts and rules.\n- **Type narrowing:** Reducing a broad type to a more specific type after a check.\n- **Generic:** A reusable type or function that works with several related types."
+    },
+    {
+      "id": "redspher_react",
+      "name": "React Application Design",
+      "description": "Structuring, managing state, and improving performance in production React applications.",
+      "category": "frontend",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nReact is a JavaScript library for building user interfaces from reusable components. A component receives data and returns a description of what should appear on the screen. React updates the browser when the component state or input data changes.\n\nReact is commonly used with TypeScript, routing, form libraries, data-fetching libraries, and state-management tools to build complete web applications.\n\n## What problem does it solve?\n\nComplex user interfaces contain many screens, controls, data sources, loading states, errors, and user interactions. React helps divide this complexity into smaller components with clear responsibilities.\n\nIt also provides a predictable way to connect application state to the displayed interface. When the state changes, React calculates which parts of the page need to be updated.\n\n## How it works\n\nA React application is normally organized into features, screens, components, hooks, and data-access code. Local state should remain close to the component that owns it. State should only be moved upward or into a shared store when several parts of the application genuinely need it.\n\nRemote API data is different from ordinary interface state. A server-state library can manage fetching, caching, retries, freshness, and invalidation. Context is useful for stable shared dependencies or settings, while a global store is useful for larger cross-screen client workflows.\n\nPerformance work should begin with measurement. React Profiler and browser performance tools can reveal unnecessary renders, expensive calculations, large lists, or updates arriving too frequently. Possible improvements include better component boundaries, stable props, memoization of proven hot paths, list virtualization, and batching frequent updates.\n\n## Common mistakes\n\nCommon mistakes include placing all state in a global store, storing server data twice, using effects for logic that could be calculated directly, and memoizing every component without measuring a problem.\n\nLarge components that mix rendering, API calls, validation, permissions, and business rules are difficult to test and maintain. Another mistake is using array indexes as keys for changing lists, which can cause incorrect component reuse.\n\nA slow screen should not be optimized by guessing. The actual bottleneck may be network traffic, repeated rendering, data transformation, browser layout, or too many visible rows.\n\n## Key terms\n\n- **Component:** A reusable unit of user-interface behavior and rendering.\n- **Props:** Inputs passed from one component to another.\n- **State:** Data owned by a component or application that can change over time.\n- **Hook:** A function that lets components use state and other React features.\n- **Server state:** Data owned by a remote system and cached in the client.\n- **Context:** A way to provide shared values to a component tree.\n- **Memoization:** Reusing a previous result when its inputs have not changed.\n- **Virtualization:** Rendering only the visible part of a large list."
+    },
+    {
+      "id": "redspher_feature_delivery",
+      "name": "End-to-End Feature Delivery",
+      "description": "Turning business requirements into complete, maintainable features across frontend and backend.",
+      "category": "fullstack",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nEnd-to-end feature delivery is the process of taking a business need from an initial idea to a working production feature. It includes understanding the problem, designing the user experience and data flow, implementing frontend and backend changes, testing them, releasing them, and checking whether the result works as intended.\n\nThe goal is not only to write code. The goal is to solve a useful business problem safely and maintainably.\n\n## What problem does it solve?\n\nBusiness requests are often incomplete or written as proposed solutions rather than clearly defined problems. If developers begin implementation too early, they may build the wrong feature, miss important rules, or create unnecessary technical complexity.\n\nEnd-to-end delivery creates shared understanding between product, business, design, engineering, quality assurance, and operations. It also exposes risks early, such as unclear ownership, missing data, security requirements, failure cases, or difficult migrations.\n\n## How it works\n\nThe process starts by clarifying the user, the problem, the expected outcome, and how success will be measured. The team then identifies the workflow, business rules, permissions, data sources, edge cases, performance needs, and operational constraints.\n\nThe solution should be divided into small, valuable slices. A first version should test the most important assumptions without requiring every possible feature. Acceptance criteria, examples, diagrams, and short written decisions help confirm that everyone understands the same behavior.\n\nImplementation should maintain clear boundaries between the user interface, APIs, business logic, and data. Testing should cover rules, integration points, and critical user journeys. Release should be controlled with monitoring, feature flags, and rollback when the change has meaningful risk.\n\nAfter release, technical and business signals should be reviewed to confirm that the feature actually solved the original problem.\n\n## Common mistakes\n\nA frequent mistake is accepting a requested implementation without asking what problem it is meant to solve. Another is trying to design every future possibility before delivering any value.\n\nTeams may also forget permissions, failure handling, data migration, support needs, or how users will recover from an interrupted process. A technically correct feature can still fail if it is confusing, too slow, difficult to operate, or impossible to measure.\n\nLarge releases with no gradual rollout make it harder to separate technical defects from incorrect business assumptions.\n\n## Key terms\n\n- **Business outcome:** The measurable result the organization wants to achieve.\n- **Acceptance criteria:** Clear conditions that define when a feature behaves correctly.\n- **Vertical slice:** A small feature delivered through all required system layers.\n- **Edge case:** A less common situation that may require special handling.\n- **Non-functional requirement:** A quality requirement such as performance, security, or availability.\n- **Feature flag:** A switch that controls whether deployed functionality is active.\n- **Rollback:** Returning to the previous working version after a failed release."
+    },
+    {
+      "id": "redspher_nodejs",
+      "name": "Node.js Backend Engineering",
+      "description": "Designing reliable and scalable Node.js services.",
+      "category": "backend",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nNode.js is a runtime that executes JavaScript outside the browser. It is commonly used to build web APIs, background workers, command-line tools, real-time services, and integration services.\n\nNode.js is especially effective for applications that spend much of their time waiting for network, file, or database operations. It uses an event-driven model that can handle many concurrent operations without creating one operating-system thread for every request.\n\n## What problem does it solve?\n\nBackend applications often need to manage many simultaneous connections and coordinate calls to databases or external services. Node.js provides a lightweight model for this kind of input and output work while allowing frontend and backend teams to use the same programming language.\n\nIts large package ecosystem also makes it practical for building APIs and integrations quickly. However, its concurrency model requires developers to understand blocking work, asynchronous failures, resource limits, and process lifecycle.\n\n## How it works\n\nJavaScript normally runs on one event loop per Node.js process. When an asynchronous operation starts, Node.js can continue handling other work while the operating system or runtime waits for the result. When the operation finishes, its callback or promise continuation is scheduled.\n\nLong synchronous operations and CPU-heavy calculations block the event loop and delay unrelated requests. Heavy computation should be moved to worker threads, background jobs, or separate services when appropriate.\n\nA maintainable service keeps HTTP handlers thin. Request validation and mapping happen at the boundary, business rules live in application or domain modules, and databases or external systems are accessed through clear adapters.\n\nEvery external call should have a timeout. Errors should be classified, logged with useful context, and converted into safe client responses. Retries should be limited to transient failures and safe operations.\n\n## Common mistakes\n\nCommon mistakes include using synchronous file or cryptographic operations on a request path, starting unlimited parallel work, forgetting timeouts, and retrying every error.\n\nUnhandled promise rejections, missing shutdown handling, oversized request bodies, and uncontrolled memory growth can also make a service unstable.\n\nAnother mistake is placing business logic directly inside framework routes. This makes rules difficult to test and tightly couples the application to Express, NestJS, or another framework.\n\n## Key terms\n\n- **Event loop:** The mechanism that schedules JavaScript work and completed asynchronous operations.\n- **Non-blocking I/O:** Starting an input or output operation without stopping other JavaScript work.\n- **Promise:** An object representing a future success or failure.\n- **Worker thread:** A separate thread used for CPU-heavy JavaScript work.\n- **Backpressure:** Slowing incoming work when the system cannot process it safely.\n- **Graceful shutdown:** Stopping new work and completing or safely abandoning current work before exit.\n- **Adapter:** Code that connects application logic to an external technology."
+    },
+    {
+      "id": "redspher_rest_api",
+      "name": "REST API Design",
+      "description": "Designing robust, evolvable, and secure REST APIs.",
+      "category": "backend",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nA REST API is an HTTP-based interface through which applications exchange information about resources such as shipments, orders, users, or prices. Clients send requests using standard HTTP methods, and the server returns status codes and structured responses, usually in JSON.\n\nREST is not a single strict implementation. A useful REST API follows clear and consistent conventions that make its behavior predictable for clients.\n\n## What problem does it solve?\n\nFrontend applications, partner systems, mobile applications, and internal services need a stable way to request data and perform actions. A well-designed API separates clients from server internals and allows each side to evolve with a controlled contract.\n\nIt also creates a clear place for validation, authentication, authorization, rate limits, observability, and compatibility rules.\n\n## How it works\n\nResources are identified by URLs, and HTTP methods describe common operations. `GET` reads data, `POST` often creates or starts work, `PUT` replaces a resource, `PATCH` changes part of it, and `DELETE` removes it.\n\nRequests and responses should be described with explicit schemas. The server validates inputs and returns consistent error structures. Large collections require pagination, filtering, sorting, limits, and database indexes that support the available queries.\n\nOperations that may be retried need careful design. An idempotency key can identify one logical create operation so repeated requests return the original result instead of creating duplicates.\n\nExisting APIs should normally evolve through additive, backward-compatible changes. Breaking semantic changes may require a parallel endpoint or new version, along with a migration and deprecation period.\n\n## Common mistakes\n\nCommon mistakes include inconsistent naming, returning success codes for failures, exposing raw database structures, accepting unbounded queries, and returning different error shapes from different endpoints.\n\nRetries can create duplicate orders or payments when write operations are not idempotent. Offset pagination can become slow or unstable for large, frequently changing collections.\n\nAnother mistake is removing or renaming fields without knowing which clients still use them. Contract tests and usage telemetry should support deprecation decisions.\n\n## Key terms\n\n- **Resource:** A business object exposed through an API.\n- **HTTP status code:** A standard code describing the result of a request.\n- **Schema:** A machine-readable description of valid data.\n- **Pagination:** Returning a large collection in smaller portions.\n- **Idempotency:** Repeating the same logical operation without creating additional effects.\n- **Cursor pagination:** Pagination based on a stable position rather than a numeric offset.\n- **Backward compatibility:** Allowing existing clients to continue working after a change.\n- **OpenAPI:** A standard format for describing HTTP API contracts."
+    },
+    {
+      "id": "redspher_aws",
+      "name": "AWS Application Architecture",
+      "description": "Deploying and operating full-stack applications in AWS.",
+      "category": "cloud",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nAmazon Web Services, usually called AWS, is a cloud platform that provides managed computing, storage, networking, database, messaging, security, and monitoring services.\n\nInstead of buying and operating all hardware directly, a team can combine AWS services to run applications and scale them as demand changes. The correct design depends on workload behavior, security needs, reliability targets, team experience, and cost.\n\n## What problem does it solve?\n\nApplications need reliable infrastructure, but operating servers, networks, databases, backups, monitoring, and failover manually requires significant effort. AWS provides managed building blocks that reduce some of this operational work.\n\nIt also makes it possible to provision environments automatically, scale selected components, isolate workloads, and pay according to the chosen service model. Cloud services do not remove architectural responsibility. Poorly chosen services can still create high cost, security risks, or reliability problems.\n\n## How it works\n\nA React frontend can be stored as static files in S3 and delivered through CloudFront. A Node.js backend may run in Lambda for short event-driven work or in containers such as ECS for long-running processes, stable high load, custom runtime needs, or persistent connections.\n\nApplications use IAM roles to receive limited permissions. Secrets should be stored in a managed secret service rather than source code. Private resources can be placed in controlled network segments, with security groups governing allowed traffic.\n\nManaged databases, queues, object storage, and caches can reduce operational effort. CloudWatch logs, metrics, alarms, and tracing help teams understand system behavior. Infrastructure and deployments should be automated, repeatable, and reversible.\n\nReliability requires timeouts, bounded retries, multi-Availability-Zone services where appropriate, backups, health checks, and tested recovery procedures.\n\n## Common mistakes\n\nCommon mistakes include giving broad administrator permissions, storing credentials in environment files or repositories, exposing databases publicly, and assuming every AWS service is automatically resilient.\n\nLambda is sometimes chosen for long-lived or connection-heavy workloads without considering runtime and connection limits. Containers may be used for very small bursty tasks even when their idle capacity and operational overhead are unnecessary.\n\nAnother mistake is scaling application servers while ignoring the database, downstream services, connection pools, or account-level limits.\n\n## Key terms\n\n- **Region:** A geographic AWS area containing several Availability Zones.\n- **Availability Zone:** An isolated infrastructure location within a region.\n- **IAM role:** A set of temporary permissions assumed by a workload.\n- **Lambda:** Managed function execution for event-driven workloads.\n- **ECS:** A managed service for running containers.\n- **S3:** Object storage commonly used for files and static websites.\n- **CloudFront:** A content delivery network.\n- **CloudWatch:** AWS services for logs, metrics, alarms, and operational visibility.\n- **Infrastructure as code:** Defining infrastructure in version-controlled configuration."
+    },
+    {
+      "id": "redspher_reliability",
+      "name": "Scalability and Reliability",
+      "description": "Handling load, failures, retries, consistency, and operational risks.",
+      "category": "architecture",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nScalability is the ability of a system to handle more work by adding or using resources effectively. Reliability is the ability of a system to behave correctly over time, including when components slow down, fail, or receive unexpected load.\n\nThese concerns include capacity, failure isolation, retry behavior, data consistency, graceful degradation, observability, and recovery.\n\n## What problem does it solve?\n\nA system that works during normal testing may fail under a traffic spike, a slow database, a broken partner API, duplicated messages, or a partial network failure. Without protection, one problem can spread and exhaust threads, connections, memory, queues, or downstream capacity.\n\nReliability practices limit this damage and help critical business operations continue. Scalability practices ensure that added traffic can be handled without redesigning the entire system.\n\n## How it works\n\nTeams measure latency, traffic, errors, and resource saturation to find the real bottleneck. Stateless services can often scale horizontally, but databases, caches, connection pools, and external dependencies must also have enough capacity.\n\nTimeouts limit how long work waits. Retries are bounded and use backoff with jitter. Circuit breakers stop repeated calls to a failing dependency. Bulkheads and concurrency limits prevent one workload from consuming every resource.\n\nQueues can buffer asynchronous work, but they require maximum sizes, retry rules, dead-letter handling, and idempotent consumers. Multi-step workflows often use local transactions, an outbox, explicit workflow states, reconciliation, and compensation rather than one distributed database transaction.\n\nCaches improve performance when the business can tolerate their freshness rules. Cache keys, invalidation, expiry, failure behavior, and stale-data risk must be intentional.\n\n## Common mistakes\n\nCommon mistakes include retrying immediately and indefinitely, creating unbounded queues, scaling only the web layer, and treating average traffic as the only capacity requirement.\n\nA cache can hide data changes or serve unsafe stale information when no freshness policy exists. Dual writes to multiple systems can leave them inconsistent after a partial failure.\n\nHigh availability should not be assumed from architecture diagrams. Failover, restoration, rollback, and operational procedures need to be tested.\n\n## Key terms\n\n- **Horizontal scaling:** Adding more service instances.\n- **Backoff:** Waiting increasingly longer between retries.\n- **Jitter:** Adding randomness to retry timing to avoid synchronized retry storms.\n- **Circuit breaker:** Temporarily stopping calls to a failing dependency.\n- **Bulkhead:** Isolating resources so one failure cannot consume everything.\n- **Idempotent consumer:** A message handler that can safely receive the same message more than once.\n- **Transactional outbox:** Saving business data and an outgoing event in one local transaction.\n- **Graceful degradation:** Keeping important functions available with reduced behavior."
+    },
+    {
+      "id": "redspher_delivery",
+      "name": "Testing and Delivery",
+      "description": "Testing, CI/CD, deployment safety, and release practices.",
+      "category": "devops",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nTesting and delivery cover the practices used to prove that software behaves correctly and to move changes safely from source code into production.\n\nThis includes automated tests, code review, continuous integration, artifact creation, security checks, environment promotion, deployment strategies, monitoring, and rollback.\n\n## What problem does it solve?\n\nSoftware changes can break business rules, API contracts, databases, security controls, or existing user journeys. Manual checking alone is slow and inconsistent, while uncontrolled deployments make failures difficult to detect and reverse.\n\nA reliable delivery process provides fast feedback during development and increasingly realistic checks before production. It also reduces differences between environments and creates a clear record of what was released.\n\n## How it works\n\nUnit tests check small pieces of business logic quickly. Integration tests verify important boundaries such as databases, HTTP APIs, message handlers, and external adapters. Contract tests confirm that frontend and backend expectations remain compatible. A small set of end-to-end tests protects critical user journeys in a real browser or realistic environment.\n\nA CI pipeline runs formatting, linting, type checking, tests, and a production build. It creates one immutable, versioned artifact and promotes that same artifact between environments. Security checks may scan dependencies, secrets, licenses, and container images.\n\nProduction releases can use feature flags, canaries, blue-green deployment, or gradual percentage rollout. Smoke tests and monitoring confirm health after deployment. Database changes should preserve compatibility while old and new application versions coexist.\n\n## Common mistakes\n\nCommon mistakes include relying mainly on slow end-to-end tests, mocking every dependency, rebuilding a different artifact for each environment, and allowing flaky tests to become normal.\n\nDeploying a new frontend before the backend supports it can break users. Irreversible database migrations and tightly coupled release steps make rollback difficult.\n\nA successful deployment does not prove a successful feature. Technical metrics and relevant business outcomes must still be monitored.\n\n## Key terms\n\n- **Unit test:** A fast test of a small unit of logic.\n- **Integration test:** A test of real boundaries between components or technologies.\n- **Contract test:** A test that checks compatibility between a service and its consumers.\n- **Immutable artifact:** A versioned build that is not changed after creation.\n- **Continuous integration:** Automatically checking each code change.\n- **Canary release:** Releasing to a small portion of traffic first.\n- **Blue-green deployment:** Switching traffic between two complete environments.\n- **Smoke test:** A small post-deployment check of essential behavior."
+    },
+    {
+      "id": "redspher_llm",
+      "name": "LLM Integration",
+      "description": "Adding useful and safe LLM capabilities to business applications.",
+      "category": "fullstack",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nA large language model, or LLM, is a machine-learning model that generates or interprets text based on patterns learned from large amounts of data. In business software, it can summarize information, answer questions, extract structured data, draft messages, classify cases, or suggest actions.\n\nAn LLM produces probable output rather than guaranteed facts. It should therefore be treated as an uncertain component inside a controlled software system.\n\n## What problem does it solve?\n\nMany business workflows contain unstructured text, repeated research, document interpretation, or decisions that require gathering information from several places. Traditional rules can be expensive to write for every wording or document format.\n\nLLMs can make these tasks faster and provide a natural-language interface. Their output can also be wrong, unsupported, inconsistent, or influenced by malicious input. Safe integration is therefore as important as model capability.\n\n## How it works\n\nThe application sends the model instructions and relevant context. Clear prompts describe the task, constraints, allowed output, and examples. Structured output should follow a schema and be validated before use.\n\nRetrieval-augmented generation supplies current or private documents at request time. This is useful when answers must be based on company policies, shipment data, or other changing sources. Fine-tuning is more suitable for stable repeated behavior or style than for loading frequently changing facts.\n\nHigh-impact actions should not be executed directly from free-form model text. The model can prepare a draft or proposed structured action, while deterministic code checks permissions, business rules, limits, and required approval.\n\nQuality should be tested with a representative evaluation set and task-specific measures. Production monitoring should include correctness samples, groundedness, failures, latency, token use, and cost.\n\n## Common mistakes\n\nCommon mistakes include assuming confident wording means correctness, sending unnecessary sensitive data, trusting model-generated JSON without validation, and allowing direct access to powerful tools.\n\nA general model benchmark does not prove that a specific company workflow works well. Evaluation must use realistic normal, difficult, and unsafe examples.\n\nFine-tuning is often incorrectly used as a replacement for retrieval of current documents. Another mistake is launching without a human fallback or rollback threshold.\n\n## Key terms\n\n- **Prompt:** Instructions and context sent to a language model.\n- **Hallucination:** Output that sounds plausible but is unsupported or incorrect.\n- **Grounding:** Connecting an answer to trusted source information.\n- **RAG:** Retrieval-augmented generation, which adds retrieved context to a model request.\n- **Structured output:** Model output constrained to a defined data shape.\n- **Fine-tuning:** Additional training that changes model behavior using examples.\n- **Evaluation set:** A collection of test cases used to measure feature quality.\n- **Prompt injection:** Input designed to manipulate the model or override intended instructions."
+    },
+    {
+      "id": "redspher_agents_mcp",
+      "name": "AI Agents and MCP",
+      "description": "Understanding tool-using agents, orchestration, safeguards, and the Model Context Protocol.",
+      "category": "architecture",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nAn AI agent is an application that uses a model to choose steps, call tools, inspect results, and continue toward a goal. The tools may search data, call internal services, create drafts, or perform controlled business actions.\n\nThe Model Context Protocol, or MCP, is a standard way for AI applications to discover and use tools or context exposed by separate MCP servers. It reduces the need to build a different custom connector for every AI client.\n\n## What problem does it solve?\n\nA normal language model only produces text from the information in its request. Business tasks often require current data and actions in external systems. Agents connect model reasoning to these capabilities.\n\nWithout a standard interface, every agent platform may need a separate integration for every tool. MCP provides a common protocol for describing and calling capabilities. Neither agents nor MCP automatically make actions safe. They introduce new trust, permission, and operational risks that must be controlled.\n\n## How it works\n\nAn AI host manages the user interaction and model. An MCP client communicates with one or more MCP servers. A server exposes defined capabilities such as tools, resources, or prompts.\n\nTools should be narrow and typed. For example, `getShipment` is safer than a general tool that can run arbitrary database commands. Every tool validates its arguments and independently checks authentication and authorization.\n\nAn agent orchestrator tracks the goal, state, model responses, tool calls, and results. It applies limits for steps, time, tokens, cost, retries, and repeated actions. High-impact operations require explicit approval.\n\nA useful workflow often combines deterministic logic with model assistance. Rules detect known conditions, the model summarizes context or proposes options, and controlled code performs approved actions. Every important decision and tool call should be auditable.\n\n## Common mistakes\n\nCommon mistakes include exposing broad tools, trusting the model to enforce permissions, allowing unlimited loops, and treating tool output as safe without validation.\n\nAn agent should not be used when a fixed workflow or normal service call solves the problem more reliably. MCP may also be unnecessary when only one internal application needs one simple API integration.\n\nAnother mistake is giving the model responsibility for deterministic detection or irreversible actions that should remain in normal application code.\n\n## Key terms\n\n- **Agent:** Software that uses a model to choose and execute multiple steps.\n- **Tool call:** A structured request from an agent to an external capability.\n- **Orchestrator:** The component that manages agent state and execution.\n- **MCP host:** The application that runs the AI experience.\n- **MCP client:** The protocol component that connects a host to an MCP server.\n- **MCP server:** A service that exposes tools or context through MCP.\n- **Human in the loop:** Requiring a person to review or approve selected actions.\n- **Execution budget:** A limit on steps, time, tokens, or cost."
+    },
+    {
+      "id": "redspher_legacy",
+      "name": "Legacy System Integration",
+      "description": "Maintaining, integrating, and gradually replacing legacy applications.",
+      "category": "architecture",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nA legacy system is an older application that still supports important business operations. It may use an older language such as PHP, outdated frameworks, undocumented rules, tightly coupled databases, or manual deployment processes.\n\nLegacy integration means connecting new software to the existing system safely. Modernization means improving or replacing selected parts without interrupting daily operations.\n\n## What problem does it solve?\n\nOrganizations cannot usually stop all development and rewrite a critical platform from the beginning. The legacy system may contain years of business rules that are not fully documented anywhere else.\n\nA direct rewrite can miss hidden behavior, create long periods without delivered value, and fail during final migration. Incremental integration and modernization reduce this risk while allowing the business to continue operating.\n\n## How it works\n\nThe first step is understanding actual behavior. Developers study code, logs, database activity, production examples, support cases, and user knowledge. Characterization tests record what the system currently does, even when that behavior is not ideal.\n\nNew code should connect through a stable boundary such as an API, facade, or adapter. An anti-corruption layer translates legacy concepts into cleaner models so new code does not depend on every legacy detail.\n\nThe strangler pattern replaces one bounded business capability at a time. A routing layer sends selected requests to the new implementation while the rest remains in the old system. Data ownership must be explicit, because uncontrolled dual writes can create inconsistent records.\n\nFeature flags, shadow processing, parallel comparison, monitoring, and rollback support gradual migration. Old code should only be removed after traffic and dependency evidence shows that it is no longer used.\n\n## Common mistakes\n\nCommon mistakes include beginning with a large rewrite, changing behavior before it is measured, directly reading or writing the legacy database from many new services, and assuming old code has no valuable rules.\n\nWeak test coverage is not a reason to avoid testing. It is a reason to add characterization tests around the area being changed.\n\nKeeping both old and new systems forever also creates cost and confusion. Every migration slice should include a path to decommission the old path.\n\n## Key terms\n\n- **Characterization test:** A test that records existing behavior before a change.\n- **Golden master:** A saved reference output used to detect behavior changes.\n- **Adapter:** Code that translates between two interfaces or data models.\n- **Anti-corruption layer:** A boundary that prevents legacy concepts from spreading into new code.\n- **Strangler pattern:** Gradually routing business capabilities from a legacy system to new implementations.\n- **Dual write:** Writing the same logical change to two systems.\n- **Shadow processing:** Running new logic without using its result, so outputs can be compared.\n- **Decommission:** Safely removing an old system or capability."
+    }
+  ],
+  "questions": [
+    {
+      "id": "redspher_typescript_api_boundary_001",
+      "title": "TypeScript at API boundaries",
+      "prompt": "How would you safely handle data coming from a REST API in a TypeScript application?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_typescript"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain compile-time limits, runtime validation, mapping, and error handling.",
+      "expectedPoints": [
+        {
+          "id": "ts_boundary_runtime",
+          "label": "Recognizes runtime validation",
+          "description": "Explains that TypeScript types do not validate external data at runtime.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "runtime validation",
+            "types disappear",
+            "untrusted input",
+            "schema validation",
+            "validate response",
+            "parse data"
+          ]
+        },
+        {
+          "id": "ts_boundary_schema",
+          "label": "Uses an explicit schema",
+          "description": "Proposes a schema or validator at the system boundary.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "zod schema",
+            "json schema",
+            "validation library",
+            "request schema",
+            "response schema",
+            "typed decoder"
+          ]
+        },
+        {
+          "id": "ts_boundary_mapping",
+          "label": "Maps external data",
+          "description": "Separates transport DTOs from internal domain models.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "map dto",
+            "domain model",
+            "adapter layer",
+            "normalize data",
+            "explicit mapping",
+            "boundary layer"
+          ]
+        },
+        {
+          "id": "ts_boundary_errors",
+          "label": "Handles validation failures",
+          "description": "Describes logging and user-safe handling for invalid responses.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "validation error",
+            "safe fallback",
+            "error reporting",
+            "structured error",
+            "log failure",
+            "reject invalid"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ts_boundary_missing_runtime",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "ts_boundary_runtime"
+          },
+          "prompt": "Why is a TypeScript interface alone not enough here?",
+          "expectedPoints": []
+        },
+        {
+          "id": "ts_boundary_covered_schema",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "ts_boundary_schema"
+          },
+          "prompt": "Where would you place the validation code in a full-stack application?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "TypeScript only checks code during development, so I would treat every external response as untrusted. I would validate it with a runtime schema, map the validated DTO into an internal model, and return a clear error if the payload is invalid. This keeps API changes from silently breaking the UI."
+    },
+    {
+      "id": "redspher_typescript_modeling_002",
+      "title": "Modeling domain states",
+      "prompt": "How would you model a shipment that can be planned, dispatched, delayed, delivered, or cancelled in TypeScript?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_typescript"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss discriminated unions, valid transitions, exhaustiveness, and domain rules.",
+      "expectedPoints": [
+        {
+          "id": "ts_model_union",
+          "label": "Uses explicit state variants",
+          "description": "Models each state as a distinct variant instead of loose optional fields.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "discriminated union",
+            "tagged union",
+            "state variant",
+            "explicit status",
+            "separate types",
+            "union type"
+          ]
+        },
+        {
+          "id": "ts_model_valid",
+          "label": "Protects valid transitions",
+          "description": "Keeps transition rules in domain logic rather than scattered UI conditions.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "valid transitions",
+            "domain rules",
+            "transition function",
+            "state machine",
+            "guard transition",
+            "central rules"
+          ]
+        },
+        {
+          "id": "ts_model_exhaustive",
+          "label": "Uses exhaustive handling",
+          "description": "Uses exhaustive switches or never checks when handling states.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "exhaustive switch",
+            "never check",
+            "all states",
+            "compile time check",
+            "missing case",
+            "exhaustiveness"
+          ]
+        },
+        {
+          "id": "ts_model_runtime",
+          "label": "Connects to persisted data",
+          "description": "Notes that persisted status values still require validation and migration handling.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "validate persisted",
+            "unknown status",
+            "data migration",
+            "backward compatibility",
+            "runtime parsing"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ts_model_missing_transition",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "ts_model_valid"
+          },
+          "prompt": "Where should the allowed status transitions be enforced?",
+          "expectedPoints": []
+        },
+        {
+          "id": "ts_model_covered_union",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "ts_model_union"
+          },
+          "prompt": "How would this design help when a new status is added?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would use a discriminated union with one variant for each shipment state and keep transition rules in a dedicated domain function or state machine. Consumers would use exhaustive switches so a new state creates a compile-time reminder. Values loaded from an API or database would still be validated at runtime."
+    },
+    {
+      "id": "redspher_typescript_shared_types_003",
+      "title": "Sharing types across frontend and backend",
+      "prompt": "Would you share TypeScript types directly between a React frontend and a Node.js backend? What are the trade-offs?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_typescript"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover contract ownership, coupling, generated types, runtime validation, and versioning.",
+      "expectedPoints": [
+        {
+          "id": "ts_shared_contract",
+          "label": "Shares contracts deliberately",
+          "description": "Distinguishes stable API contracts from internal backend models.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "api contract",
+            "shared dto",
+            "contract package",
+            "public types",
+            "separate models",
+            "boundary types"
+          ]
+        },
+        {
+          "id": "ts_shared_coupling",
+          "label": "Identifies coupling risk",
+          "description": "Explains that direct sharing can tightly couple deployments and leak internals.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "tight coupling",
+            "deployment coupling",
+            "leak internals",
+            "breaking change",
+            "shared dependency",
+            "version mismatch"
+          ]
+        },
+        {
+          "id": "ts_shared_generation",
+          "label": "Considers generated clients",
+          "description": "Mentions OpenAPI, GraphQL, or schema-driven generation as an alternative.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "openapi generation",
+            "generated client",
+            "graphql types",
+            "schema first",
+            "code generation",
+            "generated types"
+          ]
+        },
+        {
+          "id": "ts_shared_runtime",
+          "label": "Keeps runtime validation",
+          "description": "Explains that shared compile-time types do not replace runtime checks.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "runtime validation",
+            "validate payload",
+            "types disappear",
+            "schema validation",
+            "untrusted response"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "ts_shared_missing_coupling",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "ts_shared_coupling"
+          },
+          "prompt": "What could go wrong if the frontend imports backend domain entities?",
+          "expectedPoints": []
+        },
+        {
+          "id": "ts_shared_covered_generation",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "ts_shared_generation"
+          },
+          "prompt": "When would generated API types be preferable to a shared package?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would share only explicit API contracts, not backend entities or database models. A small versioned contract package can work in a monorepo, but schema-driven generation from OpenAPI or GraphQL often gives clearer ownership and looser coupling. Runtime validation is still needed because the deployed systems can be on different versions."
+    },
+    {
+      "id": "redspher_react_feature_structure_001",
+      "title": "Structuring a React feature",
+      "prompt": "How would you structure a medium-sized React feature that includes forms, API calls, permissions, and several screens?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "redspher_react"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe feature boundaries, component responsibilities, data access, state, and testing.",
+      "expectedPoints": [
+        {
+          "id": "react_structure_feature",
+          "label": "Uses feature boundaries",
+          "description": "Groups code around the business feature instead of only technical file types.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "feature folder",
+            "vertical slice",
+            "feature boundary",
+            "domain feature",
+            "cohesive module",
+            "local ownership"
+          ]
+        },
+        {
+          "id": "react_structure_components",
+          "label": "Separates responsibilities",
+          "description": "Keeps presentational components, orchestration, and domain logic distinct.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "separate concerns",
+            "container component",
+            "presentational component",
+            "custom hooks",
+            "domain logic",
+            "thin components"
+          ]
+        },
+        {
+          "id": "react_structure_data",
+          "label": "Centralizes data access",
+          "description": "Uses a clear API or query layer with consistent loading and error states.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "api layer",
+            "query layer",
+            "data hook",
+            "loading state",
+            "error state",
+            "request abstraction"
+          ]
+        },
+        {
+          "id": "react_structure_tests",
+          "label": "Designs for testing",
+          "description": "Plans focused tests around behavior and key integration paths.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "component tests",
+            "integration tests",
+            "test behavior",
+            "mock boundary",
+            "critical flow",
+            "testing library"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "react_structure_missing_data",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "react_structure_data"
+          },
+          "prompt": "Where would API-specific code live and why?",
+          "expectedPoints": []
+        },
+        {
+          "id": "react_structure_covered_feature",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "react_structure_feature"
+          },
+          "prompt": "How would you prevent this feature from becoming a large isolated mini-application?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would organize the code as a feature module with screens, focused components, hooks, API adapters, validation, and tests close together. Components would stay mostly responsible for rendering, while hooks or services handle orchestration and domain rules. The feature would expose a small public interface so it does not leak internal details across the app."
+    },
+    {
+      "id": "redspher_react_state_choice_002",
+      "title": "Choosing where state belongs",
+      "prompt": "How do you decide whether React state should be local, in context, in a global store, or managed as server state?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_react"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Classify the state, explain ownership, and discuss update frequency and persistence.",
+      "expectedPoints": [
+        {
+          "id": "react_state_local",
+          "label": "Defaults to local ownership",
+          "description": "Keeps state close to the smallest common owner when possible.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "local state",
+            "closest owner",
+            "smallest scope",
+            "lift when needed",
+            "component state",
+            "state ownership"
+          ]
+        },
+        {
+          "id": "react_state_server",
+          "label": "Separates server state",
+          "description": "Treats remote cached data differently from client UI state.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "server state",
+            "query cache",
+            "remote data",
+            "cache invalidation",
+            "react query",
+            "request cache"
+          ]
+        },
+        {
+          "id": "react_state_global",
+          "label": "Uses global state selectively",
+          "description": "Uses global state only for genuinely cross-cutting client concerns.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "global state",
+            "cross cutting",
+            "shared client state",
+            "redux store",
+            "app wide state",
+            "avoid overuse"
+          ]
+        },
+        {
+          "id": "react_state_context",
+          "label": "Understands context trade-offs",
+          "description": "Uses context for stable shared dependencies or low-frequency values.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "react context",
+            "dependency injection",
+            "low frequency",
+            "provider value",
+            "context rerender",
+            "shared dependency"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "react_state_missing_server",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "react_state_server"
+          },
+          "prompt": "Why is fetched API data usually different from normal global client state?",
+          "expectedPoints": []
+        },
+        {
+          "id": "react_state_covered_global",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "react_state_global"
+          },
+          "prompt": "Give an example where a global store is justified.",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I start with local state and move it only when several parts of the application need the same client-side value. Remote data is server state, so I prefer a query cache that handles fetching, staleness, retries, and invalidation. Context is useful for stable shared dependencies, while a global store is reserved for genuinely application-wide client workflows."
+    },
+    {
+      "id": "redspher_react_performance_003",
+      "title": "Diagnosing a slow React screen",
+      "prompt": "A React logistics dashboard becomes slow when many shipments update. How would you investigate and improve it?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "redspher_react"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Start with measurement, identify render causes, reduce work, and consider data frequency.",
+      "expectedPoints": [
+        {
+          "id": "react_perf_measure",
+          "label": "Measures before changing",
+          "description": "Uses profiling and browser tools to identify the actual bottleneck.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "react profiler",
+            "performance profile",
+            "measure first",
+            "browser profiler",
+            "render timing",
+            "flame chart"
+          ]
+        },
+        {
+          "id": "react_perf_renders",
+          "label": "Reduces unnecessary renders",
+          "description": "Examines component boundaries, stable props, selectors, and memoization where useful.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "unnecessary renders",
+            "stable props",
+            "memoization",
+            "selector equality",
+            "component boundary",
+            "react memo"
+          ]
+        },
+        {
+          "id": "react_perf_volume",
+          "label": "Reduces rendered work",
+          "description": "Uses virtualization, pagination, batching, or aggregation for large changing datasets.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "list virtualization",
+            "windowing",
+            "batch updates",
+            "pagination",
+            "aggregate updates",
+            "reduce rows"
+          ]
+        },
+        {
+          "id": "react_perf_frequency",
+          "label": "Controls update frequency",
+          "description": "Considers throttling, debouncing, or event coalescing for frequent updates.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "throttle updates",
+            "debounce updates",
+            "event batching",
+            "coalesce events",
+            "update frequency",
+            "buffer events"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "react_perf_missing_measure",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "react_perf_measure"
+          },
+          "prompt": "Which tool would you use first to prove where time is spent?",
+          "expectedPoints": []
+        },
+        {
+          "id": "react_perf_covered_volume",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "react_perf_volume"
+          },
+          "prompt": "How would you handle a table containing tens of thousands of rows?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would first profile the screen to see whether the cost comes from rendering, data transformation, network updates, or the browser layout. Then I would tighten component boundaries, stabilize props and selectors, and memoize only proven hot paths. For large live lists I would virtualize rows and batch or throttle incoming updates."
+    },
+    {
+      "id": "redspher_feature_business_requirements_001",
+      "title": "From business request to technical plan",
+      "prompt": "A product stakeholder asks for a new feature but the requirement is vague. How do you turn it into a technical solution?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "experience_deep_dive"
+      ],
+      "topicIds": [
+        "redspher_feature_delivery"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify outcome, users, rules, constraints, edge cases, delivery slices, and success measures.",
+      "expectedPoints": [
+        {
+          "id": "feature_require_outcome",
+          "label": "Clarifies the business outcome",
+          "description": "Starts with the problem, users, and measurable result rather than the requested implementation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "business outcome",
+            "user problem",
+            "success metric",
+            "desired result",
+            "who uses it",
+            "why needed"
+          ]
+        },
+        {
+          "id": "feature_require_rules",
+          "label": "Makes rules explicit",
+          "description": "Identifies workflows, permissions, data, exceptions, and non-functional needs.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "business rules",
+            "edge cases",
+            "permissions",
+            "data flow",
+            "failure cases",
+            "non functional"
+          ]
+        },
+        {
+          "id": "feature_require_slice",
+          "label": "Plans incremental delivery",
+          "description": "Breaks the solution into a small first slice with feedback and low risk.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "small slice",
+            "incremental delivery",
+            "mvp scope",
+            "early feedback",
+            "phased rollout",
+            "reduce risk"
+          ]
+        },
+        {
+          "id": "feature_require_align",
+          "label": "Confirms shared understanding",
+          "description": "Uses examples, diagrams, or acceptance criteria to align stakeholders.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "acceptance criteria",
+            "example scenarios",
+            "shared understanding",
+            "sequence diagram",
+            "confirm assumptions",
+            "written decision"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "feature_require_missing_outcome",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "feature_require_outcome"
+          },
+          "prompt": "What would you ask before discussing implementation?",
+          "expectedPoints": []
+        },
+        {
+          "id": "feature_require_covered_slice",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "feature_require_slice"
+          },
+          "prompt": "How would you choose the first deliverable slice?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would first clarify the user problem, expected business result, and how success will be measured. Then I would make the workflow, rules, permissions, data, edge cases, and operational constraints explicit. I would confirm the understanding with examples or acceptance criteria and propose a small first slice that can be released and evaluated safely."
+    },
+    {
+      "id": "redspher_feature_tracking_design_002",
+      "title": "Designing shipment tracking end to end",
+      "prompt": "Design an end-to-end feature that shows near-real-time shipment status updates to users.",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "redspher_feature_delivery"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Cover data source, backend flow, frontend updates, failure handling, security, and observability.",
+      "expectedPoints": [
+        {
+          "id": "tracking_flow",
+          "label": "Defines the update flow",
+          "description": "Explains how status events move from source systems to storage, backend, and clients.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "status events",
+            "event flow",
+            "message broker",
+            "update pipeline",
+            "persist status",
+            "client delivery"
+          ]
+        },
+        {
+          "id": "tracking_delivery",
+          "label": "Chooses client delivery",
+          "description": "Selects polling, SSE, or WebSocket based on frequency and interaction needs.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "server sent events",
+            "websocket",
+            "long polling",
+            "polling interval",
+            "push updates",
+            "delivery choice"
+          ]
+        },
+        {
+          "id": "tracking_resilience",
+          "label": "Handles gaps and reconnects",
+          "description": "Supports reconnect, missed-event recovery, deduplication, and stale indicators.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "reconnect logic",
+            "missed events",
+            "event id",
+            "deduplicate events",
+            "stale indicator",
+            "resume token"
+          ]
+        },
+        {
+          "id": "tracking_security_ops",
+          "label": "Covers security and operations",
+          "description": "Includes authorization, monitoring, tracing, and rate or connection limits.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "authorization check",
+            "connection limits",
+            "structured logs",
+            "delivery metrics",
+            "trace id",
+            "rate limiting"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "tracking_missing_resilience",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "tracking_resilience"
+          },
+          "prompt": "What happens when the browser disconnects for five minutes?",
+          "expectedPoints": []
+        },
+        {
+          "id": "tracking_covered_delivery",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "tracking_delivery"
+          },
+          "prompt": "Why would you choose SSE instead of WebSocket here?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would ingest shipment status events, validate and persist them, then publish them to a delivery service. For one-way updates I would usually start with SSE, while keeping a normal REST endpoint for the current snapshot and reconnect recovery. Events would carry IDs for deduplication and resume, and the whole flow would include authorization, freshness indicators, metrics, and tracing."
+    },
+    {
+      "id": "redspher_feature_pricing_rollout_003",
+      "title": "Safely changing pricing logic",
+      "prompt": "How would you deliver a major change to transport pricing logic without creating unexpected business impact?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_feature_delivery"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss rule ownership, test data, comparison, rollout, observability, and rollback.",
+      "expectedPoints": [
+        {
+          "id": "pricing_rules",
+          "label": "Makes pricing rules explicit",
+          "description": "Separates and versions business rules with clear ownership and inputs.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "pricing rules",
+            "versioned rules",
+            "rule engine",
+            "explicit inputs",
+            "business ownership",
+            "deterministic logic"
+          ]
+        },
+        {
+          "id": "pricing_compare",
+          "label": "Compares old and new results",
+          "description": "Uses historical replay, shadow calculation, or side-by-side analysis.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "shadow calculation",
+            "historical replay",
+            "compare outputs",
+            "dual run",
+            "difference report",
+            "sample orders"
+          ]
+        },
+        {
+          "id": "pricing_rollout",
+          "label": "Uses controlled rollout",
+          "description": "Uses feature flags, percentage rollout, or selected users and supports rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "feature flag",
+            "gradual rollout",
+            "canary release",
+            "selected customers",
+            "quick rollback",
+            "kill switch"
+          ]
+        },
+        {
+          "id": "pricing_monitor",
+          "label": "Monitors business effects",
+          "description": "Tracks technical and business metrics, anomalies, and manual overrides.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "price deviation",
+            "business metrics",
+            "anomaly alert",
+            "conversion rate",
+            "margin impact",
+            "manual override"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "pricing_missing_compare",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "pricing_compare"
+          },
+          "prompt": "How would you prove the new logic behaves correctly before enabling it?",
+          "expectedPoints": []
+        },
+        {
+          "id": "pricing_covered_rollout",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "pricing_monitor"
+          },
+          "prompt": "Which signals would make you stop the rollout?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would keep pricing logic versioned and deterministic, with clear inputs and ownership. Before activation I would replay historical orders or run the new calculation in shadow mode and compare outcomes. I would release it behind a flag, monitor price deviation and business metrics, and keep an immediate rollback or manual override."
+    },
+    {
+      "id": "redspher_node_event_loop_001",
+      "title": "Node.js event loop under load",
+      "prompt": "Why can one slow operation affect many requests in Node.js, and how would you prevent it?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_nodejs"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain the event loop, blocking work, I/O, worker options, and measurement.",
+      "expectedPoints": [
+        {
+          "id": "node_loop_single",
+          "label": "Explains event loop behavior",
+          "description": "Explains that JavaScript execution shares an event loop per process.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "event loop",
+            "single thread",
+            "shared loop",
+            "one process",
+            "javascript thread",
+            "loop delay"
+          ]
+        },
+        {
+          "id": "node_loop_blocking",
+          "label": "Identifies blocking work",
+          "description": "Recognizes synchronous I/O and CPU-heavy work as event-loop blockers.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "blocking io",
+            "cpu heavy",
+            "synchronous call",
+            "large computation",
+            "event loop block",
+            "long callback"
+          ]
+        },
+        {
+          "id": "node_loop_mitigate",
+          "label": "Moves or limits heavy work",
+          "description": "Suggests async I/O, workers, job queues, chunking, or separate services.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "worker thread",
+            "job queue",
+            "separate service",
+            "async io",
+            "chunk work",
+            "background job"
+          ]
+        },
+        {
+          "id": "node_loop_measure",
+          "label": "Measures event-loop health",
+          "description": "Mentions latency, event-loop delay, CPU, and profiling.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "event loop delay",
+            "cpu profile",
+            "latency metric",
+            "clinic js",
+            "performance hooks",
+            "profile first"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "node_loop_missing_blocking",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "node_loop_blocking"
+          },
+          "prompt": "Give an example of code that would block the event loop.",
+          "expectedPoints": []
+        },
+        {
+          "id": "node_loop_covered_mitigate",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "node_loop_mitigate"
+          },
+          "prompt": "When would you choose a worker thread over a separate service?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "Each Node.js process executes JavaScript on a shared event loop, so a long synchronous or CPU-heavy task delays unrelated requests. I would use asynchronous I/O, move CPU-heavy work to worker threads or a job queue, and isolate very heavy workloads when necessary. I would verify the issue with event-loop delay, CPU profiles, and request latency."
+    },
+    {
+      "id": "redspher_node_async_failures_002",
+      "title": "Handling asynchronous failures",
+      "prompt": "How would you design error handling for a Node.js service that calls several external systems?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_nodejs"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover timeouts, error classification, retries, cancellation, logging, and user-safe responses.",
+      "expectedPoints": [
+        {
+          "id": "node_error_timeout",
+          "label": "Uses explicit timeouts",
+          "description": "Bounds every external call and supports cancellation where possible.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "request timeout",
+            "abort controller",
+            "cancel request",
+            "bounded call",
+            "deadline",
+            "timeout budget"
+          ]
+        },
+        {
+          "id": "node_error_classify",
+          "label": "Classifies failures",
+          "description": "Separates validation, dependency, transient, and internal failures.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "error classes",
+            "transient error",
+            "validation error",
+            "dependency error",
+            "internal error",
+            "status mapping"
+          ]
+        },
+        {
+          "id": "node_error_retry",
+          "label": "Retries selectively",
+          "description": "Retries only transient and safe operations with backoff and jitter.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "retry transient",
+            "exponential backoff",
+            "random jitter",
+            "idempotent retry",
+            "retry budget",
+            "limited retries"
+          ]
+        },
+        {
+          "id": "node_error_observe",
+          "label": "Preserves diagnostic context",
+          "description": "Uses structured logs, correlation IDs, metrics, and safe external messages.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "structured logs",
+            "correlation id",
+            "error metric",
+            "trace context",
+            "safe message",
+            "root cause"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "node_error_missing_timeout",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "node_error_timeout"
+          },
+          "prompt": "What happens if an external HTTP call never returns?",
+          "expectedPoints": []
+        },
+        {
+          "id": "node_error_covered_retry",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "node_error_retry"
+          },
+          "prompt": "Which failures should not be retried?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would put a timeout and cancellation path around every dependency call, classify errors, and map them to consistent service responses. Only transient and idempotent operations would be retried, with capped exponential backoff and jitter. Structured logs, correlation IDs, traces, and dependency metrics would preserve enough context without exposing internal details to clients."
+    },
+    {
+      "id": "redspher_node_service_structure_003",
+      "title": "Structuring a Node.js backend",
+      "prompt": "How would you structure a Node.js service so that business rules, HTTP handling, and infrastructure remain maintainable?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "redspher_nodejs"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss layers or boundaries, dependency direction, validation, data access, and testability.",
+      "expectedPoints": [
+        {
+          "id": "node_structure_domain",
+          "label": "Keeps domain logic independent",
+          "description": "Places business rules outside controllers and framework-specific code.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "domain layer",
+            "business logic",
+            "thin controller",
+            "use case",
+            "application service",
+            "framework independent"
+          ]
+        },
+        {
+          "id": "node_structure_boundary",
+          "label": "Defines clear boundaries",
+          "description": "Separates HTTP adapters, application logic, repositories, and external clients.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "adapter layer",
+            "repository interface",
+            "http handler",
+            "service boundary",
+            "dependency inversion",
+            "external client"
+          ]
+        },
+        {
+          "id": "node_structure_validation",
+          "label": "Validates at boundaries",
+          "description": "Validates request input and maps it into explicit internal models.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "request validation",
+            "input schema",
+            "dto mapping",
+            "boundary validation",
+            "sanitize input",
+            "typed input"
+          ]
+        },
+        {
+          "id": "node_structure_tests",
+          "label": "Enables focused tests",
+          "description": "Supports unit tests for rules and integration tests for adapters.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "unit test domain",
+            "integration test",
+            "mock interface",
+            "test double",
+            "contract test",
+            "test boundary"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "node_structure_missing_domain",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "node_structure_domain"
+          },
+          "prompt": "Why should pricing rules not live directly in an Express route?",
+          "expectedPoints": []
+        },
+        {
+          "id": "node_structure_covered_boundary",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "node_structure_boundary"
+          },
+          "prompt": "How would you replace a database implementation without rewriting the business logic?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would keep HTTP handlers thin and put use cases and business rules in framework-independent application or domain modules. Database access and external APIs would sit behind explicit interfaces or adapters, with validation and mapping at the boundaries. This makes the rules easy to unit test and the infrastructure easy to integration test or replace."
+    },
+    {
+      "id": "redspher_rest_resource_design_001",
+      "title": "Designing a robust REST API",
+      "prompt": "What makes a REST API easy for frontend teams to use and safe to operate?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_rest_api"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover resources, consistency, validation, errors, pagination, documentation, and operations.",
+      "expectedPoints": [
+        {
+          "id": "rest_consistency",
+          "label": "Uses consistent contracts",
+          "description": "Keeps naming, status codes, filtering, and response shapes predictable.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "consistent responses",
+            "http status",
+            "resource naming",
+            "error format",
+            "filter syntax",
+            "predictable contract"
+          ]
+        },
+        {
+          "id": "rest_validation",
+          "label": "Validates and documents input",
+          "description": "Uses explicit schemas, constraints, and machine-readable documentation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "request validation",
+            "openapi schema",
+            "input constraints",
+            "documented contract",
+            "response schema",
+            "api documentation"
+          ]
+        },
+        {
+          "id": "rest_scale",
+          "label": "Handles collections safely",
+          "description": "Includes pagination, filtering, sorting, limits, and appropriate indexes.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "cursor pagination",
+            "page limit",
+            "filtering",
+            "sorting",
+            "query limits",
+            "database index"
+          ]
+        },
+        {
+          "id": "rest_operations",
+          "label": "Designs for operation",
+          "description": "Includes authentication, rate limits, observability, and correlation IDs.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "rate limiting",
+            "authentication",
+            "correlation id",
+            "request metrics",
+            "audit log",
+            "structured logs"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rest_missing_validation",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rest_validation"
+          },
+          "prompt": "How would the frontend know exactly which request fields are valid?",
+          "expectedPoints": []
+        },
+        {
+          "id": "rest_covered_scale",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "rest_scale"
+          },
+          "prompt": "When would cursor pagination be preferable to offset pagination?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "A good API has predictable resources, status codes, error shapes, filtering, and pagination. Requests and responses are defined with schemas such as OpenAPI and validated at runtime. It also includes authentication, limits, logs, metrics, and correlation IDs so it remains safe and diagnosable in production."
+    },
+    {
+      "id": "redspher_rest_idempotency_002",
+      "title": "Safe retries and idempotency",
+      "prompt": "A client times out while creating a transport order and retries. How do you prevent duplicate orders?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_rest_api"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain idempotency keys, persistence, response replay, concurrency, and expiration.",
+      "expectedPoints": [
+        {
+          "id": "rest_idem_key",
+          "label": "Uses an idempotency key",
+          "description": "Requires a client-generated key for the logical operation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "idempotency key",
+            "request key",
+            "client generated",
+            "operation id",
+            "dedupe key",
+            "unique token"
+          ]
+        },
+        {
+          "id": "rest_idem_atomic",
+          "label": "Stores the result atomically",
+          "description": "Ensures only one request wins under concurrency and associates the final result with the key.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "atomic insert",
+            "unique constraint",
+            "transaction lock",
+            "compare and set",
+            "single winner",
+            "store result"
+          ]
+        },
+        {
+          "id": "rest_idem_replay",
+          "label": "Replays a consistent response",
+          "description": "Returns the previous successful result for matching retries.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "replay response",
+            "same result",
+            "cached response",
+            "previous order",
+            "return existing",
+            "consistent response"
+          ]
+        },
+        {
+          "id": "rest_idem_scope",
+          "label": "Defines key scope and lifetime",
+          "description": "Scopes keys to caller and operation, checks payload mismatch, and expires records safely.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "key expiry",
+            "payload hash",
+            "caller scope",
+            "operation scope",
+            "mismatch error",
+            "retention period"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rest_idem_missing_atomic",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rest_idem_atomic"
+          },
+          "prompt": "What if two retries arrive at exactly the same time?",
+          "expectedPoints": []
+        },
+        {
+          "id": "rest_idem_covered_scope",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "rest_idem_scope"
+          },
+          "prompt": "What should happen if the same key is reused with a different payload?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would require an idempotency key scoped to the caller and operation. The service would atomically reserve the key, execute the order creation once, and store the resulting response. Later retries with the same payload would receive the stored result, while a different payload using the same key would be rejected."
+    },
+    {
+      "id": "redspher_rest_evolution_003",
+      "title": "Evolving an API without breaking clients",
+      "prompt": "How would you change a REST API that is already used by several frontend and partner applications?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_rest_api"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss additive changes, compatibility, versioning, deprecation, contract tests, and telemetry.",
+      "expectedPoints": [
+        {
+          "id": "rest_evolve_additive",
+          "label": "Prefers compatible changes",
+          "description": "Starts with additive optional fields and tolerant consumers where possible.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "additive change",
+            "optional field",
+            "backward compatible",
+            "tolerant reader",
+            "non breaking",
+            "safe default"
+          ]
+        },
+        {
+          "id": "rest_evolve_version",
+          "label": "Versions breaking changes",
+          "description": "Uses an explicit version or parallel endpoint when semantics must change.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "api version",
+            "parallel endpoint",
+            "new resource",
+            "version header",
+            "breaking change",
+            "migration path"
+          ]
+        },
+        {
+          "id": "rest_evolve_deprecate",
+          "label": "Manages deprecation",
+          "description": "Communicates timelines, provides documentation, and supports migration.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "deprecation notice",
+            "migration guide",
+            "sunset date",
+            "client communication",
+            "support window",
+            "release notes"
+          ]
+        },
+        {
+          "id": "rest_evolve_verify",
+          "label": "Verifies real usage",
+          "description": "Uses contract tests and telemetry before removing old behavior.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "contract tests",
+            "consumer tests",
+            "usage telemetry",
+            "client metrics",
+            "access logs",
+            "compatibility test"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rest_evolve_missing_verify",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rest_evolve_verify"
+          },
+          "prompt": "How would you know whether the old field is still used?",
+          "expectedPoints": []
+        },
+        {
+          "id": "rest_evolve_covered_version",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "rest_evolve_version"
+          },
+          "prompt": "When is a new API version actually justified?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would prefer additive, backward-compatible changes first. When semantics must break, I would expose a parallel version, publish a migration path and sunset date, and keep both versions during the agreed window. Contract tests and usage telemetry would confirm that consumers have moved before the old behavior is removed."
+    },
+    {
+      "id": "redspher_aws_fullstack_architecture_001",
+      "title": "Hosting a full-stack application on AWS",
+      "prompt": "How would you deploy a React frontend and Node.js backend on AWS for a business-critical internal platform?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "redspher_aws"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Describe hosting, compute, networking, data, identity, observability, and deployment.",
+      "expectedPoints": [
+        {
+          "id": "aws_stack_frontend",
+          "label": "Chooses frontend hosting",
+          "description": "Uses object storage and a CDN for static React assets when appropriate.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "s3 hosting",
+            "cloudfront",
+            "static assets",
+            "cdn cache",
+            "origin access",
+            "cache headers"
+          ]
+        },
+        {
+          "id": "aws_stack_backend",
+          "label": "Chooses backend compute",
+          "description": "Selects Lambda, ECS, or another managed option based on workload characteristics.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "aws lambda",
+            "ecs fargate",
+            "managed compute",
+            "api gateway",
+            "application load balancer",
+            "workload fit"
+          ]
+        },
+        {
+          "id": "aws_stack_security",
+          "label": "Builds secure boundaries",
+          "description": "Uses private networking where needed, least-privilege IAM, and managed secrets.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "least privilege",
+            "iam role",
+            "private subnet",
+            "secrets manager",
+            "security group",
+            "tls encryption"
+          ]
+        },
+        {
+          "id": "aws_stack_ops",
+          "label": "Plans operation and delivery",
+          "description": "Includes logs, metrics, alarms, tracing, CI/CD, backups, and rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "cloudwatch logs",
+            "cloudwatch alarm",
+            "distributed tracing",
+            "deployment pipeline",
+            "backup policy",
+            "rollback plan"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "aws_stack_missing_backend",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "aws_stack_backend"
+          },
+          "prompt": "What would make you choose ECS instead of Lambda?",
+          "expectedPoints": []
+        },
+        {
+          "id": "aws_stack_covered_security",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "aws_stack_security"
+          },
+          "prompt": "How would the backend access a database password securely?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would normally serve the React build from S3 through CloudFront and choose Lambda or ECS for the Node.js backend based on execution time, traffic shape, and operational needs. Data services would be managed and placed behind appropriate network controls. IAM roles, managed secrets, logs, metrics, alarms, tracing, automated deployments, backups, and rollback would be part of the design from the start."
+    },
+    {
+      "id": "redspher_aws_lambda_vs_containers_002",
+      "title": "Lambda versus containers",
+      "prompt": "When would you choose AWS Lambda and when would you choose containers for a Node.js service?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_aws"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare traffic shape, runtime limits, latency, connections, scaling, cost, and operations.",
+      "expectedPoints": [
+        {
+          "id": "aws_compute_lambda",
+          "label": "Explains Lambda strengths",
+          "description": "Identifies bursty event-driven workloads and low operational overhead.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "bursty traffic",
+            "event driven",
+            "scale to zero",
+            "managed scaling",
+            "short tasks",
+            "low operations"
+          ]
+        },
+        {
+          "id": "aws_compute_container",
+          "label": "Explains container strengths",
+          "description": "Identifies long-running processes, stable traffic, custom runtime needs, or persistent connections.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "long running",
+            "persistent connection",
+            "stable traffic",
+            "custom runtime",
+            "background process",
+            "websocket server"
+          ]
+        },
+        {
+          "id": "aws_compute_limits",
+          "label": "Considers practical limits",
+          "description": "Discusses cold starts, duration, memory, concurrency, startup, and connection behavior.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "cold start",
+            "timeout limit",
+            "concurrency limit",
+            "startup time",
+            "connection pooling",
+            "memory limit"
+          ]
+        },
+        {
+          "id": "aws_compute_cost",
+          "label": "Compares total cost",
+          "description": "Considers request cost, idle cost, team expertise, and operational burden.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "cost model",
+            "idle capacity",
+            "request pricing",
+            "operations cost",
+            "team skills",
+            "total cost"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "aws_compute_missing_container",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "aws_compute_container"
+          },
+          "prompt": "Would Lambda be a good fit for a long-lived WebSocket service?",
+          "expectedPoints": []
+        },
+        {
+          "id": "aws_compute_covered_cost",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "aws_compute_cost"
+          },
+          "prompt": "Why can the cheaper option at low traffic become expensive at steady high traffic?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would favor Lambda for short, event-driven, bursty workloads where managed scaling and low idle cost matter. Containers are better for long-running services, stable high load, persistent connections, custom processes, or tighter runtime control. I would compare cold starts, limits, connection behavior, request cost, idle capacity, and the operational experience of the team."
+    },
+    {
+      "id": "redspher_aws_failure_design_003",
+      "title": "Designing for AWS failures",
+      "prompt": "How would you make an AWS-based application resilient when a dependency becomes slow or unavailable?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_aws"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover timeouts, retries, queues, isolation, graceful degradation, multi-AZ, and monitoring.",
+      "expectedPoints": [
+        {
+          "id": "aws_fail_bound",
+          "label": "Bounds dependency impact",
+          "description": "Uses timeouts, retry limits, backoff, circuit breaking, and concurrency controls.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "request timeout",
+            "retry limit",
+            "exponential backoff",
+            "circuit breaker",
+            "concurrency limit",
+            "bulkhead isolation"
+          ]
+        },
+        {
+          "id": "aws_fail_async",
+          "label": "Decouples work when possible",
+          "description": "Uses queues and dead-letter handling for retryable asynchronous processing.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "sqs queue",
+            "dead letter",
+            "async processing",
+            "message retry",
+            "queue buffer",
+            "poison message"
+          ]
+        },
+        {
+          "id": "aws_fail_degrade",
+          "label": "Degrades gracefully",
+          "description": "Keeps core flows available with cached, partial, or delayed behavior.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "graceful degradation",
+            "cached result",
+            "partial response",
+            "deferred processing",
+            "fallback path",
+            "stale data"
+          ]
+        },
+        {
+          "id": "aws_fail_infra",
+          "label": "Uses resilient managed setup",
+          "description": "Uses multi-AZ services, health checks, alarms, and tested recovery procedures.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "multi az",
+            "health check",
+            "cloudwatch alarm",
+            "failover test",
+            "recovery runbook",
+            "availability zone"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "aws_fail_missing_bound",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "aws_fail_bound"
+          },
+          "prompt": "How do you stop one slow dependency from exhausting all request workers?",
+          "expectedPoints": []
+        },
+        {
+          "id": "aws_fail_covered_async",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "aws_fail_async"
+          },
+          "prompt": "What should happen to a message that keeps failing?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would limit every dependency call with timeouts, bounded retries, backoff, circuit breaking, and concurrency isolation. Work that does not need an immediate answer would go through a queue with a dead-letter path. The application would degrade gracefully where possible, while multi-AZ services, health checks, alarms, and tested runbooks support infrastructure recovery."
+    },
+    {
+      "id": "redspher_reliability_traffic_spike_001",
+      "title": "Handling a sudden traffic spike",
+      "prompt": "A logistics platform receives ten times its normal traffic after a major disruption. What would you check and change?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "redspher_reliability"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Prioritize measurement, bottlenecks, protection, scaling, data stores, and graceful degradation.",
+      "expectedPoints": [
+        {
+          "id": "reliability_spike_measure",
+          "label": "Finds the bottleneck",
+          "description": "Uses latency, throughput, saturation, error, and dependency metrics.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "latency metric",
+            "error rate",
+            "resource saturation",
+            "throughput metric",
+            "dependency latency",
+            "queue depth"
+          ]
+        },
+        {
+          "id": "reliability_spike_protect",
+          "label": "Protects the system",
+          "description": "Uses rate limits, backpressure, load shedding, and bounded queues.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "rate limiting",
+            "backpressure",
+            "load shedding",
+            "bounded queue",
+            "admission control",
+            "protect dependency"
+          ]
+        },
+        {
+          "id": "reliability_spike_scale",
+          "label": "Scales the right layer",
+          "description": "Scales stateless compute and verifies database, cache, and downstream capacity.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "horizontal scaling",
+            "autoscaling",
+            "stateless service",
+            "database capacity",
+            "cache capacity",
+            "connection pool"
+          ]
+        },
+        {
+          "id": "reliability_spike_degrade",
+          "label": "Preserves critical functions",
+          "description": "Temporarily reduces nonessential work or serves reduced-fidelity responses.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "disable nonessential",
+            "graceful degradation",
+            "cached response",
+            "reduced fidelity",
+            "priority traffic",
+            "defer work"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "reliability_spike_missing_measure",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "reliability_spike_measure"
+          },
+          "prompt": "Which four signals would you inspect before scaling anything?",
+          "expectedPoints": []
+        },
+        {
+          "id": "reliability_spike_covered_protect",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "reliability_spike_protect"
+          },
+          "prompt": "What is the difference between rate limiting and backpressure?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would first identify the bottleneck using latency, traffic, errors, saturation, queue depth, and dependency metrics. I would protect the system with limits, backpressure, bounded queues, and priority for critical operations, then scale the constrained stateless layer while checking database and downstream capacity. Nonessential work could be deferred or degraded temporarily."
+    },
+    {
+      "id": "redspher_reliability_distributed_workflow_002",
+      "title": "Reliable multi-step workflows",
+      "prompt": "A transport booking updates a database, calls a partner API, and sends notifications. How would you handle partial failure?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "redspher_reliability"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Discuss transaction boundaries, outbox, idempotency, retries, compensation, and status visibility.",
+      "expectedPoints": [
+        {
+          "id": "workflow_local_tx",
+          "label": "Keeps local state consistent",
+          "description": "Commits business state and an outgoing event atomically where possible.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "transactional outbox",
+            "local transaction",
+            "outbox table",
+            "atomic commit",
+            "persist event",
+            "same transaction"
+          ]
+        },
+        {
+          "id": "workflow_idempotent",
+          "label": "Makes steps idempotent",
+          "description": "Uses operation identifiers and deduplication for retried steps.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "idempotent consumer",
+            "operation id",
+            "deduplicate message",
+            "safe retry",
+            "unique key",
+            "processed event"
+          ]
+        },
+        {
+          "id": "workflow_compensate",
+          "label": "Handles irreversible failures",
+          "description": "Defines compensation, manual resolution, or explicit failure states.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "compensating action",
+            "manual review",
+            "failure state",
+            "saga pattern",
+            "reconciliation job",
+            "retry exhausted"
+          ]
+        },
+        {
+          "id": "workflow_visibility",
+          "label": "Exposes workflow status",
+          "description": "Tracks progress, errors, and correlation across services.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "workflow status",
+            "correlation id",
+            "state machine",
+            "audit trail",
+            "step status",
+            "trace workflow"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "workflow_missing_local_tx",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "workflow_local_tx"
+          },
+          "prompt": "How do you avoid saving the booking but losing the event that triggers the partner call?",
+          "expectedPoints": []
+        },
+        {
+          "id": "workflow_covered_compensate",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "workflow_compensate"
+          },
+          "prompt": "What would you do if the partner accepted the booking but your response was lost?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would keep the local database update and an outgoing event in one transaction using an outbox. A worker would deliver the event, and each external step would use an operation ID and idempotent handling. The workflow would have explicit states, bounded retries, reconciliation, and compensation or manual review for cases that cannot be resolved automatically."
+    },
+    {
+      "id": "redspher_reliability_cache_consistency_003",
+      "title": "Caching changing business data",
+      "prompt": "How would you cache frequently read shipment or pricing data without serving dangerously stale results?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_reliability"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover what to cache, freshness, invalidation, ownership, failure behavior, and observability.",
+      "expectedPoints": [
+        {
+          "id": "cache_safety",
+          "label": "Classifies freshness needs",
+          "description": "Separates data where staleness is acceptable from data requiring strong freshness.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "freshness requirement",
+            "stale tolerance",
+            "critical data",
+            "strong consistency",
+            "business risk",
+            "cache suitability"
+          ]
+        },
+        {
+          "id": "cache_strategy",
+          "label": "Chooses a clear strategy",
+          "description": "Uses cache-aside, write-through, TTL, or event invalidation deliberately.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "cache aside",
+            "write through",
+            "ttl policy",
+            "event invalidation",
+            "cache key",
+            "versioned key"
+          ]
+        },
+        {
+          "id": "cache_failure",
+          "label": "Plans failure behavior",
+          "description": "Defines behavior for cache miss, cache outage, stampede, and stale fallback.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "cache miss",
+            "cache stampede",
+            "stale fallback",
+            "request coalescing",
+            "cache outage",
+            "jittered ttl"
+          ]
+        },
+        {
+          "id": "cache_observe",
+          "label": "Measures cache quality",
+          "description": "Tracks hit rate, age, evictions, latency, and correctness issues.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "cache hit rate",
+            "entry age",
+            "eviction metric",
+            "cache latency",
+            "stale result",
+            "invalidation metric"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "cache_missing_safety",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "cache_safety"
+          },
+          "prompt": "Would you cache a final price quote the same way as a public tracking summary?",
+          "expectedPoints": []
+        },
+        {
+          "id": "cache_covered_failure",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "cache_failure"
+          },
+          "prompt": "How would you prevent thousands of requests from rebuilding the same expired value?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would first classify how much staleness each data type can tolerate. Then I would choose a clear strategy such as cache-aside with TTL and event-driven invalidation, using versioned keys when needed. The design would define behavior for misses, outages, and stampedes, and monitor hit rate, value age, latency, and stale-result incidents."
+    },
+    {
+      "id": "redspher_delivery_test_strategy_001",
+      "title": "Testing a full-stack feature",
+      "prompt": "What test strategy would you use for an end-to-end React and Node.js feature?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_delivery"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe the testing pyramid, contracts, integration boundaries, E2E scope, and test data.",
+      "expectedPoints": [
+        {
+          "id": "test_unit",
+          "label": "Tests business logic cheaply",
+          "description": "Uses focused unit tests for domain rules, transformations, and pure behavior.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "unit tests",
+            "business rules",
+            "pure functions",
+            "fast feedback",
+            "domain logic",
+            "edge cases"
+          ]
+        },
+        {
+          "id": "test_integration",
+          "label": "Tests real boundaries",
+          "description": "Uses integration tests for database, HTTP, schemas, and external adapters.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "integration tests",
+            "real database",
+            "api test",
+            "adapter test",
+            "schema validation",
+            "test container"
+          ]
+        },
+        {
+          "id": "test_contract",
+          "label": "Protects frontend-backend contracts",
+          "description": "Uses contract or schema tests to catch incompatible changes.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "contract tests",
+            "openapi validation",
+            "schema test",
+            "consumer contract",
+            "api compatibility",
+            "response contract"
+          ]
+        },
+        {
+          "id": "test_e2e",
+          "label": "Keeps E2E focused",
+          "description": "Uses a small number of reliable E2E tests for critical user journeys.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "critical journey",
+            "end to end",
+            "few e2e",
+            "stable selectors",
+            "real browser",
+            "happy path"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "test_missing_contract",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "test_contract"
+          },
+          "prompt": "How would you detect that the backend renamed a field used by the frontend?",
+          "expectedPoints": []
+        },
+        {
+          "id": "test_covered_e2e",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "test_e2e"
+          },
+          "prompt": "Which scenarios deserve an end-to-end test?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would put most tests around business logic and important component behavior, then add integration tests for the API, database, and adapters. Contract or schema tests would protect the frontend-backend boundary. Only a small set of critical user journeys would be covered end to end so the suite remains fast and reliable."
+    },
+    {
+      "id": "redspher_delivery_pipeline_002",
+      "title": "Designing a CI/CD pipeline",
+      "prompt": "What should happen in a CI/CD pipeline before a full-stack application reaches production?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "redspher_delivery"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover fast checks, tests, security, artifacts, environments, deployment, verification, and rollback.",
+      "expectedPoints": [
+        {
+          "id": "pipeline_checks",
+          "label": "Runs repeatable quality checks",
+          "description": "Includes formatting, linting, type checking, tests, and build verification.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "lint check",
+            "type check",
+            "unit tests",
+            "integration tests",
+            "production build",
+            "format check"
+          ]
+        },
+        {
+          "id": "pipeline_artifact",
+          "label": "Promotes one immutable artifact",
+          "description": "Builds once and promotes the same version through environments.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "immutable artifact",
+            "build once",
+            "versioned image",
+            "artifact registry",
+            "promote artifact",
+            "release version"
+          ]
+        },
+        {
+          "id": "pipeline_security",
+          "label": "Includes security checks",
+          "description": "Scans dependencies, secrets, and container or artifact vulnerabilities.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "dependency scan",
+            "secret scan",
+            "container scan",
+            "security gate",
+            "vulnerability scan",
+            "license check"
+          ]
+        },
+        {
+          "id": "pipeline_release",
+          "label": "Verifies safe deployment",
+          "description": "Uses controlled deployment, smoke checks, monitoring, and rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "smoke test",
+            "canary deployment",
+            "health check",
+            "rollback automation",
+            "post deploy",
+            "release monitoring"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "pipeline_missing_artifact",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "pipeline_artifact"
+          },
+          "prompt": "Why is rebuilding separately for production risky?",
+          "expectedPoints": []
+        },
+        {
+          "id": "pipeline_covered_release",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "pipeline_release"
+          },
+          "prompt": "What should the pipeline do immediately after deployment?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "The pipeline should run formatting, linting, type checks, unit and integration tests, contract checks, and a production build. It should create one versioned immutable artifact, scan it, and promote that same artifact through environments. Production deployment should be controlled, followed by smoke checks and monitoring, with an automated rollback path."
+    },
+    {
+      "id": "redspher_delivery_safe_release_003",
+      "title": "Releasing a risky feature safely",
+      "prompt": "How would you release a large feature that changes both the React frontend and the backend API?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_delivery"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss compatibility order, feature flags, database changes, rollout, telemetry, and rollback.",
+      "expectedPoints": [
+        {
+          "id": "release_compat",
+          "label": "Maintains cross-version compatibility",
+          "description": "Deploys backend and schema changes so old and new clients can coexist.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "backward compatible",
+            "expand contract",
+            "old client",
+            "new client",
+            "compatible schema",
+            "deployment order"
+          ]
+        },
+        {
+          "id": "release_flag",
+          "label": "Controls activation separately",
+          "description": "Uses a feature flag or configuration switch independent of deployment.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "feature flag",
+            "kill switch",
+            "gradual activation",
+            "targeted rollout",
+            "configuration toggle",
+            "percentage rollout"
+          ]
+        },
+        {
+          "id": "release_data",
+          "label": "Migrates data safely",
+          "description": "Uses expand-migrate-contract, backfills, and reversible database steps.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "expand migrate contract",
+            "data backfill",
+            "dual read",
+            "dual write",
+            "reversible migration",
+            "schema migration"
+          ]
+        },
+        {
+          "id": "release_observe",
+          "label": "Monitors rollout health",
+          "description": "Tracks technical and business metrics and defines stop conditions.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "error rate",
+            "business metric",
+            "rollout metric",
+            "stop condition",
+            "user feedback",
+            "rollback trigger"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "release_missing_compat",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "release_compat"
+          },
+          "prompt": "Which should be deployed first when the frontend needs a new API field?",
+          "expectedPoints": []
+        },
+        {
+          "id": "release_covered_flag",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "release_flag"
+          },
+          "prompt": "What is the benefit of separating deployment from feature activation?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would first deploy backward-compatible backend and database changes so old clients continue to work. The frontend could then ship with the feature disabled behind a flag. I would enable it gradually, watch technical and business metrics, and keep a kill switch and reversible data plan until the rollout is proven."
+    },
+    {
+      "id": "redspher_llm_safe_integration_001",
+      "title": "Adding an LLM feature safely",
+      "prompt": "How would you add an LLM-based assistant to a logistics application without allowing unreliable output to directly change business data?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "redspher_llm"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Cover scope, grounding, structured output, validation, permissions, human control, and monitoring.",
+      "expectedPoints": [
+        {
+          "id": "llm_scope",
+          "label": "Limits the model's authority",
+          "description": "Starts with advisory or draft behavior and separates suggestion from execution.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "advisory mode",
+            "draft output",
+            "human approval",
+            "limited authority",
+            "read only",
+            "confirm action"
+          ]
+        },
+        {
+          "id": "llm_validate",
+          "label": "Validates model output",
+          "description": "Uses structured schemas, deterministic validation, and business-rule checks.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "structured output",
+            "json schema",
+            "validate output",
+            "business rules",
+            "allow list",
+            "reject invalid"
+          ]
+        },
+        {
+          "id": "llm_ground",
+          "label": "Grounds the response",
+          "description": "Provides relevant trusted context and handles missing or conflicting evidence.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "retrieval context",
+            "trusted source",
+            "cite source",
+            "grounded answer",
+            "missing context",
+            "context window"
+          ]
+        },
+        {
+          "id": "llm_ops",
+          "label": "Adds security and observability",
+          "description": "Protects sensitive data and tracks quality, cost, latency, and failures.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "data redaction",
+            "prompt injection",
+            "audit log",
+            "token cost",
+            "quality metric",
+            "latency metric"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "llm_missing_scope",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "llm_scope"
+          },
+          "prompt": "Would you let the model automatically cancel a transport order on day one?",
+          "expectedPoints": []
+        },
+        {
+          "id": "llm_covered_validate",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "llm_validate"
+          },
+          "prompt": "How would you validate a proposed structured action before execution?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would begin with a read-only or draft assistant and require confirmation before any business action. The model would receive only authorized, relevant context and return structured output that is validated against schemas, permissions, and business rules. Sensitive data controls, audit logs, quality evaluation, latency, cost, and failure monitoring would be included."
+    },
+    {
+      "id": "redspher_llm_evaluation_002",
+      "title": "Evaluating an AI feature",
+      "prompt": "How would you decide whether an LLM feature is good enough to release?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_llm"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define tasks, test set, metrics, human review, failure categories, and production feedback.",
+      "expectedPoints": [
+        {
+          "id": "llm_eval_dataset",
+          "label": "Creates a representative test set",
+          "description": "Uses real or realistic cases including difficult and unsafe examples.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "evaluation dataset",
+            "real examples",
+            "edge cases",
+            "adversarial cases",
+            "gold answers",
+            "representative sample"
+          ]
+        },
+        {
+          "id": "llm_eval_metrics",
+          "label": "Uses task-specific metrics",
+          "description": "Measures correctness, groundedness, action validity, latency, and cost.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "accuracy metric",
+            "groundedness",
+            "valid action",
+            "latency target",
+            "cost per task",
+            "failure rate"
+          ]
+        },
+        {
+          "id": "llm_eval_human",
+          "label": "Includes human review",
+          "description": "Uses domain experts for subjective or high-impact quality checks.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "human review",
+            "domain expert",
+            "quality rubric",
+            "blind comparison",
+            "manual scoring",
+            "review sample"
+          ]
+        },
+        {
+          "id": "llm_eval_production",
+          "label": "Monitors after release",
+          "description": "Uses feedback, sampling, drift checks, and rollback thresholds.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "production sampling",
+            "user feedback",
+            "quality drift",
+            "rollback threshold",
+            "monitor failures",
+            "prompt version"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "llm_eval_missing_dataset",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "llm_eval_dataset"
+          },
+          "prompt": "What kinds of examples would you include in the evaluation set?",
+          "expectedPoints": []
+        },
+        {
+          "id": "llm_eval_covered_metrics",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "llm_eval_metrics"
+          },
+          "prompt": "Why is a general model benchmark not enough for this feature?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would define the exact tasks and create a representative evaluation set containing normal, difficult, and unsafe cases. The release criteria would use task-specific measures such as correctness, groundedness, valid structured actions, latency, and cost, with domain-expert review for high-impact cases. Production sampling, feedback, prompt versioning, and rollback thresholds would continue after release."
+    },
+    {
+      "id": "redspher_llm_rag_choice_003",
+      "title": "Prompting, RAG, or fine-tuning",
+      "prompt": "When would you use prompt engineering, retrieval-augmented generation, or fine-tuning for an LLM feature?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_llm"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare behavior instructions, changing knowledge, specialized style or behavior, cost, and maintenance.",
+      "expectedPoints": [
+        {
+          "id": "llm_choice_prompt",
+          "label": "Uses prompting for instructions",
+          "description": "Uses prompts and examples to shape behavior before adding heavier solutions.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "prompt instructions",
+            "few shot examples",
+            "system prompt",
+            "output format",
+            "behavior guidance",
+            "start simple"
+          ]
+        },
+        {
+          "id": "llm_choice_rag",
+          "label": "Uses retrieval for changing knowledge",
+          "description": "Uses RAG when answers depend on current private or source-backed information.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "retrieval augmented",
+            "current knowledge",
+            "private documents",
+            "source grounding",
+            "vector search",
+            "document retrieval"
+          ]
+        },
+        {
+          "id": "llm_choice_tune",
+          "label": "Uses tuning for stable behavior",
+          "description": "Uses fine-tuning for repeated specialized behavior, style, or compact examples rather than fresh facts.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "fine tuning",
+            "specialized behavior",
+            "consistent style",
+            "training examples",
+            "not fresh facts",
+            "stable pattern"
+          ]
+        },
+        {
+          "id": "llm_choice_eval",
+          "label": "Chooses through evaluation",
+          "description": "Compares approaches using quality, latency, cost, security, and maintenance.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "quality evaluation",
+            "latency cost",
+            "maintenance cost",
+            "security risk",
+            "ab test",
+            "measure outcome"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "llm_choice_missing_rag",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "llm_choice_rag"
+          },
+          "prompt": "Which approach fits answers based on frequently changing internal transport policies?",
+          "expectedPoints": []
+        },
+        {
+          "id": "llm_choice_covered_tune",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "llm_choice_tune"
+          },
+          "prompt": "Why is fine-tuning usually not the right way to load current company documents?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would start with a clear prompt and examples. If the feature needs current private or source-backed knowledge, I would add retrieval so the model receives the relevant documents at request time. Fine-tuning is more suitable for stable repeated behavior or style, and I would compare all options using task quality, latency, cost, security, and maintenance."
+    },
+    {
+      "id": "redspher_mcp_basics_001",
+      "title": "Understanding MCP",
+      "prompt": "What problem does the Model Context Protocol solve, and where would it fit in an AI-enabled application?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_agents_mcp"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain standard tool access, client-server roles, capabilities, and security boundaries.",
+      "expectedPoints": [
+        {
+          "id": "mcp_problem",
+          "label": "Explains the interoperability goal",
+          "description": "Describes MCP as a standard way for AI applications to discover and use external tools or context.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "standard protocol",
+            "tool integration",
+            "external context",
+            "interoperability",
+            "discover tools",
+            "common interface"
+          ]
+        },
+        {
+          "id": "mcp_roles",
+          "label": "Describes the roles",
+          "description": "Explains the relationship between host, client, and MCP server at a useful level.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "mcp server",
+            "mcp client",
+            "host application",
+            "tool provider",
+            "capability discovery",
+            "protocol messages"
+          ]
+        },
+        {
+          "id": "mcp_boundary",
+          "label": "Keeps authorization separate",
+          "description": "Notes that MCP does not remove the need for authentication, authorization, validation, or auditing.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "authentication",
+            "authorization",
+            "validate arguments",
+            "audit tool calls",
+            "least privilege",
+            "trust boundary"
+          ]
+        },
+        {
+          "id": "mcp_fit",
+          "label": "Identifies suitable use cases",
+          "description": "Uses MCP when several agents or applications need consistent access to shared tools.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "shared tools",
+            "reusable connector",
+            "multiple clients",
+            "internal systems",
+            "tool catalog",
+            "standard adapter"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "mcp_missing_boundary",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "mcp_boundary"
+          },
+          "prompt": "Does exposing a tool through MCP automatically make it safe?",
+          "expectedPoints": []
+        },
+        {
+          "id": "mcp_covered_fit",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "mcp_fit"
+          },
+          "prompt": "When would a normal internal API be enough instead of MCP?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "MCP provides a standard interface through which an AI host can discover and call tools or access context exposed by MCP servers. It reduces custom integration work when several AI clients need the same capabilities. It is still only a protocol boundary, so authentication, authorization, argument validation, least privilege, and auditing remain application responsibilities."
+    },
+    {
+      "id": "redspher_agent_orchestration_002",
+      "title": "Designing a tool-using agent",
+      "prompt": "How would you design an AI agent that can look up shipments, suggest actions, and call internal tools?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "redspher_agents_mcp"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Cover orchestration, tool schemas, state, permission checks, limits, human approval, and observability.",
+      "expectedPoints": [
+        {
+          "id": "agent_tools",
+          "label": "Defines narrow tools",
+          "description": "Exposes small, typed, deterministic tools instead of broad unrestricted access.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "narrow tools",
+            "typed schema",
+            "explicit action",
+            "deterministic tool",
+            "validated arguments",
+            "small capability"
+          ]
+        },
+        {
+          "id": "agent_control",
+          "label": "Controls execution",
+          "description": "Adds permissions, budgets, step limits, timeouts, and approval for high-impact actions.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "step limit",
+            "token budget",
+            "request timeout",
+            "permission check",
+            "human approval",
+            "action limit"
+          ]
+        },
+        {
+          "id": "agent_state",
+          "label": "Manages workflow state",
+          "description": "Tracks goals, intermediate results, tool outputs, and resumable status explicitly.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "workflow state",
+            "execution state",
+            "tool result",
+            "resume workflow",
+            "state machine",
+            "conversation state"
+          ]
+        },
+        {
+          "id": "agent_observe",
+          "label": "Audits and evaluates behavior",
+          "description": "Logs decisions and tool calls and measures success, failure, cost, and latency.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "tool audit",
+            "execution trace",
+            "success rate",
+            "failure reason",
+            "token cost",
+            "agent latency"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "agent_missing_control",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "agent_control"
+          },
+          "prompt": "How would you prevent an agent from repeatedly calling the same expensive tool?",
+          "expectedPoints": []
+        },
+        {
+          "id": "agent_covered_tools",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "agent_tools"
+          },
+          "prompt": "Why are narrow tools safer than one generic database tool?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would expose narrow typed tools such as getShipment, listExceptions, or proposeAction, with validation and authorization inside every tool. An orchestrator would track state and apply step, token, timeout, and cost limits. High-impact actions would require human approval, while all prompts, decisions, tool calls, results, failures, and costs would be auditable."
+    },
+    {
+      "id": "redspher_agent_exception_workflow_003",
+      "title": "Agent-assisted shipment exceptions",
+      "prompt": "Design an AI-assisted workflow for handling delayed or failed shipments while keeping humans in control.",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_agents_mcp"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe detection, context collection, recommendation, confidence, approval, execution, and learning.",
+      "expectedPoints": [
+        {
+          "id": "agent_exception_detect",
+          "label": "Starts with deterministic detection",
+          "description": "Uses rules or events to identify exceptions before involving the model.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "exception event",
+            "deterministic rule",
+            "delay threshold",
+            "monitoring signal",
+            "workflow trigger",
+            "known condition"
+          ]
+        },
+        {
+          "id": "agent_exception_recommend",
+          "label": "Uses the model for recommendations",
+          "description": "Lets the model summarize context and propose ranked actions rather than silently execute.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "ranked options",
+            "recommend action",
+            "summarize context",
+            "confidence score",
+            "explain reason",
+            "draft response"
+          ]
+        },
+        {
+          "id": "agent_exception_approve",
+          "label": "Applies approval rules",
+          "description": "Requires human confirmation for costly, customer-facing, or irreversible actions.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "human approval",
+            "approval threshold",
+            "irreversible action",
+            "cost limit",
+            "customer impact",
+            "manual confirmation"
+          ]
+        },
+        {
+          "id": "agent_exception_feedback",
+          "label": "Captures outcomes",
+          "description": "Records decisions, overrides, results, and feedback for evaluation and improvement.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "decision outcome",
+            "operator feedback",
+            "override reason",
+            "audit trail",
+            "evaluation data",
+            "success metric"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "agent_exception_missing_detect",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "agent_exception_detect"
+          },
+          "prompt": "Why should the LLM not be responsible for detecting every delay by itself?",
+          "expectedPoints": []
+        },
+        {
+          "id": "agent_exception_covered_approve",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "agent_exception_approve"
+          },
+          "prompt": "Which actions could be automated and which should require approval?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "Deterministic rules or operational events would first detect an exception and collect trusted shipment, customer, and policy context. The model would summarize the case and rank possible actions with reasons, but costly or irreversible actions would require approval. The system would record the chosen action, overrides, outcome, cost, and operator feedback for later evaluation."
+    },
+    {
+      "id": "redspher_legacy_php_integration_001",
+      "title": "Integrating with a legacy PHP system",
+      "prompt": "You need to add a React and Node.js feature that depends on an existing PHP application. How would you approach the integration?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_legacy"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover discovery, contract boundaries, adapters, security, testing, and gradual change.",
+      "expectedPoints": [
+        {
+          "id": "legacy_php_discover",
+          "label": "Understands current behavior",
+          "description": "Maps real workflows, data ownership, dependencies, and undocumented edge cases before changing anything.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "map workflow",
+            "data ownership",
+            "existing behavior",
+            "production logs",
+            "edge cases",
+            "dependency map"
+          ]
+        },
+        {
+          "id": "legacy_php_boundary",
+          "label": "Creates a stable boundary",
+          "description": "Uses an API, adapter, or anti-corruption layer instead of direct internal coupling.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "adapter layer",
+            "anti corruption",
+            "stable api",
+            "service boundary",
+            "facade endpoint",
+            "contract layer"
+          ]
+        },
+        {
+          "id": "legacy_php_verify",
+          "label": "Protects behavior with tests",
+          "description": "Adds characterization, contract, and integration tests around the existing behavior.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "characterization tests",
+            "contract tests",
+            "integration tests",
+            "golden master",
+            "existing behavior",
+            "regression test"
+          ]
+        },
+        {
+          "id": "legacy_php_rollout",
+          "label": "Changes incrementally",
+          "description": "Uses flags, shadowing, parallel paths, and monitoring instead of a big-bang rewrite.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "incremental migration",
+            "feature flag",
+            "shadow traffic",
+            "parallel run",
+            "gradual rollout",
+            "avoid big bang"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "legacy_php_missing_discover",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "legacy_php_discover"
+          },
+          "prompt": "What would you do if there is almost no documentation?",
+          "expectedPoints": []
+        },
+        {
+          "id": "legacy_php_covered_boundary",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "legacy_php_boundary"
+          },
+          "prompt": "Why is direct access to the legacy database usually risky?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would first map the real workflow, data ownership, dependencies, and edge cases using code, logs, users, and production behavior. I would place a stable API or adapter boundary around the PHP system rather than coupling new code to its internals. Characterization and contract tests would protect current behavior, and the new path would roll out incrementally behind flags."
+    },
+    {
+      "id": "redspher_legacy_strangler_002",
+      "title": "Gradually replacing a legacy application",
+      "prompt": "How does the strangler pattern work, and how would you use it to modernize a legacy platform?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_legacy"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain routing, choosing slices, data ownership, coexistence, observability, and removal.",
+      "expectedPoints": [
+        {
+          "id": "strangler_route",
+          "label": "Routes selected capabilities",
+          "description": "Places a routing or facade layer in front and directs chosen functions to the new implementation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "strangler pattern",
+            "routing layer",
+            "facade layer",
+            "new service",
+            "route capability",
+            "incremental replacement"
+          ]
+        },
+        {
+          "id": "strangler_slice",
+          "label": "Chooses safe slices",
+          "description": "Migrates bounded, valuable capabilities rather than arbitrary technical layers.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "bounded capability",
+            "business slice",
+            "low risk",
+            "clear boundary",
+            "valuable feature",
+            "migration slice"
+          ]
+        },
+        {
+          "id": "strangler_data",
+          "label": "Plans data ownership",
+          "description": "Avoids uncontrolled dual writes and defines migration or synchronization explicitly.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "data ownership",
+            "dual write risk",
+            "data migration",
+            "change data capture",
+            "single writer",
+            "sync strategy"
+          ]
+        },
+        {
+          "id": "strangler_remove",
+          "label": "Completes the migration",
+          "description": "Measures traffic and dependencies so old code can eventually be deleted.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "usage telemetry",
+            "remove legacy",
+            "dependency tracking",
+            "sunset path",
+            "zero traffic",
+            "decommission"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "strangler_missing_data",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "strangler_data"
+          },
+          "prompt": "What is the main danger of letting both old and new systems write the same data?",
+          "expectedPoints": []
+        },
+        {
+          "id": "strangler_covered_slice",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "strangler_slice"
+          },
+          "prompt": "What would make a capability a good first migration candidate?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "The strangler pattern puts a stable entry point in front of the legacy application and redirects selected business capabilities to new implementations over time. I would start with a bounded, valuable, low-risk slice and define data ownership carefully to avoid uncontrolled dual writes. Usage telemetry and dependency tracking would confirm when the old path can be removed."
+    },
+    {
+      "id": "redspher_legacy_undocumented_003",
+      "title": "Working with undocumented behavior",
+      "prompt": "How would you safely change a poorly documented legacy system that is important to daily operations?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "redspher_legacy"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe evidence gathering, characterization, small changes, observability, rollout, and rollback.",
+      "expectedPoints": [
+        {
+          "id": "legacy_unknown_evidence",
+          "label": "Builds an evidence-based model",
+          "description": "Uses code, logs, database traces, users, and production examples to learn actual behavior.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "production logs",
+            "trace requests",
+            "user interview",
+            "database query",
+            "real examples",
+            "code reading"
+          ]
+        },
+        {
+          "id": "legacy_unknown_tests",
+          "label": "Captures current behavior",
+          "description": "Writes characterization or golden-master tests before refactoring.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "characterization test",
+            "golden master",
+            "snapshot behavior",
+            "regression test",
+            "capture output",
+            "current behavior"
+          ]
+        },
+        {
+          "id": "legacy_unknown_small",
+          "label": "Makes small reversible changes",
+          "description": "Uses narrow changes, flags, and staged rollout with clear rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "small change",
+            "reversible change",
+            "feature flag",
+            "staged rollout",
+            "rollback plan",
+            "limited scope"
+          ]
+        },
+        {
+          "id": "legacy_unknown_observe",
+          "label": "Adds observability first",
+          "description": "Improves logging, metrics, and comparison before changing core behavior.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "add logging",
+            "business metrics",
+            "comparison metric",
+            "correlation id",
+            "error baseline",
+            "monitor behavior"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "legacy_unknown_missing_tests",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "legacy_unknown_tests"
+          },
+          "prompt": "What is a characterization test and why is it useful here?",
+          "expectedPoints": []
+        },
+        {
+          "id": "legacy_unknown_covered_observe",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "legacy_unknown_observe"
+          },
+          "prompt": "Which signals would you add before touching the critical path?",
+          "expectedPoints": []
+        }
+      ],
+      "sampleStrongAnswer": "I would learn the real behavior from code, logs, traces, database activity, users, and representative production cases. Before refactoring I would add characterization tests and better observability to create a baseline. Changes would be small, reversible, flagged, and rolled out gradually with explicit rollback criteria."
+    }
+  ]
+}
