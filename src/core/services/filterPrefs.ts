@@ -17,8 +17,6 @@ export type FilterPrefs = {
   lang?: LangCode;
   dev?: boolean;
   ver?: string;
-  /** Study UI variant: "classic" (library view) or "learn" (learning mode). */
-  ui?: string;
 };
 
 const KEY = "filter-prefs";

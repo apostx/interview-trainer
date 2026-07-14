@@ -15,18 +15,6 @@
   --good-text: #006300;
   --warning: #fab219;
   --critical: #d03b3b;
-  /* Semantic learning colours (Study learning mode): one hue per
-     information type, used as a left border + faint tint, never alone. */
-  --sem-definition: #2a78d6;
-  --sem-definition-bg: #eef4fb;
-  --sem-problem: #a97a12;
-  --sem-problem-bg: #f8f2e2;
-  --sem-mechanism: #0f8a4f;
-  --sem-mechanism-bg: #e9f5ee;
-  --sem-mistake: #c2452e;
-  --sem-mistake-bg: #faedea;
-  --sem-recall: #7c4fd0;
-  --sem-recall-bg: #f2edfa;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -45,16 +33,6 @@
     --good-text: #0ca30c;
     --warning: #fab219;
     --critical: #d03b3b;
-    --sem-definition: #6aa3ea;
-    --sem-definition-bg: #131e2c;
-    --sem-problem: #d5a640;
-    --sem-problem-bg: #221c0e;
-    --sem-mechanism: #45b078;
-    --sem-mechanism-bg: #0f2118;
-    --sem-mistake: #e07a63;
-    --sem-mistake-bg: #271310;
-    --sem-recall: #a887e6;
-    --sem-recall-bg: #1c152c;
   }
 }
 
@@ -73,16 +51,6 @@
   --color-good-text: var(--good-text);
   --color-warning: var(--warning);
   --color-critical: var(--critical);
-  --color-sem-definition: var(--sem-definition);
-  --color-sem-definition-bg: var(--sem-definition-bg);
-  --color-sem-problem: var(--sem-problem);
-  --color-sem-problem-bg: var(--sem-problem-bg);
-  --color-sem-mechanism: var(--sem-mechanism);
-  --color-sem-mechanism-bg: var(--sem-mechanism-bg);
-  --color-sem-mistake: var(--sem-mistake);
-  --color-sem-mistake-bg: var(--sem-mistake-bg);
-  --color-sem-recall: var(--sem-recall);
-  --color-sem-recall-bg: var(--sem-recall-bg);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
