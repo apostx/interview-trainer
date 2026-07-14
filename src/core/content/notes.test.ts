@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parseStudyNotes } from "./notes";
+import {
+  isMistakesHeading,
+  isTermsHeading,
+  parseKeyTerm,
+  parseStudyNotes,
+} from "./notes";
 
 describe("parseStudyNotes", () => {
   it("splits paragraphs on blank lines and joins wrapped lines", () => {
@@ -34,5 +39,36 @@ describe("parseStudyNotes", () => {
       { type: "p", text: "A" },
       { type: "p", text: "B" },
     ]);
+  });
+});
+
+describe("heading kind helpers", () => {
+  it("recognizes the terms heading in English and Hungarian", () => {
+    expect(isTermsHeading("Key terms")).toBe(true);
+    expect(isTermsHeading("Kulcsfogalmak")).toBe(true);
+    expect(isTermsHeading("How it works")).toBe(false);
+  });
+
+  it("recognizes the mistakes heading in English and Hungarian", () => {
+    expect(isMistakesHeading("Common mistakes")).toBe(true);
+    expect(isMistakesHeading("Gyakori hibák")).toBe(true);
+    expect(isMistakesHeading("Key terms")).toBe(false);
+  });
+});
+
+describe("parseKeyTerm", () => {
+  it("splits 'term — explanation' items", () => {
+    expect(parseKeyTerm("Backpressure — pushing back on producers.")).toEqual({
+      term: "Backpressure",
+      def: "pushing back on producers.",
+    });
+  });
+
+  it("accepts an en dash", () => {
+    expect(parseKeyTerm("TTL – time to live").def).toBe("time to live");
+  });
+
+  it("falls back to a plain entry without a dash", () => {
+    expect(parseKeyTerm("Just a term")).toEqual({ term: "Just a term", def: null });
   });
 });

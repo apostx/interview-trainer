@@ -32,7 +32,12 @@ import {
   type StudyPdfFormat,
   type StudyPdfScope,
 } from "@/core/pdf/studyPdf";
-import { parseStudyNotes } from "@/core/content/notes";
+import {
+  isMistakesHeading,
+  isTermsHeading,
+  parseKeyTerm,
+  parseStudyNotes,
+} from "@/core/content/notes";
 import { normalizedIncludes } from "@/core/services/transcriptNormalizer";
 
 const CATEGORY_LABELS: Record<Topic["category"], string> = {
@@ -77,28 +82,73 @@ function cardMatchesQuery(card: QuestionCard, query: string): boolean {
   );
 }
 
+const CHIP_CLASSES = ["bg-chip-1", "bg-chip-2", "bg-chip-3", "bg-chip-4"];
+
+// Annotates each block with whether it sits in the key-terms section (whose
+// lists render as term cards instead of bullets).
+function annotateBlocks(notes: string) {
+  let inTerms = false;
+  return parseStudyNotes(notes).map((block) => {
+    if (block.type === "h") inTerms = isTermsHeading(block.text);
+    return { block, inTerms };
+  });
+}
+
+/**
+ * The study material renders on a warm "paper" surface with highlighter-style
+ * headings and flashcard-like key terms: reading research favours dark text
+ * on a light background, and selective vivid colour aids attention/encoding.
+ */
 function StudyNotes({ notes }: { notes: string }) {
+  const rendered = annotateBlocks(notes).map(({ block, inTerms }, i) => {
+    if (block.type === "h") {
+      const mark = isMistakesHeading(block.text) ? "bg-marker-warn" : "bg-marker";
+      return (
+        <h2 key={i} className="mt-3 text-base font-bold first:mt-0">
+          <span className={`${mark} -mx-1 rounded-sm box-decoration-clone px-1.5 py-0.5`}>
+            {block.text}
+          </span>
+        </h2>
+      );
+    }
+    if (block.type === "p") {
+      return (
+        <p key={i} className="text-[15px] leading-relaxed text-paper-soft">
+          {block.text}
+        </p>
+      );
+    }
+    if (inTerms) {
+      return (
+        <dl key={i} className="grid gap-2 sm:grid-cols-2">
+          {block.items.map((item, j) => {
+            const { term, def } = parseKeyTerm(item);
+            return (
+              <div
+                key={j}
+                className={`${CHIP_CLASSES[j % CHIP_CLASSES.length]} rounded-lg px-3 py-2 shadow-sm`}
+              >
+                <dt className="text-sm font-bold">{term}</dt>
+                {def && <dd className="mt-0.5 text-sm leading-snug">{def}</dd>}
+              </div>
+            );
+          })}
+        </dl>
+      );
+    }
+    return (
+      <ul key={i} className="flex list-disc flex-col gap-1.5 pl-5 marker:text-paper-soft">
+        {block.items.map((item, j) => (
+          <li key={j} className="text-[15px] leading-relaxed text-paper-soft">
+            {item}
+          </li>
+        ))}
+      </ul>
+    );
+  });
   return (
-    <div className="mb-6 flex flex-col gap-3">
-      {parseStudyNotes(notes).map((block, i) =>
-        block.type === "h" ? (
-          <h2 key={i} className="mt-2 font-bold">
-            {block.text}
-          </h2>
-        ) : block.type === "p" ? (
-          <p key={i} className="text-sm leading-relaxed text-secondary">
-            {block.text}
-          </p>
-        ) : (
-          <ul key={i} className="flex list-disc flex-col gap-1 pl-5">
-            {block.items.map((item, j) => (
-              <li key={j} className="text-sm leading-relaxed text-secondary">
-                {item}
-              </li>
-            ))}
-          </ul>
-        ),
-      )}
+    <div className="mb-6 rounded-2xl border border-paper-line bg-paper px-5 py-6 text-paper-ink shadow-sm sm:px-7">
+      <div className="flex max-w-prose flex-col gap-4">{rendered}</div>
     </div>
   );
 }

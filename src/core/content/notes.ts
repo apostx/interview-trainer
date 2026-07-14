@@ -10,6 +10,27 @@ export type NoteBlock =
   | { type: "h"; text: string }
   | { type: "ul"; items: string[] };
 
+/** "Key terms" / "Kulcsfogalmak" heading (its list renders as term cards). */
+export function isTermsHeading(text: string): boolean {
+  return /^(key terms|kulcsfogalmak)/i.test(text);
+}
+
+/** "Common mistakes" / "Gyakori hibák" heading (gets the warning marker —
+ * the one visually isolated element, which is what makes it memorable). */
+export function isMistakesHeading(text: string): boolean {
+  return /^(common mistakes|gyakori hib)/i.test(text);
+}
+
+/**
+ * Splits a key-terms list item written as "term — explanation" (em/en dash)
+ * into a term card; items without a dash fall back to a plain entry.
+ * Items never contain newlines (parseStudyNotes joins continuation lines).
+ */
+export function parseKeyTerm(item: string): { term: string; def: string | null } {
+  const m = item.match(/^(.{1,60}?)\s+[—–]\s+(.+)$/);
+  return m ? { term: m[1], def: m[2] } : { term: item, def: null };
+}
+
 export function parseStudyNotes(notes: string): NoteBlock[] {
   const blocks: NoteBlock[] = [];
   for (const raw of notes.split(/\n\s*\n/)) {
