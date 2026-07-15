@@ -5,28 +5,22 @@ import type { Bank } from "./deriveBank";
 
 /**
  * Per-topic metadata derived from a bank's questions. Practice items only
- * carry topic ids, so their role/source/importance filters go through the
- * topics: a topic's roles and sources are the union of its questions'.
+ * carry topic ids, so their role/importance filters go through the topics:
+ * a topic's roles are the union of its questions'.
  */
 export type TopicMeta = {
   rolesByTopic: Map<string, Set<InterviewRole>>;
-  sourcesByTopic: Map<string, Set<string>>;
   importanceByTopic: Map<string, number>;
   hasImportance: boolean;
 };
 
 export function topicMetaMaps(bank: Bank): TopicMeta {
   const rolesByTopic = new Map<string, Set<InterviewRole>>();
-  const sourcesByTopic = new Map<string, Set<string>>();
   for (const card of bank.questions) {
-    const cardSources = bank.sourcesByCardId.get(card.id) ?? [];
     for (const topicId of card.topicIds) {
       const roles = rolesByTopic.get(topicId) ?? new Set();
       for (const r of card.roles) roles.add(r);
       rolesByTopic.set(topicId, roles);
-      const sources = sourcesByTopic.get(topicId) ?? new Set();
-      for (const s of cardSources) sources.add(s);
-      sourcesByTopic.set(topicId, sources);
     }
   }
   const importanceByTopic = new Map(
@@ -36,7 +30,6 @@ export function topicMetaMaps(bank: Bank): TopicMeta {
   );
   return {
     rolesByTopic,
-    sourcesByTopic,
     importanceByTopic,
     hasImportance: importanceByTopic.size > 0,
   };
@@ -55,7 +48,6 @@ export function topicIdsMatch(
   topicIds: string[],
   meta: TopicMeta,
   role: RoleFilter,
-  sources: string[],
   imp: string[],
 ): boolean {
   return topicIds.some((id) => {
@@ -63,10 +55,6 @@ export function topicIdsMatch(
       const members = TRACK_MEMBER_ROLES[role] ?? [role];
       const topicRoles = meta.rolesByTopic.get(id);
       if (!topicRoles || !members.some((m) => topicRoles.has(m))) return false;
-    }
-    if (sources.length > 0) {
-      const topicSources = meta.sourcesByTopic.get(id);
-      if (!topicSources || !sources.some((s) => topicSources.has(s))) return false;
     }
     if (
       imp.length > 0 &&
@@ -76,18 +64,4 @@ export function topicIdsMatch(
     }
     return true;
   });
-}
-
-/** Content sources grouped for the source dropdown: [group, entries][]. */
-export function groupSources(
-  contentSources: Bank["contentSources"],
-): [string, { id: string; name: string }[]][] {
-  const groups = new Map<string, { id: string; name: string }[]>();
-  for (const src of contentSources) {
-    groups.set(src.group, [
-      ...(groups.get(src.group) ?? []),
-      { id: src.id, name: src.name },
-    ]);
-  }
-  return [...groups.entries()].sort();
 }

@@ -18,7 +18,14 @@ import {
   ROLE_TRACKS,
   modesForPracticeTypes,
 } from "@/core/models";
-import { allQuestions } from "@/core/content/bank";
+import { bankFor } from "@/core/content/bank";
+import { CheckboxDropdown, packGroups, packSummary } from "@/components/filters";
+import {
+  loadFilterPrefs,
+  parsePackParam,
+  patchUrl,
+  saveFilterPrefs,
+} from "@/core/services/filterPrefs";
 import { generateSession } from "@/core/services/sessionGenerator";
 import {
   getSettings,
@@ -38,6 +45,9 @@ export default function SessionSetupPage() {
   ]);
   const [includeWeakTopics, setIncludeWeakTopics] = useState(true);
   const [includeUnknownTopics, setIncludeUnknownTopics] = useState(false);
+  // The session draws its questions from the selected data packs (shared
+  // selection with Study/Practice; empty = every pack).
+  const [selectedPacks, setPacksState] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
@@ -46,7 +56,20 @@ export default function SessionSetupPage() {
       setRole(s.targetRole);
       setDuration(s.defaultSessionDurationMinutes === 10 ? 10 : 30);
     });
+    const initPacks = () => {
+      const fromUrl = parsePackParam(
+        new URLSearchParams(window.location.search).get("pack"),
+      );
+      setPacksState(fromUrl.length > 0 ? fromUrl : (loadFilterPrefs().packs ?? []));
+    };
+    initPacks();
   }, []);
+
+  const setSelectedPacks = (packs: string[]) => {
+    setPacksState(packs);
+    patchUrl({ pack: packs.length > 0 ? packs.join(",") : null });
+    saveFilterPrefs({ packs });
+  };
 
   function togglePracticeType(type: PracticeType) {
     setPracticeTypes((prev) =>
@@ -80,7 +103,7 @@ export default function SessionSetupPage() {
           includeUnknownTopics,
         },
         {
-          cards: allQuestions,
+          cards: bankFor(selectedPacks).questions,
           topicsById,
           dueTopicIds: new Set(dueItems.flatMap((i) => i.topicIds)),
           weakTopicIds: new Set(recentSessions.flatMap((s) => s.weakTopicIds)),
@@ -122,6 +145,23 @@ export default function SessionSetupPage() {
       />
 
       <Card className="flex flex-col gap-6">
+        <div>
+          <span className={labelBase}>Data pack</span>
+          <div className="mt-1">
+            <CheckboxDropdown
+              ariaLabel="Pack filter"
+              allLabel="All packs"
+              summary={packSummary(selectedPacks)}
+              groups={packGroups()}
+              selected={selectedPacks}
+              onChange={setSelectedPacks}
+            />
+          </div>
+          <p className="mt-1 text-xs text-muted">
+            Questions come from the selected packs (shared with Study).
+          </p>
+        </div>
+
         <div>
           <label className={labelBase} htmlFor="role">
             Target role

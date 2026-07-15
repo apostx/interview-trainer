@@ -1,9 +1,28 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { allBanks } from "@/core/content/bank";
+import { dataPacks } from "@/core/content/bank";
 import { hasStudyMaterial } from "@/core/content/notes";
 import { selectCompact } from "@/components/ui";
+
+/** Entries for the data-pack multi-select (single unnamed group). */
+export function packGroups(): [string, { id: string; name: string }[]][] {
+  return [
+    [
+      "",
+      dataPacks.map((p) => ({
+        id: p.label,
+        name: `${p.label} (${p.bank.topics.filter(hasStudyMaterial).length} topics)`,
+      })),
+    ],
+  ];
+}
+
+export function packSummary(selected: string[]): string {
+  if (selected.length === 0) return "All packs";
+  if (selected.length === 1) return selected[0];
+  return `${selected.length} packs`;
+}
 
 /** Importance levels for the multi-select filter ("u" = unrated topics). */
 export const IMPORTANCE_LEVELS: { id: string; name: string }[] = [
@@ -113,41 +132,3 @@ export function CheckboxDropdown({
   );
 }
 
-/** Dev-mode (?dev=1) bank switcher for comparing content versions. */
-export function DevVersionSwitcher({
-  versionLabel,
-  onSelect,
-  onExit,
-}: {
-  versionLabel: string;
-  onSelect: (label: string) => void;
-  onExit: () => void;
-}) {
-  if (allBanks.length < 2) return null;
-  return (
-    <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-hairline bg-background px-3 py-2">
-      <span className="text-xs font-semibold uppercase tracking-wide text-muted">
-        Dev · content version
-      </span>
-      <select
-        className={selectCompact}
-        value={versionLabel}
-        onChange={(e) => onSelect(e.target.value)}
-        aria-label="Content version"
-      >
-        {allBanks.map((b) => (
-          <option key={b.label} value={b.label}>
-            {b.label} ({b.bank.topics.filter(hasStudyMaterial).length} topics)
-          </option>
-        ))}
-      </select>
-      <button
-        type="button"
-        onClick={onExit}
-        className="text-xs text-muted underline hover:text-foreground"
-      >
-        Exit dev mode
-      </button>
-    </div>
-  );
-}

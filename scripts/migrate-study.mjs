@@ -8,7 +8,7 @@
 // transition; the app prefers studyContent when both exist.
 //
 // Usage: node scripts/migrate-study.mjs [--dry-run] [--dir content/packs]
-import { readFileSync, readdirSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, writeFileSync, existsSync } from "node:fs";
 import path from "node:path";
 
 const SECTION_MATCHERS = [
@@ -199,7 +199,18 @@ function main() {
     process.exit(1);
   }
   let migrated = 0, failed = 0, skipped = 0;
-  for (const file of readdirSync(dir).filter((f) => f.endsWith(".json"))) {
+  // Data packs are first-level folders (multiple JSON files per pack);
+  // root-level .json files are single-file packs.
+  const files = readdirSync(dir).flatMap((entry) => {
+    const full = path.join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      return readdirSync(full)
+        .filter((f) => f.endsWith(".json"))
+        .map((f) => `${entry}/${f}`);
+    }
+    return entry.endsWith(".json") ? [entry] : [];
+  });
+  for (const file of files) {
     const full = path.join(dir, file);
     let pack;
     try {

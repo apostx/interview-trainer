@@ -4,18 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, ModeBadge, PageHeader, buttonGhost, buttonSecondary, inputBase, selectCompact } from "@/components/ui";
 import type { LangCode, QuestionCard, StudyContent, Topic } from "@/core/models";
 import { ROLE_LABELS, ROLE_TRACKS, TRACK_MEMBER_ROLES } from "@/core/models";
-import { allBanks, liveBank } from "@/core/content/bank";
+import { bankFor } from "@/core/content/bank";
 import {
   CheckboxDropdown,
-  DevVersionSwitcher,
   IMPORTANCE_LEVELS,
   importanceSummary,
+  packGroups,
+  packSummary,
 } from "@/components/filters";
 import { importanceToken } from "@/core/content/topicFilters";
 import {
   loadFilterPrefs,
   parseImpParam,
-  parseSourceParam,
+  parsePackParam,
   patchUrl,
   saveFilterPrefs,
   type RoleFilter,
@@ -61,21 +62,11 @@ const CATEGORY_LABELS: Record<Topic["category"], string> = {
 // Pre-prefs versions stored the reading language under this key.
 const LEGACY_LANG_KEY = "study-lang";
 
-/** Role and source filters apply per card; a topic shows if any card survives.
- * An empty `selectedSources` means "all sources". */
-function cardMatchesFilters(
-  card: QuestionCard,
-  role: RoleFilter,
-  selectedSources: string[],
-  sources: Map<string, string[]>,
-): boolean {
+/** The role filter applies per card; a topic shows if any card survives. */
+function cardMatchesFilters(card: QuestionCard, role: RoleFilter): boolean {
   if (role !== "all") {
     const members = TRACK_MEMBER_ROLES[role] ?? [role];
     if (!card.roles.some((r) => members.includes(r))) return false;
-  }
-  if (selectedSources.length > 0) {
-    const cardSources = sources.get(card.id) ?? [];
-    if (!selectedSources.some((s) => cardSources.includes(s))) return false;
   }
   return true;
 }
@@ -291,21 +282,6 @@ function LanguagePicker({
   );
 }
 
-/** Summary text for the source dropdown ("All sources" / a name / "N sources"). */
-function sourceSummary(
-  selected: string[],
-  sourceGroups: [string, { id: string; name: string }[]][],
-): string {
-  if (selected.length === 0) return "All sources";
-  if (selected.length === 1)
-    return (
-      sourceGroups
-        .flatMap(([, entries]) => entries)
-        .find((s) => s.id === selected[0])?.name ?? "1 source"
-    );
-  return `${selected.length} sources`;
-}
-
 function PdfButtons({
   generating,
   onGenerate,
@@ -349,11 +325,9 @@ function readUrlState() {
   return {
     topicId: p.get("topic"),
     role: (p.get("role") as RoleFilter | null) ?? null,
-    sources: parseSourceParam(p.get("source")),
+    packs: parsePackParam(p.get("pack")),
     query: p.get("q") ?? "",
     lang: p.get("lang"),
-    dev: p.get("dev") === "1",
-    version: p.get("ver") ?? "Live",
     imp: parseImpParam(p.get("imp")),
   };
 }
@@ -366,22 +340,19 @@ export default function StudyPage() {
   // query changes after a reload + back navigation.
   const [selectedTopicId, setTopicId] = useState<string | null>(null);
   const [roleParam, setRoleParam] = useState<RoleFilter | null>(null);
-  const [selectedSources, setSourcesState] = useState<string[]>([]);
+  const [selectedPacks, setPacksState] = useState<string[]>([]);
   const [query, setQueryState] = useState("");
   const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
-  const [devMode, setDevMode] = useState(false);
-  const [versionLabel, setVersionLabelState] = useState("Live");
   const [selectedImp, setImpState] = useState<string[]>([]);
   const [generating, setGenerating] = useState<StudyPdfFormat | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
 
-  // The active content bank (Live, or an alternate version picked in dev mode).
-  const activeBank =
-    allBanks.find((b) => b.label === versionLabel)?.bank ?? liveBank;
+  // The active bank is the merged selection of data packs (empty = all).
+  const activeBank = useMemo(() => bankFor(selectedPacks), [selectedPacks]);
 
   // Everything the view lists is derived from the active bank, so switching
-  // versions swaps the whole Study content at once.
-  const { cardsByTopicId, studyTopics, sourceGroups, languages, hasImportance } = useMemo(() => {
+  // packs swaps the whole Study content at once.
+  const { cardsByTopicId, studyTopics, languages, hasImportance } = useMemo(() => {
     const cardsByTopicId = new Map<string, QuestionCard[]>();
     for (const card of activeBank.questions) {
       for (const topicId of card.topicIds) {
@@ -394,18 +365,10 @@ export default function StudyPage() {
     const studyTopics = activeBank.topics.filter(
       (t) => cardsByTopicId.has(t.id) || hasStudyMaterial(t),
     );
-    const groups = new Map<string, { id: string; name: string }[]>();
-    for (const src of activeBank.contentSources) {
-      groups.set(src.group, [
-        ...(groups.get(src.group) ?? []),
-        { id: src.id, name: src.name },
-      ]);
-    }
-    const sourceGroups = [...groups.entries()].sort();
     const languages = availableLanguages(activeBank.topics, activeBank.questions);
     // The importance filter only appears when the content actually rates topics.
     const hasImportance = studyTopics.some((t) => t.importance !== undefined);
-    return { cardsByTopicId, studyTopics, sourceGroups, languages, hasImportance };
+    return { cardsByTopicId, studyTopics, languages, hasImportance };
   }, [activeBank]);
 
   // The reading language is both shareable (URL) and a preference (prefs).
@@ -423,11 +386,9 @@ export default function StudyPage() {
       const s = readUrlState();
       setTopicId(s.topicId);
       setRoleParam(s.role);
-      setSourcesState(s.sources);
+      setPacksState(s.packs);
       setQueryState(s.query);
       if (s.lang) setLangState(s.lang);
-      setDevMode(s.dev);
-      setVersionLabelState(s.version);
       setImpState(s.imp);
     };
     const init = () => {
@@ -435,20 +396,14 @@ export default function StudyPage() {
       const prefs = loadFilterPrefs();
       const patch: Record<string, string | null> = {};
       if (!p.has("role") && prefs.role) patch.role = prefs.role;
-      if (!p.has("source") && prefs.sources?.length)
-        patch.source = prefs.sources.join(",");
+      if (!p.has("pack") && prefs.packs?.length)
+        patch.pack = prefs.packs.join(",");
       if (!p.has("imp") && prefs.imp?.length) patch.imp = prefs.imp.join(",");
       if (!p.has("lang")) {
         const l = prefs.lang ?? localStorage.getItem(LEGACY_LANG_KEY);
         if (l && l !== DEFAULT_LANG) patch.lang = l;
       }
-      if (!p.has("dev") && prefs.dev) patch.dev = "1";
-      if (!p.has("ver") && prefs.ver && prefs.ver !== "Live")
-        patch.ver = prefs.ver;
       if (Object.keys(patch).length > 0) patchUrl(patch);
-      // A dev link someone sent me should stick like my own choice would.
-      if (p.get("dev") === "1") saveFilterPrefs({ dev: true });
-      if (p.has("ver")) saveFilterPrefs({ ver: p.get("ver") ?? "Live" });
       syncUrl();
     };
     init();
@@ -456,17 +411,10 @@ export default function StudyPage() {
     return () => window.removeEventListener("popstate", syncUrl);
   }, []);
 
-  const setVersion = (label: string) => {
-    setVersionLabelState(label);
-    patchUrl({ ver: label === "Live" ? null : label });
-    saveFilterPrefs({ ver: label });
-  };
-
-  const exitDevMode = () => {
-    setDevMode(false);
-    setVersionLabelState("Live");
-    patchUrl({ dev: null, ver: null });
-    saveFilterPrefs({ dev: false, ver: "Live" });
+  const setSelectedPacks = (packs: string[]) => {
+    setPacksState(packs);
+    patchUrl({ pack: packs.length > 0 ? packs.join(",") : null });
+    saveFilterPrefs({ packs });
   };
 
   const setSelectedImp = (levels: string[]) => {
@@ -495,21 +443,16 @@ export default function StudyPage() {
     patchUrl({ role });
     saveFilterPrefs({ role });
   };
-  const setSelectedSources = (sources: string[]) => {
-    setSourcesState(sources);
-    patchUrl({ source: sources.length > 0 ? sources.join(",") : null });
-    saveFilterPrefs({ sources });
-  };
   const setSelectedTopicId = (id: string | null) => {
     setTopicId(id);
     patchUrl({ topic: id }, true);
   };
   const clearFilters = () => {
     setRoleParam("all");
-    setSourcesState([]);
+    setPacksState([]);
     setImpState([]);
-    patchUrl({ role: "all", source: null, imp: null });
-    saveFilterPrefs({ role: "all", sources: [], imp: [] });
+    patchUrl({ role: "all", pack: null, imp: null });
+    saveFilterPrefs({ role: "all", packs: [], imp: [] });
   };
 
   async function generatePdf(format: StudyPdfFormat, scope: StudyPdfScope) {
@@ -537,16 +480,11 @@ export default function StudyPage() {
 
   const matchingCardsOfTopic = (topicId: string) =>
     (cardsByTopicId.get(topicId) ?? []).filter((c) =>
-      cardMatchesFilters(c, selectedRole, selectedSources, activeBank.sourcesByCardId),
+      cardMatchesFilters(c, selectedRole),
     );
 
   const roleLabel = selectedRole === "all" ? null : ROLE_LABELS[selectedRole];
-  const sourceLabel =
-    selectedSources.length === 0
-      ? null
-      : selectedSources.length === 1
-        ? activeBank.contentSources.find((s) => s.id === selectedSources[0])?.name
-        : `${selectedSources.length} sources`;
+  const packLabel = selectedPacks.length === 0 ? null : packSummary(selectedPacks);
   const importanceLabel =
     selectedImp.length === 0
       ? null
@@ -554,15 +492,15 @@ export default function StudyPage() {
         ? importanceSummary(selectedImp)
         : `Importance ${[...selectedImp].sort().reverse().join(",")}`;
   const scopeName =
-    [roleLabel, sourceLabel, importanceLabel].filter(Boolean).join(" · ") || null;
+    [packLabel, roleLabel, importanceLabel].filter(Boolean).join(" · ") || null;
   const scopeSlug =
     [
-      selectedRole === "all" ? null : selectedRole,
-      selectedSources.length === 0
+      selectedPacks.length === 0
         ? null
-        : selectedSources.length === 1
-          ? selectedSources[0].replace(/[^a-zA-Z0-9_-]+/g, "-")
-          : `${selectedSources.length}src`,
+        : selectedPacks.length === 1
+          ? selectedPacks[0].replace(/[^a-zA-Z0-9_-]+/g, "-")
+          : `${selectedPacks.length}packs`,
+      selectedRole === "all" ? null : selectedRole,
       selectedImp.length === 0
         ? null
         : `imp${[...selectedImp].sort().reverse().join("")}`,
@@ -746,14 +684,14 @@ export default function StudyPage() {
           own select. */}
       <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-secondary">Source</span>
+          <span className="text-sm font-medium text-secondary">Pack</span>
           <CheckboxDropdown
-            ariaLabel="Source filter"
-            allLabel="All sources"
-            summary={sourceSummary(selectedSources, sourceGroups)}
-            groups={sourceGroups}
-            selected={selectedSources}
-            onChange={setSelectedSources}
+            ariaLabel="Pack filter"
+            allLabel="All packs"
+            summary={packSummary(selectedPacks)}
+            groups={packGroups()}
+            selected={selectedPacks}
+            onChange={setSelectedPacks}
           />
         </div>
 
@@ -781,14 +719,6 @@ export default function StudyPage() {
         />
       </div>
 
-      {devMode && (
-        <DevVersionSwitcher
-          versionLabel={versionLabel}
-          onSelect={setVersion}
-          onExit={exitDevMode}
-        />
-      )}
-
       <input
         type="search"
         value={query}
@@ -802,7 +732,7 @@ export default function StudyPage() {
         <div className="flex flex-col items-center gap-3 py-10 text-center">
           <p className="text-sm text-secondary">
             {studyTopics.length === 0
-              ? "This content bank is empty — switch to a content version in dev mode (?dev=1)."
+              ? "The selected data packs are empty — pick another pack."
               : searching
                 ? `Nothing matches "${query}".`
                 : "No topics match these filters."}

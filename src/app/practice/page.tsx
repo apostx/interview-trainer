@@ -14,20 +14,17 @@ import {
 } from "@/components/ui";
 import {
   CheckboxDropdown,
-  DevVersionSwitcher,
   IMPORTANCE_LEVELS,
   importanceSummary,
+  packGroups,
+  packSummary,
 } from "@/components/filters";
-import { allBanks, liveBank } from "@/core/content/bank";
-import {
-  groupSources,
-  topicIdsMatch,
-  topicMetaMaps,
-} from "@/core/content/topicFilters";
+import { bankFor } from "@/core/content/bank";
+import { topicIdsMatch, topicMetaMaps } from "@/core/content/topicFilters";
 import {
   loadFilterPrefs,
   parseImpParam,
-  parseSourceParam,
+  parsePackParam,
   patchUrl,
   saveFilterPrefs,
   type RoleFilter,
@@ -68,29 +65,20 @@ export default function PracticePage() {
   // The same filters as Study, shared through the persisted prefs and
   // mirrored in the URL — practice what you scoped your studying to.
   const [roleFilter, setRoleState] = useState<RoleFilter>("all");
-  const [selectedSources, setSourcesState] = useState<string[]>([]);
+  const [selectedPacks, setPacksState] = useState<string[]>([]);
   const [selectedImp, setImpState] = useState<string[]>([]);
-  const [devMode, setDevMode] = useState(false);
-  const [versionLabel, setVersionLabelState] = useState("Live");
 
-  // Practice items only carry topic ids; role/source/importance are resolved
-  // through the active bank's topics (alternate version in dev mode).
-  const activeBank =
-    allBanks.find((b) => b.label === versionLabel)?.bank ?? liveBank;
+  // Practice items only carry topic ids; role/importance resolve through the
+  // selected packs' topics (empty selection = every pack).
+  const activeBank = useMemo(() => bankFor(selectedPacks), [selectedPacks]);
   const meta = useMemo(() => topicMetaMaps(activeBank), [activeBank]);
-  const sourceGroups = useMemo(
-    () => groupSources(activeBank.contentSources),
-    [activeBank],
-  );
 
   useEffect(() => {
     const syncUrl = () => {
       const p = new URLSearchParams(window.location.search);
       setRoleState((p.get("role") as RoleFilter | null) ?? "all");
-      setSourcesState(parseSourceParam(p.get("source")));
+      setPacksState(parsePackParam(p.get("pack")));
       setImpState(parseImpParam(p.get("imp")));
-      setDevMode(p.get("dev") === "1");
-      setVersionLabelState(p.get("ver") ?? "Live");
     };
     const init = () => {
       const p = new URLSearchParams(window.location.search);
@@ -98,15 +86,10 @@ export default function PracticePage() {
       const patch: Record<string, string | null> = {};
       if (!p.has("role") && prefs.role && prefs.role !== "all")
         patch.role = prefs.role;
-      if (!p.has("source") && prefs.sources?.length)
-        patch.source = prefs.sources.join(",");
+      if (!p.has("pack") && prefs.packs?.length)
+        patch.pack = prefs.packs.join(",");
       if (!p.has("imp") && prefs.imp?.length) patch.imp = prefs.imp.join(",");
-      if (!p.has("dev") && prefs.dev) patch.dev = "1";
-      if (!p.has("ver") && prefs.ver && prefs.ver !== "Live")
-        patch.ver = prefs.ver;
       if (Object.keys(patch).length > 0) patchUrl(patch);
-      if (p.get("dev") === "1") saveFilterPrefs({ dev: true });
-      if (p.has("ver")) saveFilterPrefs({ ver: p.get("ver") ?? "Live" });
       syncUrl();
     };
     init();
@@ -119,33 +102,22 @@ export default function PracticePage() {
     patchUrl({ role: role === "all" ? null : role });
     saveFilterPrefs({ role });
   };
-  const setSelectedSources = (sources: string[]) => {
-    setSourcesState(sources);
-    patchUrl({ source: sources.length > 0 ? sources.join(",") : null });
-    saveFilterPrefs({ sources });
+  const setSelectedPacks = (packs: string[]) => {
+    setPacksState(packs);
+    patchUrl({ pack: packs.length > 0 ? packs.join(",") : null });
+    saveFilterPrefs({ packs });
   };
   const setSelectedImp = (levels: string[]) => {
     setImpState(levels);
     patchUrl({ imp: levels.length > 0 ? levels.join(",") : null });
     saveFilterPrefs({ imp: levels });
   };
-  const setVersion = (label: string) => {
-    setVersionLabelState(label);
-    patchUrl({ ver: label === "Live" ? null : label });
-    saveFilterPrefs({ ver: label });
-  };
-  const exitDevMode = () => {
-    setDevMode(false);
-    setVersionLabelState("Live");
-    patchUrl({ dev: null, ver: null });
-    saveFilterPrefs({ dev: false, ver: "Live" });
-  };
   const clearFilters = () => {
     setRoleState("all");
-    setSourcesState([]);
+    setPacksState([]);
     setImpState([]);
-    patchUrl({ role: null, source: null, imp: null });
-    saveFilterPrefs({ role: "all", sources: [], imp: [] });
+    patchUrl({ role: null, pack: null, imp: null });
+    saveFilterPrefs({ role: "all", packs: [], imp: [] });
   };
 
   const reload = useCallback(async () => {
@@ -175,12 +147,12 @@ export default function PracticePage() {
   }
 
   const queue = due.filter((item) =>
-    topicIdsMatch(item.topicIds, meta, roleFilter, selectedSources, selectedImp),
+    topicIdsMatch(item.topicIds, meta, roleFilter, selectedImp),
   );
   const current = queue[0];
   const filteredOut = due.length - queue.length;
   const filtersActive =
-    roleFilter !== "all" || selectedSources.length > 0 || selectedImp.length > 0;
+    roleFilter !== "all" || selectedPacks.length > 0 || selectedImp.length > 0;
 
   async function submitAnswer(text: string) {
     if (!current) return;
@@ -253,22 +225,14 @@ export default function PracticePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-secondary">Source</span>
+            <span className="text-sm font-medium text-secondary">Pack</span>
             <CheckboxDropdown
-              ariaLabel="Source filter"
-              allLabel="All sources"
-              summary={
-                selectedSources.length === 0
-                  ? "All sources"
-                  : selectedSources.length === 1
-                    ? (activeBank.contentSources.find(
-                        (s) => s.id === selectedSources[0],
-                      )?.name ?? "1 source")
-                    : `${selectedSources.length} sources`
-              }
-              groups={sourceGroups}
-              selected={selectedSources}
-              onChange={setSelectedSources}
+              ariaLabel="Pack filter"
+              allLabel="All packs"
+              summary={packSummary(selectedPacks)}
+              groups={packGroups()}
+              selected={selectedPacks}
+              onChange={setSelectedPacks}
             />
           </div>
 
@@ -295,14 +259,6 @@ export default function PracticePage() {
             </span>
           )}
         </div>
-      )}
-
-      {devMode && (
-        <DevVersionSwitcher
-          versionLabel={versionLabel}
-          onSelect={setVersion}
-          onExit={exitDevMode}
-        />
       )}
 
       {queue.length === 0 ? (

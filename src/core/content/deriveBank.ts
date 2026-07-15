@@ -2,7 +2,7 @@ import type { QuestionCard, Topic } from "@/core/models";
 import { seedTopics } from "@/core/seed/topics";
 import type { ContentPack } from "./schema";
 import { toQuestionCard, toTopic } from "./schema";
-import type { LoadedPack } from "./packs";
+import type { LoadedPack } from "./bank";
 
 /**
  * Derives a complete, self-contained content bank from a set of parsed packs.

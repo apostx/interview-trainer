@@ -1,52 +1,57 @@
 import type { QuestionCard, Topic } from "@/core/models";
 import { contentPackSchema, formatZodError, looksLikePack } from "./schema";
 import type { ContentPack } from "./schema";
-import {
-  defaultLoadedPacks,
-  defaultPackErrors,
-  defaultPacks,
-  type LoadedPack,
-} from "./packs";
 import { type Bank, type ContentSource, deriveBank } from "./deriveBank";
 
 /**
- * The live content bank (from `content/packs/`) plus any alternate versions
- * under `content/versions/<label>/` used by the Study dev-mode switcher.
+ * Data packs: every first-level folder under `content/packs/` is an
+ * INDEPENDENT bank (a pack may span several JSON files; ids only need to be
+ * unique within the pack — different packs may reuse ids freely). A root
+ * level `.json` file is treated as a single-file pack named after the file.
+ *
+ * The app works from the user's pack selection (`bankFor`); the union of
+ * every pack backs the DB topic seeding, session card resolution, and the
+ * default PDF scope. Cross-pack id overlaps are intentionally not handled:
+ * in the union the first pack wins, selections merge naively.
  */
 
 export type { Bank, ContentSource };
 
-/** The live bank as a single object (used by the dev-mode version list). */
-export const liveBank: Bank = deriveBank(defaultPacks, defaultLoadedPacks);
+export type LoadedPack = {
+  id: string;
+  name: string;
+  fileName: string;
+  topicCount: number;
+  questionCount: number;
+};
 
-export const allTopics: Topic[] = liveBank.topics;
-export const allQuestions: QuestionCard[] = liveBank.questions;
-export const sourcesByCardId = liveBank.sourcesByCardId;
-export const contentSources = liveBank.contentSources;
-export const getCard = (id: string): QuestionCard | undefined =>
-  liveBank.getCard(id);
-export const loadedPacks = defaultLoadedPacks;
-export const packErrors = [...defaultPackErrors, ...liveBank.errors];
+export type DataPack = {
+  label: string;
+  bank: Bank;
+  loadedPacks: LoadedPack[];
+};
 
-/** A selectable content bank in the dev-mode comparison switcher. */
-export type ContentVersion = { label: string; bank: Bank };
+type Group = {
+  packs: ContentPack[];
+  loaded: LoadedPack[];
+  seen: Set<string>;
+  errors: string[];
+};
 
-function loadVersions(): ContentVersion[] {
+function loadGroups(): Map<string, Group> {
   let context: RequireContext;
   try {
-    // Recursive: keys look like "./<label>/<pack>.json".
-    context = require.context("../../../content/versions", true, /\.json$/);
+    context = require.context("../../../content/packs", true, /\.json$/);
   } catch {
-    return [];
+    return new Map();
   }
-  const groups = new Map<
-    string,
-    { packs: ContentPack[]; loaded: LoadedPack[]; seen: Set<string>; errors: string[] }
-  >();
+  const groups = new Map<string, Group>();
   for (const key of context.keys().sort()) {
-    const m = key.match(/^\.\/([^/]+)\/(.+\.json)$/);
+    // "./label/file.json" → folder pack; "./file.json" → single-file pack.
+    const m = key.match(/^\.\/(?:([^/]+)\/)?([^/]+\.json)$/);
     if (!m) continue;
-    const [, label, fileName] = m;
+    const label = m[1] ?? m[2].replace(/\.json$/, "");
+    const fileName = m[1] ? `${m[1]}/${m[2]}` : m[2];
     const g =
       groups.get(label) ??
       { packs: [], loaded: [], seen: new Set<string>(), errors: [] };
@@ -80,19 +85,56 @@ function loadVersions(): ContentVersion[] {
       questionCount: pack.questions.length,
     });
   }
-  return [...groups.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([label, g]) => {
-      const bank = deriveBank(g.packs, g.loaded);
-      return { label, bank: { ...bank, errors: [...g.errors, ...bank.errors] } };
-    });
+  return groups;
 }
 
-/** Alternate content banks for the dev-mode switcher (empty in normal use). */
-export const contentVersions: ContentVersion[] = loadVersions();
+const groups = loadGroups();
 
-/** All selectable banks: Live first, then the alternate versions. */
-export const allBanks: ContentVersion[] = [
-  { label: "Live", bank: liveBank },
-  ...contentVersions,
-];
+/** Every data pack, each derived as its own self-contained bank. */
+export const dataPacks: DataPack[] = [...groups.entries()]
+  .sort((a, b) => a[0].localeCompare(b[0]))
+  .map(([label, g]) => {
+    const derived = deriveBank(g.packs, g.loaded);
+    return {
+      label,
+      bank: { ...derived, errors: [...g.errors, ...derived.errors] },
+      loadedPacks: g.loaded,
+    };
+  });
+
+/** Loader problems per pack, shown on the Topics page. */
+export const packErrors: string[] = dataPacks.flatMap((p) =>
+  p.bank.errors.map((e) => `${p.label}: ${e}`),
+);
+
+export const loadedPacks: LoadedPack[] = dataPacks.flatMap((p) => p.loadedPacks);
+
+// The union of every pack: DB seeding, session card lookup, PDF defaults.
+// Cross-pack duplicate ids are silently first-wins here (by design).
+const unionBank: Bank = deriveBank(
+  [...groups.values()].flatMap((g) => g.packs),
+  loadedPacks,
+);
+
+export const allTopics: Topic[] = unionBank.topics;
+export const allQuestions: QuestionCard[] = unionBank.questions;
+export const getCard = (id: string): QuestionCard | undefined =>
+  unionBank.getCard(id);
+
+const bankCache = new Map<string, Bank>();
+
+/** Bank for the current pack selection; empty selection = every pack. */
+export function bankFor(labels: string[]): Bank {
+  const selected = dataPacks.filter((p) => labels.includes(p.label));
+  if (selected.length === 0) return unionBank;
+  const key = selected.map((p) => p.label).join("|");
+  let bank = bankCache.get(key);
+  if (!bank) {
+    bank = deriveBank(
+      selected.flatMap((p) => groups.get(p.label)?.packs ?? []),
+      selected.flatMap((p) => p.loadedPacks),
+    );
+    bankCache.set(key, bank);
+  }
+  return bank;
+}

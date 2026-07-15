@@ -11,12 +11,11 @@ export type RoleFilter = InterviewRole | "all";
  */
 export type FilterPrefs = {
   role?: RoleFilter;
-  sources?: string[];
+  /** Selected data packs (folder labels); empty/absent = every pack. */
+  packs?: string[];
   /** Selected importance levels: "1".."5", plus "u" for unrated topics. */
   imp?: string[];
   lang?: LangCode;
-  dev?: boolean;
-  ver?: string;
 };
 
 const KEY = "filter-prefs";
@@ -57,7 +56,7 @@ export function parseImpParam(value: string | null): string[] {
     .filter((s) => ["1", "2", "3", "4", "5", "u"].includes(s));
 }
 
-/** Comma list of source ids; empty/absent (or the legacy "all") = all. */
-export function parseSourceParam(value: string | null): string[] {
+/** Comma list of pack labels; empty/absent (or the legacy "all") = all. */
+export function parsePackParam(value: string | null): string[] {
   return (value ?? "").split(",").filter((s) => s && s !== "all");
 }

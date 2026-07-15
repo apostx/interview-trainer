@@ -3,49 +3,56 @@
 The app's content lives in two places:
 
 1. **Built-in seed content** in `src/core/seed/` (compiled in).
-2. **Content packs**: plain JSON files in **`content/packs/`**. Every
-   `*.json` file dropped into that folder is picked up automatically at
-   build/dev time — no registration, no database import. In dev mode the
-   running app hot-reloads when you add or edit a file.
+2. **Data packs**: folders under **`content/packs/`**, each holding one or
+   more JSON files. Every pack folder is picked up automatically at build/dev
+   time — no registration, no database import. In dev mode the running app
+   hot-reloads when you add or edit a file.
 
 Invalid packs never break the app: they are skipped and the exact validation
 errors are shown on the **Topics** page (and in `npm run content:check`).
 
 ## Workflow
 
-1. Write or AI-generate a pack JSON (prompt template below).
-2. Save it as `content/packs/<your-pack>.json`.
+1. Write or AI-generate the pack JSON file(s) (prompt template below).
+2. Save them under `content/packs/<pack-name>/` (one folder per pack; a pack
+   may span several JSON files).
 3. Validate: `npm run content:check` — fix anything it reports.
-4. Reload the app. The Topics page lists the pack; its topics appear in the
-   library and its questions join the session generator's pool.
-5. To compare candidate rebuilds against the live content before promoting,
-   drop each under `content/versions/<label>/` and open Study with `?dev=1`
-   (see "Comparing content versions" below). This works in dev, and on the
-   deployed site once the versions are shipped — no separate staging deploy.
-6. Publish to the live site: **`npm run release:content`** — it re-runs the
+4. Reload the app. The Topics page lists the pack; select it in the
+   Study/Practice/Setup "Pack" dropdown to study or practice exactly that
+   pack (nothing selected = all packs).
+5. Publish to the live site: **`npm run release:content`** — it re-runs the
    gates, commits everything changed, bumps the minor version and pushes;
    the `v*` tag triggers the Pages deploy (~2 minutes to live). Custom commit
    message: `npm run release:content -- "feat: kubernetes pack"`.
-7. Unhappy with what went out? **`npm run release:revert`** rolls the DATA
+6. Unhappy with what went out? **`npm run release:revert`** rolls the DATA
    back to the previous release (or `-- v0.24.0` for a specific one) and
    ships it as a new patch version — app code stays current, the version
    keeps increasing, only `content/packs/` reverts. Preview with
    `-- v0.24.0 --dry-run`.
 
-Packs need no registration anywhere: every `*.json` in `content/packs/` is
-discovered automatically at build time. Note the flip side: the LIVE site
+Packs need no registration anywhere: every pack folder in `content/packs/`
+is discovered automatically at build time. Note the flip side: the LIVE site
 only picks up content after a release — dev mode hot-reloads instantly.
 
 ## Pack structure
 
+**A data pack is a first-level FOLDER under `content/packs/`** (e.g.
+`content/packs/luxair/`) and may contain several JSON files — all of them
+together form one independent bank. Packs are fully independent of each
+other: ids only need to be unique WITHIN a pack, different packs may reuse
+ids freely, and a pack's questions may only reference topics defined in the
+same pack (or bare seed-taxonomy ids). The app's Study/Practice/interview
+flows work from the packs selected in the UI (one or several; nothing
+selected = all packs); overlaps between packs are deliberately not managed.
+
+The legacy `sources` field (dataresource file tracking) is no longer used by
+the app — it may stay in old files but should be omitted in new ones.
+
 ```jsonc
 {
-  "id": "my_pack",                  // snake_case, unique across packs
+  "id": "my_pack",                  // snake_case, unique within the pack folder
   "name": "Human readable name",
   "description": "optional",
-  "sources": ["tibi/lufthansa"],    // origin files in dataresource/ (no extension);
-                                    // drives the Study source filter. A question can
-                                    // override with its own "sources" array.
   "topics": [ /* new topics this pack introduces (optional) */ ],
   "questions": [ /* question cards (optional) */ ]
 }
@@ -55,7 +62,7 @@ only picks up content after a release — dev mode hot-reloads instantly.
 
 ```jsonc
 {
-  "id": "event_sourcing",           // snake_case, unique across app + packs
+  "id": "event_sourcing",           // snake_case, unique within this pack
   "name": "Event Sourcing",
   "description": "Storing state as an append-only sequence of events.",
   "category": "architecture",       // one of: frontend | backend | fullstack |
@@ -397,8 +404,7 @@ Rules the AI must follow when **modifying** existing content:
   PDF exports ignore the legacy string.
 - Prefer linking to an existing topic (`relatedTopicIds`, or reusing its id
   in `topicIds`) over creating a near-duplicate topic.
-- Keep `sources` accurate: list the `dataresource/` files (path without
-  extension) the content is based on.
+- Do not add the legacy `sources` field to new content.
 
 To **translate** a pack into another language (for the Study language
 selector), use the ready-made prompt in
@@ -406,43 +412,24 @@ selector), use the ready-made prompt in
 below — translations are additive `i18n` blocks, so they never touch ids or
 the English text.
 
-## Comparing content versions (dev mode)
+## Selecting and comparing data packs
 
-To judge which rebuild reads best, you can hold several full content banks in
-the app at once and switch between them while reading — without deploying each
-separately.
-
-- The **live** bank is `content/packs/` (what ships).
-- Each **alternate version** is a subfolder of `content/versions/<label>/`
-  holding a full set of pack JSONs. `<label>` is what shows in the switcher
-  (e.g. `content/versions/gpt-rewrite/`, `content/versions/claude-rewrite/`).
-- Open Study with **`?dev=1`** to reveal a "Dev · content version" dropdown
-  listing `Live` plus every version folder. Selecting one swaps the entire
-  Study bank (topics, questions, notes, translations, PDF export). The choice
-  is URL-addressable (`?ver=<label>`), so you can link a specific version.
-- Without `?dev=1` the dropdown is hidden and only the live bank is used, so
-  normal visitors never see the versions — but the folders ARE bundled into
-  the build, including production. That is deliberate: release candidates to
-  the live site and compare them against Live at
-  `https://interviewtrainer.sallai.cc/study/?dev=1`, no staging deploy needed.
-  Once you have picked a winner, delete the version folders and release again
-  to drop them from the bundle.
-- `npm run content:check` validates every version folder as its own bank
-  (schema, structured studyContent limits, or the legacy studyNotes structure
-  where used), exactly like the live one. Version banks are
-  independent, so ids may repeat across versions (but must be unique within
-  one).
+- Every data pack is selectable in the **Pack** dropdown on the Study,
+  Practice and Setup pages (multi-select; the selection is shared between
+  pages, mirrored in the URL as `?pack=a,b` and persisted).
+- Nothing selected = every pack. The interview/practice session draws its
+  questions from the selected packs only.
+- To compare candidate rebuilds of the same pack, drop them in as separate
+  pack folders (e.g. `luxair-v2/`) and switch between them in the dropdown;
+  delete the loser afterwards.
 - Non-pack JSON files (an AI's audit summary, a manifest — anything without a
   top-level `id`) are ignored by both the loader and the gate, so you can drop
-  an AI's whole output folder in as-is.
+  them next to the pack files without breaking anything.
 
-Typical flow: have each AI rebuild the bank, drop the results into
-`content/versions/<ai-name>/`, run `content:check`, then compare them in Study
-under `?dev=1` and copy the winner into `content/packs/`.
 
 ## AI prompt template
 
-Paste this into the AI chat (together with the `content:ids` output), fill
+Paste this into the AI chat (together with the relevant pack's `content:ids` section, when extending an existing pack), fill
 in the placeholders, and save the output as `content/packs/<name>.json`.
 **Batch small:** give the AI at most ~6 topics per request and merge the
 results yourself — long topic lists make models ration their writing effort
@@ -458,7 +445,6 @@ The JSON must follow this exact structure (all ids snake_case):
   "id": "<pack id>",
   "name": "<pack name>",
   "description": "<one sentence>",
-  "sources": ["<dataresource file the content comes from, e.g. tibi/login>"],
   "topics": [
     { "id": "...", "name": "...", "description": "...",
       "category": "<frontend|backend|fullstack|architecture|cloud|security|database|devops|observability|soft_technical|core>",
@@ -537,14 +523,15 @@ Content rules:
   scenario_discussion / troubleshooting for practical situations,
   system_design for design tasks.
 - Write everything in English.
-- Do NOT reuse or change any id from the inventory's PACK sections; new ids
-  must not collide with those. NEVER skip or thin a topic because a similar
-  concept appears somewhere in the inventory — every pack must be a complete,
-  self-contained bank for its own scope. The "seed topic ids" list is bare
-  taxonomy with NO educational content: you may reference those ids in
-  relatedTopicIds, and you may even define a topic with the same id to give
-  it full content (your definition wins), but their existence is never a
-  reason to leave a concept out.
+- The pack you generate is INDEPENDENT: ids only need to be unique within
+  this pack, and every question must reference topics defined in THIS pack
+  (or bare seed-taxonomy ids). If I pasted an existing pack's inventory to
+  extend, do not reuse or change its ids for NEW entries. NEVER skip or thin
+  a topic because another pack covers a similar concept — every pack must be
+  a complete, self-contained bank for its own scope. The "seed topic ids"
+  list is bare taxonomy with NO educational content: you may reference those
+  ids in relatedTopicIds, or define a topic with the same id to give it full
+  content, but their existence is never a reason to leave a concept out.
 - Rate every topic's "importance" (1-5) by how often it comes up in real
   interviews for the target roles: 5 = a first-round staple asked almost
   always, 4 = expected from the role, 3 = commonly asked, 2 = occasional,
@@ -565,7 +552,6 @@ Generate a pack now for these topics, with 3 questions per topic:
 
 TOPICS: <<< YOUR TOPIC LIST HERE, e.g. "Kubernetes basics, Service Mesh, OAuth2 flows" >>>
 TARGET ROLES: <<< e.g. "backend_developer and backend_architect" >>>
-SOURCES: <<< dataresource file(s) this is based on, e.g. "tibi/system_design" — or omit if none >>>
 ````
 
 After saving, always run `npm run content:check` — if the AI hallucinated a
