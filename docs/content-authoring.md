@@ -376,17 +376,17 @@ The intended workflow for growing or fixing content with *any* AI system
      <https://raw.githubusercontent.com/apostx/interview-trainer/main/docs/content-authoring.md>
    - the id inventory (auto-regenerated on every `release:content`):
      <https://raw.githubusercontent.com/apostx/interview-trainer/main/docs/content-inventory.md>
-   - if *modifying* a pack, its JSON:
-     `https://raw.githubusercontent.com/apostx/interview-trainer/main/content/packs/<name>.json`
+   - if *modifying* a pack, its JSON file(s):
+     `https://raw.githubusercontent.com/apostx/interview-trainer/main/content/packs/<pack-folder>/<file>.json`
 
    If the AI cannot fetch URLs, paste the same three things instead
    (`npm run content:ids` prints the inventory). Then add your instruction —
    what to add/change, in any language; the OUTPUT must be English.
 2. **The AI answers with JSON** — either a brand-new pack or the complete
    updated pack file.
-3. **You copy it back** into `content/packs/<name>.json` (overwrite the old
-   file when modifying — the AI must always return the *whole* file, never
-   a fragment).
+3. **You copy it back** into `content/packs/<pack-folder>/` (overwrite the
+   old file when modifying — the AI must always return the *whole* file,
+   never a fragment).
 4. **Validate: `npm run content:check`.** It enforces the schema, id
    uniqueness, reference integrity, and the structured studyContent limits
    (plus the legacy studyNotes structure where that format is still used),
@@ -402,8 +402,10 @@ Rules the AI must follow when **modifying** existing content:
   `studyNotes` only for backward compatibility (never write new ones).
 - When a topic has both, `studyContent` is authoritative — the app and the
   PDF exports ignore the legacy string.
-- Prefer linking to an existing topic (`relatedTopicIds`, or reusing its id
-  in `topicIds`) over creating a near-duplicate topic.
+- Within the SAME pack, prefer linking to an existing topic
+  (`relatedTopicIds`, or reusing its id in `topicIds`) over creating a
+  near-duplicate. Other packs are irrelevant: never reference their topics
+  and never thin this pack because they cover something similar.
 - Do not add the legacy `sources` field to new content.
 
 To **translate** a pack into another language (for the Study language
@@ -429,8 +431,9 @@ the English text.
 
 ## AI prompt template
 
-Paste this into the AI chat (together with the relevant pack's `content:ids` section, when extending an existing pack), fill
-in the placeholders, and save the output as `content/packs/<name>.json`.
+Paste this into the AI chat (together with the relevant pack's `content:ids`
+section, when extending an existing pack), fill in the placeholders, and save
+the output under `content/packs/<pack-folder>/`.
 **Batch small:** give the AI at most ~6 topics per request and merge the
 results yourself — long topic lists make models ration their writing effort
 per topic, which is exactly what produces flat, hard-to-read content:
