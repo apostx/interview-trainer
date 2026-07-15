@@ -45,9 +45,6 @@ same pack (or bare seed-taxonomy ids). The app's Study/Practice/interview
 flows work from the packs selected in the UI (one or several; nothing
 selected = all packs); overlaps between packs are deliberately not managed.
 
-The legacy `sources` field (dataresource file tracking) is no longer used by
-the app — it may stay in old files but should be omitted in new ones.
-
 ```jsonc
 {
   "id": "my_pack",                  // snake_case, unique within the pack folder
@@ -69,7 +66,7 @@ the app — it may stay in old files but should be omitted in new ones.
                                     // architecture | cloud | security | database |
                                     // devops | observability | soft_technical | core
   "relatedTopicIds": ["event_driven"], // optional
-  "studyContent": {                    // PREFERRED: structured study material
+  "studyContent": {                    // REQUIRED: the structured study material
     "mentalModel": "1-2 plain sentences with the central idea (max 300 chars).",
     "problem": "What goes wrong without the concept (max 600 chars).",
     "example": "One concrete, easy-to-follow example (max 700 chars).",
@@ -77,8 +74,6 @@ the app — it may stay in old files but should be omitted in new ones.
     "commonMistakes": ["2-4 misunderstandings.", "Each max 220 chars."],
     "keyTerms": [{ "term": "max 60 chars", "definition": "max 220 chars" }]
   },
-  // "studyNotes": "LEGACY free-form prose — superseded by studyContent; do
-  //                not author new content this way (see below)",
   "importance": 4,                      // optional, 1–5: how essential for interviews
                                         // (5 = asked in almost every relevant interview,
                                         //  3 = commonly comes up, 1 = niche/rare).
@@ -105,7 +100,7 @@ like reference metadata instead of teaching. Rules:
   every string a learner sees must survive being read out of context.
 - Write the studyContent fields and descriptions as clear teaching prose
   before wrapping them in JSON. Do not let the JSON format shorten your
-  sentences. (Never author new studyNotes — that format is legacy.)
+  sentences.
 - Generate in small batches (a handful of topics per request) so each topic
   gets real writing effort instead of a token-budget ration.
 
@@ -128,8 +123,8 @@ like — anything you omit shows the English original. English is the base and
 is never a key. When at least one translation exists, a language selector
 appears in the Study view (and the exported PDF follows the choice).
 
-- **Topic** `i18n[lang]`: `name`, `description`, `studyContent`, and (legacy)
-  `studyNotes` — all optional. Inside a translated `studyContent`, scalar
+- **Topic** `i18n[lang]`: `name`, `description`, `studyContent` — all
+  optional. Inside a translated `studyContent`, scalar
   fields fall back to English per field; a provided ARRAY replaces the
   complete English array (arrays are never merged by index — translate a
   list fully or leave it out entirely). Section headings are localized by
@@ -191,7 +186,7 @@ limits, enforced by `npm run content:check`:
 | ---------------- | -------------------- | -------------------------------------------------- |
 | `mentalModel`    | string               | required; ONE paragraph; ≤300 chars                |
 | `problem`        | string               | required; ≤600 chars                               |
-| `example`        | string               | ≤700 chars (see the required/optional note below)  |
+| `example`        | string               | required; ≤700 chars                               |
 | `howItWorks`     | string[]             | 2–5 steps, each ≤220 chars                         |
 | `commonMistakes` | string[]             | 2–4 items, each ≤220 chars                         |
 | `keyTerms`       | {term, definition}[] | 1–5 items; term ≤60, definition ≤220               |
@@ -204,9 +199,8 @@ hard-validated by the schema. Two rules are softer on purpose:
 - The whole English `studyContent` should stay around **100–260 words**;
   above 260 `content:check` prints a warning, not an error — treat it as a
   sign the page stopped being a first explanation.
-- `example` is **mandatory for newly authored content** (the prompt template
-  enforces it, and `content:check` warns when it is missing) but stays
-  schema-optional so mechanically migrated legacy content remains valid.
+- `example` is **mandatory**: always include it (`content:check` warns when
+  it is missing).
 
 Writing rules:
 
@@ -273,27 +267,6 @@ credits, consumer lag, bounded concurrency, backoff, jitter, intake control,
 flow-control protocols. Terms like these enter only when a topic genuinely
 requires them or a deeper related topic covers them.
 
-### Legacy `studyNotes` (transitional — do not author new content this way)
-
-Old packs store the same material as one free-form string with `## `
-headings ("## What is it?", "## What problem does it solve?", "## How it
-works", "## Common mistakes", "## Key terms" — blank lines required around
-every heading). It still renders, validates, and exports (the flashcard PDF
-extracts the first paragraphs of the known sections), but it is superseded:
-**when a topic has both, the app uses `studyContent`** and ignores the
-string.
-
-`npm run content:migrate-study` mechanically moves well-structured legacy
-notes into `studyContent` (add `-- --dry-run` to preview): it never rewrites
-or discards prose, keeps `studyNotes` in place, migrates every translation
-together with the base (or fails the whole topic so a translated reader
-never silently falls back to English), and reports each topic that does not
-fit the structured limits so it can be rewritten or regenerated. Migrated
-content is NOT automatically pedagogically good — plan a rewrite pass.
-
-Questions may also reference **existing seed topic ids** (see
-`src/core/seed/topics.ts`), e.g. `api_design`, `caching`, `message_queue`,
-`idempotency`, `observability`, `scalability`, `microservices`, …
 
 ### Question card
 
@@ -388,8 +361,7 @@ The intended workflow for growing or fixing content with *any* AI system
    old file when modifying — the AI must always return the *whole* file,
    never a fragment).
 4. **Validate: `npm run content:check`.** It enforces the schema, id
-   uniqueness, reference integrity, and the structured studyContent limits
-   (plus the legacy studyNotes structure where that format is still used),
+   uniqueness, reference integrity, and the structured studyContent limits,
    and names the exact file/path/expectation for anything wrong. Nothing invalid can
    reach the app — a broken pack is skipped and reported, never crashes.
 5. Reload the app (or `npm run dev`) and review the result in the Study tab.
@@ -398,15 +370,11 @@ Rules the AI must follow when **modifying** existing content:
 
 - Never change existing `id` values — user progress (practice history,
   spaced repetition) is keyed to question/topic ids.
-- Author or regenerate educational content as `studyContent`; keep legacy
-  `studyNotes` only for backward compatibility (never write new ones).
-- When a topic has both, `studyContent` is authoritative — the app and the
-  PDF exports ignore the legacy string.
+- All educational content lives in `studyContent`.
 - Within the SAME pack, prefer linking to an existing topic
   (`relatedTopicIds`, or reusing its id in `topicIds`) over creating a
   near-duplicate. Other packs are irrelevant: never reference their topics
   and never thin this pack because they cover something similar.
-- Do not add the legacy `sources` field to new content.
 
 To **translate** a pack into another language (for the Study language
 selector), use the ready-made prompt in
@@ -585,9 +553,6 @@ Rules:
   replaces the whole English array. Do NOT put section headings into the
   fields (the app renders localized headings). English technical terms stay
   in English where developers use them untranslated.
-  Legacy packs that still use "studyNotes" strings: translate those fully,
-  keeping the exact "## " section structure and blank lines (only the
-  heading text is translated, e.g. "## What is it?" -> "## Mi ez?").
 - For each QUESTION, add an "i18n" object keyed by the language code with any
   of: "title", "prompt", "answerStructureHint",
   "expectedPoints" (an object keyed by each rubric item's id ->
