@@ -3,7 +3,43 @@
 import { useEffect, useRef } from "react";
 import { dataPacks } from "@/core/content/bank";
 import { hasStudyMaterial } from "@/core/content/notes";
+import { languageLabel } from "@/core/content/i18n";
+import type { LangCode } from "@/core/models";
 import { selectCompact } from "@/components/ui";
+
+/** Study reading-language dropdown; renders nothing unless translations exist. */
+export function LanguagePicker({
+  lang,
+  languages,
+  onChange,
+  className,
+}: {
+  lang: LangCode;
+  languages: LangCode[];
+  onChange: (lang: LangCode) => void;
+  className?: string;
+}) {
+  if (languages.length < 2) return null;
+  return (
+    <div className={`flex items-center gap-2 ${className ?? ""}`}>
+      <label className="text-sm font-medium text-secondary" htmlFor="lang-filter">
+        Language
+      </label>
+      <select
+        id="lang-filter"
+        className={selectCompact}
+        value={lang}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {languages.map((code) => (
+          <option key={code} value={code}>
+            {languageLabel(code)}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 /** Entries for the data-pack multi-select (single unnamed group). */
 export function packGroups(): [string, { id: string; name: string }[]][] {

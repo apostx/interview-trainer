@@ -16,6 +16,8 @@ export type FilterPrefs = {
   /** Selected importance levels: "1".."5", plus "u" for unrated topics. */
   imp?: string[];
   lang?: LangCode;
+  /** Questions page view: compact Q&A (default) or full details. */
+  qview?: "qa" | "full";
 };
 
 const KEY = "filter-prefs";

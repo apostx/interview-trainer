@@ -36,6 +36,17 @@ const items = [
     ),
   },
   {
+    href: "/questions",
+    label: "Questions",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M9.6 9.2a2.4 2.4 0 1 1 3.3 2.2c-.7.3-1.3 1-1.3 1.8v.3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M11.6 16.6h.01" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     href: "/topics",
     label: "Topics",
     icon: (

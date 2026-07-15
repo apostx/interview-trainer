@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Card, ModeBadge, PageHeader, buttonGhost, buttonSecondary, inputBase, selectCompact } from "@/components/ui";
+import { Card, ModeBadge, PageHeader, buttonGhost, buttonSecondary, inputBase } from "@/components/ui";
 import type { LangCode, QuestionCard, StudyContent, Topic } from "@/core/models";
 import { ROLE_LABELS, ROLE_TRACKS, TRACK_MEMBER_ROLES } from "@/core/models";
 import { bankFor } from "@/core/content/bank";
@@ -9,6 +9,7 @@ import {
   CheckboxDropdown,
   IMPORTANCE_LEVELS,
   importanceSummary,
+  LanguagePicker,
   packGroups,
   packSummary,
 } from "@/components/filters";
@@ -24,7 +25,6 @@ import {
 import {
   availableLanguages,
   DEFAULT_LANG,
-  languageLabel,
   localizeCard,
   localizeTopic,
   studySectionLabel,
@@ -245,40 +245,6 @@ function StudyCard({ card }: { card: QuestionCard }) {
         </>
       )}
     </Card>
-  );
-}
-
-/** Study reading-language dropdown; renders nothing unless translations exist. */
-function LanguagePicker({
-  lang,
-  languages,
-  onChange,
-  className,
-}: {
-  lang: LangCode;
-  languages: LangCode[];
-  onChange: (lang: LangCode) => void;
-  className?: string;
-}) {
-  if (languages.length < 2) return null;
-  return (
-    <div className={`flex items-center gap-2 ${className ?? ""}`}>
-      <label className="text-sm font-medium text-secondary" htmlFor="lang-filter">
-        Language
-      </label>
-      <select
-        id="lang-filter"
-        className={selectCompact}
-        value={lang}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {languages.map((code) => (
-          <option key={code} value={code}>
-            {languageLabel(code)}
-          </option>
-        ))}
-      </select>
-    </div>
   );
 }
 
