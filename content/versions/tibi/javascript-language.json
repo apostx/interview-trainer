@@ -1,0 +1,2136 @@
+{
+  "id": "rebuild26_javascript_language_additive",
+  "name": "JavaScript Language Fundamentals — additive questions",
+  "description": "Question expansion derived from the attached source files; reuses existing repository topic IDs and defines only missing concepts.",
+  "sources": [
+    "tibi/company_holidu",
+    "tibi/eib",
+    "tibi/lufthansa",
+    "tibi/tesco_hungary"
+  ],
+  "topics": [
+    {
+      "id": "rebuild26_js_object_model",
+      "name": "Property Ownership and Prototype Lookup",
+      "description": "JavaScript objects are dynamic property collections linked through a prototype chain. Operations such as Object.entries, delete, in, and instanceof answer different questions about own properties, inheritance, and identity.",
+      "category": "frontend",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nJavaScript objects are dynamic property collections linked through a prototype chain. Operations such as Object.entries, delete, in, and instanceof answer different questions about own properties, inheritance, and identity.\n\nThe JavaScript object model means property lookup starts on the object and continues through its prototype chain until a match is found or the chain ends.\n\n## What problem does it solve?\n\nConfusing own and inherited properties causes unsafe iteration, incorrect serialization, and fragile type checks. The delete operator can also behave differently from assigning undefined.\n\n## How it works\n\nObject.entries(user) returns enumerable own key-value pairs. \"toString\" in user may be true through inheritance, while Object.hasOwn(user, \"toString\") can still be false.\n\n- Read own properties directly from the object\n- If a property is missing, JavaScript follows the prototype link\n- Use own-property APIs when inherited values must be excluded\n- Use delete to remove a configurable property rather than merely replacing its value\n\n## Common mistakes\n\n- Using for...in without filtering inherited enumerable properties\n- Using instanceof across realms as a universal type check\n- Thinking delete removes local variables or changes an array's length safely\n\n## Key terms\n\n- own property — a property stored directly on the object\n- prototype chain — the linked objects searched for inherited properties\n- enumerable property — a property included by common iteration APIs"
+    },
+    {
+      "id": "rebuild26_json_serialization",
+      "name": "JSON Serialization Boundaries",
+      "description": "JSON serialization converts a limited data model into text for storage or transport. It does not preserve JavaScript prototypes, methods, undefined values, symbols, bigint, or object identity.",
+      "category": "fullstack",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nJSON serialization converts a limited data model into text for storage or transport. It does not preserve JavaScript prototypes, methods, undefined values, symbols, bigint, or object identity.\n\nJSON serialization means translating application data into the JSON value types that another process can reconstruct.\n\n## What problem does it solve?\n\nAssuming every JavaScript value survives JSON.stringify causes silent field loss, date ambiguity, bigint errors, circular-reference failures, and security problems when parsed data is trusted blindly.\n\n## How it works\n\nA Date becomes an ISO string in JSON, so the receiver must decide whether and how to turn it back into a Date. A Map must be converted to entries or an object before serialization.\n\n- Define an explicit transport shape using JSON-compatible values\n- Convert special application values such as dates or maps deliberately\n- Serialize and transmit the text\n- Parse into untrusted plain data and validate it before use\n\n## Common mistakes\n\n- Calling JSON a deep clone for every JavaScript value\n- Expecting class instances and methods to reappear after parsing\n- Using eval instead of JSON.parse\n\n## Key terms\n\n- serialization — converting data into a transport or storage representation\n- deserialization — reconstructing data from the representation\n- replacer — a JSON.stringify hook that controls how values are serialized"
+    },
+    {
+      "id": "rebuild26_regexp_matching",
+      "name": "Regular Expression Matching",
+      "description": "A regular expression describes a text pattern that can be tested, searched, or replaced. Correct use requires understanding anchors, character classes, flags, escaping, and performance risks.",
+      "category": "frontend",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nA regular expression describes a text pattern that can be tested, searched, or replaced. Correct use requires understanding anchors, character classes, flags, escaping, and performance risks.\n\nRegular-expression matching means asking whether text satisfies a compact pattern, not whether it is semantically valid in every business sense.\n\n## What problem does it solve?\n\nAn unanchored or incorrectly escaped pattern may accept partial or unintended text. A pathological pattern can also consume excessive CPU on attacker-controlled input.\n\n## How it works\n\nTo accept exactly three uppercase letters followed by two digits, /^[A-Z]{3}\\d{2}$/ tests the whole string. Without ^ and $, a longer string containing that pattern would also match.\n\n- Define what part of the text must match\n- Build the pattern from literals, character classes, groups, and quantifiers\n- Use flags only when their behavior is required\n- Test valid, invalid, boundary, Unicode, and hostile inputs\n\n## Common mistakes\n\n- Using regex for complex nested grammars or full email semantics\n- Forgetting that test with a global regex can carry lastIndex state\n- Building a regex from user input without escaping or limits\n\n## Key terms\n\n- anchor — a token such as ^ or $ that fixes a match to a boundary\n- quantifier — a token that controls how many times a pattern may repeat\n- flag — an option such as i, m, s, u, or g that changes matching behavior"
+    },
+    {
+      "id": "rebuild26_intl_formatting",
+      "name": "Locale-Aware Formatting with Intl",
+      "description": "The Intl APIs format numbers, dates, currencies, lists, and messages according to locale rules. They separate stored values from human-readable presentation.",
+      "category": "frontend",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nThe Intl APIs format numbers, dates, currencies, lists, and messages according to locale rules. They separate stored values from human-readable presentation.\n\nLocale-aware formatting means giving a raw value and locale options to a formatter instead of manually assembling display text.\n\n## What problem does it solve?\n\nManual separators, date order, currency symbols, and plural rules work for one culture and silently fail for another. toLocaleString without explicit options can also vary by environment.\n\n## How it works\n\nA price is stored as a numeric amount plus EUR currency. Intl.NumberFormat(\"de-DE\", {style: \"currency\", currency: \"EUR\"}) displays it using German grouping, decimal, and currency conventions.\n\n- Keep dates, numbers, and currency metadata in machine-readable form\n- Choose a locale and explicit formatting options\n- Reuse formatter instances when formatting many values\n- Treat formatted text as presentation, not as data to parse back\n\n## Common mistakes\n\n- Storing a formatted currency string as the source of truth\n- Assuming every user wants the runtime's default locale\n- Parsing locale-formatted output with fixed separators\n\n## Key terms\n\n- locale — a language and regional convention identifier\n- formatter — an Intl object configured to produce localized text\n- currency code — an ISO code such as EUR or USD that identifies the currency"
+    },
+    {
+      "id": "rebuild26_array_pipelines",
+      "name": "Array Transformation Pipelines",
+      "description": "Array methods such as map, filter, reduce, slice, and sort express data transformations, but their mutation behavior and intermediate allocations differ. A readable chain should make both semantics and cost clear.",
+      "category": "frontend",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nArray methods such as map, filter, reduce, slice, and sort express data transformations, but their mutation behavior and intermediate allocations differ. A readable chain should make both semantics and cost clear.\n\nAn array pipeline means passing a collection through small transformations where each step has a clear input and output.\n\n## What problem does it solve?\n\nLong chains can hide multiple full passes and allocations, while mutating methods such as sort, reverse, fill, or splice can unexpectedly change shared data.\n\n## How it works\n\nTo total prices above zero, items.filter(isValid).map(toPrice).reduce(sum, 0) is expressive. For a very large hot path, one reduce may avoid intermediate arrays if it remains understandable.\n\n- Choose a method whose name matches the transformation\n- Know whether the method returns a new array, a scalar, or mutates the original\n- Estimate the number of passes and temporary arrays\n- Prefer clarity unless profiling shows the pipeline is a bottleneck\n\n## Common mistakes\n\n- Assuming every array method is immutable\n- Using reduce for logic that map or filter would express more clearly\n- Chaining many passes over huge data without measuring memory or latency\n\n## Key terms\n\n- map — creates one output value for each input item\n- filter — keeps only items that satisfy a predicate\n- reduce — combines a sequence into one accumulated result\n- mutating method — a method that changes the original array"
+    }
+  ],
+  "questions": [
+    {
+      "id": "rebuild26_js_types_equality_001_scenario_002",
+      "title": "Applying JavaScript Equality and Type Coercion in practice",
+      "prompt": "A form returns the string \"10\". \"10\" + 5 produces \"105\", while Number(\"10\") + 5 produces 15. A check value == null intentionally matches both null and undefined, whereas value === null matches only null. Would you keep this approach? Explain the trade-offs, likely failure modes, and how you would verify it.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "js_language_basics"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_js_types_equality_001_scenario_002_point_1",
+          "label": "Identifies runtime types",
+          "description": "Correctly distinguishes primitives, objects, null, undefined, and the single JavaScript number type.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "primitive types",
+            "number type",
+            "null value",
+            "undefined value",
+            "objects",
+            "runtime types"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_types_equality_001_scenario_002_point_2",
+          "label": "Explains equality coercion",
+          "description": "States that == may convert operands while === requires same type and value.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "loose equality",
+            "strict equality",
+            "type coercion",
+            "same type",
+            "same value",
+            "equality coercion"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_types_equality_001_scenario_002_point_3",
+          "label": "Handles boundary examples",
+          "description": "Explains string concatenation, explicit Number conversion, and intentional value == null behavior.",
+          "importance": "important",
+          "acceptedSignals": [
+            "string concatenation",
+            "explicit conversion",
+            "number conversion",
+            "null or undefined",
+            "input boundary",
+            "boundary examples"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_js_types_equality_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_js_types_equality_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_js_types_equality_001_review_003",
+      "title": "Challenging weak reasoning about JavaScript Equality and Type Coercion",
+      "prompt": "A teammate claims: \"Calling float or struct JavaScript primitive types.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "js_language_basics"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_js_types_equality_001_review_003_point_1",
+          "label": "Identifies runtime types",
+          "description": "Correctly distinguishes primitives, objects, null, undefined, and the single JavaScript number type.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "primitive types",
+            "number type",
+            "null value",
+            "undefined value",
+            "objects",
+            "runtime types"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_types_equality_001_review_003_point_2",
+          "label": "Explains equality coercion",
+          "description": "States that == may convert operands while === requires same type and value.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "loose equality",
+            "strict equality",
+            "type coercion",
+            "same type",
+            "same value",
+            "equality coercion"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_types_equality_001_review_003_point_3",
+          "label": "Handles boundary examples",
+          "description": "Explains string concatenation, explicit Number conversion, and intentional value == null behavior.",
+          "importance": "important",
+          "acceptedSignals": [
+            "string concatenation",
+            "explicit conversion",
+            "number conversion",
+            "null or undefined",
+            "input boundary",
+            "boundary examples"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_js_types_equality_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_js_types_equality_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Assuming + always means numeric addition?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_js_const_references_001_scenario_002",
+      "title": "Applying const Bindings and Object Mutation in practice",
+      "prompt": "A const array can still receive push because the same array is mutated. Assigning a new array to the variable fails; creating [...items, newItem] produces a new reference instead. Would you keep this approach? Explain the trade-offs, likely failure modes, and how you would verify it.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "js_language_basics"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_js_const_references_001_scenario_002_point_1",
+          "label": "Explains binding immutability",
+          "description": "States that const prevents reassignment of the variable but not mutation of the referenced object.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "const binding",
+            "cannot reassign",
+            "object can mutate",
+            "same reference",
+            "array push",
+            "binding immutability"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_const_references_001_scenario_002_point_2",
+          "label": "Explains reference identity",
+          "description": "Describes mutation as retaining the same reference and immutable update as creating a new reference.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "reference identity",
+            "same object",
+            "new reference",
+            "immutable update",
+            "spread array"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_const_references_001_scenario_002_point_3",
+          "label": "Connects to state management",
+          "description": "Explains why React or Redux relies on predictable reference changes and why shared mutation is risky.",
+          "importance": "important",
+          "acceptedSignals": [
+            "change detection",
+            "react state",
+            "redux state",
+            "shallow comparison",
+            "shared mutation",
+            "to state management"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_js_const_references_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_js_const_references_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_js_const_references_001_review_003",
+      "title": "Challenging weak reasoning about const Bindings and Object Mutation",
+      "prompt": "A teammate claims: \"Equating const with deep immutability.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "js_language_basics"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_js_const_references_001_review_003_point_1",
+          "label": "Explains binding immutability",
+          "description": "States that const prevents reassignment of the variable but not mutation of the referenced object.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "const binding",
+            "cannot reassign",
+            "object can mutate",
+            "same reference",
+            "array push",
+            "binding immutability"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_const_references_001_review_003_point_2",
+          "label": "Explains reference identity",
+          "description": "Describes mutation as retaining the same reference and immutable update as creating a new reference.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "reference identity",
+            "same object",
+            "new reference",
+            "immutable update",
+            "spread array"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_const_references_001_review_003_point_3",
+          "label": "Connects to state management",
+          "description": "Explains why React or Redux relies on predictable reference changes and why shared mutation is risky.",
+          "importance": "important",
+          "acceptedSignals": [
+            "change detection",
+            "react state",
+            "redux state",
+            "shallow comparison",
+            "shared mutation",
+            "to state management"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_js_const_references_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_js_const_references_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Using Object.freeze and assuming nested objects are frozen too?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_js_object_model_001",
+      "title": "Reasoning about JavaScript objects",
+      "prompt": "Compare Object.entries, the in operator, Object.hasOwn, instanceof, and delete. What does each one actually tell you or change?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "rebuild26_js_object_model"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Organize the answer around own properties, inherited properties, prototype identity, and property removal.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_js_object_model_001_own_inherited",
+          "label": "Distinguishes own and inherited properties",
+          "description": "Explains Object.entries and Object.hasOwn as own-property tools and in as checking the whole prototype chain.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "own properties",
+            "object entries",
+            "object hasown",
+            "in operator",
+            "prototype chain",
+            "own and inherited properties"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_object_model_001_instanceof",
+          "label": "Explains instanceof",
+          "description": "States that instanceof checks whether a constructor prototype appears in an object's prototype chain, with realm and customization caveats.",
+          "importance": "important",
+          "acceptedSignals": [
+            "constructor prototype",
+            "instanceof operator",
+            "prototype identity",
+            "cross realm",
+            "symbol hasinstance",
+            "instanceof"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_object_model_001_delete",
+          "label": "Explains delete accurately",
+          "description": "Describes removal of configurable object properties and distinguishes it from assigning undefined or removing lexical variables.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "delete property",
+            "configurable property",
+            "assign undefined",
+            "array hole",
+            "not local variable",
+            "delete accurately"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_js_object_model_001_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_js_object_model_001_own_inherited"
+          },
+          "prompt": "How would you safely iterate only the data fields directly owned by an object?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_js_object_model_001_scenario_002",
+      "title": "Applying Property Ownership and Prototype Lookup in practice",
+      "prompt": "Object.entries(user) returns enumerable own key-value pairs. \"toString\" in user may be true through inheritance, while Object.hasOwn(user, \"toString\") can still be false. Would you keep this approach? Explain the trade-offs, likely failure modes, and how you would verify it.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "rebuild26_js_object_model"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_js_object_model_001_scenario_002_point_1",
+          "label": "Distinguishes own and inherited properties",
+          "description": "Explains Object.entries and Object.hasOwn as own-property tools and in as checking the whole prototype chain.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "own properties",
+            "object entries",
+            "object hasown",
+            "in operator",
+            "prototype chain",
+            "own and inherited properties"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_object_model_001_scenario_002_point_2",
+          "label": "Explains instanceof",
+          "description": "States that instanceof checks whether a constructor prototype appears in an object's prototype chain, with realm and customization caveats.",
+          "importance": "important",
+          "acceptedSignals": [
+            "constructor prototype",
+            "instanceof operator",
+            "prototype identity",
+            "cross realm",
+            "symbol hasinstance",
+            "instanceof"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_object_model_001_scenario_002_point_3",
+          "label": "Explains delete accurately",
+          "description": "Describes removal of configurable object properties and distinguishes it from assigning undefined or removing lexical variables.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "delete property",
+            "configurable property",
+            "assign undefined",
+            "array hole",
+            "not local variable",
+            "delete accurately"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_js_object_model_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_js_object_model_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_js_object_model_001_review_003",
+      "title": "Challenging weak reasoning about Property Ownership and Prototype Lookup",
+      "prompt": "A teammate claims: \"Using for...in without filtering inherited enumerable properties.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "rebuild26_js_object_model"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_js_object_model_001_review_003_point_1",
+          "label": "Distinguishes own and inherited properties",
+          "description": "Explains Object.entries and Object.hasOwn as own-property tools and in as checking the whole prototype chain.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "own properties",
+            "object entries",
+            "object hasown",
+            "in operator",
+            "prototype chain",
+            "own and inherited properties"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_object_model_001_review_003_point_2",
+          "label": "Explains instanceof",
+          "description": "States that instanceof checks whether a constructor prototype appears in an object's prototype chain, with realm and customization caveats.",
+          "importance": "important",
+          "acceptedSignals": [
+            "constructor prototype",
+            "instanceof operator",
+            "prototype identity",
+            "cross realm",
+            "symbol hasinstance",
+            "instanceof"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_js_object_model_001_review_003_point_3",
+          "label": "Explains delete accurately",
+          "description": "Describes removal of configurable object properties and distinguishes it from assigning undefined or removing lexical variables.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "delete property",
+            "configurable property",
+            "assign undefined",
+            "array hole",
+            "not local variable",
+            "delete accurately"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_js_object_model_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_js_object_model_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Using instanceof across realms as a universal type check?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_object_vs_map_001_scenario_002",
+      "title": "Applying Object vs Map in JavaScript in practice",
+      "prompt": "A user profile with name and email is an Object. A cache keyed by DOM elements is a Map because object identity must be preserved and entries are added and removed dynamically. Would you keep this approach? Explain the trade-offs, likely failure modes, and how you would verify it.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "object_vs_map"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_object_vs_map_001_scenario_002_point_1",
+          "label": "Separates record and collection semantics",
+          "description": "Uses Object for a known field schema and Map for dynamic key-value collection behavior.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "structured record",
+            "dynamic collection",
+            "known fields",
+            "key value store",
+            "clear intent",
+            "record and collection semantics"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_object_vs_map_001_scenario_002_point_2",
+          "label": "Compares keys and APIs",
+          "description": "Mentions arbitrary key types, key identity, size, has, set, delete, and predictable iteration.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "any key type",
+            "object keys",
+            "map size",
+            "map has",
+            "insertion order",
+            "keys and apis"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_object_vs_map_001_scenario_002_point_3",
+          "label": "Covers serialization and safety",
+          "description": "Notes easy JSON use for objects, explicit conversion for Map, and prototype-key concerns for dictionary-like objects.",
+          "importance": "important",
+          "acceptedSignals": [
+            "json serialization",
+            "convert map",
+            "prototype pollution",
+            "untrusted keys",
+            "object create null",
+            "serialization and safety"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_object_vs_map_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_object_vs_map_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_object_vs_map_001_review_003",
+      "title": "Challenging weak reasoning about Object vs Map in JavaScript",
+      "prompt": "A teammate claims: \"Saying Map is always faster without measuring the actual workload.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "object_vs_map"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_object_vs_map_001_review_003_point_1",
+          "label": "Separates record and collection semantics",
+          "description": "Uses Object for a known field schema and Map for dynamic key-value collection behavior.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "structured record",
+            "dynamic collection",
+            "known fields",
+            "key value store",
+            "clear intent",
+            "record and collection semantics"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_object_vs_map_001_review_003_point_2",
+          "label": "Compares keys and APIs",
+          "description": "Mentions arbitrary key types, key identity, size, has, set, delete, and predictable iteration.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "any key type",
+            "object keys",
+            "map size",
+            "map has",
+            "insertion order",
+            "keys and apis"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_object_vs_map_001_review_003_point_3",
+          "label": "Covers serialization and safety",
+          "description": "Notes easy JSON use for objects, explicit conversion for Map, and prototype-key concerns for dictionary-like objects.",
+          "importance": "important",
+          "acceptedSignals": [
+            "json serialization",
+            "convert map",
+            "prototype pollution",
+            "untrusted keys",
+            "object create null",
+            "serialization and safety"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_object_vs_map_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_object_vs_map_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Using plain Object with untrusted keys and ignoring prototype pollution risks?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_json_serialization_001",
+      "title": "Designing a JSON boundary",
+      "prompt": "What information can be lost or changed when JavaScript values are serialized to JSON, and how would you design a safe API boundary?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "rebuild26_json_serialization"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "List unsupported or transformed values, define an explicit schema, and mention validation after parsing.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_json_serialization_001_limits",
+          "label": "Explains JSON limits",
+          "description": "Mentions loss or transformation of undefined, functions, symbols, bigint, dates, prototypes, maps, sets, and circular references as relevant.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "undefined omitted",
+            "date becomes string",
+            "bigint error",
+            "prototype lost",
+            "circular reference",
+            "json limits"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_json_serialization_001_schema",
+          "label": "Defines an explicit transport schema",
+          "description": "Uses plain JSON-compatible values and deliberate encodings for dates, enums, maps, or large numbers.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "explicit schema",
+            "iso date",
+            "map entries",
+            "string bigint",
+            "plain data",
+            "an explicit transport schema"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_json_serialization_001_validation",
+          "label": "Treats parsed data as untrusted",
+          "description": "Validates shape, types, limits, and dangerous fields instead of assuming parsed JSON matches application objects.",
+          "importance": "important",
+          "acceptedSignals": [
+            "validate input",
+            "untrusted data",
+            "schema validation",
+            "type checks",
+            "size limits",
+            "treats parsed data as"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_json_serialization_001_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_json_serialization_001_limits"
+          },
+          "prompt": "Why is JSON.parse(JSON.stringify(value)) an unreliable general-purpose deep clone?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_json_serialization_001_scenario_002",
+      "title": "Applying JSON Serialization Boundaries in practice",
+      "prompt": "A Date becomes an ISO string in JSON, so the receiver must decide whether and how to turn it back into a Date. A Map must be converted to entries or an object before serialization. Would you keep this approach? Explain the trade-offs, likely failure modes, and how you would verify it.",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "rebuild26_json_serialization"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_json_serialization_001_scenario_002_point_1",
+          "label": "Explains JSON limits",
+          "description": "Mentions loss or transformation of undefined, functions, symbols, bigint, dates, prototypes, maps, sets, and circular references as relevant.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "undefined omitted",
+            "date becomes string",
+            "bigint error",
+            "prototype lost",
+            "circular reference",
+            "json limits"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_json_serialization_001_scenario_002_point_2",
+          "label": "Defines an explicit transport schema",
+          "description": "Uses plain JSON-compatible values and deliberate encodings for dates, enums, maps, or large numbers.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "explicit schema",
+            "iso date",
+            "map entries",
+            "string bigint",
+            "plain data",
+            "an explicit transport schema"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_json_serialization_001_scenario_002_point_3",
+          "label": "Treats parsed data as untrusted",
+          "description": "Validates shape, types, limits, and dangerous fields instead of assuming parsed JSON matches application objects.",
+          "importance": "important",
+          "acceptedSignals": [
+            "validate input",
+            "untrusted data",
+            "schema validation",
+            "type checks",
+            "size limits",
+            "treats parsed data as"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_json_serialization_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_json_serialization_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_json_serialization_001_review_003",
+      "title": "Challenging weak reasoning about JSON Serialization Boundaries",
+      "prompt": "A teammate claims: \"Calling JSON a deep clone for every JavaScript value.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "rebuild26_json_serialization"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_json_serialization_001_review_003_point_1",
+          "label": "Explains JSON limits",
+          "description": "Mentions loss or transformation of undefined, functions, symbols, bigint, dates, prototypes, maps, sets, and circular references as relevant.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "undefined omitted",
+            "date becomes string",
+            "bigint error",
+            "prototype lost",
+            "circular reference",
+            "json limits"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_json_serialization_001_review_003_point_2",
+          "label": "Defines an explicit transport schema",
+          "description": "Uses plain JSON-compatible values and deliberate encodings for dates, enums, maps, or large numbers.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "explicit schema",
+            "iso date",
+            "map entries",
+            "string bigint",
+            "plain data",
+            "an explicit transport schema"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_json_serialization_001_review_003_point_3",
+          "label": "Treats parsed data as untrusted",
+          "description": "Validates shape, types, limits, and dangerous fields instead of assuming parsed JSON matches application objects.",
+          "importance": "important",
+          "acceptedSignals": [
+            "validate input",
+            "untrusted data",
+            "schema validation",
+            "type checks",
+            "size limits",
+            "treats parsed data as"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_json_serialization_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_json_serialization_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Expecting class instances and methods to reappear after parsing?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_regexp_matching_001",
+      "title": "Using RegExp safely",
+      "prompt": "How would you explain RegExp.test, anchoring, flags, and the main correctness or security traps?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "rebuild26_regexp_matching"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Give one anchored example, then discuss stateful global regexes, escaping, and excessive backtracking.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_regexp_matching_001_matching",
+          "label": "Explains matching and anchors",
+          "description": "Describes test as a boolean pattern check and uses ^ and $ when the whole string must match.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "regexp test",
+            "boolean match",
+            "start anchor",
+            "end anchor",
+            "whole string",
+            "matching and anchors"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_regexp_matching_001_flags_state",
+          "label": "Explains flags and state",
+          "description": "Mentions relevant flags and the lastIndex behavior of global or sticky regular expressions.",
+          "importance": "important",
+          "acceptedSignals": [
+            "regex flags",
+            "global flag",
+            "lastindex state",
+            "unicode flag",
+            "case insensitive",
+            "flags and state"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_regexp_matching_001_safety",
+          "label": "Covers safety risks",
+          "description": "Discusses escaping dynamic input, limiting complexity, and avoiding catastrophic backtracking.",
+          "importance": "important",
+          "acceptedSignals": [
+            "escape user input",
+            "catastrophic backtracking",
+            "redos risk",
+            "input limits",
+            "safe pattern",
+            "safety risks"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_regexp_matching_001_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_regexp_matching_001_safety"
+          },
+          "prompt": "When would a parser or ordinary string operations be clearer than a regular expression?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_regexp_matching_001_scenario_002",
+      "title": "Applying Regular Expression Matching in practice",
+      "prompt": "To accept exactly three uppercase letters followed by two digits, /^[A-Z]{3}\\d{2}$/ tests the whole string. Without ^ and $, a longer string containing that pattern would also match. Would you keep this approach? Explain the trade-offs, likely failure modes, and how you would verify it.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "rebuild26_regexp_matching"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_regexp_matching_001_scenario_002_point_1",
+          "label": "Explains matching and anchors",
+          "description": "Describes test as a boolean pattern check and uses ^ and $ when the whole string must match.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "regexp test",
+            "boolean match",
+            "start anchor",
+            "end anchor",
+            "whole string",
+            "matching and anchors"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_regexp_matching_001_scenario_002_point_2",
+          "label": "Explains flags and state",
+          "description": "Mentions relevant flags and the lastIndex behavior of global or sticky regular expressions.",
+          "importance": "important",
+          "acceptedSignals": [
+            "regex flags",
+            "global flag",
+            "lastindex state",
+            "unicode flag",
+            "case insensitive",
+            "flags and state"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_regexp_matching_001_scenario_002_point_3",
+          "label": "Covers safety risks",
+          "description": "Discusses escaping dynamic input, limiting complexity, and avoiding catastrophic backtracking.",
+          "importance": "important",
+          "acceptedSignals": [
+            "escape user input",
+            "catastrophic backtracking",
+            "redos risk",
+            "input limits",
+            "safe pattern",
+            "safety risks"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_regexp_matching_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_regexp_matching_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_regexp_matching_001_review_003",
+      "title": "Challenging weak reasoning about Regular Expression Matching",
+      "prompt": "A teammate claims: \"Using regex for complex nested grammars or full email semantics.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "rebuild26_regexp_matching"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_regexp_matching_001_review_003_point_1",
+          "label": "Explains matching and anchors",
+          "description": "Describes test as a boolean pattern check and uses ^ and $ when the whole string must match.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "regexp test",
+            "boolean match",
+            "start anchor",
+            "end anchor",
+            "whole string",
+            "matching and anchors"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_regexp_matching_001_review_003_point_2",
+          "label": "Explains flags and state",
+          "description": "Mentions relevant flags and the lastIndex behavior of global or sticky regular expressions.",
+          "importance": "important",
+          "acceptedSignals": [
+            "regex flags",
+            "global flag",
+            "lastindex state",
+            "unicode flag",
+            "case insensitive",
+            "flags and state"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_regexp_matching_001_review_003_point_3",
+          "label": "Covers safety risks",
+          "description": "Discusses escaping dynamic input, limiting complexity, and avoiding catastrophic backtracking.",
+          "importance": "important",
+          "acceptedSignals": [
+            "escape user input",
+            "catastrophic backtracking",
+            "redos risk",
+            "input limits",
+            "safe pattern",
+            "safety risks"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_regexp_matching_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_regexp_matching_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Forgetting that test with a global regex can carry lastIndex state?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_intl_formatting_001",
+      "title": "Formatting for different locales",
+      "prompt": "Why is Intl.NumberFormat or Intl.DateTimeFormat safer than manual formatting, and what data should remain unformatted?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "rebuild26_intl_formatting"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate data from presentation, explain locale and options, and mention default-locale and parsing traps.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_intl_formatting_001_data_presentation",
+          "label": "Separates data and presentation",
+          "description": "Keeps numeric, date, and currency values structured and applies locale formatting only for display.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "raw numeric value",
+            "structured date",
+            "currency metadata",
+            "display only",
+            "not source truth",
+            "data and presentation"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_intl_formatting_001_intl",
+          "label": "Explains Intl configuration",
+          "description": "Uses explicit locale and options for number, currency, date, or list formatting.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "intl numberformat",
+            "intl datetimeformat",
+            "explicit locale",
+            "format options",
+            "currency style",
+            "intl configuration"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_intl_formatting_001_traps",
+          "label": "Identifies portability traps",
+          "description": "Notes environment defaults, time zones, precision, and the danger of parsing formatted output.",
+          "importance": "important",
+          "acceptedSignals": [
+            "default locale",
+            "time zone",
+            "rounding rules",
+            "do not parse",
+            "environment dependent",
+            "portability traps"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_intl_formatting_001_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_intl_formatting_001_traps"
+          },
+          "prompt": "How would you handle a user's locale and time zone independently?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_intl_formatting_001_scenario_002",
+      "title": "Applying Locale-Aware Formatting with Intl in practice",
+      "prompt": "A price is stored as a numeric amount plus EUR currency. Intl.NumberFormat(\"de-DE\", {style: \"currency\", currency: \"EUR\"}) displays it using German grouping, decimal, and currency conventions. Would you keep this approach? Explain the trade-offs, likely failure modes, and how you would verify it.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "rebuild26_intl_formatting"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_intl_formatting_001_scenario_002_point_1",
+          "label": "Separates data and presentation",
+          "description": "Keeps numeric, date, and currency values structured and applies locale formatting only for display.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "raw numeric value",
+            "structured date",
+            "currency metadata",
+            "display only",
+            "not source truth",
+            "data and presentation"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_intl_formatting_001_scenario_002_point_2",
+          "label": "Explains Intl configuration",
+          "description": "Uses explicit locale and options for number, currency, date, or list formatting.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "intl numberformat",
+            "intl datetimeformat",
+            "explicit locale",
+            "format options",
+            "currency style",
+            "intl configuration"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_intl_formatting_001_scenario_002_point_3",
+          "label": "Identifies portability traps",
+          "description": "Notes environment defaults, time zones, precision, and the danger of parsing formatted output.",
+          "importance": "important",
+          "acceptedSignals": [
+            "default locale",
+            "time zone",
+            "rounding rules",
+            "do not parse",
+            "environment dependent",
+            "portability traps"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_intl_formatting_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_intl_formatting_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_intl_formatting_001_review_003",
+      "title": "Challenging weak reasoning about Locale-Aware Formatting with Intl",
+      "prompt": "A teammate claims: \"Storing a formatted currency string as the source of truth.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "rebuild26_intl_formatting"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_intl_formatting_001_review_003_point_1",
+          "label": "Separates data and presentation",
+          "description": "Keeps numeric, date, and currency values structured and applies locale formatting only for display.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "raw numeric value",
+            "structured date",
+            "currency metadata",
+            "display only",
+            "not source truth",
+            "data and presentation"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_intl_formatting_001_review_003_point_2",
+          "label": "Explains Intl configuration",
+          "description": "Uses explicit locale and options for number, currency, date, or list formatting.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "intl numberformat",
+            "intl datetimeformat",
+            "explicit locale",
+            "format options",
+            "currency style",
+            "intl configuration"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_intl_formatting_001_review_003_point_3",
+          "label": "Identifies portability traps",
+          "description": "Notes environment defaults, time zones, precision, and the danger of parsing formatted output.",
+          "importance": "important",
+          "acceptedSignals": [
+            "default locale",
+            "time zone",
+            "rounding rules",
+            "do not parse",
+            "environment dependent",
+            "portability traps"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_intl_formatting_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_intl_formatting_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Assuming every user wants the runtime's default locale?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_array_pipelines_001",
+      "title": "Reasoning about array method chains",
+      "prompt": "Compare map, filter, reduce, slice, sort, reverse, and fill in terms of purpose, return value, mutation, and performance.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "rebuild26_array_pipelines"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Group methods by transformation and mutation, then discuss passes, intermediate arrays, and readability.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_array_pipelines_001_purpose",
+          "label": "Explains method purposes",
+          "description": "Correctly assigns mapping, filtering, accumulation, copying, sorting, reversing, and filling responsibilities.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "map transforms",
+            "filter selects",
+            "reduce accumulates",
+            "slice copies",
+            "sort orders",
+            "reverse mutates",
+            "method purposes"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_array_pipelines_001_mutation",
+          "label": "Distinguishes mutation behavior",
+          "description": "Identifies sort, reverse, and fill as mutating and contrasts them with methods that return new arrays.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "mutates original",
+            "new array",
+            "sort mutation",
+            "reverse mutation",
+            "fill mutation",
+            "mutation behavior"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_array_pipelines_001_cost",
+          "label": "Discusses pipeline cost",
+          "description": "Mentions O(n) passes, sort complexity, intermediate allocations, and the clarity-versus-fusion trade-off.",
+          "importance": "important",
+          "acceptedSignals": [
+            "multiple passes",
+            "intermediate arrays",
+            "sort n log n",
+            "memory allocation",
+            "readability tradeoff",
+            "discusses pipeline cost"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_array_pipelines_001_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_array_pipelines_001_cost"
+          },
+          "prompt": "When would you replace a clear map-filter chain with a single loop?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_array_pipelines_001_scenario_002",
+      "title": "Applying Array Transformation Pipelines in practice",
+      "prompt": "To total prices above zero, items.filter(isValid).map(toPrice).reduce(sum, 0) is expressive. For a very large hot path, one reduce may avoid intermediate arrays if it remains understandable. Would you keep this approach? Explain the trade-offs, likely failure modes, and how you would verify it.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "rebuild26_array_pipelines"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_array_pipelines_001_scenario_002_point_1",
+          "label": "Explains method purposes",
+          "description": "Correctly assigns mapping, filtering, accumulation, copying, sorting, reversing, and filling responsibilities.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "map transforms",
+            "filter selects",
+            "reduce accumulates",
+            "slice copies",
+            "sort orders",
+            "reverse mutates",
+            "method purposes"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_array_pipelines_001_scenario_002_point_2",
+          "label": "Distinguishes mutation behavior",
+          "description": "Identifies sort, reverse, and fill as mutating and contrasts them with methods that return new arrays.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "mutates original",
+            "new array",
+            "sort mutation",
+            "reverse mutation",
+            "fill mutation",
+            "mutation behavior"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_array_pipelines_001_scenario_002_point_3",
+          "label": "Discusses pipeline cost",
+          "description": "Mentions O(n) passes, sort complexity, intermediate allocations, and the clarity-versus-fusion trade-off.",
+          "importance": "important",
+          "acceptedSignals": [
+            "multiple passes",
+            "intermediate arrays",
+            "sort n log n",
+            "memory allocation",
+            "readability tradeoff",
+            "discusses pipeline cost"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_array_pipelines_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_array_pipelines_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_array_pipelines_001_review_003",
+      "title": "Challenging weak reasoning about Array Transformation Pipelines",
+      "prompt": "A teammate claims: \"Assuming every array method is immutable.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "rebuild26_array_pipelines"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_array_pipelines_001_review_003_point_1",
+          "label": "Explains method purposes",
+          "description": "Correctly assigns mapping, filtering, accumulation, copying, sorting, reversing, and filling responsibilities.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "map transforms",
+            "filter selects",
+            "reduce accumulates",
+            "slice copies",
+            "sort orders",
+            "reverse mutates",
+            "method purposes"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_array_pipelines_001_review_003_point_2",
+          "label": "Distinguishes mutation behavior",
+          "description": "Identifies sort, reverse, and fill as mutating and contrasts them with methods that return new arrays.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "mutates original",
+            "new array",
+            "sort mutation",
+            "reverse mutation",
+            "fill mutation",
+            "mutation behavior"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_array_pipelines_001_review_003_point_3",
+          "label": "Discusses pipeline cost",
+          "description": "Mentions O(n) passes, sort complexity, intermediate allocations, and the clarity-versus-fusion trade-off.",
+          "importance": "important",
+          "acceptedSignals": [
+            "multiple passes",
+            "intermediate arrays",
+            "sort n log n",
+            "memory allocation",
+            "readability tradeoff",
+            "discusses pipeline cost"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_array_pipelines_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_array_pipelines_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Using reduce for logic that map or filter would express more clearly?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_object_integrity_001_scenario_002",
+      "title": "Applying Object extensibility, sealing, and freezing in practice",
+      "prompt": "Freezing a configuration object blocks top-level add, delete, and assignment, but a nested options object can still change unless separately frozen. What conclusion would you draw, which assumptions matter, and how would you validate it?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "object_locking"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_object_integrity_001_scenario_002_point_1",
+          "label": "Orders the three controls",
+          "description": "Correctly explains the increasing restrictions from extensibility to writable values.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "preventextensions",
+            "seal",
+            "freeze",
+            "increasing restrictions",
+            "orders the three controls"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_object_integrity_001_scenario_002_point_2",
+          "label": "Uses descriptor language",
+          "description": "Distinguishes adding, deleting or configuring, and assigning values.",
+          "importance": "important",
+          "acceptedSignals": [
+            "add property",
+            "delete property",
+            "configurable",
+            "writable",
+            "descriptor language"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_object_integrity_001_scenario_002_point_3",
+          "label": "Recognizes shallow protection",
+          "description": "States that nested objects remain mutable unless handled separately.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "shallow freeze",
+            "nested object",
+            "deep immutability",
+            "shallow protection"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_object_integrity_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_object_integrity_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_object_integrity_001_review_003",
+      "title": "Challenging weak reasoning about Object extensibility, sealing, and freezing",
+      "prompt": "A teammate claims: \"Calling Object.freeze deep immutability.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "object_locking"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_object_integrity_001_review_003_point_1",
+          "label": "Orders the three controls",
+          "description": "Correctly explains the increasing restrictions from extensibility to writable values.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "preventextensions",
+            "seal",
+            "freeze",
+            "increasing restrictions",
+            "orders the three controls"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_object_integrity_001_review_003_point_2",
+          "label": "Uses descriptor language",
+          "description": "Distinguishes adding, deleting or configuring, and assigning values.",
+          "importance": "important",
+          "acceptedSignals": [
+            "add property",
+            "delete property",
+            "configurable",
+            "writable",
+            "descriptor language"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_object_integrity_001_review_003_point_3",
+          "label": "Recognizes shallow protection",
+          "description": "States that nested objects remain mutable unless handled separately.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "shallow freeze",
+            "nested object",
+            "deep immutability",
+            "shallow protection"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_object_integrity_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_object_integrity_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Assuming sealed properties cannot change value even when they remain writable?",
+          "expectedPoints": []
+        }
+      ]
+    }
+  ]
+}

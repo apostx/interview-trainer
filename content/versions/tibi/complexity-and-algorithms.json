@@ -1,0 +1,1028 @@
+{
+  "id": "rebuild26_complexity_and_algorithms_additive",
+  "name": "Complexity and Algorithm Analysis — additive questions",
+  "description": "Question expansion derived from the attached source files; reuses existing repository topic IDs and defines only missing concepts.",
+  "sources": [
+    "tibi/11_komplexitas"
+  ],
+  "topics": [],
+  "questions": [
+    {
+      "id": "rebuild26_big_o_model_001_scenario_002",
+      "title": "Applying Big-O as a Growth Model in practice",
+      "prompt": "A loop that checks every user once is O(n). If the number of users doubles, the amount of work grows roughly twofold, even though the exact runtime depends on the machine. What conclusion would you draw, which assumptions matter, and how would you validate it?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "bigo_basics"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_big_o_model_001_scenario_002_point_1",
+          "label": "Defines growth rate",
+          "description": "Explains that Big-O describes how resource use changes with input size and focuses on the dominant term.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "growth rate",
+            "input size",
+            "dominant term",
+            "asymptotic behavior",
+            "scales with n"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_big_o_model_001_scenario_002_point_2",
+          "label": "Distinguishes from exact runtime",
+          "description": "States that hardware, constants, implementation, and real data still affect measured performance.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "not exact runtime",
+            "hardware dependent",
+            "constant factors",
+            "real benchmarks",
+            "implementation details",
+            "from exact runtime"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_big_o_model_001_scenario_002_point_3",
+          "label": "Explains why it is useful",
+          "description": "Uses Big-O to compare approaches and predict which one remains practical as input grows.",
+          "importance": "important",
+          "acceptedSignals": [
+            "compare algorithms",
+            "large input",
+            "predict scaling",
+            "choose approach",
+            "performance risk",
+            "why it is useful"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_big_o_model_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_big_o_model_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_big_o_model_001_review_003",
+      "title": "Challenging weak reasoning about Big-O as a Growth Model",
+      "prompt": "A teammate claims: \"Treating Big-O as an exact speed measurement.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "bigo_basics"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_big_o_model_001_review_003_point_1",
+          "label": "Defines growth rate",
+          "description": "Explains that Big-O describes how resource use changes with input size and focuses on the dominant term.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "growth rate",
+            "input size",
+            "dominant term",
+            "asymptotic behavior",
+            "scales with n"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_big_o_model_001_review_003_point_2",
+          "label": "Distinguishes from exact runtime",
+          "description": "States that hardware, constants, implementation, and real data still affect measured performance.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "not exact runtime",
+            "hardware dependent",
+            "constant factors",
+            "real benchmarks",
+            "implementation details",
+            "from exact runtime"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_big_o_model_001_review_003_point_3",
+          "label": "Explains why it is useful",
+          "description": "Uses Big-O to compare approaches and predict which one remains practical as input grows.",
+          "importance": "important",
+          "acceptedSignals": [
+            "compare algorithms",
+            "large input",
+            "predict scaling",
+            "choose approach",
+            "performance risk",
+            "why it is useful"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_big_o_model_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_big_o_model_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Ignoring the input variable when several dimensions exist?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_complexity_classes_001_scenario_002",
+      "title": "Applying Common Complexity Classes in practice",
+      "prompt": "Binary search halves a sorted array on every step, so a billion items need only about thirty comparisons. A double nested scan over the same items would be impossible. What conclusion would you draw, which assumptions matter, and how would you validate it?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "complexity_classes"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_complexity_classes_001_scenario_002_point_1",
+          "label": "Explains the main classes",
+          "description": "Correctly describes constant, logarithmic, linear, linearithmic, quadratic, and exponential growth.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "constant time",
+            "logarithmic time",
+            "linear time",
+            "n log n",
+            "quadratic time",
+            "exponential time",
+            "the main classes"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_complexity_classes_001_scenario_002_point_2",
+          "label": "Gives fitting examples",
+          "description": "Uses examples such as direct access, binary search, full scan, efficient sort, nested comparison, and exhaustive subsets.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "array access",
+            "binary search",
+            "full scan",
+            "merge sort",
+            "nested loops",
+            "all subsets",
+            "fitting examples"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_complexity_classes_001_scenario_002_point_3",
+          "label": "Explains practical scale",
+          "description": "Shows why higher-growth classes become impractical much sooner as n increases.",
+          "importance": "important",
+          "acceptedSignals": [
+            "large input",
+            "growth curve",
+            "becomes impractical",
+            "doubling input",
+            "explosive growth",
+            "practical scale"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_complexity_classes_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_complexity_classes_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_complexity_classes_001_review_003",
+      "title": "Challenging weak reasoning about Common Complexity Classes",
+      "prompt": "A teammate claims: \"Assuming every nested loop is O(n²) without checking loop bounds.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "complexity_classes"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_complexity_classes_001_review_003_point_1",
+          "label": "Explains the main classes",
+          "description": "Correctly describes constant, logarithmic, linear, linearithmic, quadratic, and exponential growth.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "constant time",
+            "logarithmic time",
+            "linear time",
+            "n log n",
+            "quadratic time",
+            "exponential time",
+            "the main classes"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_complexity_classes_001_review_003_point_2",
+          "label": "Gives fitting examples",
+          "description": "Uses examples such as direct access, binary search, full scan, efficient sort, nested comparison, and exhaustive subsets.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "array access",
+            "binary search",
+            "full scan",
+            "merge sort",
+            "nested loops",
+            "all subsets",
+            "fitting examples"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_complexity_classes_001_review_003_point_3",
+          "label": "Explains practical scale",
+          "description": "Shows why higher-growth classes become impractical much sooner as n increases.",
+          "importance": "important",
+          "acceptedSignals": [
+            "large input",
+            "growth curve",
+            "becomes impractical",
+            "doubling input",
+            "explosive growth",
+            "practical scale"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_complexity_classes_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_complexity_classes_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Calling hash-map lookup always O(1) without acknowledging average-case behavior?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_complexity_from_code_001_scenario_002",
+      "title": "Applying Deriving Complexity from Code in practice",
+      "prompt": "A function first scans n items, then sorts them, then performs one lookup per item in a hash map. The total is O(n + n log n + n), which simplifies to O(n log n). What conclusion would you draw, which assumptions matter, and how would you validate it?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "complexity_calculation"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_complexity_from_code_001_scenario_002_point_1",
+          "label": "Uses a repeatable method",
+          "description": "Identifies input variables, counts repeated operations, combines sequential and nested work, then simplifies.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "identify input size",
+            "count operations",
+            "add sequential",
+            "multiply nested",
+            "dominant term",
+            "a repeatable method"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_complexity_from_code_001_scenario_002_point_2",
+          "label": "Recognizes hidden costs",
+          "description": "Accounts for sorting, copying, searching, serialization, and data-structure operation complexity.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "sort cost",
+            "array copy",
+            "includes scan",
+            "serialization cost",
+            "data structure cost",
+            "hidden costs"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_complexity_from_code_001_scenario_002_point_3",
+          "label": "Handles recursion",
+          "description": "Explains recursion depth, branching factor, and a recurrence or intuitive expansion.",
+          "importance": "important",
+          "acceptedSignals": [
+            "recursion depth",
+            "branching factor",
+            "recurrence relation",
+            "base case",
+            "call tree",
+            "recursion"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_complexity_from_code_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_complexity_from_code_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_complexity_from_code_001_review_003",
+      "title": "Challenging weak reasoning about Deriving Complexity from Code",
+      "prompt": "A teammate claims: \"Dropping different input variables into one n.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "complexity_calculation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_complexity_from_code_001_review_003_point_1",
+          "label": "Uses a repeatable method",
+          "description": "Identifies input variables, counts repeated operations, combines sequential and nested work, then simplifies.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "identify input size",
+            "count operations",
+            "add sequential",
+            "multiply nested",
+            "dominant term",
+            "a repeatable method"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_complexity_from_code_001_review_003_point_2",
+          "label": "Recognizes hidden costs",
+          "description": "Accounts for sorting, copying, searching, serialization, and data-structure operation complexity.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "sort cost",
+            "array copy",
+            "includes scan",
+            "serialization cost",
+            "data structure cost",
+            "hidden costs"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_complexity_from_code_001_review_003_point_3",
+          "label": "Handles recursion",
+          "description": "Explains recursion depth, branching factor, and a recurrence or intuitive expansion.",
+          "importance": "important",
+          "acceptedSignals": [
+            "recursion depth",
+            "branching factor",
+            "recurrence relation",
+            "base case",
+            "call tree",
+            "recursion"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_complexity_from_code_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_complexity_from_code_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Multiplying two loops that run one after another?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_space_complexity_001_scenario_002",
+      "title": "Applying Space Complexity and Call Stack in practice",
+      "prompt": "An iterative palindrome check uses two indices and O(1) extra space. Creating a reversed copy uses O(n) extra space even if both versions take O(n) time. What conclusion would you draw, which assumptions matter, and how would you validate it?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "space_complexity"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_space_complexity_001_scenario_002_point_1",
+          "label": "Defines auxiliary space",
+          "description": "Counts temporary collections, copies, buffers, and other memory that grows with input.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "auxiliary space",
+            "temporary arrays",
+            "memory copies",
+            "extra storage",
+            "peak memory"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_space_complexity_001_scenario_002_point_2",
+          "label": "Accounts for recursion",
+          "description": "Explains that active recursive calls consume stack frames proportional to maximum depth.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "call stack",
+            "stack frames",
+            "recursion depth",
+            "stack overflow",
+            "active calls",
+            "accounts for recursion"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_space_complexity_001_scenario_002_point_3",
+          "label": "Recognizes time-space trade-offs",
+          "description": "Shows that faster lookup may require a map or that lower memory may require extra passes.",
+          "importance": "important",
+          "acceptedSignals": [
+            "time space tradeoff",
+            "hash map memory",
+            "extra pass",
+            "in place",
+            "faster lookup",
+            "time-space trade-offs"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_space_complexity_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_space_complexity_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_space_complexity_001_review_003",
+      "title": "Challenging weak reasoning about Space Complexity and Call Stack",
+      "prompt": "A teammate claims: \"Calling an in-place algorithm O(1) while recursion still uses O(n) stack frames.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "space_complexity"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_space_complexity_001_review_003_point_1",
+          "label": "Defines auxiliary space",
+          "description": "Counts temporary collections, copies, buffers, and other memory that grows with input.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "auxiliary space",
+            "temporary arrays",
+            "memory copies",
+            "extra storage",
+            "peak memory"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_space_complexity_001_review_003_point_2",
+          "label": "Accounts for recursion",
+          "description": "Explains that active recursive calls consume stack frames proportional to maximum depth.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "call stack",
+            "stack frames",
+            "recursion depth",
+            "stack overflow",
+            "active calls",
+            "accounts for recursion"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_space_complexity_001_review_003_point_3",
+          "label": "Recognizes time-space trade-offs",
+          "description": "Shows that faster lookup may require a map or that lower memory may require extra passes.",
+          "importance": "important",
+          "acceptedSignals": [
+            "time space tradeoff",
+            "hash map memory",
+            "extra pass",
+            "in place",
+            "faster lookup",
+            "time-space trade-offs"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_space_complexity_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_space_complexity_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Ignoring immutable string or array copies?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_algorithmic_optimization_001_scenario_002",
+      "title": "Applying Algorithmic Optimization by Data Structure in practice",
+      "prompt": "To detect duplicates, one implementation compares every item with every later item. Another walks once and stores seen values in a Set, using O(n) time and O(n) extra space. What conclusion would you draw, which assumptions matter, and how would you validate it?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "complexity_classes",
+        "space_complexity"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_algorithmic_optimization_001_scenario_002_point_1",
+          "label": "Identifies quadratic pair comparison",
+          "description": "Explains why comparing all pairs performs roughly n² work.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "all pairs",
+            "nested scan",
+            "quadratic time",
+            "n squared",
+            "repeated search",
+            "quadratic pair comparison"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_algorithmic_optimization_001_scenario_002_point_2",
+          "label": "Uses a set or map",
+          "description": "Proposes a single pass with a Set or Map for average O(1) membership checks.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "use a set",
+            "single pass",
+            "membership lookup",
+            "seen values",
+            "average constant",
+            "a set or map"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_algorithmic_optimization_001_scenario_002_point_3",
+          "label": "Explains trade-offs and correctness",
+          "description": "Mentions O(n) extra space, equality semantics, ordering, and worst-case or realistic benchmarking.",
+          "importance": "important",
+          "acceptedSignals": [
+            "extra memory",
+            "equality semantics",
+            "preserve order",
+            "worst case",
+            "benchmark data",
+            "trade-offs and correctness"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_algorithmic_optimization_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_algorithmic_optimization_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_algorithmic_optimization_001_review_003",
+      "title": "Challenging weak reasoning about Algorithmic Optimization by Data Structure",
+      "prompt": "A teammate claims: \"Claiming a hash map guarantees constant time in every case.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "frontend_developer",
+        "backend_developer",
+        "fullstack_developer",
+        "frontend_architect",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "complexity_classes",
+        "space_complexity"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_algorithmic_optimization_001_review_003_point_1",
+          "label": "Identifies quadratic pair comparison",
+          "description": "Explains why comparing all pairs performs roughly n² work.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "all pairs",
+            "nested scan",
+            "quadratic time",
+            "n squared",
+            "repeated search",
+            "quadratic pair comparison"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_algorithmic_optimization_001_review_003_point_2",
+          "label": "Uses a set or map",
+          "description": "Proposes a single pass with a Set or Map for average O(1) membership checks.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "use a set",
+            "single pass",
+            "membership lookup",
+            "seen values",
+            "average constant",
+            "a set or map"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_algorithmic_optimization_001_review_003_point_3",
+          "label": "Explains trade-offs and correctness",
+          "description": "Mentions O(n) extra space, equality semantics, ordering, and worst-case or realistic benchmarking.",
+          "importance": "important",
+          "acceptedSignals": [
+            "extra memory",
+            "equality semantics",
+            "preserve order",
+            "worst case",
+            "benchmark data",
+            "trade-offs and correctness"
+          ],
+          "roleWeight": {
+            "frontend_developer": 4,
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "frontend_architect": 5,
+            "backend_architect": 5,
+            "solution_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_algorithmic_optimization_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_algorithmic_optimization_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Optimizing before identifying the actual input size and bottleneck?",
+          "expectedPoints": []
+        }
+      ]
+    }
+  ]
+}

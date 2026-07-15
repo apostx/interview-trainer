@@ -1,0 +1,408 @@
+{
+  "id": "luxair_integration_nodejs_reliability",
+  "name": "Luxair Integration — Node.js Reliability",
+  "description": "Node.js error propagation, safe public error mapping, and process recovery for production integration services.",
+  "sources": [
+    "luxair_software_developer_integration_job_ad"
+  ],
+  "topics": [
+    {
+      "id": "luxair_nodejs_error_handling",
+      "name": "Centralized Error Handling in Node.js",
+      "description": "Centralized error handling gives expected request and asynchronous failures one controlled path for classification, logging, and a safe external response.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "luxair_nodejs_service_lifecycle",
+        "luxair_cross_service_observability",
+        "luxair_outbound_api_resilience"
+      ],
+      "studyContent": {
+        "mentalModel": "Centralized error handling means expected failures travel to one owned place that decides what the caller sees, what is logged, and whether retry is safe.",
+        "problem": "When every layer catches errors differently, code can hide the original cause, send more than one response, or retry an unsafe operation. Clients receive inconsistent error bodies and operators lose the context needed to diagnose the failure.",
+        "example": "A route validates input and calls a partner adapter. A validation error becomes a stable 400 response, a partner timeout becomes a 503 with an internal cause and correlation id, and an unexpected programming error becomes a generic 500 without exposing a stack trace.",
+        "howItWorks": [
+          "Classify expected failures such as invalid input, business rejection, and temporary dependency failure.",
+          "Propagate rejected promises and thrown errors to one framework-level error handler.",
+          "Map each category to a stable status, safe response, retry policy, and alert severity.",
+          "Preserve the original cause and operational context in structured logs without exposing secrets."
+        ],
+        "commonMistakes": [
+          "Catching an error, logging it, and then continuing as if the operation succeeded.",
+          "Returning stack traces, credentials, or raw provider responses to the caller.",
+          "Retrying every failure without checking whether the operation and error are retryable."
+        ],
+        "keyTerms": [
+          {
+            "term": "central error handler",
+            "definition": "the owned layer that converts failures into consistent application behavior"
+          },
+          {
+            "term": "error cause",
+            "definition": "the original lower-level failure preserved inside a higher-level error"
+          },
+          {
+            "term": "safe error response",
+            "definition": "a stable client-facing error that does not expose internal or sensitive details"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Központosított hibakezelés Node.js-ben",
+          "description": "A központosított hibakezelés az elvárt kérés- és aszinkron hibákat egyetlen ellenőrzött útvonalon osztályozza, naplózza és alakítja biztonságos külső válasszá.",
+          "studyContent": {
+            "mentalModel": "A központosított hibakezelés azt jelenti, hogy az elvárt hibák egy kijelölt helyre jutnak, amely eldönti, mit lát a hívó, mit naplózunk, és biztonságos-e az újrapróbálkozás.",
+            "problem": "Ha minden réteg másképp kezeli a hibákat, a kód elveszítheti az eredeti okot, kétszer küldhet választ, vagy nem biztonságos műveletet próbálhat újra. A kliensek eltérő hibaformátumokat kapnak, az üzemeltetők pedig elveszítik a diagnózishoz szükséges adatokat.",
+            "example": "Egy útvonal ellenőrzi a bemenetet, majd partneradaptert hív. Az érvénytelen bemenet egységes 400-as választ, a partner időtúllépése 503-as választ és belső hibaokot, a programozási hiba pedig veremkiírás nélküli általános 500-as választ eredményez.",
+            "howItWorks": [
+              "Osztályozd az elvárt hibákat, például az érvénytelen bemenetet, az üzleti elutasítást és az ideiglenes függőségi hibát.",
+              "A visszautasított Promise-okat és a dobott hibákat vezesd egyetlen keretrendszerszintű hibakezelőhöz.",
+              "Minden kategóriához rendelj stabil státuszt, biztonságos választ, újrapróbálkozási szabályt és riasztási súlyosságot.",
+              "Az eredeti hibaokot és az üzemeltetési adatokat strukturált naplóban őrizd meg érzékeny adatok kiszivárogtatása nélkül."
+            ],
+            "commonMistakes": [
+              "Elkapni és naplózni a hibát, majd úgy folytatni, mintha a művelet sikerült volna.",
+              "Veremkiírást, hitelesítő adatot vagy nyers partnerválaszt visszaadni a hívónak.",
+              "Minden hibát automatikusan újrapróbálni annak vizsgálata nélkül, hogy a művelet és a hiba valóban újrapróbálható-e."
+            ],
+            "keyTerms": [
+              {
+                "term": "központi hibakezelő",
+                "definition": "a kijelölt réteg, amely a hibákat egységes alkalmazásviselkedéssé alakítja"
+              },
+              {
+                "term": "hibaok",
+                "definition": "az eredeti alacsonyabb szintű hiba, amelyet egy magasabb szintű hiba megőriz"
+              },
+              {
+                "term": "biztonságos hibaválasz",
+                "definition": "stabil kliensoldali hiba, amely nem fed fel belső vagy érzékeny részleteket"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "luxair_nodejs_error_boundary_001",
+      "title": "Designing one centralized error path for a Node.js API",
+      "prompt": "How would you structure error propagation in a Node.js integration API so asynchronous failures reach one controlled boundary and every request receives at most one response?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "design_review",
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_nodejs_error_handling"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Async propagation, centralized boundary, error classes, safe response mapping, and preserved context.",
+      "expectedPoints": [
+        {
+          "id": "luxair_node_error_propagation",
+          "label": "Propagates asynchronous failures",
+          "description": "Returns or awaits promises and forwards rejected work to a known handler instead of leaving detached or swallowed failures.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "return promise",
+            "await promise",
+            "forward error",
+            "central handler",
+            "no swallowed error"
+          ]
+        },
+        {
+          "id": "luxair_node_error_classification",
+          "label": "Uses explicit error categories",
+          "description": "Distinguishes validation, business, dependency, and programmer failures so response, retry, and alert behavior are intentional.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "validation error",
+            "business rejection",
+            "dependency error",
+            "programmer error",
+            "error category"
+          ]
+        },
+        {
+          "id": "luxair_node_error_single_response",
+          "label": "Keeps one response owner",
+          "description": "Lets one boundary map errors to safe responses, preserves the cause and correlation context, and avoids writing after a response has already started.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "single response",
+            "preserve cause",
+            "correlation id",
+            "safe response",
+            "headers sent"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_nodejs_error_boundary_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would this design change for a background message consumer that has no HTTP response?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Központosított hibakezelési útvonal tervezése Node.js API-hoz",
+          "prompt": "Hogyan építenéd fel a hibák továbbítását egy Node.js integrációs API-ban úgy, hogy az aszinkron hibák egy szabályozott határhoz jussanak, és minden kérés legfeljebb egy választ kapjon?",
+          "answerStructureHint": "Aszinkron továbbítás, központi hibakezelő, hibakategóriák, biztonságos válaszleképezés és az eredeti kontextus megőrzése.",
+          "expectedPoints": {
+            "luxair_node_error_propagation": {
+              "label": "Továbbítja az aszinkron hibákat",
+              "description": "A Promise-okat visszaadja vagy megvárja, az elutasított műveleteket pedig kijelölt kezelőhöz továbbítja ahelyett, hogy elvesznének."
+            },
+            "luxair_node_error_classification": {
+              "label": "Egyértelmű hibakategóriákat használ",
+              "description": "Elkülöníti a validációs, üzleti, függőségi és programhibákat, hogy a válasz, az újrapróbálás és a riasztás tudatos döntés legyen."
+            },
+            "luxair_node_error_single_response": {
+              "label": "Egy hely birtokolja a választ",
+              "description": "Egy kijelölt határ alakítja a hibát biztonságos válasszá, megőrzi az okot és a korrelációs adatot, valamint nem próbál újra írni egy már elkezdett válaszba."
+            }
+          },
+          "followUps": {
+            "luxair_nodejs_error_boundary_followup": "Hogyan változna ez a megoldás egy háttérben futó üzenetfogyasztónál, ahol nincs HTTP-válasz?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_nodejs_fatal_error_002",
+      "title": "Fatal process-level errors in Node.js",
+      "prompt": "An unexpected error reaches uncaughtException, or an unhandled rejection is configured to terminate the Node.js process. What should the service do, and why is resuming normal work unsafe?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_nodejs_service_lifecycle"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Capture minimal evidence synchronously, exit promptly, and rely on an external supervisor to restart a clean process.",
+      "expectedPoints": [
+        {
+          "id": "luxair_node_fatal_evidence",
+          "label": "Captures the failure evidence",
+          "description": "Records the original error, stack, correlation or request context, and service version using a minimal path that does not assume the application is still healthy.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "log stack",
+            "error context",
+            "correlation id",
+            "service version",
+            "original cause"
+          ]
+        },
+        {
+          "id": "luxair_node_fatal_shutdown",
+          "label": "Exits and relies on an external supervisor",
+          "description": "Performs only minimal synchronous cleanup, exits promptly, and lets a separate process manager or platform start a clean instance.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "synchronous cleanup",
+            "exit process",
+            "process supervisor",
+            "supervisor restart",
+            "clean process"
+          ]
+        },
+        {
+          "id": "luxair_node_fatal_not_control_flow",
+          "label": "Does not use fatal handlers as normal control flow",
+          "description": "Explains that the process may be in an undefined state and that process-level handlers are only a last safety net, not normal error control flow.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "last safety net",
+            "not normal flow",
+            "handle promises",
+            "undefined process state",
+            "no recovery guarantee"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_nodejs_fatal_error_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How is this different from handling SIGTERM during a normal deployment?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Végzetes folyamatszintű hibák Node.js-ben",
+          "prompt": "Egy váratlan hiba eléri az uncaughtException kezelőt, vagy egy nem kezelt Promise-elutasítás úgy van beállítva, hogy leállítsa a Node.js folyamatot. Mit tegyen a szolgáltatás, és miért veszélyes folytatni a normál munkát?",
+          "answerStructureHint": "A legszükségesebb diagnosztikai adatok szinkron rögzítése, gyors kilépés és tiszta folyamat indítása külső felügyelővel.",
+          "expectedPoints": {
+            "luxair_node_fatal_evidence": {
+              "label": "Rögzíti a hiba bizonyítékait",
+              "description": "Minimális, az alkalmazás egészséges működését nem feltételező úton rögzíti az eredeti hibát, a veremnyomot, a kérés vagy korreláció környezetét és a szolgáltatásverzióját."
+            },
+            "luxair_node_fatal_shutdown": {
+              "label": "Kilép, és külső felügyelőre bízza az újraindítást",
+              "description": "Csak minimális szinkron takarítást végez, gyorsan kilép, majd külön folyamatkezelőre vagy platformra bízza egy tiszta példány elindítását."
+            },
+            "luxair_node_fatal_not_control_flow": {
+              "label": "Nem tekinti normál hibakezelésnek",
+              "description": "Elmondja, hogy a folyamat állapota bizonytalanná válhat, és a folyamatszintű kezelő csak utolsó biztonsági háló, nem pedig normál hibakezelési út."
+            }
+          },
+          "followUps": {
+            "luxair_nodejs_fatal_error_followup": "Miben különbözik ez a normál telepítés közbeni SIGTERM kezelésétől?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_nodejs_error_mapping_003",
+      "title": "Mapping internal failures to safe API errors",
+      "prompt": "How would you map validation errors, partner business rejections, temporary dependency failures, and unexpected bugs to API responses without leaking internal details or hiding useful diagnostics?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_nodejs_error_handling"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Stable public error contract, intentional status mapping, internal cause and correlation, and no unsafe leakage.",
+      "expectedPoints": [
+        {
+          "id": "luxair_node_error_public_contract",
+          "label": "Uses a stable public error contract",
+          "description": "Returns a machine-readable error code, safe message, and correlation identifier without exposing stacks, credentials, or raw partner payloads.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "error code",
+            "safe message",
+            "correlation id",
+            "no stack trace",
+            "machine readable"
+          ]
+        },
+        {
+          "id": "luxair_node_error_status_mapping",
+          "label": "Maps categories intentionally",
+          "description": "Uses client error status for invalid input, a defined domain response for business rejection, and appropriate 5xx or unavailable behavior for dependency or unexpected failure.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "client error",
+            "business rejection",
+            "dependency unavailable",
+            "server error",
+            "status mapping"
+          ]
+        },
+        {
+          "id": "luxair_node_error_internal_context",
+          "label": "Keeps rich internal diagnostics",
+          "description": "Preserves the original cause, partner response metadata, retryability, service version, and correlation data in logs or traces.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "preserve cause",
+            "partner metadata",
+            "retryable flag",
+            "structured log",
+            "trace context"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_nodejs_error_mapping_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you return the same status when every partner is unavailable and when only one optional partner is unavailable?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Belső hibák biztonságos API-hibává alakítása",
+          "prompt": "Hogyan alakítanád API-válasszá a validációs hibát, a partner üzleti elutasítását, az átmeneti függőségi hibát és a váratlan programhibát úgy, hogy ne szivárogjon ki belső részlet, de a diagnosztika használható maradjon?",
+          "answerStructureHint": "Stabil nyilvános hibaformátum, tudatos státuszleképezés, belső ok és korreláció, valamint az érzékeny részletek elrejtése.",
+          "expectedPoints": {
+            "luxair_node_error_public_contract": {
+              "label": "Stabil nyilvános hibaszerződést használ",
+              "description": "Géppel feldolgozható hibakódot, biztonságos üzenetet és korrelációs azonosítót ad vissza veremnyom, hitelesítő adat vagy nyers partneradat nélkül."
+            },
+            "luxair_node_error_status_mapping": {
+              "label": "Tudatosan rendeli hozzá a státuszokat",
+              "description": "Hibás bemenethez klienshibát, üzleti elutasításhoz meghatározott domain-specifikus választ, függőségi vagy váratlan hibához pedig megfelelő 5xx választ használ."
+            },
+            "luxair_node_error_internal_context": {
+              "label": "Gazdag belső diagnosztikát őriz meg",
+              "description": "A naplókban vagy nyomkövetési adatokban megőrzi az eredeti okot, a partner válaszmetaadatait, az újrapróbálhatóságot, a szolgáltatásverziót és a korrelációs adatokat."
+            }
+          },
+          "followUps": {
+            "luxair_nodejs_error_mapping_followup": "Ugyanazt a státuszt adnád vissza, ha minden partner nem elérhető, mint amikor csak egy opcionális partner esik ki?"
+          }
+        }
+      }
+    }
+  ]
+}

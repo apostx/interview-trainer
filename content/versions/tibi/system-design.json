@@ -1,0 +1,1465 @@
+{
+  "id": "rebuild26_system_design_additive",
+  "name": "System Design Foundations — additive questions",
+  "description": "Question expansion derived from the attached source files; reuses existing repository topic IDs and defines only missing concepts.",
+  "sources": [
+    "tibi/system_design",
+    "tibi/10_api_paradigmak"
+  ],
+  "topics": [
+    {
+      "id": "rebuild26_media_streaming",
+      "name": "Media Streaming System Design",
+      "description": "Designing upload, processing, storage, delivery, and adaptive playback for media.",
+      "category": "architecture",
+      "relatedTopicIds": [],
+      "studyNotes": "## What is it?\n\nUpload, transcoding, object storage, metadata, CDN, adaptive bitrate playback, search, and offline behavior.\n\nStreaming separates large immutable media delivery from mutable metadata and asynchronous processing pipelines.\n\n## What problem does it solve?\n\nServing originals through application servers wastes bandwidth, and synchronous transcoding makes uploads fragile and slow.\n\n## How it works\n\nClients upload directly to object storage using signed URLs; workers produce multiple segments and bitrates, and a CDN serves manifests and chunks.\n\n- Store media objects separately from relational or document metadata\n- Use an event-driven pipeline for validation, transcoding, thumbnails, manifests, indexing, and status updates\n- Adaptive bitrate playback selects segment quality from bandwidth and buffer conditions, usually through a CDN\n\n## Common mistakes\n\n- Proxying every large upload and stream through the main API tier without need\n- Assuming one encoded file and one bitrate serves all devices and networks well\n\n## Key terms\n\n- transcoding — Converting media into delivery formats and qualities\n- manifest — A playlist describing media segments and variants\n- adaptive bitrate — Changing quality based on playback conditions"
+    }
+  ],
+  "questions": [
+    {
+      "id": "rebuild26_system_requirements_001_scenario_002",
+      "title": "Applying System Design Discovery and Capacity Planning in practice",
+      "prompt": "Read/write ratio, payload size, retention, concurrency, and peak factor turn vague millions of users into throughput and storage estimates. Review the design. Which assumptions and trade-offs matter, and how would you validate it at scale?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "requirements_clarification",
+        "nfr",
+        "scalability"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_system_requirements_001_scenario_002_point_1",
+          "label": "Clarifies functional scope",
+          "description": "Identifies actors, core flows, and explicit exclusions.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "functional requirements",
+            "core flow",
+            "out of scope",
+            "clarifies functional scope"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_system_requirements_001_scenario_002_point_2",
+          "label": "Prioritizes quality attributes",
+          "description": "Makes latency, availability, consistency, durability, cost, or compliance explicit.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "latency",
+            "availability",
+            "consistency",
+            "durability",
+            "cost",
+            "prioritizes quality attributes"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_system_requirements_001_scenario_002_point_3",
+          "label": "Estimates with assumptions",
+          "description": "Calculates average and peak throughput, data growth, or bandwidth and states uncertainty.",
+          "importance": "important",
+          "acceptedSignals": [
+            "requests per second",
+            "peak",
+            "storage",
+            "bandwidth",
+            "assumption",
+            "estimates with assumptions"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_system_requirements_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_system_requirements_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_system_requirements_001_review_003",
+      "title": "Challenging weak reasoning about System Design Discovery and Capacity Planning",
+      "prompt": "A teammate claims: \"Starting with microservices or a database before asking requirements.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "requirements_clarification",
+        "nfr",
+        "scalability"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_system_requirements_001_review_003_point_1",
+          "label": "Clarifies functional scope",
+          "description": "Identifies actors, core flows, and explicit exclusions.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "functional requirements",
+            "core flow",
+            "out of scope",
+            "clarifies functional scope"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_system_requirements_001_review_003_point_2",
+          "label": "Prioritizes quality attributes",
+          "description": "Makes latency, availability, consistency, durability, cost, or compliance explicit.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "latency",
+            "availability",
+            "consistency",
+            "durability",
+            "cost",
+            "prioritizes quality attributes"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_system_requirements_001_review_003_point_3",
+          "label": "Estimates with assumptions",
+          "description": "Calculates average and peak throughput, data growth, or bandwidth and states uncertainty.",
+          "importance": "important",
+          "acceptedSignals": [
+            "requests per second",
+            "peak",
+            "storage",
+            "bandwidth",
+            "assumption",
+            "estimates with assumptions"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_system_requirements_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_system_requirements_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Presenting precise-looking numbers without assumptions or sensitivity ranges?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_cap_consistency_001_scenario_002",
+      "title": "Applying CAP and Consistency Trade-offs in practice",
+      "prompt": "A banking balance update may reject writes without quorum, while a social like counter accepts temporary divergence and reconciles later. Review the design. Which assumptions and trade-offs matter, and how would you validate it at scale?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "cap_theorem",
+        "reliability"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_cap_consistency_001_scenario_002_point_1",
+          "label": "States CAP precisely",
+          "description": "Limits the C-A trade-off to partition conditions.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "during partition",
+            "consistency availability",
+            "network partition",
+            "cap precisely"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_cap_consistency_001_scenario_002_point_2",
+          "label": "Chooses by invariant",
+          "description": "Protects financial invariants and allows weaker semantics for tolerant counters.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "financial invariant",
+            "reject write",
+            "eventual counter",
+            "by invariant"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_cap_consistency_001_scenario_002_point_3",
+          "label": "Explains recovery",
+          "description": "Covers conflict handling, convergence, compensation, or user impact.",
+          "importance": "important",
+          "acceptedSignals": [
+            "reconcile",
+            "conflict",
+            "compensation",
+            "converge",
+            "recovery"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_cap_consistency_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_cap_consistency_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_cap_consistency_001_review_003",
+      "title": "Challenging weak reasoning about CAP and Consistency Trade-offs",
+      "prompt": "A teammate claims: \"Saying every distributed database is simply CP or AP in all situations.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "cap_theorem",
+        "reliability"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_cap_consistency_001_review_003_point_1",
+          "label": "States CAP precisely",
+          "description": "Limits the C-A trade-off to partition conditions.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "during partition",
+            "consistency availability",
+            "network partition",
+            "cap precisely"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_cap_consistency_001_review_003_point_2",
+          "label": "Chooses by invariant",
+          "description": "Protects financial invariants and allows weaker semantics for tolerant counters.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "financial invariant",
+            "reject write",
+            "eventual counter",
+            "by invariant"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_cap_consistency_001_review_003_point_3",
+          "label": "Explains recovery",
+          "description": "Covers conflict handling, convergence, compensation, or user impact.",
+          "importance": "important",
+          "acceptedSignals": [
+            "reconcile",
+            "conflict",
+            "compensation",
+            "converge",
+            "recovery"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_cap_consistency_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_cap_consistency_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Using eventual consistency without describing user-visible anomalies and repair?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_cache_cdn_001_scenario_002",
+      "title": "Applying Cache and CDN Layer Selection in practice",
+      "prompt": "Static media uses a CDN with immutable versioned URLs; personalized data may use a short-lived application cache keyed by user and permissions. Review the design. Which assumptions and trade-offs matter, and how would you validate it at scale?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "caching_strategies",
+        "cdn",
+        "frontend_performance"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_cache_cdn_001_scenario_002_point_1",
+          "label": "Chooses appropriate layers and keys",
+          "description": "Separates CDN assets from application data and keys by all relevant dimensions.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "cdn",
+            "application cache",
+            "cache key",
+            "versioned asset",
+            "layers and keys"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_cache_cdn_001_scenario_002_point_2",
+          "label": "Defines freshness policy",
+          "description": "Explains TTL, revalidation, invalidation, and acceptable staleness.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "ttl",
+            "revalidation",
+            "invalidation",
+            "stale",
+            "freshness policy"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_cache_cdn_001_scenario_002_point_3",
+          "label": "Protects failure paths",
+          "description": "Covers stampede, hot keys, origin overload, fallback, or metrics.",
+          "importance": "important",
+          "acceptedSignals": [
+            "stampede",
+            "hot key",
+            "origin overload",
+            "request coalescing",
+            "failure paths"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_cache_cdn_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_cache_cdn_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_cache_cdn_001_review_003",
+      "title": "Challenging weak reasoning about Cache and CDN Layer Selection",
+      "prompt": "A teammate claims: \"Saying cache invalidation is solved by adding a TTL without discussing acceptable staleness.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "caching_strategies",
+        "cdn",
+        "frontend_performance"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_cache_cdn_001_review_003_point_1",
+          "label": "Chooses appropriate layers and keys",
+          "description": "Separates CDN assets from application data and keys by all relevant dimensions.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "cdn",
+            "application cache",
+            "cache key",
+            "versioned asset",
+            "layers and keys"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_cache_cdn_001_review_003_point_2",
+          "label": "Defines freshness policy",
+          "description": "Explains TTL, revalidation, invalidation, and acceptable staleness.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "ttl",
+            "revalidation",
+            "invalidation",
+            "stale",
+            "freshness policy"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_cache_cdn_001_review_003_point_3",
+          "label": "Protects failure paths",
+          "description": "Covers stampede, hot keys, origin overload, fallback, or metrics.",
+          "importance": "important",
+          "acceptedSignals": [
+            "stampede",
+            "hot key",
+            "origin overload",
+            "request coalescing",
+            "failure paths"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_cache_cdn_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_cache_cdn_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Caching authorization-sensitive responses under keys that omit identity or policy version?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_data_scaling_001_scenario_002",
+      "title": "Applying Replication vs Sharding in practice",
+      "prompt": "A user-scoped service shards by a stable hashed user ID and maintains replicas per shard, while global reports run asynchronously. Would you keep this approach? Explain the trade-offs, likely failure modes, and how you would verify it.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "replication",
+        "sharding",
+        "scaling_fundamentals"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_data_scaling_001_scenario_002_point_1",
+          "label": "Separates replication and sharding",
+          "description": "Connects copies to availability or reads and partitions to capacity.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "replication copies",
+            "sharding partitions",
+            "read scale",
+            "capacity",
+            "replication and sharding"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_data_scaling_001_scenario_002_point_2",
+          "label": "Explains replica semantics",
+          "description": "Mentions lag, consistency, failover, or synchronous trade-offs.",
+          "importance": "important",
+          "acceptedSignals": [
+            "replica lag",
+            "failover",
+            "synchronous asynchronous",
+            "replica semantics"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_data_scaling_001_scenario_002_point_3",
+          "label": "Evaluates shard keys",
+          "description": "Covers distribution, cardinality, locality, hotspots, and cross-shard queries.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "shard key",
+            "hotspot",
+            "cardinality",
+            "cross-shard",
+            "shard keys"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_data_scaling_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_data_scaling_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_data_scaling_001_review_003",
+      "title": "Challenging weak reasoning about Replication vs Sharding",
+      "prompt": "A teammate claims: \"Choosing a sequential or low-cardinality hot shard key.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "replication",
+        "sharding",
+        "scaling_fundamentals"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_data_scaling_001_review_003_point_1",
+          "label": "Separates replication and sharding",
+          "description": "Connects copies to availability or reads and partitions to capacity.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "replication copies",
+            "sharding partitions",
+            "read scale",
+            "capacity",
+            "replication and sharding"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_data_scaling_001_review_003_point_2",
+          "label": "Explains replica semantics",
+          "description": "Mentions lag, consistency, failover, or synchronous trade-offs.",
+          "importance": "important",
+          "acceptedSignals": [
+            "replica lag",
+            "failover",
+            "synchronous asynchronous",
+            "replica semantics"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_data_scaling_001_review_003_point_3",
+          "label": "Evaluates shard keys",
+          "description": "Covers distribution, cardinality, locality, hotspots, and cross-shard queries.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "shard key",
+            "hotspot",
+            "cardinality",
+            "cross-shard",
+            "shard keys"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_data_scaling_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_data_scaling_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Sending strongly consistent reads to asynchronous replicas without acknowledging lag?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_url_shortener_001_scenario_002",
+      "title": "Applying Designing a URL shortener in practice",
+      "prompt": "A globally unique numeric ID encoded in Base62 creates a compact key; redirects are cached, while click events enter an asynchronous stream. Review the design. Which assumptions and trade-offs matter, and how would you validate it at scale?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "design_url_shortener",
+        "caching_strategies",
+        "scaling_fundamentals"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_url_shortener_001_scenario_002_point_1",
+          "label": "Designs unique key generation",
+          "description": "Explains uniqueness, collision strategy, and compact encoding.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "unique id",
+            "base62",
+            "collision check",
+            "key space",
+            "unique key generation"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_url_shortener_001_scenario_002_point_2",
+          "label": "Optimizes the redirect path",
+          "description": "Uses indexed storage and cache with correct redirect semantics.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "cache",
+            "indexed lookup",
+            "301 302 redirect",
+            "read heavy",
+            "the redirect path"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_url_shortener_001_scenario_002_point_3",
+          "label": "Separates and secures side concerns",
+          "description": "Moves analytics asynchronously and covers expiry, abuse, or scanning.",
+          "importance": "important",
+          "acceptedSignals": [
+            "async analytics",
+            "expiration",
+            "abuse prevention",
+            "malware scan",
+            "and secures side concerns"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_url_shortener_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_url_shortener_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_url_shortener_001_review_003",
+      "title": "Challenging weak reasoning about Designing a URL shortener",
+      "prompt": "A teammate claims: \"Assuming hashing alone guarantees short collision-free keys.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "design_url_shortener",
+        "caching_strategies",
+        "scaling_fundamentals"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_url_shortener_001_review_003_point_1",
+          "label": "Designs unique key generation",
+          "description": "Explains uniqueness, collision strategy, and compact encoding.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "unique id",
+            "base62",
+            "collision check",
+            "key space",
+            "unique key generation"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_url_shortener_001_review_003_point_2",
+          "label": "Optimizes the redirect path",
+          "description": "Uses indexed storage and cache with correct redirect semantics.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "cache",
+            "indexed lookup",
+            "301 302 redirect",
+            "read heavy",
+            "the redirect path"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_url_shortener_001_review_003_point_3",
+          "label": "Separates and secures side concerns",
+          "description": "Moves analytics asynchronously and covers expiry, abuse, or scanning.",
+          "importance": "important",
+          "acceptedSignals": [
+            "async analytics",
+            "expiration",
+            "abuse prevention",
+            "malware scan",
+            "and secures side concerns"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_url_shortener_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_url_shortener_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Writing click analytics synchronously before returning the redirect?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_media_streaming_001",
+      "title": "Designing a media streaming platform",
+      "prompt": "Design the upload-to-playback path of a Spotify- or video-like streaming service.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "rebuild26_media_streaming"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 90,
+      "answerStructureHint": "Walk through direct upload, asynchronous processing, metadata, storage, CDN delivery, adaptation, and failure state.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_media_streaming_001_p1",
+          "label": "Separates data types and paths",
+          "description": "Keeps media objects, metadata, and processing status in appropriate stores.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "object storage",
+            "metadata database",
+            "processing status",
+            "data types and paths"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_media_streaming_001_p2",
+          "label": "Builds an asynchronous pipeline",
+          "description": "Covers upload event, workers, transcoding, manifests, and retries.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "event queue",
+            "worker",
+            "transcoding",
+            "retry",
+            "manifest",
+            "an asynchronous pipeline"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_media_streaming_001_p3",
+          "label": "Designs scalable playback",
+          "description": "Uses CDN, segmented delivery, adaptive bitrate, and authorization strategy.",
+          "importance": "important",
+          "acceptedSignals": [
+            "cdn",
+            "segments",
+            "adaptive bitrate",
+            "signed url",
+            "scalable playback"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_media_streaming_001_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_media_streaming_001_p3"
+          },
+          "prompt": "How would offline playback change the client and authorization design?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_media_streaming_001_scenario_002",
+      "title": "Applying Media Streaming System Design in practice",
+      "prompt": "Clients upload directly to object storage using signed URLs; workers produce multiple segments and bitrates, and a CDN serves manifests and chunks. Review the design. Which assumptions and trade-offs matter, and how would you validate it at scale?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "rebuild26_media_streaming"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_media_streaming_001_scenario_002_point_1",
+          "label": "Separates data types and paths",
+          "description": "Keeps media objects, metadata, and processing status in appropriate stores.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "object storage",
+            "metadata database",
+            "processing status",
+            "data types and paths"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_media_streaming_001_scenario_002_point_2",
+          "label": "Builds an asynchronous pipeline",
+          "description": "Covers upload event, workers, transcoding, manifests, and retries.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "event queue",
+            "worker",
+            "transcoding",
+            "retry",
+            "manifest",
+            "an asynchronous pipeline"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_media_streaming_001_scenario_002_point_3",
+          "label": "Designs scalable playback",
+          "description": "Uses CDN, segmented delivery, adaptive bitrate, and authorization strategy.",
+          "importance": "important",
+          "acceptedSignals": [
+            "cdn",
+            "segments",
+            "adaptive bitrate",
+            "signed url",
+            "scalable playback"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_media_streaming_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_media_streaming_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_media_streaming_001_review_003",
+      "title": "Challenging weak reasoning about Media Streaming System Design",
+      "prompt": "A teammate claims: \"Proxying every large upload and stream through the main API tier without need.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "rebuild26_media_streaming"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_media_streaming_001_review_003_point_1",
+          "label": "Separates data types and paths",
+          "description": "Keeps media objects, metadata, and processing status in appropriate stores.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "object storage",
+            "metadata database",
+            "processing status",
+            "data types and paths"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_media_streaming_001_review_003_point_2",
+          "label": "Builds an asynchronous pipeline",
+          "description": "Covers upload event, workers, transcoding, manifests, and retries.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "event queue",
+            "worker",
+            "transcoding",
+            "retry",
+            "manifest",
+            "an asynchronous pipeline"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_media_streaming_001_review_003_point_3",
+          "label": "Designs scalable playback",
+          "description": "Uses CDN, segmented delivery, adaptive bitrate, and authorization strategy.",
+          "importance": "important",
+          "acceptedSignals": [
+            "cdn",
+            "segments",
+            "adaptive bitrate",
+            "signed url",
+            "scalable playback"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_media_streaming_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_media_streaming_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Assuming one encoded file and one bitrate serves all devices and networks well?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_reliable_async_work_001_scenario_002",
+      "title": "Applying Reliable Asynchronous Processing in practice",
+      "prompt": "A click event is acknowledged after durable enqueue; consumers update analytics idempotently, retry transient errors, and quarantine poison messages. Review the design. Which assumptions and trade-offs matter, and how would you validate it at scale?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "message_queue",
+        "retries",
+        "idempotency",
+        "observability"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Clarify the goal, apply the relevant mechanism, then discuss trade-offs, failure modes, and verification.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_reliable_async_work_001_scenario_002_point_1",
+          "label": "Chooses delivery and ordering semantics",
+          "description": "Connects at-least-once and partition ordering to business needs.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "at-least once",
+            "ordering",
+            "partition key",
+            "business invariant",
+            "delivery and ordering semantics"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_reliable_async_work_001_scenario_002_point_2",
+          "label": "Makes processing idempotent",
+          "description": "Uses event identity, conditional writes, or deduplication.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "idempotent consumer",
+            "event id",
+            "deduplication",
+            "conditional write",
+            "processing idempotent"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_reliable_async_work_001_scenario_002_point_3",
+          "label": "Handles failure and pressure",
+          "description": "Covers bounded retries, DLQ, lag, scaling, and backpressure.",
+          "importance": "important",
+          "acceptedSignals": [
+            "exponential backoff",
+            "dead-letter",
+            "consumer lag",
+            "backpressure",
+            "failure and pressure"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_reliable_async_work_001_scenario_002_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_reliable_async_work_001_scenario_002_point_2"
+          },
+          "prompt": "Which changed requirement or constraint would reverse your decision?",
+          "expectedPoints": []
+        }
+      ]
+    },
+    {
+      "id": "rebuild26_reliable_async_work_001_review_003",
+      "title": "Challenging weak reasoning about Reliable Asynchronous Processing",
+      "prompt": "A teammate claims: \"Claiming exactly-once business effects because a broker advertises exactly-once processing.\" Challenge the claim. What is wrong or incomplete, and what would you decide instead?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "message_queue",
+        "retries",
+        "idempotency",
+        "observability"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Identify the misconception, explain the correct model, and propose a safer practical decision.",
+      "expectedPoints": [
+        {
+          "id": "rebuild26_reliable_async_work_001_review_003_point_1",
+          "label": "Chooses delivery and ordering semantics",
+          "description": "Connects at-least-once and partition ordering to business needs.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "at-least once",
+            "ordering",
+            "partition key",
+            "business invariant",
+            "delivery and ordering semantics"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_reliable_async_work_001_review_003_point_2",
+          "label": "Makes processing idempotent",
+          "description": "Uses event identity, conditional writes, or deduplication.",
+          "importance": "critical",
+          "acceptedSignals": [
+            "idempotent consumer",
+            "event id",
+            "deduplication",
+            "conditional write",
+            "processing idempotent"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        },
+        {
+          "id": "rebuild26_reliable_async_work_001_review_003_point_3",
+          "label": "Handles failure and pressure",
+          "description": "Covers bounded retries, DLQ, lag, scaling, and backpressure.",
+          "importance": "important",
+          "acceptedSignals": [
+            "exponential backoff",
+            "dead-letter",
+            "consumer lag",
+            "backpressure",
+            "failure and pressure"
+          ],
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5,
+            "frontend_architect": 5
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rebuild26_reliable_async_work_001_review_003_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "rebuild26_reliable_async_work_001_review_003_point_1"
+          },
+          "prompt": "How would you detect this issue in practice: Retrying permanent validation failures forever on the main queue?",
+          "expectedPoints": []
+        }
+      ]
+    }
+  ]
+}

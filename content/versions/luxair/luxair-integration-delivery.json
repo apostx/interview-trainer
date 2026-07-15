@@ -1,0 +1,1681 @@
+{
+  "id": "luxair_integration_delivery",
+  "name": "Luxair Integration Developer — Testing, Delivery, and Azure",
+  "description": "Role-specific interview preparation for partner testing, Docker, CI/CD, safe releases, and practical Azure integration architecture.",
+  "sources": [
+    "luxair_software_developer_integration_job_ad"
+  ],
+  "topics": [
+    {
+      "id": "luxair_partner_integration_testing",
+      "name": "Partner Integration Testing",
+      "description": "Partner integration testing verifies adapter behavior and shared contract assumptions without making every test depend on a live external system.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "luxair_api_contract_evolution",
+        "luxair_runtime_validation_typescript",
+        "luxair_outbound_api_resilience",
+        "luxair_engineering_process_improvement"
+      ],
+      "studyContent": {
+        "mentalModel": "Partner integration testing means checking both your adapter logic and the shared contract while keeping routine tests independent from a live external system.",
+        "problem": "Mocks alone can drift from reality, while tests that always call a real provider are slow, fragile, costly, and may change external data. Without a layered strategy, teams either miss breaking changes or avoid running tests often.",
+        "example": "A booking adapter is tested with recorded partner responses and contract fixtures in CI. A small scheduled test runs against the partner sandbox, while production monitoring detects unknown fields and changed error behavior.",
+        "howItWorks": [
+          "Unit-test mapping and validation with representative fixtures, including malformed and edge-case payloads.",
+          "Use contract tests to verify the request and response assumptions shared with the partner.",
+          "Run a smaller set of end-to-end tests against a sandbox or controlled environment.",
+          "Monitor production for schema drift, unknown values, and changed error rates."
+        ],
+        "commonMistakes": [
+          "Mocking only the happy path and assuming the partner behaves exactly like the mock.",
+          "Making every CI run depend on an unstable external sandbox.",
+          "Using production credentials or real customer data in automated tests."
+        ],
+        "keyTerms": [
+          {
+            "term": "contract test",
+            "definition": "a test that verifies the expectations shared between an API consumer and provider"
+          },
+          {
+            "term": "fixture",
+            "definition": "a saved example input or response used by a test"
+          },
+          {
+            "term": "sandbox",
+            "definition": "a provider environment intended for safe integration testing"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Partnerintegrációk tesztelése",
+          "description": "A partnerintegrációk tesztelése ellenőrzi az adapter működését és a közös szerződésre vonatkozó feltételezéseket anélkül, hogy minden teszt egy élő külső rendszertől függne.",
+          "studyContent": {
+            "mentalModel": "A partnerintegráció tesztelése egyszerre ellenőrzi az adapter saját logikáját és a partnerrel közös szerződést, miközben a mindennapi tesztek nem függnek egy élő külső rendszertől.",
+            "problem": "A mockok idővel eltérhetnek a valós szolgáltatás működésétől, az élő szolgáltatót mindig hívó tesztek pedig lassúak, törékenyek, költségesek és külső adatot módosíthatnak. Rétegezett stratégia nélkül a csapat nem veszi észre a visszafelé nem kompatibilis változásokat, vagy túl ritkán futtat valódi integrációs ellenőrzést.",
+            "example": "A CI-folyamat egy foglalási adaptert mentett partnerválaszokkal és szerződéses tesztadatokkal ellenőriz. Egy kisebb ütemezett teszt a partner tesztkörnyezetét hívja, az éles megfigyelés pedig ismeretlen mezőket és megváltozott hibaviselkedést keres.",
+            "howItWorks": [
+              "Egységtesztekkel ellenőrizd a leképezést és a validációt reprezentatív tesztadatokkal, köztük hibás és szélső esetekkel.",
+              "Szerződésteszttel ellenőrizd a fogyasztó és szolgáltató kérésre és válaszra vonatkozó közös feltételezéseit.",
+              "Kisebb end-to-end tesztkészletet futtass tesztkörnyezetben vagy szabályozott környezetben.",
+              "Éles környezetben figyeld a sémaeltérést, ismeretlen értékeket és változó hibaarányt."
+            ],
+            "commonMistakes": [
+              "Csak a sikeres alapfolyamatot lefedni mockkal, és feltételezni, hogy a partner pontosan úgy működik, mint a mock.",
+              "Minden CI-futást egy instabil külső tesztkörnyezettől függővé tenni.",
+              "Éles környezethez tartozó hitelesítő adatot vagy valódi ügyféladatot használni automatikus tesztekben."
+            ],
+            "keyTerms": [
+              {
+                "term": "szerződésteszt",
+                "definition": "teszt, amely ellenőrzi az API fogyasztója és szolgáltatója közötti közös elvárásokat"
+              },
+              {
+                "term": "tesztadat",
+                "definition": "tesztben használt mentett példa bemenet vagy válasz"
+              },
+              {
+                "term": "tesztkörnyezet",
+                "definition": "biztonságos integrációs tesztelésre szánt szolgáltatói környezet"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_dockerized_services",
+      "name": "Production-Ready Docker Images for Node.js",
+      "description": "A production-ready Docker image packages a Node.js service reproducibly, runs with limited privileges, receives configuration at startup, and keeps durable state outside the container.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "luxair_nodejs_service_lifecycle",
+        "luxair_safe_delivery_pipeline"
+      ],
+      "studyContent": {
+        "mentalModel": "A Docker image packages the application and its fixed runtime dependencies. The environment supplies configuration, credentials, networking, and temporary storage when a container starts.",
+        "problem": "A container that works locally can fail in production when the image depends on undeclared files, mutable state, a developer machine, root privileges, or environment-specific configuration. Large or unpinned images also make releases slower and less reproducible.",
+        "example": "A Node.js integration service uses a pinned multi-stage image, installs only production dependencies, runs as a non-root user, reads configuration at startup, writes logs to stdout, and stores no business state inside the container.",
+        "howItWorks": [
+          "Pin the Node.js and base-image versions, then use a multi-stage build so the final image contains only what the service needs at runtime.",
+          "Keep the image environment-neutral and inject configuration, credentials, and endpoints when the container starts.",
+          "Run as a non-root user and declare any writable temporary paths instead of assuming the whole filesystem is writable.",
+          "Write logs to stdout or stderr and keep durable business state in external services."
+        ],
+        "commonMistakes": [
+          "Baking secrets or environment-specific configuration into the image.",
+          "Using an unpinned latest tag or shipping compilers, caches, and development dependencies in the final image.",
+          "Storing important business state inside the container filesystem."
+        ],
+        "keyTerms": [
+          {
+            "term": "image",
+            "definition": "an immutable package containing the application and the files needed to run it"
+          },
+          {
+            "term": "container",
+            "definition": "a running instance of an image with environment-provided configuration and resources"
+          },
+          {
+            "term": "multi-stage build",
+            "definition": "a Docker build that uses separate build and runtime stages to keep the final image small"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Éles környezetre kész Docker image-ek Node.js-hez",
+          "description": "Egy éles környezetre kész Docker image reprodukálhatóan csomagolja a Node.js-szolgáltatást, korlátozott jogosultságokkal fut, induláskor kapja a konfigurációt, és a tartós állapotot a konténeren kívül tárolja.",
+          "studyContent": {
+            "mentalModel": "A Docker image az alkalmazást és a rögzített futásidejű függőségeit csomagolja össze. A konténer indulásakor a környezet adja a konfigurációt, a hitelesítő adatokat, a hálózatot és az ideiglenes tárhelyet.",
+            "problem": "Egy helyben működő konténer éles környezetben elbukhat, ha nem deklarált fájlokra, módosítható belső állapotra, a fejlesztő gépére, root jogosultságra vagy környezetspecifikus beállításra támaszkodik. A nagy vagy nem rögzített image a kiadást is lassabbá és kevésbé reprodukálhatóvá teszi.",
+            "example": "Egy Node.js integrációs szolgáltatás rögzített verziójú, többlépcsős image-et használ, csak az éles függőségeket telepíti, nem root felhasználóként fut, induláskor olvassa be a konfigurációt, stdoutba naplóz, és nem tárol üzleti állapotot a konténerben.",
+            "howItWorks": [
+              "Rögzítsd a Node.js és az alap-image verzióját, majd használj többlépcsős buildet, hogy a végső image csak a futtatáshoz szükséges fájlokat tartalmazza.",
+              "Az image maradjon környezetfüggetlen; a konfigurációt, hitelesítő adatokat és végpontokat a konténer indulásakor add át.",
+              "Ne root felhasználóként futtasd, és külön jelöld az írható ideiglenes útvonalakat ahelyett, hogy az egész fájlrendszert írhatónak feltételeznéd.",
+              "A naplókat stdoutba vagy stderrbe írd, a tartós üzleti állapotot pedig külső szolgáltatásban tárold."
+            ],
+            "commonMistakes": [
+              "Titkot vagy környezetspecifikus konfigurációt az image-be építeni.",
+              "Nem rögzített latest címkét használni, vagy fordítóeszközöket, gyorsítótárat és fejlesztői függőségeket hagyni a végső image-ben.",
+              "Fontos üzleti állapotot a konténer fájlrendszerében tárolni."
+            ],
+            "keyTerms": [
+              {
+                "term": "image",
+                "definition": "nem módosuló csomag, amely az alkalmazást és a futtatásához szükséges fájlokat tartalmazza"
+              },
+              {
+                "term": "konténer",
+                "definition": "egy image futó példánya, amely a környezettől kap konfigurációt és erőforrásokat"
+              },
+              {
+                "term": "többlépcsős build",
+                "definition": "külön build- és futtatási szakaszt használó Docker-összeállítás, amely kisebb végső image-et eredményez"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_safe_delivery_pipeline",
+      "name": "Safe CI/CD for Integration Services",
+      "description": "Safe CI/CD for integration services checks code and contract compatibility, releases gradually, and keeps rollback possible when a partner-facing change causes problems.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "luxair_partner_integration_testing",
+        "luxair_dockerized_services",
+        "luxair_cross_service_observability",
+        "luxair_engineering_process_improvement"
+      ],
+      "studyContent": {
+        "mentalModel": "Contract-safe CI/CD means treating API and message compatibility as a release condition, not only checking that the new code passes unit tests.",
+        "problem": "An integration service can deploy successfully and still break a partner through a removed field, changed enum, new timeout, or incompatible message. A full rollout makes the blast radius large before the problem is visible.",
+        "example": "A pipeline runs unit, integration, schema, and consumer contract tests. It builds one immutable image, scans it, deploys a canary, checks error and latency metrics by partner, and promotes only when the new version remains healthy. Rollback uses the previous image and compatible schema.",
+        "howItWorks": [
+          "Validate code, runtime configuration, API schemas, messages, and migration compatibility.",
+          "Build one traceable artifact and promote the same artifact between environments.",
+          "Roll out gradually with partner- or route-level health signals and automatic stop conditions.",
+          "Keep database, message, and API changes backward compatible long enough for rollback."
+        ],
+        "commonMistakes": [
+          "Calling a release safe because unit tests pass while contract changes are untested.",
+          "Building a different artifact for production than the one tested earlier.",
+          "Depending on rollback when a destructive schema change makes the old version unusable."
+        ],
+        "keyTerms": [
+          {
+            "term": "contract test",
+            "definition": "a test that verifies a provider and consumer still agree on an API or message shape"
+          },
+          {
+            "term": "canary release",
+            "definition": "a rollout to a small traffic share before wider promotion"
+          },
+          {
+            "term": "immutable artifact",
+            "definition": "the exact same versioned build promoted through every environment"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Biztonságos CI/CD integrációs szolgáltatásokhoz",
+          "description": "Az integrációs szolgáltatások biztonságos CI/CD-folyamata ellenőrzi a kód és az interfészek kompatibilitását, fokozatosan adja ki a változást, és hiba esetén lehetővé teszi a visszaállítást.",
+          "studyContent": {
+            "mentalModel": "A biztonságos CI/CD-ben az API- és üzenetkompatibilitás kiadási feltétel. Nem elég, hogy az új kód saját egységtesztjei sikeresek.",
+            "problem": "Egy integrációs szolgáltatás technikailag sikeresen telepíthető, mégis megszakíthat egy partnerintegrációt egy eltávolított mezővel, megváltozott enumértékkel, új időkorláttal vagy inkompatibilis üzenettel. Egyszerre történő teljes bevezetésnél a hiba hatóköre nagy lehet, mire láthatóvá válik.",
+            "example": "A CI-folyamat egység- és integrációs teszteket, valamint séma- és fogyasztói szerződésteszteket futtat. Egy változtathatatlan image-et készít és ellenőriz, majd canaryként telepíti. Partnerenként figyeli a hiba- és késleltetési mutatókat, és csak egészséges állapotban vezeti be szélesebb körben. A visszaállítás az előző image-et és kompatibilis sémát használja.",
+            "howItWorks": [
+              "Validáld a kódot, futásidejű konfigurációt, API-sémákat, üzeneteket és migrációs kompatibilitást.",
+              "Egy nyomon követhető artefaktumot készíts, és ugyanazt vidd tovább a környezetek között.",
+              "Vezesd be fokozatosan partner- vagy útvonal-szintű állapotjelzésekkel és automatikus leállítási feltételekkel.",
+              "Az adatbázis-, üzenet- és API-változás maradjon elég ideig visszafelé kompatibilis ahhoz, hogy visszaállítás lehetséges legyen."
+            ],
+            "commonMistakes": [
+              "Egy kiadást biztonságosnak nevezni csak azért, mert az egységtesztek átmennek, miközben a szerződésváltozás teszteletlen.",
+              "Éles környezetre más artefaktumot készíteni, mint amelyet korábban teszteltek.",
+              "Visszaállításra támaszkodni olyan romboló sémaváltozás mellett, amelyet a régi verzió már nem tud használni."
+            ],
+            "keyTerms": [
+              {
+                "term": "szerződésteszt",
+                "definition": "teszt, amely ellenőrzi, hogy a szolgáltató és fogyasztó továbbra is ugyanazt az API- vagy üzenetformátumot várja"
+              },
+              {
+                "term": "canary kiadás",
+                "definition": "fokozatos bevezetés a forgalom kis részére a szélesebb bevezetés előtt"
+              },
+              {
+                "term": "változtathatatlan artefaktum",
+                "definition": "ugyanaz a verziózott elkészített csomag kerül minden környezetbe"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_azure_integration_platform",
+      "name": "Choosing Azure Services for Integrations",
+      "description": "Choosing Azure services for an integration means starting from latency, reliability, security, delivery, and ownership needs, then selecting only the managed components that solve those needs.",
+      "category": "cloud",
+      "relatedTopicIds": [
+        "luxair_queue_vs_pubsub",
+        "luxair_api_gateway_security",
+        "luxair_azure_managed_identity_secrets"
+      ],
+      "studyContent": {
+        "mentalModel": "Choose an Azure service only when it solves a stated need such as API governance, durable messaging, application hosting, identity, or telemetry.",
+        "problem": "Starting from service names can create extra latency, cost, and operational work. It can also move business rules into gateway policies or infrastructure where they are harder to test and change.",
+        "example": "A Node.js partner API runs on Azure Container Apps. API Management applies shared authentication and quotas, Service Bus stores long-running work, and Application Insights follows one request across the flow.",
+        "howItWorks": [
+          "Write down traffic, latency, delivery, security, networking, and ownership requirements first.",
+          "Use API Management when APIs need shared gateway policies and lifecycle control.",
+          "Use Service Bus when work must be stored durably or delivered to independent consumers.",
+          "Choose compute, identity, secrets, and telemetry services that match the remaining requirements."
+        ],
+        "commonMistakes": [
+          "Selecting several Azure services before defining the problem each one solves.",
+          "Putting domain workflow decisions into API gateway policies.",
+          "Using stored connection strings when managed identity is available."
+        ],
+        "keyTerms": [
+          {
+            "term": "Azure API Management",
+            "definition": "a managed gateway for publishing, protecting, and governing APIs"
+          },
+          {
+            "term": "Azure Service Bus",
+            "definition": "a managed broker with durable queues and publish-subscribe topics"
+          },
+          {
+            "term": "managed identity",
+            "definition": "an Azure-provided workload identity that avoids stored application credentials"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Azure-szolgáltatások kiválasztása integrációkhoz",
+          "description": "Az Azure-szolgáltatások kiválasztásakor először a válaszidővel, megbízhatósággal, biztonsággal, kézbesítéssel és felelősségi körökkel kapcsolatos igényeket kell tisztázni, majd csak az ezeket megoldó elemeket érdemes használni.",
+          "studyContent": {
+            "mentalModel": "Csak akkor válassz egy Azure-szolgáltatást, ha egy konkrét igényt old meg, például API-kezelést, tartós üzenetküldést, futtatást, identitást vagy megfigyelhetőséget.",
+            "problem": "Ha szolgáltatásnevekből indulunk ki, felesleges késleltetés, költség és üzemeltetési munka keletkezhet. Az üzleti szabályok könnyen az API-átjáró szabályaiba vagy infrastruktúrába kerülnek, ahol nehezebb őket tesztelni és módosítani.",
+            "example": "Egy Node.js partner API Azure Container Appsban fut. Az API Management közös hitelesítést és kvótákat alkalmaz, a Service Bus eltárolja a hosszabb munkát, az Application Insights pedig végigköveti a kérést a teljes folyamaton.",
+            "howItWorks": [
+              "Először írd le a forgalmi, késleltetési, kézbesítési, biztonsági, hálózati és felelősségi követelményeket.",
+              "API Managementet akkor használj, ha az API-khoz közös átjárószabályok és életciklus-kezelés kell.",
+              "Az Azure Service Bus szolgáltatást akkor használd, ha a munkát tartósan tárolni kell, vagy több független fogyasztó kapja meg.",
+              "A futtatási, identitás-, titokkezelési és telemetria-szolgáltatásokat a fennmaradó igényekhez válaszd."
+            ],
+            "commonMistakes": [
+              "Több Azure-szolgáltatást kiválasztani, mielőtt meghatároznánk, melyik milyen problémát old meg.",
+              "Üzleti folyamatdöntéseket tenni az API-átjáró szabályaiba.",
+              "Tárolt kapcsolati karakterláncot használni, amikor menedzselt identitás is elérhető."
+            ],
+            "keyTerms": [
+              {
+                "term": "Azure API Management",
+                "definition": "menedzselt átjáró API-k publikálására, védelmére és szabályozására"
+              },
+              {
+                "term": "Azure Service Bus",
+                "definition": "menedzselt üzenetközvetítő tartós üzenetsorokkal és publish-subscribe témákkal"
+              },
+              {
+                "term": "menedzselt identitás",
+                "definition": "Azure által biztosított alkalmazásidentitás, amelyhez nem kell hitelesítő adatot tárolni"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_engineering_process_improvement",
+      "name": "Improving Engineering Processes with Evidence",
+      "description": "An effective engineering-process improvement targets one recurring delivery problem, makes the better behavior easy to follow, and measures whether the change actually helped.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "luxair_safe_delivery_pipeline",
+        "luxair_partner_integration_testing",
+        "luxair_cross_service_observability"
+      ],
+      "studyContent": {
+        "mentalModel": "Engineering process improvement means fixing a repeated source of delay or defects, then proving that the new way of working is better.",
+        "problem": "A team may add rules, tools, or approvals whenever something goes wrong. Without evidence and a clear owner, the process becomes slower while the original defects continue. A useful improvement targets one repeated problem and makes the desired behavior easy to follow.",
+        "example": "Several integration incidents came from inconsistent API error bodies. The team defines one error format, adds a shared helper and contract test, migrates the busiest APIs first, and tracks error-format defects and review comments for the next month.",
+        "howItWorks": [
+          "Describe the recurring problem with examples, frequency, cost, or incident evidence.",
+          "Choose the smallest technical or workflow change that addresses the cause.",
+          "Make adoption easy through templates, automation, documentation, and a clear owner.",
+          "Compare before-and-after measures, collect feedback, and revise or remove the change if it does not help."
+        ],
+        "commonMistakes": [
+          "Introducing a large tool or approval process before proving the problem needs it.",
+          "Measuring activity, such as more checks, instead of outcomes such as fewer defects or faster feedback.",
+          "Declaring the change finished without helping the team adopt it or reviewing its effect."
+        ],
+        "keyTerms": [
+          {
+            "term": "baseline",
+            "definition": "the measured starting point used to compare the result of a change"
+          },
+          {
+            "term": "adoption",
+            "definition": "the extent to which the team consistently uses the new practice"
+          },
+          {
+            "term": "feedback loop",
+            "definition": "a repeated cycle of measuring results, learning, and adjusting the process"
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": "Fejlesztési folyamatok javítása mérhető eredmények alapján",
+          "description": "Egy hasznos folyamatjavítás egy visszatérő szállítási problémát céloz, megkönnyíti a jobb működést, majd méréssel ellenőrzi, hogy a változtatás valóban segített-e.",
+          "studyContent": {
+            "mentalModel": "A fejlesztési folyamat javítása azt jelenti, hogy megszüntetünk egy visszatérő késést vagy hibaforrást, majd méréssel igazoljuk, hogy az új működés jobb.",
+            "problem": "Egy csapat minden hiba után új szabályt, eszközt vagy jóváhagyási lépést vezethet be. Bizonyíték és egyértelmű felelős nélkül a folyamat lassabb lesz, miközben az eredeti hibák megmaradnak. A hasznos javítás egy konkrét, ismétlődő problémát céloz, és megkönnyíti a helyes működést.",
+            "example": "Több integrációs incidens oka az eltérő API-hibaformátum volt. A csapat egységes formátumot, közös segédfüggvényt és szerződéstesztet vezet be, először a legforgalmasabb API-kon, majd egy hónapig méri a kapcsolódó hibákat és kódellenőrzési megjegyzéseket.",
+            "howItWorks": [
+              "Példákkal, gyakorisággal, költséggel vagy incidensadatokkal írd le a visszatérő problémát.",
+              "Válaszd ki a legkisebb technikai vagy munkafolyamatbeli változtatást, amely az okot kezeli.",
+              "Sablonokkal, automatizálással, dokumentációval és egyértelmű felelőssel könnyítsd meg az elfogadást.",
+              "Hasonlítsd össze az előtte és utána mért eredményeket, gyűjts visszajelzést, és módosítsd vagy vond vissza a változtatást, ha nem segít."
+            ],
+            "commonMistakes": [
+              "Nagy eszközt vagy jóváhagyási folyamatot bevezetni, mielőtt bizonyítottuk volna, hogy szükség van rá.",
+              "A tevékenységet mérni, például az ellenőrzések számát, a valódi eredmény helyett, például a kevesebb hibát vagy gyorsabb visszajelzést.",
+              "Befejezettnek tekinteni a változtatást anélkül, hogy segítenénk a bevezetést vagy később ellenőriznénk a hatását."
+            ],
+            "keyTerms": [
+              {
+                "term": "kiindulási érték",
+                "definition": "a változtatás előtti mért állapot, amelyhez az eredményt hasonlítjuk"
+              },
+              {
+                "term": "elfogadás",
+                "definition": "annak mértéke, hogy a csapat mennyire következetesen használja az új gyakorlatot"
+              },
+              {
+                "term": "visszacsatolási kör",
+                "definition": "az eredmények mérésének, a tanulásnak és a folyamat módosításának ismétlődő ciklusa"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "luxair_testing_strategy_001",
+      "title": "Testing a third-party integration without depending on it",
+      "prompt": "How would you test an integration with a third-party API without making every CI run depend on the provider's live environment?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_partner_integration_testing"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Build a layered strategy: mapping tests, contract tests, controlled sandbox checks, and production drift detection.",
+      "expectedPoints": [
+        {
+          "id": "luxair_testing_fast_local",
+          "label": "Tests mapping and failure cases locally",
+          "description": "Uses representative fixtures to cover validation, mapping, error responses, timeouts, and malformed payloads quickly in CI.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "representative fixtures",
+            "mapping tests",
+            "malformed payload",
+            "timeout test",
+            "error response"
+          ]
+        },
+        {
+          "id": "luxair_testing_contract",
+          "label": "Verifies shared contract assumptions",
+          "description": "Uses consumer or provider contract tests so request and response expectations change visibly.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "contract test",
+            "consumer expectations",
+            "provider contract",
+            "schema compatibility",
+            "breaking change"
+          ]
+        },
+        {
+          "id": "luxair_testing_sandbox_prod",
+          "label": "Uses sandbox and production evidence selectively",
+          "description": "Runs a smaller controlled sandbox suite and monitors production for unknown values, schema drift, and changed failure behavior.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "sandbox tests",
+            "scheduled checks",
+            "schema drift",
+            "unknown values",
+            "production monitoring"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_testing_strategy_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "luxair_testing_sandbox_prod"
+          },
+          "prompt": "What would you do if the partner sandbox behaves differently from production?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Külső integráció tesztelése a szolgáltató függősége nélkül",
+          "prompt": "Hogyan tesztelnél egy külső API-integrációt úgy, hogy ne függjön minden CI-futás a szolgáltató élő környezetétől?",
+          "answerStructureHint": "Építs rétegezett stratégiát: leképezési teszt, szerződésteszt, kontrollált tesztkörnyezeti ellenőrzés és az éles környezetben észlelt sémaeltérések.",
+          "expectedPoints": {
+            "luxair_testing_fast_local": {
+              "label": "Helyben teszteli a leképezést és hibákat",
+              "description": "Reprezentatív tesztadatokkal gyorsan lefedi a validációt, leképezést, hibaválaszokat, időkorlátokat és hibás adatcsomagokat a CI-ban."
+            },
+            "luxair_testing_contract": {
+              "label": "Ellenőrzi a közös szerződéses feltételezéseket",
+              "description": "Fogyasztói vagy szolgáltatói szerződéstesztet használ, hogy a kérés- és válaszelvárások változása látható legyen."
+            },
+            "luxair_testing_sandbox_prod": {
+              "label": "Szelektíven használ tesztkörnyezeti és éles környezet bizonyítékot",
+              "description": "Kisebb kontrollált tesztkörnyezeti tesztkészletet futtat, éles környezetben pedig sémaeltérést, ismeretlen értéket és megváltozott hibaműködést figyel."
+            }
+          },
+          "followUps": {
+            "luxair_testing_strategy_followup": "Mit tennél, ha a partner tesztkörnyezete eltérően viselkedne az éles környezettől?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_testing_breaking_change_002",
+      "title": "Detecting a partner breaking change",
+      "prompt": "A partner removes an enum value and changes the error response format. How should your tests and runtime behavior reveal the change?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting",
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_partner_integration_testing"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Fail clearly at the boundary, keep contract evidence, protect the core model, and make the operational impact visible.",
+      "expectedPoints": [
+        {
+          "id": "luxair_testing_boundary_fail",
+          "label": "Fails clearly at the boundary",
+          "description": "Runtime validation rejects unexpected shapes or values with a specific integration error instead of corrupting internal state.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "runtime validation",
+            "unknown enum",
+            "schema failure",
+            "integration error",
+            "reject payload"
+          ]
+        },
+        {
+          "id": "luxair_testing_contract_evidence",
+          "label": "Updates contract evidence",
+          "description": "Contract or fixture tests fail when the expected enum or error schema changes, showing exactly which assumption no longer holds.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "contract test fails",
+            "fixture mismatch",
+            "error schema",
+            "enum contract",
+            "broken assumption"
+          ]
+        },
+        {
+          "id": "luxair_testing_operational_visibility",
+          "label": "Makes the change operationally visible",
+          "description": "Tracks validation failures by partner and field, alerts on a meaningful increase, and supports a safe fallback or incident response.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "validation metric",
+            "partner alert",
+            "field name",
+            "safe fallback",
+            "incident response"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_testing_breaking_change_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you temporarily accept the unknown enum value? What risks would you consider?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Partneroldali, visszafelé nem kompatibilis változás felismerése",
+          "prompt": "Egy partner eltávolít egy enumértéket, és megváltoztatja a hibaválasz formátumát. Hogyan jelezzék ezt a változást a tesztek és az éles megfigyelés?",
+          "answerStructureHint": "Bukjon el egyértelműen a határon, őrizze meg a szerződés bizonyítékot, védje a belső modellt, és tegye láthatóvá az üzemeltetési hatást.",
+          "expectedPoints": {
+            "luxair_testing_boundary_fail": {
+              "label": "Egyértelműen elbukik a határon",
+              "description": "A futásidejű validáció specifikus integrációs hibával elutasítja a váratlan formát vagy értéket, nem engedi a belső állapot sérülését."
+            },
+            "luxair_testing_contract_evidence": {
+              "label": "Frissíti a szerződés bizonyítékot",
+              "description": "A szerződés- vagy tesztadat-alapú teszt elbukik a felsorolási érték vagy a hibaséma változásakor, és megmutatja, mely feltételezés nem érvényes."
+            },
+            "luxair_testing_operational_visibility": {
+              "label": "Üzemeltetésileg láthatóvá teszi a változást",
+              "description": "Partner és mező szerint méri a validációs hibákat, jelentős növekedésre riaszt, és biztonságos tartalék működést vagy incidenskezelést támogat."
+            }
+          },
+          "followUps": {
+            "luxair_testing_breaking_change_followup": "Ideiglenesen elfogadnád az ismeretlen enumértéket? Milyen kockázatokat mérlegelnél?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_docker_production_image_001",
+      "title": "Building a production-ready Node.js image",
+      "prompt": "What would you look for in a production Dockerfile for a Node.js integration service?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "design_review",
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_dockerized_services"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover reproducible builds, a small runtime image, non-root execution, an environment-neutral artifact, and runtime-injected configuration.",
+      "expectedPoints": [
+        {
+          "id": "luxair_docker_reproducible",
+          "label": "Builds a reproducible minimal image",
+          "description": "Uses a pinned or controlled base, deterministic dependency installation, and a multi-stage build that excludes development tools.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "multi stage build",
+            "deterministic install",
+            "pinned base",
+            "production dependencies",
+            "small image"
+          ]
+        },
+        {
+          "id": "luxair_docker_runtime_security",
+          "label": "Secures the runtime",
+          "description": "Runs as non-root, minimizes packages and permissions, scans dependencies, and does not bake secrets into image layers.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "non root user",
+            "no embedded secrets",
+            "image scan",
+            "minimal packages",
+            "least privilege"
+          ]
+        },
+        {
+          "id": "luxair_docker_operability",
+          "label": "Keeps the image environment-neutral",
+          "description": "Uses an explicit start command, writes logs to stdout or stderr, injects configuration and secrets at runtime, and keeps durable state outside the container.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "runtime configuration",
+            "logs to stdout",
+            "external state",
+            "same image",
+            "exec form command",
+            "environment neutral"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_docker_production_image_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why should the same image be promoted through test and production instead of being rebuilt with environment-specific configuration?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Éles használatra kész Node.js Docker image összeállítása",
+          "prompt": "Mit ellenőriznél egy Node.js integrációs szolgáltatás éles használatra szánt Dockerfile-jában?",
+          "answerStructureHint": "Térj ki a reprodukálható buildre, a kis futtatási image-re, a nem root felhasználóra, a környezetfüggetlen csomagra és a futáskor átadott konfigurációra.",
+          "expectedPoints": {
+            "luxair_docker_reproducible": {
+              "label": "Reprodukálható, minimális image-et készít",
+              "description": "Rögzített vagy ellenőrzött alap-image-et, determinisztikus függőségtelepítést és a fejlesztői eszközöket kizáró többlépcsős buildet használ."
+            },
+            "luxair_docker_runtime_security": {
+              "label": "Biztonságossá teszi a futtatási környezetet",
+              "description": "Nem root felhasználóval fut, minimalizálja a csomagokat és jogosultságokat, ellenőrzi a függőségek sérülékenységeit, és nem épít titkos adatot az image rétegeibe."
+            },
+            "luxair_docker_operability": {
+              "label": "Környezetfüggetlenül tartja az image-et",
+              "description": "Egyértelmű indítási parancsot használ, stdoutba vagy stderrbe naplóz, a konfigurációt és a titkos adatokat futáskor kapja, a tartós állapotot pedig a konténeren kívül tárolja."
+            }
+          },
+          "followUps": {
+            "luxair_docker_production_image_followup": "Miért ugyanazt az image-et érdemes végigvinni a teszt- és éles környezeteken ahelyett, hogy környezetspecifikus beállításokkal újra buildelnénk?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_docker_local_prod_002",
+      "title": "A container works locally but fails in production",
+      "prompt": "A service works in Docker on a developer machine but repeatedly restarts after deployment. How would you investigate?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_dockerized_services"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Compare runtime inputs and constraints, inspect lifecycle signals, then reproduce with production-like settings.",
+      "expectedPoints": [
+        {
+          "id": "luxair_docker_runtime_difference",
+          "label": "Compares environment differences",
+          "description": "Checks environment variables, secret access, network and DNS, mounted files, architecture, base image, and runtime version.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "environment variables",
+            "secret access",
+            "dns resolution",
+            "network policy",
+            "runtime version",
+            "mounted files"
+          ]
+        },
+        {
+          "id": "luxair_docker_lifecycle_evidence",
+          "label": "Inspects lifecycle evidence",
+          "description": "Reads container exit code, startup logs, health probe failures, memory or CPU limits, and termination signals.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "exit code",
+            "startup logs",
+            "probe failure",
+            "memory limit",
+            "oom killed",
+            "termination signal"
+          ]
+        },
+        {
+          "id": "luxair_docker_reproduce_fix",
+          "label": "Reproduces and fixes systematically",
+          "description": "Runs the same immutable image with production-like config and limits, changes one hypothesis at a time, and validates graceful startup and shutdown.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "same image",
+            "production like config",
+            "resource limits",
+            "one hypothesis",
+            "graceful shutdown"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_docker_local_prod_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would an exit code caused by an out-of-memory kill suggest about your next checks?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "A konténer helyben működik, éles környezetben elbukik",
+          "prompt": "Egy szolgáltatás Dockerben működik a fejlesztő gépén, de telepítés után folyamatosan újraindul. Hogyan vizsgálnád?",
+          "answerStructureHint": "Hasonlítsd össze a futtatási környezet bemeneteket és korlátokat, vizsgáld meg az életciklus-jeleket, majd reprodukáld éles környezethez hasonló beállításokkal.",
+          "expectedPoints": {
+            "luxair_docker_runtime_difference": {
+              "label": "Összehasonlítja a környezeti különbségeket",
+              "description": "Ellenőrzi a környezeti változókat, a titkos adatok elérését, hálózatot és DNS-t, csatolt fájlokat, architektúrát, alap-image-et és futtatókörnyezet-verziót."
+            },
+            "luxair_docker_lifecycle_evidence": {
+              "label": "Megvizsgálja az életciklus bizonyítékait",
+              "description": "Megnézi a konténer kilépési kódját, indulási naplóit, állapotellenőrzési hibákat, memória- vagy CPU-limitjét és leállítási jelét."
+            },
+            "luxair_docker_reproduce_fix": {
+              "label": "Szisztematikusan reprodukál és javít",
+              "description": "Ugyanazt a változtathatatlan image-et éles környezethez hasonló konfigurációval és limitekkel futtatja, egyszerre egy hipotézist változtat, és ellenőrzi az indulást és leállást."
+            }
+          },
+          "followUps": {
+            "luxair_docker_local_prod_followup": "Mit jelezne egy memóriakorlát miatti leállás kilépési kódja a következő ellenőrzésekről?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_cicd_pipeline_001",
+      "title": "CI/CD gates for contract-sensitive integration services",
+      "prompt": "Design a delivery pipeline for a Node.js integration service where a small API or message change could break many consumers. Which gates belong before and after deployment?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design",
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_safe_delivery_pipeline"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Cover code and contract tests, immutable build, security and config checks, gradual rollout, partner-level health signals, and rollback compatibility.",
+      "expectedPoints": [
+        {
+          "id": "luxair_cicd_build",
+          "label": "Builds and tests one traceable artifact",
+          "description": "Runs linting, unit and integration tests, builds one immutable image, records version and dependencies, and promotes the same artifact.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "immutable image",
+            "same artifact",
+            "unit tests",
+            "integration tests",
+            "version metadata"
+          ]
+        },
+        {
+          "id": "luxair_cicd_quality",
+          "label": "Adds integration-specific compatibility gates",
+          "description": "Runs API schema, message, consumer contract, runtime configuration, secret, and migration compatibility checks.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "contract tests",
+            "schema compatibility",
+            "message compatibility",
+            "config validation",
+            "migration check"
+          ]
+        },
+        {
+          "id": "luxair_cicd_release",
+          "label": "Controls rollout and rollback",
+          "description": "Uses canary or phased rollout, partner-level error and latency signals, stop conditions, and backward-compatible changes that preserve rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "canary rollout",
+            "partner metrics",
+            "stop condition",
+            "backward compatible",
+            "rollback ready"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_cicd_pipeline_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which change can pass every pre-deployment test but still require a canary in production?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "CI/CD-ellenőrzések szerződésérzékeny integrációs szolgáltatásokhoz",
+          "prompt": "Tervezz kiadási folyamatot egy Node.js integrációs szolgáltatáshoz, ahol egy kis API- vagy üzenetváltozás sok fogyasztót működésképtelenné tehet. Mely ellenőrzések legyenek telepítés előtt és után?",
+          "answerStructureHint": "Térj ki a kód- és szerződéstesztekre, a változtathatatlan buildre, a biztonsági és konfigurációs ellenőrzésekre, a fokozatos bevezetésre, a partnerszintű állapotjelzőkre és a visszaállítási kompatibilitásra.",
+          "expectedPoints": {
+            "luxair_cicd_build": {
+              "label": "Egy nyomon követhető artefaktumot készít és tesztel",
+              "description": "Lintet, egység- és integrációs teszteket futtat, egy változtathatatlan image-et készít, rögzíti a verziót és függőségeket, majd ugyanazt az artefaktumot szélesebb körben bevezeti."
+            },
+            "luxair_cicd_quality": {
+              "label": "Integrációspecifikus kompatibilitási ellenőrzéseket ad",
+              "description": "API-séma-, üzenet- és fogyasztói szerződésteszteket, továbbá futásidejű konfigurációs, titokkezelési és migrációs kompatibilitási ellenőrzéseket futtat."
+            },
+            "luxair_cicd_release": {
+              "label": "Kontrollálja a fokozatos bevezetést és visszaállítást",
+              "description": "Canary vagy szakaszos bevezetést, partnerszintű hiba- és késleltetési jelzőket, automatikus leállítási feltételt és a visszaállítást lehetővé tevő, visszafelé kompatibilis változtatást használ."
+            }
+          },
+          "followUps": {
+            "luxair_cicd_pipeline_followup": "Mely változás mehet át minden telepítés előtti teszten, mégis igényel canary fokozatos bevezetést éles környezetben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_cicd_safe_rollout_002",
+      "title": "Releasing and rolling back safely",
+      "prompt": "A new integration-service version passes tests but causes more partner timeouts in production. How would you limit impact and recover safely?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_safe_delivery_pipeline"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Detect through rollout metrics, stop or reverse traffic quickly, preserve compatibility, and investigate with versioned evidence.",
+      "expectedPoints": [
+        {
+          "id": "luxair_cicd_progressive_detection",
+          "label": "Limits blast radius and detects regression",
+          "description": "Uses canary or small-percentage rollout and compares partner latency and error metrics with the previous version.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "canary rollout",
+            "small percentage",
+            "compare metrics",
+            "partner timeout rate",
+            "blast radius"
+          ]
+        },
+        {
+          "id": "luxair_cicd_fast_recovery",
+          "label": "Recovers without rebuilding",
+          "description": "Stops promotion and redirects traffic to the known working artifact or disables the risky path with a controlled switch.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "stop rollout",
+            "rollback traffic",
+            "known good version",
+            "feature flag",
+            "no rebuild"
+          ]
+        },
+        {
+          "id": "luxair_cicd_compatibility",
+          "label": "Preserves data and contract compatibility",
+          "description": "Ensures schema and configuration changes can coexist with both versions and records deployment, config, and trace evidence for diagnosis.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "backward compatible schema",
+            "both versions",
+            "deployment record",
+            "config version",
+            "trace evidence"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_cicd_safe_rollout_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What kind of database migration could make a simple rollback unsafe?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Biztonságos kiadás és visszaállítás",
+          "prompt": "Egy integrációs szolgáltatás új verziója átmegy a teszteken, de éles környezetben több partnerhívásnál időtúllépést okoz. Hogyan korlátoznád a hatást és állítanád helyre a szolgáltatást?",
+          "answerStructureHint": "A fokozatos bevezetés metrikáival észleld a problémát, gyorsan állítsd le vagy fordítsd vissza a forgalmat, őrizd meg a kompatibilitást, és verziózott bizonyíték alapján vizsgálj.",
+          "expectedPoints": {
+            "luxair_cicd_progressive_detection": {
+              "label": "Korlátozza a hatást és felismeri a regressziót",
+              "description": "Canary vagy kis százalékos fokozatos bevezetést használ, és a partnerenkénti késleltetési és hibametrikákat összehasonlítja az előző verzióval."
+            },
+            "luxair_cicd_fast_recovery": {
+              "label": "Újrabuildelés nélkül áll helyre",
+              "description": "Leállítja a fokozatos bevezetést, a forgalmat az ismerten működő artefaktumra irányítja, vagy kontrollált kapcsolóval kikapcsolja a kockázatos útvonalat."
+            },
+            "luxair_cicd_compatibility": {
+              "label": "Megőrzi az adat- és szerződés-kompatibilitást",
+              "description": "Biztosítja, hogy a séma- és konfigurációváltozás mindkét verzióval együtt éljen, és telepítési, konfigurációs és nyomkövetési adatokat rögzít a diagnózishoz."
+            }
+          },
+          "followUps": {
+            "luxair_cicd_safe_rollout_followup": "Milyen adatbázis-migráció tehet veszélyessé egy egyszerű visszaállítást?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_azure_architecture_001",
+      "title": "Designing an Azure integration flow",
+      "prompt": "Design an Azure-based flow for a public booking API that must call internal services and reliably notify several downstream systems.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_azure_integration_platform"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 75,
+      "answerStructureHint": "Map requirements to API exposure, hosting, synchronous calls, durable messaging, identity, secrets, and telemetry.",
+      "expectedPoints": [
+        {
+          "id": "luxair_azure_api_hosting",
+          "label": "Separates API edge and application hosting",
+          "description": "Uses API Management for governed exposure and a suitable compute service such as Container Apps for the Node.js API.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "api management",
+            "container apps",
+            "api gateway",
+            "node api hosting",
+            "governed exposure"
+          ]
+        },
+        {
+          "id": "luxair_azure_messaging",
+          "label": "Uses durable messaging for downstream work",
+          "description": "Publishes commands or events through Service Bus queues or topics so consumers can retry and scale independently.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "service bus",
+            "queue or topic",
+            "durable messaging",
+            "independent consumers",
+            "publish event"
+          ]
+        },
+        {
+          "id": "luxair_azure_platform_controls",
+          "label": "Adds platform security and observability",
+          "description": "Uses managed identity and Key Vault for credentials, private networking where required, and Application Insights or Azure Monitor for correlated telemetry.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "managed identity",
+            "key vault",
+            "private network",
+            "application insights",
+            "azure monitor",
+            "trace correlation"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_azure_architecture_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which step would you keep synchronous if booking confirmation depends on an internal availability check?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Azure-alapú integrációs folyamat tervezése",
+          "prompt": "Tervezz Azure-alapú folyamatot egy publikus foglalási API-hoz, amely belső szolgáltatásokat hív, és több kapcsolódó rendszert megbízhatóan értesít.",
+          "answerStructureHint": "Rendeld a követelményeket az API-publikáláshoz, a futtatáshoz, a szinkron hívásokhoz, a tartós üzenetküldéshez, az identitáshoz, a titkos adatokhoz és a telemetriához.",
+          "expectedPoints": {
+            "luxair_azure_api_hosting": {
+              "label": "Szétválasztja az API-peremréteget és az alkalmazás futtatását",
+              "description": "API Managementet használ a szabályozott API-publikáláshoz, a Node.js API-t pedig az igényekhez illő futtatási szolgáltatáson, például Azure Container Appsban helyezi el."
+            },
+            "luxair_azure_messaging": {
+              "label": "Tartós üzenetkezelést használ a kapcsolódó háttérmunkához",
+              "description": "Service Bus üzenetsorán vagy topicján keresztül parancsot vagy eseményt publikál, így a fogyasztók önállóan újrapróbálkozhatnak és skálázódhatnak."
+            },
+            "luxair_azure_platform_controls": {
+              "label": "Platformszintű biztonságot és megfigyelhetőséget ad",
+              "description": "Menedzselt identitást és Key Vaultot használ hitelesítő adathoz, szükség esetén privát hálózati kapcsolatot, valamint Application Insightsot vagy Azure Monitort korrelált telemetriához."
+            }
+          },
+          "followUps": {
+            "luxair_azure_architecture_followup": "Mely lépést tartanád szinkronban, ha a foglalás megerősítése egy belső elérhetőség-ellenőrzés eredményétől függ?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_azure_service_choice_002",
+      "title": "Choosing Azure services without overengineering",
+      "prompt": "How would you decide between direct API calls, Azure Service Bus, and an API gateway for a new integration instead of using all of them by default?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_azure_integration_platform"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Start with interaction needs, then assign each component a distinct responsibility and reject unnecessary platform layers.",
+      "expectedPoints": [
+        {
+          "id": "luxair_azure_interaction_need",
+          "label": "Starts from interaction requirements",
+          "description": "Asks whether the caller needs an immediate result, whether work must survive outages, how many consumers exist, and what ordering or delivery guarantees matter.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "immediate result",
+            "survive outage",
+            "multiple consumers",
+            "delivery guarantee",
+            "ordering requirement"
+          ]
+        },
+        {
+          "id": "luxair_azure_distinct_roles",
+          "label": "Assigns distinct component roles",
+          "description": "Uses direct APIs for immediate request-response, Service Bus for durable asynchronous decoupling, and API Management for governed exposure and shared edge policies.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "request response",
+            "durable async",
+            "service bus",
+            "api management",
+            "edge policies",
+            "decoupling"
+          ]
+        },
+        {
+          "id": "luxair_azure_avoid_layers",
+          "label": "Avoids unnecessary layers",
+          "description": "Explains operational cost, latency, ownership, failure modes, and why a component should be omitted when it solves no stated requirement.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "operational cost",
+            "added latency",
+            "clear ownership",
+            "failure modes",
+            "no requirement",
+            "avoid overengineering"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_azure_service_choice_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would make you choose a Service Bus topic instead of a queue?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Azure-szolgáltatások kiválasztása túltervezés nélkül",
+          "prompt": "Hogyan döntenél közvetlen API-hívás, Azure Service Bus és API Management között egy új integrációnál, ahelyett hogy alapból mindet használnád?",
+          "answerStructureHint": "Az interakciós igényekből indulj, adj minden komponensnek külön felelősséget, és utasítsd el a felesleges platformrétegeket.",
+          "expectedPoints": {
+            "luxair_azure_interaction_need": {
+              "label": "Az interakciós követelményekből indul",
+              "description": "Rákérdez, kell-e azonnali eredmény, túl kell-e élni a leállást, hány fogyasztó van, és milyen sorrendtartás vagy kézbesítési garancia szükséges."
+            },
+            "luxair_azure_distinct_roles": {
+              "label": "Külön szerepet ad a komponenseknek",
+              "description": "Közvetlen API-t használ azonnali kérés-válasz folyamathoz, Service Bus-t tartós aszinkron leválasztáshoz, API Managementet szabályozott API-publikáláshoz és közös peremszabályokhoz."
+            },
+            "luxair_azure_avoid_layers": {
+              "label": "Elkerüli a felesleges rétegeket",
+              "description": "Elmagyarázza az üzemeltetési költséget, hozzáadott késleltetést, felelősséget és hibamódokat, és kihagyja a komponenst, ha nem old meg valós követelményt."
+            }
+          },
+          "followUps": {
+            "luxair_azure_service_choice_followup": "Mi indokolná, hogy Service Bus queue helyett topicot válassz?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_docker_image_container_003",
+      "title": "Docker image versus container",
+      "prompt": "What is the difference between a Docker image and a container, and what problem does containerization solve for an integration service?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_dockerized_services"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 30,
+      "answerStructureHint": "Immutable template, running instance, reproducible runtime, isolation limits, and external configuration.",
+      "expectedPoints": [
+        {
+          "id": "luxair_docker_image_definition",
+          "label": "Defines an image",
+          "description": "Defines an image as a versioned read-only package containing the application and its fixed runtime dependencies.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "read only image",
+            "versioned package",
+            "application dependencies",
+            "immutable layers",
+            "build artifact"
+          ]
+        },
+        {
+          "id": "luxair_docker_container_definition",
+          "label": "Defines a container",
+          "description": "Defines a container as a running instance of an image with process state, networking, limits, and a writable layer.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "running instance",
+            "container process",
+            "writable layer",
+            "runtime limits",
+            "container network"
+          ]
+        },
+        {
+          "id": "luxair_docker_value_limit",
+          "label": "Explains the value and boundary",
+          "description": "Explains reproducible deployment and dependency isolation, while recognizing that configuration, secrets, storage, and orchestration still come from the platform.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "same runtime",
+            "reproducible deployment",
+            "dependency isolation",
+            "external configuration",
+            "not a vm"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_docker_secret_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why should production secrets not be copied into the image?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Docker image és konténer közötti különbség",
+          "prompt": "Mi a különbség a Docker image és a konténer között, és milyen problémát old meg a konténerizáció egy integrációs szolgáltatásnál?",
+          "answerStructureHint": "Megváltoztathatatlan sablon, futó példány, reprodukálható futtatási környezet, izoláció korlátai és külső konfiguráció.",
+          "expectedPoints": {
+            "luxair_docker_image_definition": {
+              "label": "Meghatározza az image fogalmát",
+              "description": "Az image-et verziózott, csak olvasható csomagként írja le, amely az alkalmazást és rögzített futtatási függőségeit tartalmazza."
+            },
+            "luxair_docker_container_definition": {
+              "label": "Meghatározza a konténer fogalmát",
+              "description": "A konténert egy image futó példányaként írja le, folyamatállapottal, hálózattal, erőforráskorlátokkal és írható réteggel."
+            },
+            "luxair_docker_value_limit": {
+              "label": "Elmagyarázza az előnyt és a határt",
+              "description": "Elmagyarázza a reprodukálható telepítést és függőségizolációt, miközben felismeri, hogy a konfigurációt, titkokat, tárolást és orchesztrációt továbbra is a platform adja."
+            }
+          },
+          "followUps": {
+            "luxair_docker_secret_followup": "Miért nem szabad az éles környezet titkait az image-be másolni?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_cicd_terms_003",
+      "title": "Continuous integration, delivery, and deployment",
+      "prompt": "What is the difference between continuous integration, continuous delivery, and continuous deployment, and which checks would you expect before an integration service reaches production?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_safe_delivery_pipeline"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 30,
+      "answerStructureHint": "Definitions, automated build and tests, release readiness, production promotion, and integration-specific gates.",
+      "expectedPoints": [
+        {
+          "id": "luxair_ci_definition",
+          "label": "Defines continuous integration",
+          "description": "Explains frequent merges with automated build, static checks, and tests that give fast feedback on every change.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "frequent integration",
+            "automated build",
+            "fast feedback",
+            "run tests",
+            "every change"
+          ]
+        },
+        {
+          "id": "luxair_cd_difference",
+          "label": "Distinguishes delivery from deployment",
+          "description": "Explains that continuous delivery keeps a releasable artifact ready for a controlled promotion, while continuous deployment promotes every passing change automatically.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "release ready",
+            "manual approval",
+            "controlled promotion",
+            "automatic production",
+            "every passing change"
+          ]
+        },
+        {
+          "id": "luxair_cicd_integration_gates",
+          "label": "Includes integration-specific gates",
+          "description": "Includes unit and integration tests, contract compatibility, security and image scanning, configuration validation, safe rollout, monitoring, and rollback readiness.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "contract tests",
+            "security scan",
+            "configuration validation",
+            "canary rollout",
+            "rollback ready",
+            "production metrics"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_cicd_database_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would a backward-incompatible database migration limit rollback?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Folyamatos integráció, szállítás és telepítés",
+          "prompt": "Mi a különbség a folyamatos integráció, a folyamatos szállítás és a folyamatos telepítés között, és milyen ellenőrzéseket várnál el, mielőtt egy integrációs szolgáltatás éles környezetbe kerül?",
+          "answerStructureHint": "Definíciók, automatizált build és tesztek, kiadásra kész állapot, éles környezetbe juttatás és integrációspecifikus kapuk.",
+          "expectedPoints": {
+            "luxair_ci_definition": {
+              "label": "Meghatározza a folyamatos integráció fogalmát",
+              "description": "Gyakori kódösszevonásokat ír le automatizált builddel, statikus ellenőrzésekkel és tesztekkel, amelyek minden változásra gyors visszajelzést adnak."
+            },
+            "luxair_cd_difference": {
+              "label": "Megkülönbözteti a szállítást és a telepítést",
+              "description": "Elmagyarázza, hogy folyamatos szállítás esetén egy kiadható artefaktum kontrollált továbbításra készen áll, folyamatos telepítés esetén pedig minden sikeres változás automatikusan éles környezetbe kerül."
+            },
+            "luxair_cicd_integration_gates": {
+              "label": "Integrációspecifikus kapukat is tartalmaz",
+              "description": "Kitér az egység- és integrációs tesztekre, a szerződéskompatibilitásra, a biztonsági és image-ellenőrzésekre, a konfiguráció validálására, a fokozatos bevezetésre, a megfigyelésre és a visszaállíthatóságra."
+            }
+          },
+          "followUps": {
+            "luxair_cicd_database_followup": "Hogyan korlátozza a visszaállítást egy visszafelé nem kompatibilis adatbázis-migráció?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_process_standard_adoption_001",
+      "title": "Introducing a useful development standard",
+      "prompt": "A team has inconsistent API error formats and review practices. How would you introduce a standard that improves quality without creating unnecessary bureaucracy?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_engineering_process_improvement"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Evidence, narrow scope, lightweight enforcement, adoption, and measurement.",
+      "expectedPoints": [
+        {
+          "id": "luxair_process_standard_problem",
+          "label": "Defines the repeated problem",
+          "description": "Uses concrete defects, delays, or review evidence to define the problem and the scope of the standard.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "repeated defect",
+            "review evidence",
+            "clear scope",
+            "concrete problem"
+          ]
+        },
+        {
+          "id": "luxair_process_standard_mechanism",
+          "label": "Makes the standard easy to follow",
+          "description": "Uses a small convention, shared helper, template, lint rule, or automated check instead of relying only on documentation.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "shared helper",
+            "automated check",
+            "code template",
+            "lint rule",
+            "easy adoption"
+          ]
+        },
+        {
+          "id": "luxair_process_standard_rollout",
+          "label": "Rolls out and measures the change",
+          "description": "Pilots the standard, explains the reason, gathers feedback, and measures defects or feedback time before expanding it.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "pilot rollout",
+            "team feedback",
+            "measure defects",
+            "compare baseline",
+            "adjust standard"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_process_standard_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would you decide that the standard is causing more cost than value?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hasznos fejlesztési szabvány bevezetése",
+          "prompt": "Egy csapatban eltérőek az API-hibaformátumok és a kódellenőrzési szokások. Hogyan vezetnél be olyan szabványt, amely javítja a minőséget, de nem hoz létre felesleges bürokráciát?",
+          "answerStructureHint": "Bizonyíték, szűk hatókör, könnyű betartás, bevezetés és mérés.",
+          "expectedPoints": {
+            "luxair_process_standard_problem": {
+              "label": "Meghatározza a visszatérő problémát",
+              "description": "Konkrét hibák, késések vagy kódellenőrzési adatok alapján határozza meg a problémát és a szabvány hatókörét."
+            },
+            "luxair_process_standard_mechanism": {
+              "label": "Könnyen követhetővé teszi a szabványt",
+              "description": "Kis konvenciót, közös segédfüggvényt, sablont, lintszabályt vagy automatizált ellenőrzést használ a puszta dokumentáció helyett."
+            },
+            "luxair_process_standard_rollout": {
+              "label": "Fokozatosan vezeti be és méri",
+              "description": "Kis körben kipróbálja, elmagyarázza az okát, visszajelzést gyűjt, és a kiterjesztés előtt méri a hibákat vagy a visszajelzési időt."
+            }
+          },
+          "followUps": {
+            "luxair_process_standard_followup": "Mikor döntenél úgy, hogy a szabvány több költséget okoz, mint amennyi értéket ad?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_process_ci_feedback_002",
+      "title": "Improving a slow and flaky CI pipeline",
+      "prompt": "A CI pipeline is slow and fails intermittently, so developers rerun it until it passes. How would you improve it and prove that the change worked?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting",
+        "experience_deep_dive"
+      ],
+      "topicIds": [
+        "luxair_engineering_process_improvement"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Baseline, root causes, prioritized changes, and before-and-after evidence.",
+      "expectedPoints": [
+        {
+          "id": "luxair_process_ci_baseline",
+          "label": "Establishes a useful baseline",
+          "description": "Measures duration, queue time, failure rate, rerun rate, and which stages or tests cause the most delay.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "pipeline duration",
+            "failure rate",
+            "rerun rate",
+            "slowest stage",
+            "queue time"
+          ]
+        },
+        {
+          "id": "luxair_process_ci_causes",
+          "label": "Fixes the main causes first",
+          "description": "Separates real product failures from flaky tests and infrastructure issues, then prioritizes the highest-cost causes.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "flaky tests",
+            "infrastructure issue",
+            "failure classification",
+            "highest cost",
+            "root cause"
+          ]
+        },
+        {
+          "id": "luxair_process_ci_result",
+          "label": "Verifies and protects the result",
+          "description": "Compares the same measures after the change and adds ownership or alerts so the pipeline does not slowly degrade again.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "before and after",
+            "trend metric",
+            "clear owner",
+            "regression alert",
+            "sustained improvement"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_process_ci_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you ever remove a test from the blocking pipeline? Under what conditions?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Lassú és bizonytalan CI-folyamat javítása",
+          "prompt": "A CI-folyamat lassú és időnként véletlenszerűen elbukik, ezért a fejlesztők addig indítják újra, amíg át nem megy. Hogyan javítanád, és hogyan bizonyítanád, hogy a változtatás működött?",
+          "answerStructureHint": "Kiindulási mérés, kiváltó okok, fontossági sorrend és előtte-utána bizonyíték.",
+          "expectedPoints": {
+            "luxair_process_ci_baseline": {
+              "label": "Hasznos kiindulási mérést készít",
+              "description": "Méri a futási és várakozási időt, a hibaarányt, az újraindítások számát, valamint a legtöbb késést okozó lépéseket és teszteket."
+            },
+            "luxair_process_ci_causes": {
+              "label": "Először a fő okokat javítja",
+              "description": "Elkülöníti a valódi termékhibákat, a bizonytalan teszteket és az infrastruktúrahibákat, majd a legnagyobb költségű okokat kezeli először."
+            },
+            "luxair_process_ci_result": {
+              "label": "Ellenőrzi és tartóssá teszi az eredményt",
+              "description": "A változtatás után ugyanazokat a mérőszámokat hasonlítja össze, és felelőst vagy riasztást rendel a folyamathoz, hogy az ne romoljon vissza."
+            }
+          },
+          "followUps": {
+            "luxair_process_ci_followup": "Eltávolítanál-e valaha egy tesztet a kötelező CI-folyamatból? Milyen feltételekkel?"
+          }
+        }
+      }
+    }
+  ]
+}

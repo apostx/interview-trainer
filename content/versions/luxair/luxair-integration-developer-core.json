@@ -1,0 +1,2353 @@
+{
+  "id": "luxair_integration_developer_core",
+  "name": "Luxair Integration Developer — JavaScript, TypeScript and HTTP Core",
+  "description": "High-probability developer-level questions covering JavaScript async behavior, TypeScript safety, Node.js runtime operation, streaming, and HTTP API semantics.",
+  "sources": [
+    "luxair_software_developer_integration_job_ad"
+  ],
+  "topics": [
+    {
+      "id": "luxair_javascript_async_control_flow",
+      "name": "JavaScript Async Control Flow",
+      "description": "Async control flow determines whether independent operations run concurrently, sequentially, or stop when one operation fails.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "luxair_nodejs_event_loop",
+        "luxair_outbound_api_resilience"
+      ],
+      "studyContent": {
+        "mentalModel": "Async control flow means choosing when asynchronous work starts, what may run together, and how failures are collected or propagated.",
+        "problem": "A service may become slow if independent calls run one after another. It may also overload a partner if every call starts at once. Poor error handling can leave rejected promises unnoticed or hide partial failure.",
+        "example": "A booking endpoint needs prices from three independent providers. It starts the calls together with a concurrency limit, waits for the results, and decides whether one failed provider should fail the whole request or produce a partial response.",
+        "howItWorks": [
+          "Identify which operations depend on earlier results and which are independent.",
+          "Run independent work concurrently, but place a limit on the number of in-flight operations.",
+          "Choose fail-fast behavior or collect all outcomes based on the business requirement.",
+          "Await or return every promise so rejections are handled by a known error path."
+        ],
+        "commonMistakes": [
+          "Using await inside a loop even when every iteration is independent.",
+          "Using Promise.all for a workflow that should keep successful results after one call fails.",
+          "Starting unbounded parallel requests and calling it scalability."
+        ],
+        "keyTerms": [
+          {
+            "term": "fail-fast",
+            "definition": "behavior where the combined promise reports failure as soon as one required part fails; already-started work is not automatically cancelled"
+          },
+          {
+            "term": "bounded concurrency",
+            "definition": "a fixed limit on how many asynchronous operations may run at the same time"
+          },
+          {
+            "term": "rejection",
+            "definition": "the failed state of a promise, carrying the reason for the failure"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "JavaScript aszinkron vezérlés",
+          "description": "Az aszinkron vezérlés határozza meg, hogy a független műveletek párhuzamosan, egymás után vagy az első hiba után leállva fussanak.",
+          "studyContent": {
+            "mentalModel": "Az aszinkron vezérlés azt jelenti, hogy tudatosan döntünk a műveletek indításáról, párhuzamosságáról és a hibák továbbadásáról.",
+            "problem": "A szolgáltatás lelassulhat, ha a független hívások egymás után futnak. A korlátlan párhuzamosság túlterhelheti a partnert, a hibás Promise-kezelés pedig elveszett vagy rejtett hibákhoz vezethet.",
+            "example": "Egy foglalási végpont három független szolgáltatótól kér árat. Korlátozott párhuzamossággal indítja a hívásokat, majd eldönti, hogy egy hiba meghiúsítsa-e az egész választ vagy részleges eredmény legyen.",
+            "howItWorks": [
+              "Azonosítsd, mely műveletek függnek korábbi eredménytől, és melyek függetlenek.",
+              "A független munkát futtasd párhuzamosan, de korlátozd az egyszerre aktív műveletek számát.",
+              "Az üzleti igény alapján válassz fail-fast működést vagy az összes eredmény összegyűjtését.",
+              "Minden Promise-t várj meg vagy adj vissza, hogy a hibák ismert hibaútvonalra kerüljenek."
+            ],
+            "commonMistakes": [
+              "await használata ciklusban akkor is, amikor minden iteráció független.",
+              "Promise.all használata olyan folyamatnál, ahol egy hiba után is meg kell tartani a sikeres eredményeket.",
+              "Korlátlan számú párhuzamos kérés indítása és ezt skálázhatóságnak nevezni."
+            ],
+            "keyTerms": [
+              {
+                "term": "fail-fast",
+                "definition": "olyan működés, amely az első szükséges rész hibájánál elutasítja az összetett Promise-t; a már elindult műveleteket nem szakítja meg automatikusan"
+              },
+              {
+                "term": "korlátozott párhuzamosság",
+                "definition": "rögzített korlát arra, hogy egyszerre hány aszinkron művelet futhat"
+              },
+              {
+                "term": "elutasított Promise",
+                "definition": "a Promise hibás állapota, amely a hiba okát hordozza"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_typescript_narrowing",
+      "name": "TypeScript Narrowing for External Data",
+      "description": "TypeScript narrowing proves which shape an external value has before the program uses fields or operations that are valid only for that shape.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "luxair_runtime_validation_typescript"
+      ],
+      "studyContent": {
+        "mentalModel": "Type narrowing means starting with a broad type and using checks that let TypeScript safely treat the value as a more specific type.",
+        "problem": "Using any removes the compiler protection exactly where external data is least trustworthy. Large unions without clear discriminators also lead to repeated casts and branches that silently miss new cases.",
+        "example": "A partner response enters the application as unknown. A runtime validator confirms its shape, then a type guard narrows it to SuccessResponse or ErrorResponse. A switch on a status field handles every supported case.",
+        "howItWorks": [
+          "Keep untrusted input as unknown until a check proves its shape.",
+          "Use type guards or discriminant fields to narrow unions in normal control flow.",
+          "Use exhaustive checks so a new variant causes a compile-time error in unhandled code."
+        ],
+        "commonMistakes": [
+          "Using any at API boundaries because the payload is inconvenient to model.",
+          "Using type assertions as if they performed runtime validation.",
+          "Creating a union whose members have no reliable field that distinguishes them."
+        ],
+        "keyTerms": [
+          {
+            "term": "unknown",
+            "definition": "a safe top type that requires checking before the value can be used as a more specific type"
+          },
+          {
+            "term": "type guard",
+            "definition": "a runtime check whose result lets TypeScript narrow a value"
+          },
+          {
+            "term": "discriminated union",
+            "definition": "a union whose members contain a shared field with different literal values"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "TypeScript-típusok szűkítése külső adatoknál",
+          "description": "A típusszűkítés ellenőrzésekkel igazolja egy külső érték konkrét alakját, mielőtt a program csak arra az alakra érvényes mezőket vagy műveleteket használna.",
+          "studyContent": {
+            "mentalModel": "A típusszűkítés ellenőrzésekkel alakít egy tág TypeScript-típust biztonságosan használható, konkrétabb típussá.",
+            "problem": "Az `any` éppen ott kapcsolja ki a fordító védelmét, ahol a külső adat a legkevésbé megbízható. A rosszul tervezett union típusok sok típuskényszerítést és könnyen kihagyott ágat eredményeznek.",
+            "example": "Egy partnerválasz `unknown` típusként érkezik. A futásidejű validátor ellenőrzi az alakját, majd egy típusőr `SuccessResponse` vagy `ErrorResponse` típusra szűkíti. A megkülönböztető állapotmező szerinti `switch` minden támogatott esetet kezel.",
+            "howItWorks": [
+              "A nem megbízható bemenet maradjon `unknown`, amíg egy ellenőrzés nem bizonyítja az alakját.",
+              "Típusőrrel vagy megkülönböztető mezővel szűkítsd az union típust a normál vezérlési folyamatban.",
+              "Használj teljeskörűség-ellenőrzést, hogy egy új variáns fordítási hibát okozzon a még nem kezelt kódban."
+            ],
+            "commonMistakes": [
+              "Az `any` használata API-határon csak azért, mert az adatcsomag modellezése kényelmetlen.",
+              "Típuskényszerítés használata úgy, mintha futásidejű validációt végezne.",
+              "Olyan union létrehozása, amelynek tagjait nem különbözteti meg megbízható mező."
+            ],
+            "keyTerms": [
+              {
+                "term": "unknown",
+                "definition": "biztonságos általános típus, amely ellenőrzést követel a konkrét használat előtt"
+              },
+              {
+                "term": "típusőr",
+                "definition": "futásidejű ellenőrzés, amelynek eredménye alapján a TypeScript szűkíti a típust"
+              },
+              {
+                "term": "discriminated union",
+                "definition": "olyan union, amelynek tagjait egy közös mező eltérő konstans értékei különböztetik meg"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_nodejs_streams_backpressure",
+      "name": "Node.js Streams and Backpressure",
+      "description": "Node.js streams process data in chunks, while backpressure prevents a fast producer from filling memory when a slower consumer cannot keep up.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "luxair_nodejs_event_loop",
+        "luxair_api_capacity_planning"
+      ],
+      "studyContent": {
+        "mentalModel": "Streaming means processing data piece by piece instead of loading the complete payload into memory. Backpressure makes the producer slow down when the consumer cannot keep up.",
+        "problem": "A service that buffers every file or response can use several times the payload size in memory. Under concurrency, this causes long garbage-collection pauses, process crashes, or unstable latency.",
+        "example": "An integration downloads a large timetable feed, transforms each record, and uploads the result. A pipeline passes chunks through the transform and pauses reading when the destination cannot write fast enough.",
+        "howItWorks": [
+          "A readable source produces chunks instead of one complete in-memory value.",
+          "A transform changes each chunk while keeping only limited buffered data.",
+          "A writable destination signals when its internal buffer is full.",
+          "The pipeline waits for capacity and forwards errors to one controlled handler."
+        ],
+        "commonMistakes": [
+          "Calling data handlers without respecting the writable stream backpressure signal.",
+          "Using streams for tiny payloads where the added complexity brings no benefit.",
+          "Assuming streaming removes the need for size limits and timeouts."
+        ],
+        "keyTerms": [
+          {
+            "term": "chunk",
+            "definition": "a small piece of data delivered through a stream"
+          },
+          {
+            "term": "backpressure",
+            "definition": "a signal that tells the producer to pause because the consumer is full"
+          },
+          {
+            "term": "pipeline",
+            "definition": "a connected chain of streams that forwards data and errors"
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": "Node.js streamek és backpressure",
+          "description": "A Node.js streamek darabokban dolgozzák fel az adatot, a backpressure pedig megakadályozza, hogy egy gyors adatforrás megtöltse a memóriát, amikor a feldolgozó nem tud vele lépést tartani.",
+          "studyContent": {
+            "mentalModel": "A streaming részenként dolgozza fel az adatot a teljes tartalom memóriába töltése helyett. A backpressure lelassítja a termelőt, amikor a fogyasztó nem tud lépést tartani.",
+            "problem": "A minden fájlt vagy választ teljesen pufferelő szolgáltatás az adatcsomag többszörösét használhatja memóriában. Párhuzamos terhelésnél ez hosszú GC-szünetet, folyamatleállást vagy ingadozó késleltetést okozhat.",
+            "example": "Egy integráció nagy menetrendi adatfolyamot tölt le, rekordonként átalakítja, majd feltölti az eredményt. A CI-folyamat adatrészeket továbbít, és szünetelteti az olvasást, ha a cél nem tud elég gyorsan írni.",
+            "howItWorks": [
+              "A readable forrás adatrészeket ad a teljes memóriabeli érték helyett.",
+              "Az írható cél jelzi, amikor megtelt a belső puffere.",
+              "Az írható cél jelzi, amikor megtelt a belső buffere.",
+              "A pipeline megvárja a szabad kapacitást, és a hibákat egy közös kezelőhöz továbbítja."
+            ],
+            "commonMistakes": [
+              "`data` eseménykezelőt használni úgy, hogy közben figyelmen kívül marad az írható stream backpressure-jelzése.",
+              "Streamek használata apró adatcsomagoknál, ahol a plusz komplexitás nem ad előnyt.",
+              "Azt feltételezni, hogy streamelés mellett nincs szükség méretkorlátra és időkorlátra."
+            ],
+            "keyTerms": [
+              {
+                "term": "chunk",
+                "definition": "egy streamen keresztül továbbított kis adatrész"
+              },
+              {
+                "term": "backpressure",
+                "definition": "jelzés a producernek, hogy álljon meg, mert a fogyasztó kapacitása elfogyott"
+              },
+              {
+                "term": "pipeline",
+                "definition": "összekapcsolt streamek lánca, amely az adatot és a hibákat továbbítja"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_nodejs_service_lifecycle",
+      "name": "Node.js Service Lifecycle",
+      "description": "A production Node.js service has explicit startup, readiness, draining, shutdown, and restart behavior so deployments and failures do not abandon accepted work.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "luxair_cross_service_observability",
+        "luxair_safe_delivery_pipeline"
+      ],
+      "studyContent": {
+        "mentalModel": "A Node.js service lifecycle defines when an instance is starting, ready for traffic, draining accepted work, stopped, or unsafe to continue.",
+        "problem": "During deployment or failure, a process may still have active requests, message locks, or database writes. Reporting readiness too early sends traffic to an unusable instance, while exiting immediately can lose accepted work.",
+        "example": "A container becomes ready only after configuration checks pass. On SIGTERM it becomes unready, stops accepting HTTP and queue work, waits for active handlers, closes connections, and exits before the platform deadline.",
+        "howItWorks": [
+          "Finish startup checks before reporting readiness.",
+          "On SIGTERM, become unready and stop accepting new requests or messages.",
+          "Wait for active work, then close consumers, connections, and other resources in a defined order.",
+          "Use a final deadline, exit, and let the external supervisor start a clean instance when the process cannot continue safely."
+        ],
+        "commonMistakes": [
+          "Reporting readiness before required configuration and local initialization are complete.",
+          "Calling process.exit immediately and cutting off pending responses, logs, or network writes.",
+          "Trying to keep normal traffic running after an uncaught process-level failure."
+        ],
+        "keyTerms": [
+          {
+            "term": "readiness",
+            "definition": "a signal telling the platform whether an instance should receive new traffic"
+          },
+          {
+            "term": "draining",
+            "definition": "stopping new work while allowing already accepted work to finish"
+          },
+          {
+            "term": "SIGTERM",
+            "definition": "a process signal commonly used to request a controlled shutdown"
+          },
+          {
+            "term": "external supervisor",
+            "definition": "the platform or process manager that starts a clean replacement instance"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Node.js szolgáltatás-életciklus",
+          "description": "Egy éles Node.js-szolgáltatás egyértelmű indulási, készenléti, leürítési, leállási és újraindítási viselkedést használ, hogy telepítés vagy hiba közben ne vesszen el a már elfogadott munka.",
+          "studyContent": {
+            "mentalModel": "A Node.js szolgáltatás életciklusa meghatározza, mikor indul egy példány, mikor fogadhat forgalmat, mikor fejezi be a már elfogadott munkát, mikor állt le, és mikor nem biztonságos tovább futnia.",
+            "problem": "Telepítés vagy hiba közben még futhatnak kérések, üzenetzárolások vagy adatbázis-írások. A túl korai készenléti jel használhatatlan példányra küldhet forgalmat, az azonnali kilépés pedig elveszítheti a már elfogadott munkát.",
+            "example": "Egy konténer csak a konfigurációs ellenőrzések után válik készen állóvá. SIGTERM esetén letiltja a készenléti jelét, nem fogad új HTTP- vagy üzenetsori munkát, megvárja az aktív kezelőket, lezárja a kapcsolatokat, majd a platform határideje előtt kilép.",
+            "howItWorks": [
+              "Az indulási ellenőrzések befejezése után jelezz készenléti állapotot.",
+              "SIGTERM esetén válj nem készen állóvá, és ne fogadj új kérést vagy üzenetet.",
+              "Várd meg az aktív munkát, majd meghatározott sorrendben zárd le a fogyasztókat, kapcsolatokat és más erőforrásokat.",
+              "Használj végső határidőt, lépj ki, és hagyd, hogy a külső felügyelő tiszta példányt indítson, ha a folyamat nem folytatható biztonságosan."
+            ],
+            "commonMistakes": [
+              "Készenléti állapotot jelezni, mielőtt a szükséges konfiguráció és helyi inicializálás befejeződött.",
+              "Azonnal meghívni a process.exit()-et, és ezzel félbeszakítani a függő válaszokat, naplóírást vagy hálózati küldést.",
+              "El nem kapott folyamatszintű hiba után továbbra is normál forgalmat kiszolgálni."
+            ],
+            "keyTerms": [
+              {
+                "term": "readiness",
+                "definition": "jelzés a platformnak arról, hogy a példány fogadhat-e új forgalmat"
+              },
+              {
+                "term": "draining",
+                "definition": "az új munka leállítása úgy, hogy a már elfogadott munka befejeződhessen"
+              },
+              {
+                "term": "SIGTERM",
+                "definition": "a kontrollált leállítás kérésére gyakran használt folyamatjel"
+              },
+              {
+                "term": "külső felügyelő",
+                "definition": "az a platform vagy folyamatkezelő, amely tiszta cserepéldányt indít"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_http_api_semantics",
+      "name": "HTTP Semantics for APIs",
+      "description": "HTTP semantics give API clients predictable meanings for methods, status codes, errors, pagination, caching, and retry behavior.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "luxair_api_contract_evolution",
+        "luxair_idempotent_processing",
+        "luxair_api_gateway_security"
+      ],
+      "studyContent": {
+        "mentalModel": "HTTP semantics means using the protocol consistently so a client can understand what an operation does and how to react without private knowledge of the server.",
+        "problem": "An API that returns 200 for every outcome, uses POST for every action, or gives inconsistent error bodies forces each consumer to add special cases. Retries and monitoring also become less reliable.",
+        "example": "Creating a booking returns 201 with the new resource location. A long-running import returns 202 and a status URL. Invalid input returns 400, failed authentication 401, missing permission 403, and temporary overload 429 with retry guidance.",
+        "howItWorks": [
+          "Choose a method whose meaning matches reading, creating, replacing, partially updating, or deleting a resource.",
+          "Return status codes that distinguish success, client errors, authentication, authorization, conflicts, and temporary failure.",
+          "Use stable error bodies with a machine-readable code and a safe human-readable message.",
+          "Document retry, pagination, caching, and correlation headers as part of the contract."
+        ],
+        "commonMistakes": [
+          "Returning 500 for validation errors or partner business rejections.",
+          "Assuming DELETE or PUT is automatically idempotent even when the implementation creates extra side effects.",
+          "Exposing internal exception names as the public error contract."
+        ],
+        "keyTerms": [
+          {
+            "term": "idempotent method",
+            "definition": "an HTTP method whose intended server effect is the same after one or repeated identical requests"
+          },
+          {
+            "term": "status code",
+            "definition": "a standard numeric result that describes the outcome category of an HTTP request"
+          },
+          {
+            "term": "error code",
+            "definition": "a stable application identifier that clients can use without parsing a message"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "HTTP-szemantika API-khoz",
+          "description": "A HTTP-szemantika kiszámítható jelentést ad az API-klienseknek a metódusokhoz, státuszkódokhoz, hibákhoz, lapozáshoz, gyorsítótárazáshoz és újrapróbálkozáshoz.",
+          "studyContent": {
+            "mentalModel": "A HTTP szemantika a protokoll következetes használata, hogy a kliens külön szerverismeret nélkül értse a műveletet és a szükséges reakciót.",
+            "problem": "A minden eredményre 200-at adó, minden művelethez POST-ot használó vagy eltérő hibatörzseket visszaadó API speciális klienskódot igényel. Az újrapróbálkozás és a monitorozás is kevésbé megbízható.",
+            "example": "Foglalás létrehozása 201-et és erőforrás-URL-t ad. Egy hosszú import 202-t és állapot-URL-t ad. Hibás bemenet 400, sikertelen hitelesítés 401, hiányzó jogosultság 403, ideiglenes túlterhelés 429 újrapróbálkozási útmutatással.",
+            "howItWorks": [
+              "Olyan metódust válassz, amely illik az olvasás, létrehozás, csere, részleges módosítás vagy törlés jelentéséhez.",
+              "A státuszkód különböztesse meg a sikert, klienshibát, hitelesítést, jogosultságkezelést, ütközést és ideiglenes hibát.",
+              "Használj stabil hibatörzset géppel olvasható kóddal és biztonságos emberi üzenettel.",
+              "Az újrapróbálkozás, lapozás, gyorsítótárazás és korrelációs fejlécek is legyenek a dokumentált szerződés részei."
+            ],
+            "commonMistakes": [
+              "500 visszaadása validációs hibára vagy partner üzleti elutasítására.",
+              "Azt feltételezni, hogy a DELETE vagy PUT automatikusan idempotens akkor is, ha az implementáció extra mellékhatást hoz létre.",
+              "Belső kivételnevek kitétele nyilvános hibaszerződésként."
+            ],
+            "keyTerms": [
+              {
+                "term": "idempotens metódus",
+                "definition": "HTTP metódus, amelynél az azonos kérés egyszeri vagy többszöri hatása ugyanaz"
+              },
+              {
+                "term": "státuszkód",
+                "definition": "szabványos numerikus eredmény, amely leírja a HTTP-kérés kimenetelének kategóriáját"
+              },
+              {
+                "term": "hibakód",
+                "definition": "stabil alkalmazásszintű azonosító, amelyet a kliens az üzenet feldolgozása nélkül használhat"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_javascript_scope_closures",
+      "name": "JavaScript Scope and Closures",
+      "description": "Lexical scope decides where a variable can be used. A closure lets a function keep access to variables from the scope where that function was created.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "luxair_javascript_async_control_flow",
+        "luxair_nodejs_event_loop"
+      ],
+      "studyContent": {
+        "mentalModel": "A closure is a function together with access to variables from the place where it was created, even after that outer function has finished.",
+        "problem": "Without understanding closures, delayed callbacks may read an unexpected value, factories may accidentally share state, and long-lived listeners may keep large objects in memory.",
+        "example": "A client factory receives a partner name and returns a request function. The returned function can still use that partner name later because it closes over the factory variable.",
+        "howItWorks": [
+          "JavaScript resolves a variable from the function’s lexical location in the source code.",
+          "An inner function keeps access to the outer bindings it uses.",
+          "Those bindings remain reachable while the inner function remains reachable."
+        ],
+        "commonMistakes": [
+          "Thinking a closure copies a frozen value instead of keeping access to a binding.",
+          "Using var in delayed loop callbacks and unintentionally sharing one function-scoped binding.",
+          "Letting a long-lived listener capture a large object that it no longer needs."
+        ],
+        "keyTerms": [
+          {
+            "term": "lexical scope",
+            "definition": "variable visibility determined by where functions and blocks are written in the source code"
+          },
+          {
+            "term": "closure",
+            "definition": "a function that keeps access to variables from its creation scope"
+          },
+          {
+            "term": "binding",
+            "definition": "the association between a variable name and its current value"
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": "JavaScript hatókör és closure",
+          "description": "A lexikális hatókör meghatározza, hogy egy változó hol használható. A closure lehetővé teszi, hogy egy függvény később is elérje a létrehozási helyének változóit.",
+          "studyContent": {
+            "mentalModel": "A closure olyan függvény, amely a külső függvény befejezése után is hozzáfér a létrehozási helyén látható változókhoz.",
+            "problem": "A closure működésének megértése nélkül a késleltetett callbackek váratlan értéket olvashatnak, a gyárfüggvények véletlenül közös állapotot használhatnak, a hosszú életű eseményfigyelők pedig nagy objektumokat tarthatnak a memóriában.",
+            "example": "Egy kliensgyár megkapja a partner nevét, majd visszaad egy kérésküldő függvényt. A visszaadott függvény később is eléri a partner nevét, mert closure-ben megőrzi a hozzáférést.",
+            "howItWorks": [
+              "A JavaScript a forráskódban elfoglalt hely alapján keresi meg a változókat.",
+              "A belső függvény hozzáfér a használt külső változók kötéseihez.",
+              "Ezek a kötések addig maradnak elérhetők, amíg a belső függvény is elérhető."
+            ],
+            "commonMistakes": [
+              "Azt gondolni, hogy a closure egy változatlan értéket másol, nem pedig egy kötéshez őrzi meg a hozzáférést.",
+              "var használatakor késleltetett ciklus-callbackekkel véletlenül ugyanazt a függvényhatókörű kötést megosztani.",
+              "Nagy, már nem szükséges objektumot befogni egy hosszú életű eseményfigyelőben."
+            ],
+            "keyTerms": [
+              {
+                "term": "lexikális hatókör",
+                "definition": "a változók láthatóságát az határozza meg, hol találhatók a függvények és blokkok a forráskódban"
+              },
+              {
+                "term": "closure",
+                "definition": "olyan függvény, amely hozzáfér a létrehozási hatókörének változóihoz"
+              },
+              {
+                "term": "kötés",
+                "definition": "kapcsolat egy változónév és annak aktuális értéke között"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "luxair_async_parallel_vs_sequential_001",
+      "title": "Parallel or sequential partner calls",
+      "prompt": "You need data from four partner APIs. How do you decide which calls should run in parallel, which must be sequential, and how many may run at once?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "luxair_javascript_async_control_flow"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Dependencies, concurrency limit, and failure policy.",
+      "expectedPoints": [
+        {
+          "id": "luxair_async_dependencies",
+          "label": "Separates dependencies from independent work",
+          "description": "Explains that calls requiring an earlier result must wait, while truly independent calls may start together.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "dependency chain",
+            "independent calls",
+            "run in parallel",
+            "must be sequential"
+          ]
+        },
+        {
+          "id": "luxair_async_limit",
+          "label": "Limits concurrency",
+          "description": "Uses bounded concurrency to protect memory, sockets, the service, and partner rate limits.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "bounded concurrency",
+            "concurrency limit",
+            "partner rate limit",
+            "limit in flight"
+          ]
+        },
+        {
+          "id": "luxair_async_failure_policy",
+          "label": "Defines failure behavior",
+          "description": "Chooses fail-fast or partial results according to whether every partner result is required.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "fail fast",
+            "partial result",
+            "all results",
+            "business requirement"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_async_parallel_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would change if one partner allows only ten concurrent requests?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Párhuzamos vagy szekvenciális partnerhívások",
+          "prompt": "Négy partner API-jából kell adat. Hogyan döntöd el, mely hívások fussanak párhuzamosan, melyek szekvenciálisan, és egyszerre hány indulhat?",
+          "answerStructureHint": "Függőségek, párhuzamossági korlát és hibapolitika.",
+          "expectedPoints": {
+            "luxair_async_dependencies": {
+              "label": "Elkülöníti a függőségeket és a független munkát",
+              "description": "Elmagyarázza, hogy a korábbi eredményt igénylő hívásoknak várniuk kell, a valóban független hívások pedig együtt indíthatók."
+            },
+            "luxair_async_limit": {
+              "label": "Korlátozza a párhuzamosságot",
+              "description": "Korlátozott párhuzamosságot használ a memória, socketek, a szolgáltatás és a partnerlimitek védelmére."
+            },
+            "luxair_async_failure_policy": {
+              "label": "Meghatározza a hibakezelést",
+              "description": "Az alapján választ fail-fast vagy részleges eredményt, hogy minden partner válasza kötelező-e."
+            }
+          },
+          "followUps": {
+            "luxair_async_parallel_followup": "Mi változna, ha az egyik partner legfeljebb tíz párhuzamos kérést engedne?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_promise_failure_handling_002",
+      "title": "Choosing Promise.all, allSettled, or sequential await",
+      "prompt": "Compare Promise.all, Promise.allSettled, and sequential await for an integration workflow. When would each choice be appropriate?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "luxair_javascript_async_control_flow"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Behavior on success, failure, dependency, and partial results.",
+      "expectedPoints": [
+        {
+          "id": "luxair_promise_all",
+          "label": "Explains Promise.all",
+          "description": "Explains that Promise.all observes promises that have already been created, rejects the combined promise when one rejects, and does not automatically cancel the remaining operations.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "promise all",
+            "rejects on failure",
+            "fail fast",
+            "already started",
+            "does not cancel"
+          ]
+        },
+        {
+          "id": "luxair_promise_settled",
+          "label": "Explains Promise.allSettled",
+          "description": "Uses allSettled when every outcome must be inspected and partial success is acceptable.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "all settled",
+            "inspect every result",
+            "partial success",
+            "fulfilled rejected"
+          ]
+        },
+        {
+          "id": "luxair_promise_sequential",
+          "label": "Explains sequential await",
+          "description": "Uses sequential execution when later work depends on earlier output or ordering is required.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "depends on previous",
+            "ordering required",
+            "sequential await",
+            "one after another"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_promise_failure_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How do you prevent a promise rejection from becoming unhandled?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Promise.all, allSettled vagy szekvenciális await választása",
+          "prompt": "Hasonlítsd össze a Promise.all, Promise.allSettled és a szekvenciális await használatát egy integrációs folyamatban. Mikor melyik megfelelő?",
+          "answerStructureHint": "Siker, hiba, függőség és részleges eredmény szerinti működés.",
+          "expectedPoints": {
+            "luxair_promise_all": {
+              "label": "Elmagyarázza a Promise.all működését",
+              "description": "Elmagyarázza, hogy a Promise.all a már létrehozott Promise-okat figyeli, az első elutasításkor elutasítja az összetett Promise-t, de a többi már elindult műveletet nem szakítja meg automatikusan."
+            },
+            "luxair_promise_settled": {
+              "label": "Elmagyarázza a Promise.allSettled működését",
+              "description": "AllSettledet használ, ha minden kimenetelt meg kell vizsgálni és részleges siker is elfogadható."
+            },
+            "luxair_promise_sequential": {
+              "label": "Elmagyarázza a szekvenciális await használatát",
+              "description": "Szekvenciális futást használ, ha a későbbi munka korábbi eredménytől függ vagy a sorrend kötelező."
+            }
+          },
+          "followUps": {
+            "luxair_promise_failure_followup": "Hogyan akadályozod meg, hogy egy elutasított Promise kezeletlen maradjon?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_ts_unknown_any_001",
+      "title": "Unknown versus any at an API boundary",
+      "prompt": "Why is unknown usually safer than any for external JSON, and how would you turn the value into a useful application type?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_typescript_narrowing"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compiler safety, runtime validation, and mapping.",
+      "expectedPoints": [
+        {
+          "id": "luxair_ts_unknown_safety",
+          "label": "Explains unknown safety",
+          "description": "States that unknown requires checks before property access, while any disables type checking.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "unknown requires check",
+            "any disables checks",
+            "cannot access directly",
+            "type safety"
+          ]
+        },
+        {
+          "id": "luxair_ts_validate",
+          "label": "Validates at runtime",
+          "description": "Validates the external shape before trusting it because TypeScript types do not exist at runtime.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "runtime validation",
+            "schema validator",
+            "types erased",
+            "validate payload"
+          ]
+        },
+        {
+          "id": "luxair_ts_map",
+          "label": "Maps to an internal model",
+          "description": "Converts the validated partner payload into a stable internal type so partner details do not spread through the codebase.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "internal model",
+            "mapping layer",
+            "adapter",
+            "stable type"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_ts_unknown_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Does a TypeScript type assertion validate the value at runtime?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "`unknown` és `any` az API-határon",
+          "prompt": "Miért biztonságosabb általában az unknown az any-nél külső JSON esetén, és hogyan alakítanád használható alkalmazástípussá?",
+          "answerStructureHint": "Fordítói biztonság, futásidejű validáció és leképezés.",
+          "expectedPoints": {
+            "luxair_ts_unknown_safety": {
+              "label": "Elmagyarázza az unknown biztonságát",
+              "description": "Elmondja, hogy az unknown ellenőrzést követel a mezőhasználat előtt, az any pedig kikapcsolja a típusellenőrzést."
+            },
+            "luxair_ts_validate": {
+              "label": "Futásidejű validációt használ",
+              "description": "Ellenőrzi a külső adat alakját, mert a TypeScript típusok futásidőben nem léteznek."
+            },
+            "luxair_ts_map": {
+              "label": "Belső modellre képez",
+              "description": "A validált partner adatcsomagot stabil belső típusra alakítja, így a partner részletei nem terjednek szét a kódbázisban."
+            }
+          },
+          "followUps": {
+            "luxair_ts_unknown_followup": "A TypeScript típuskényszerítés validálja az értéket futásidőben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_ts_discriminated_union_002",
+      "title": "Modeling partner outcomes with a union",
+      "prompt": "How would you model success, retryable failure, and permanent failure in TypeScript so callers must handle every case?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design",
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_typescript_narrowing"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discriminator, variant data, and exhaustive handling.",
+      "expectedPoints": [
+        {
+          "id": "luxair_union_discriminator",
+          "label": "Uses a discriminated union",
+          "description": "Defines variants with a shared literal field such as kind or status that identifies the case.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "discriminated union",
+            "literal field",
+            "kind property",
+            "status property"
+          ]
+        },
+        {
+          "id": "luxair_union_payload",
+          "label": "Keeps variant-specific data safe",
+          "description": "Places fields such as data, retryAfter, or reason only on the variants where they are valid.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "variant specific",
+            "retry after",
+            "success data",
+            "failure reason"
+          ]
+        },
+        {
+          "id": "luxair_union_exhaustive",
+          "label": "Checks exhaustively",
+          "description": "Uses a switch and a never check so adding a new variant exposes unhandled callers at compile time.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "exhaustive switch",
+            "never check",
+            "all cases",
+            "compile time error"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_ts_union_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What problem would a class hierarchy solve differently here?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Partnerkimenetek modellezése union típussal",
+          "prompt": "Hogyan modelleznéd TypeScriptben a sikert, újrapróbálható hibát és végleges hibát úgy, hogy a hívó minden esetet kénytelen legyen kezelni?",
+          "answerStructureHint": "Discriminator, variánsadat és exhaustive kezelés.",
+          "expectedPoints": {
+            "luxair_union_discriminator": {
+              "label": "Megkülönböztetett union típust használ",
+              "description": "Közös konstans mezővel, például kind vagy status mezőértékkel azonosítja a variánsokat."
+            },
+            "luxair_union_payload": {
+              "label": "Biztonságosan kezeli a variánsspecifikus adatot",
+              "description": "A data, újrapróbálkozásAfter vagy reason mezőket csak azon variánsokra teszi, ahol érvényesek."
+            },
+            "luxair_union_exhaustive": {
+              "label": "Exhaustive ellenőrzést használ",
+              "description": "Switch és never ellenőrzéssel eléri, hogy egy új variáns fordításkor jelezze a kezeletlen hívókat."
+            }
+          },
+          "followUps": {
+            "luxair_ts_union_followup": "Miben oldaná meg másképp ezt a problémát egy osztályhierarchia?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_stream_large_payload_001",
+      "title": "Processing a large partner payload",
+      "prompt": "A partner sends a multi-gigabyte file. How would you process and transform it in Node.js without exhausting memory?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "system_design"
+      ],
+      "topicIds": [
+        "luxair_nodejs_streams_backpressure"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Streaming pipeline, backpressure, and cleanup.",
+      "expectedPoints": [
+        {
+          "id": "luxair_stream_chunks",
+          "label": "Processes chunks",
+          "description": "Uses readable, transform, and writable streams so the complete file is never required in memory.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "stream pipeline",
+            "process chunks",
+            "not whole file",
+            "readable writable"
+          ]
+        },
+        {
+          "id": "luxair_stream_backpressure",
+          "label": "Respects backpressure",
+          "description": "Lets the pipeline pause the source when the destination or transform cannot keep up.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "backpressure",
+            "pause source",
+            "consumer slower",
+            "buffer full"
+          ]
+        },
+        {
+          "id": "luxair_stream_failure",
+          "label": "Handles failure and cleanup",
+          "description": "Uses one error path that aborts the pipeline, closes resources, and avoids leaving a partial result as complete.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "pipeline error",
+            "cleanup resources",
+            "abort upload",
+            "partial result"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_stream_payload_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would buffering the whole payload still be the simpler and better choice?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Nagy partner adatcsomag feldolgozása",
+          "prompt": "Egy partner több gigabájtos fájlt küld. Hogyan dolgoznád fel és alakítanád át Node.js-ben a memória kimerítése nélkül?",
+          "answerStructureHint": "Streamelési pipeline, backpressure és erőforrás-takarítás.",
+          "expectedPoints": {
+            "luxair_stream_chunks": {
+              "label": "Chunkokban dolgozik",
+              "description": "Readable, transform és írható streameket használ, így a teljes fájl nem kerül memóriába."
+            },
+            "luxair_stream_backpressure": {
+              "label": "Figyelembe veszi a backpressure-t",
+              "description": "Hagyja, hogy a pipeline megállítsa a forrást, ha a cél vagy transform nem bírja a tempót."
+            },
+            "luxair_stream_failure": {
+              "label": "Kezeli a hibát és erőforrás-takarítást",
+              "description": "Hiba esetén megszakítja a pipeline-t, lezárja az erőforrásokat, és nem jelöli teljesnek a részleges eredményt."
+            }
+          },
+          "followUps": {
+            "luxair_stream_payload_followup": "Mikor lenne mégis egyszerűbb és jobb a teljes adatcsomag pufferelése?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_stream_memory_growth_002",
+      "title": "Diagnosing stream memory growth",
+      "prompt": "A streaming service still consumes more memory as traffic increases. What would you investigate?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting",
+        "experience_deep_dive"
+      ],
+      "topicIds": [
+        "luxair_nodejs_streams_backpressure"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Backpressure, retained objects, and memory evidence.",
+      "expectedPoints": [
+        {
+          "id": "luxair_stream_unbounded_buffer",
+          "label": "Looks for unbounded buffering",
+          "description": "Checks whether data events, custom queues, or transforms keep accepting chunks after downstream capacity is full.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "unbounded buffer",
+            "ignores backpressure",
+            "custom queue",
+            "keeps accepting"
+          ]
+        },
+        {
+          "id": "luxair_stream_retention",
+          "label": "Looks for retained references",
+          "description": "Checks listeners, closures, caches, and request tracking that may retain chunks or completed stream objects.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "retained references",
+            "event listeners",
+            "memory leak",
+            "heap snapshot"
+          ]
+        },
+        {
+          "id": "luxair_stream_measure",
+          "label": "Measures before changing code",
+          "description": "Uses heap, RSS, garbage-collection, throughput, and concurrency data to distinguish normal buffering from a leak.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "heap usage",
+            "rss memory",
+            "gc metrics",
+            "measure concurrency"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_stream_memory_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can RSS stay high even after the JavaScript heap falls?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Stream miatti memórianövekedés diagnosztikája",
+          "prompt": "A streamelő szolgáltatás memóriája a forgalommal együtt tovább nő. Mit vizsgálnál meg?",
+          "answerStructureHint": "Backpressure, bent maradó objektumok és memóriaadatok.",
+          "expectedPoints": {
+            "luxair_stream_unbounded_buffer": {
+              "label": "Korlátlan pufferelést keres",
+              "description": "Ellenőrzi, hogy a `data` események, saját üzenetsorok vagy transzformációk tovább fogadnak-e adatrészeket azután is, hogy a céloldali puffer megtelt."
+            },
+            "luxair_stream_retention": {
+              "label": "Bent maradó referenciákat keres",
+              "description": "Eseményfigyelőket, closure-öket, gyorsítótárakat és kéréskövetést vizsgál, amelyek megtarthatják az adatrészeket vagy a már befejezett streamobjektumokat."
+            },
+            "luxair_stream_measure": {
+              "label": "Mérés alapján változtat",
+              "description": "Heap-, RSS-, szemétgyűjtési, áteresztőképességi és párhuzamossági adatokkal választja szét a normál pufferelést a memóriaszivárgástól."
+            }
+          },
+          "followUps": {
+            "luxair_stream_memory_followup": "Miért maradhat magas az RSS akkor is, amikor a JavaScript heap már csökkent?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_graceful_shutdown_001",
+      "title": "Graceful shutdown during deployment",
+      "prompt": "Describe how a Node.js integration service should react to SIGTERM during a rolling deployment.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_nodejs_service_lifecycle"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Traffic removal, draining, resource closure, and timeout.",
+      "expectedPoints": [
+        {
+          "id": "luxair_shutdown_stop_traffic",
+          "label": "Stops new traffic",
+          "description": "Fails readiness or removes the instance from routing before closing active work.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "fail readiness",
+            "stop new requests",
+            "remove from load balancer",
+            "drain traffic"
+          ]
+        },
+        {
+          "id": "luxair_shutdown_drain",
+          "label": "Drains active work",
+          "description": "Waits for in-flight requests or safely releases message locks instead of abandoning work midway.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "in flight requests",
+            "drain work",
+            "release message",
+            "finish active"
+          ]
+        },
+        {
+          "id": "luxair_shutdown_close",
+          "label": "Closes resources with a deadline",
+          "description": "Closes server, consumers, database pools, and telemetry, with a maximum timeout before forced exit.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "close database pool",
+            "close consumer",
+            "shutdown timeout",
+            "flush logs"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_shutdown_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What should happen to a queue message that is still being processed when the deadline expires?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Szabályos leállás telepítés közben",
+          "prompt": "Írd le, hogyan reagáljon egy Node.js integrációs szolgáltatás SIGTERM-re rolling telepítés közben.",
+          "answerStructureHint": "Forgalom leállítása, draining, erőforrás-zárás és időkorlát.",
+          "expectedPoints": {
+            "luxair_shutdown_stop_traffic": {
+              "label": "Leállítja az új forgalmat",
+              "description": "A készenléti állapot megszüntetésével vagy a forgalomirányításból való kivétellel megállítja az új forgalmat az aktív munka lezárása előtt."
+            },
+            "luxair_shutdown_drain": {
+              "label": "Megvárja az aktív munkát",
+              "description": "Megvárja a folyamatban lévő kéréseket, vagy biztonságosan elengedi az üzenetzárolásokat a félbehagyás helyett."
+            },
+            "luxair_shutdown_close": {
+              "label": "Határidővel lezárja az erőforrásokat",
+              "description": "Lezárja a szervert, az üzenetfogyasztókat, az adatbázis-kapcsolatkészleteket és a telemetria küldését, végső időkorláttal a kényszerített kilépés előtt."
+            }
+          },
+          "followUps": {
+            "luxair_shutdown_followup": "Mi történjen azzal az üzenetsori üzenettel, amelyet a határidő lejártakor még feldolgoznak?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_error_classification_002",
+      "title": "Classifying errors in an integration service",
+      "prompt": "Which error categories would you define inside a Node.js integration service, and how should each category influence retry, alerting, and ownership?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_nodejs_error_handling"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Category, retryability, operational owner, alert severity, and diagnostic context.",
+      "expectedPoints": [
+        {
+          "id": "luxair_error_categories",
+          "label": "Defines meaningful categories",
+          "description": "Separates client input, business outcome, transient operational failure, and internal defect because they require different responses.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "validation error",
+            "business rejection",
+            "transient failure",
+            "programmer error"
+          ]
+        },
+        {
+          "id": "luxair_error_response",
+          "label": "Defines operational handling",
+          "description": "Maps each category to retryability, alert severity, the responsible service or caller action, and reconciliation when the outcome is uncertain.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "retryable flag",
+            "caller action",
+            "service owner",
+            "alert severity",
+            "uncertain outcome"
+          ]
+        },
+        {
+          "id": "luxair_error_context",
+          "label": "Preserves diagnostic context",
+          "description": "Keeps cause, correlation ID, partner operation, and relevant metadata in logs without leaking secrets.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "correlation id",
+            "error cause",
+            "structured log",
+            "no secrets"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_error_classification_followup",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "luxair_error_response"
+          },
+          "prompt": "How would you classify and handle a partner timeout when the remote operation may already have succeeded?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hibák osztályozása integrációs szolgáltatásban",
+          "prompt": "Milyen hibakategóriákat hoznál létre egy Node.js integrációs szolgáltatásban, és hogyan befolyásolná mindegyik az újrapróbálkozást, a riasztást és a felelősségi kört?",
+          "answerStructureHint": "Kategória, újrapróbálhatóság, üzemeltetési felelős, riasztás súlyossága és diagnosztikai kontextus.",
+          "expectedPoints": {
+            "luxair_error_categories": {
+              "label": "Értelmes kategóriákat használ",
+              "description": "Elkülöníti a kliensbemenetet, üzleti eredményt, átmeneti függőségi vagy üzemeltetési hibát és belső programhibát, mert más reakciót igényelnek."
+            },
+            "luxair_error_response": {
+              "label": "Meghatározza az üzemeltetési kezelést",
+              "description": "Minden kategóriához hozzárendeli az újrapróbálhatóságot, a riasztás súlyosságát, a felelős szolgáltatást vagy kliensműveletet, bizonytalan eredménynél pedig az egyeztetést."
+            },
+            "luxair_error_context": {
+              "label": "Megőrzi a diagnosztikai kontextust",
+              "description": "A naplóban megőrzi az okot, korrelációs azonosítót, partnerműveletet és releváns metadatát titkok kiszivárogtatása nélkül."
+            }
+          },
+          "followUps": {
+            "luxair_error_classification_followup": "Hogyan osztályoznád és kezelnéd a partner időkorlátját, ha a távoli művelet közben akár sikeresen végre is hajtódhatott?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_http_method_status_001",
+      "title": "Choosing HTTP methods and status codes",
+      "prompt": "Design endpoints for creating a booking, replacing contact details, partially updating a preference, starting a long import, and reporting validation errors.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_http_api_semantics"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Resource model, methods, success codes, and validation errors.",
+      "expectedPoints": [
+        {
+          "id": "luxair_http_methods",
+          "label": "Uses methods by meaning",
+          "description": "Uses POST for creation, PUT for full replacement, PATCH for partial change, and a clear resource-oriented model.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "post create",
+            "put replacement",
+            "patch partial",
+            "resource endpoint"
+          ]
+        },
+        {
+          "id": "luxair_http_success_codes",
+          "label": "Uses suitable success codes",
+          "description": "Uses 201 for creation and 202 with a status resource for accepted long-running work.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "201 created",
+            "202 accepted",
+            "location header",
+            "status endpoint"
+          ]
+        },
+        {
+          "id": "luxair_http_error_codes",
+          "label": "Uses meaningful client-error codes",
+          "description": "Returns 400 or 422 according to the chosen contract and provides field-level errors in a stable format.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "400 bad request",
+            "422",
+            "field errors",
+            "stable error format"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_http_method_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What makes a PUT implementation idempotent in practice?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "HTTP metódusok és státuszkódok választása",
+          "prompt": "Tervezz végpontokat foglalás létrehozására, kontaktadatok cseréjére, preferencia részleges módosítására, hosszú import indítására és validációs hiba jelzésére.",
+          "answerStructureHint": "Erőforrásmodell, metódusok, sikerstátuszok és validációs hibák.",
+          "expectedPoints": {
+            "luxair_http_methods": {
+              "label": "Jelentés szerint használ metódusokat",
+              "description": "POST-ot használ létrehozásra, PUT-ot teljes cserére, PATCH-et részleges módosításra, és világos erőforrásmodellt ad."
+            },
+            "luxair_http_success_codes": {
+              "label": "Megfelelő sikerstátuszokat használ",
+              "description": "201-et használ létrehozásra, 202-t és állapoterőforrást az elfogadott hosszú munkára."
+            },
+            "luxair_http_error_codes": {
+              "label": "Értelmes klienshibakódokat használ",
+              "description": "A választott szerződés szerint 400-at vagy 422-t ad, stabil formátumú mezőszintű hibákkal."
+            }
+          },
+          "followUps": {
+            "luxair_http_method_followup": "Mitől lesz egy PUT implementáció a gyakorlatban idempotens?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_http_pagination_errors_002",
+      "title": "Stable pagination and machine-readable API errors",
+      "prompt": "How would you design pagination and error responses for a public API that may have many independent consumers?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design",
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_http_api_semantics"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Pagination stability, error shape, and backward compatibility.",
+      "expectedPoints": [
+        {
+          "id": "luxair_http_pagination",
+          "label": "Chooses stable pagination",
+          "description": "Explains offset or cursor trade-offs and uses a stable ordering so clients do not skip or repeat items unexpectedly.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "cursor pagination",
+            "stable ordering",
+            "offset pagination",
+            "next cursor"
+          ]
+        },
+        {
+          "id": "luxair_http_error_contract",
+          "label": "Defines a stable error shape",
+          "description": "Uses a machine-readable code, safe message, correlation identifier, and optional field details without exposing internals.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "machine readable code",
+            "correlation id",
+            "field details",
+            "safe message"
+          ]
+        },
+        {
+          "id": "luxair_http_evolution",
+          "label": "Plans for evolution",
+          "description": "Adds optional fields compatibly, documents limits, and avoids making clients parse display text.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "optional fields",
+            "backward compatible",
+            "document limits",
+            "do not parse message"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_http_pagination_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is offset pagination still the reasonable choice?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Stabil lapozás és géppel feldolgozható API-hibák",
+          "prompt": "Hogyan terveznél lapozást és hibaválaszokat egy sok független fogyasztóval rendelkező publikus API-hoz?",
+          "answerStructureHint": "Stabil lapozás, egységes hibaformátum és visszafelé kompatibilitás.",
+          "expectedPoints": {
+            "luxair_http_pagination": {
+              "label": "Stabil lapozási módszert választ",
+              "description": "Elmagyarázza az eltolásalapú és a kurzoralapú lapozás kompromisszumait, és stabil rendezést használ a váratlan kihagyás vagy ismétlés ellen."
+            },
+            "luxair_http_error_contract": {
+              "label": "Stabil hibaformátumot definiál",
+              "description": "Géppel olvasható kódot, biztonságos üzenetet, korrelációs azonosítót és opcionális mezőrészleteket használ belső adatok nélkül."
+            },
+            "luxair_http_evolution": {
+              "label": "Tervez az evolúcióra",
+              "description": "Kompatibilisen ad hozzá opcionális mezőket, dokumentálja a limiteket, és nem kényszeríti a klienst megjelenítési szöveg értelmezésére."
+            }
+          },
+          "followUps": {
+            "luxair_http_pagination_followup": "Mikor marad az offset alapú lapozás ésszerű választás?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_async_callbacks_promises_003",
+      "title": "Callbacks, promises, and async/await",
+      "prompt": "How are callbacks, promises, and async/await related in JavaScript, and how should errors move through each style?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_javascript_async_control_flow"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 30,
+      "answerStructureHint": "Same asynchronous work, composition and readability, return or await, and error propagation.",
+      "expectedPoints": [
+        {
+          "id": "luxair_async_same_model",
+          "label": "Relates the three styles correctly",
+          "description": "Explains that promises represent future outcomes and async/await is syntax for composing promises, while callbacks pass completion into a function.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "future outcome",
+            "async await syntax",
+            "promise based",
+            "completion callback",
+            "same async work"
+          ]
+        },
+        {
+          "id": "luxair_async_error_flow",
+          "label": "Explains error propagation",
+          "description": "Explains callback error handling, promise rejection, and try/catch around awaited promises.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "error callback",
+            "promise rejection",
+            "try catch",
+            "catch rejection",
+            "propagate error"
+          ]
+        },
+        {
+          "id": "luxair_async_return_await",
+          "label": "Avoids detached asynchronous work",
+          "description": "States that a promise should normally be returned or awaited so completion and failure remain connected to the request or job.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "return promise",
+            "await promise",
+            "handled rejection",
+            "no fire forget",
+            "connected lifecycle"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_async_fire_forget_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is fire-and-forget work acceptable, and what infrastructure would make it reliable?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Callbackok, Promise-ok és async/await",
+          "prompt": "Hogyan kapcsolódnak egymáshoz a callbackok, a Promise-ok és az async/await JavaScriptben, és hogyan kell a hibáknak továbbhaladniuk az egyes stílusokban?",
+          "answerStructureHint": "Ugyanaz az aszinkron munka, összeállíthatóság és olvashatóság, a Promise visszaadása vagy awaitelése, valamint hibaterjedés.",
+          "expectedPoints": {
+            "luxair_async_same_model": {
+              "label": "Helyesen kapcsolja össze a három stílust",
+              "description": "Elmagyarázza, hogy a Promise egy jövőbeli eredményt képvisel, az async/await a Promise-ok összeállításának szintaxisa, a callback pedig egy függvénynek adja át a befejezést."
+            },
+            "luxair_async_error_flow": {
+              "label": "Elmagyarázza a hibaterjedést",
+              "description": "Elmagyarázza a callbackes hibakezelést, a Promise elutasítását és az awaitelt Promise körüli try/catch használatát."
+            },
+            "luxair_async_return_await": {
+              "label": "Elkerüli a leválasztott aszinkron munkát",
+              "description": "Kimondja, hogy a Promise-ot általában vissza kell adni vagy awaitelni kell, hogy a befejezés és hiba kapcsolódjon a kéréshez vagy feladathoz."
+            }
+          },
+          "followUps": {
+            "luxair_async_fire_forget_followup": "Mikor elfogadható a leválasztott, fire-and-forget munka, és milyen infrastruktúra tenné megbízhatóvá?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_typescript_vs_javascript_003",
+      "title": "TypeScript safety at an external boundary",
+      "prompt": "What safety does TypeScript add to JavaScript, and why must data from an API or queue still be narrowed and validated before use?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_typescript_narrowing"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 30,
+      "answerStructureHint": "Compile-time checking, emitted JavaScript, unknown input, narrowing, and runtime validation.",
+      "expectedPoints": [
+        {
+          "id": "luxair_ts_compile_time",
+          "label": "Explains compile-time type checking",
+          "description": "Explains that TypeScript checks declared types before deployment and improves refactoring, navigation, and editor feedback.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "compile time",
+            "static type checking",
+            "safer refactoring",
+            "editor tooling",
+            "type errors"
+          ]
+        },
+        {
+          "id": "luxair_ts_erased_runtime",
+          "label": "Explains that types disappear at runtime",
+          "description": "States that TypeScript emits JavaScript and does not automatically validate API responses, queue messages, configuration, or user input.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "types erased",
+            "emits javascript",
+            "no runtime validation",
+            "external data",
+            "runtime schema"
+          ]
+        },
+        {
+          "id": "luxair_ts_boundary_use",
+          "label": "Combines static and runtime safety",
+          "description": "Uses TypeScript for internal models and narrowing, plus explicit validation and mapping at untrusted boundaries.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "validate boundary",
+            "internal model",
+            "type narrowing",
+            "schema validation",
+            "map external data"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_ts_assertion_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can an `as SomeType` assertion make code look safe while leaving the runtime value unchecked?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "TypeScript-biztonság egy külső rendszerhatáron",
+          "prompt": "Milyen biztonságot ad a TypeScript a JavaScripthez, és miért kell az API-ból vagy üzenetsorból érkező adat típusát használat előtt mégis szűkíteni és futásidőben ellenőrizni?",
+          "answerStructureHint": "Fordítás idejű ellenőrzés, generált JavaScript, ismeretlen bemenet, típusszűkítés és futásidejű validáció.",
+          "expectedPoints": {
+            "luxair_ts_compile_time": {
+              "label": "Elmagyarázza a fordítás idejű típusellenőrzést",
+              "description": "Elmagyarázza, hogy a TypeScript telepítés előtt ellenőrzi a deklarált típusokat, és segíti a refaktorálást, navigációt és szerkesztői visszajelzést."
+            },
+            "luxair_ts_erased_runtime": {
+              "label": "Elmagyarázza, hogy a típusok futásidőben eltűnnek",
+              "description": "Kimondja, hogy a TypeScript JavaScriptet generál, és nem ellenőrzi automatikusan az API-válaszokat, üzenetsori üzeneteket, konfigurációt vagy felhasználói bemenetet."
+            },
+            "luxair_ts_boundary_use": {
+              "label": "Egyesíti a statikus és futásidejű biztonságot",
+              "description": "TypeScriptet használ belső modellekhez és narrowinghoz, valamint külön validációt és leképezést a nem megbízható határokon."
+            }
+          },
+          "followUps": {
+            "luxair_ts_assertion_followup": "Miért teheti egy `as SomeType` assertion biztonságosnak látszóvá a kódot úgy, hogy a futásidejű értéket valójában nem ellenőrzi?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_js_scope_closure_basics_004",
+      "title": "Lexical scope and closures",
+      "prompt": "What are lexical scope and closures in JavaScript, and where are closures useful in a Node.js integration service?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_javascript_scope_closures"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Definition, a concrete use such as a client factory or callback, and one risk of captured state.",
+      "expectedPoints": [
+        {
+          "id": "luxair_js_scope_definition",
+          "label": "Explains lexical scope",
+          "description": "Explains that variable access is determined by where a function is defined rather than where it is later called.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "lexical scope",
+            "defined location",
+            "outer scope",
+            "variable lookup",
+            "where it is defined"
+          ]
+        },
+        {
+          "id": "luxair_js_closure_definition",
+          "label": "Explains a closure",
+          "description": "Explains that a returned or delayed function can still access bindings from its original surrounding scope.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "keeps access",
+            "captured variables",
+            "outer function returned",
+            "retained binding",
+            "surrounding scope"
+          ]
+        },
+        {
+          "id": "luxair_js_closure_use",
+          "label": "Gives a practical use and trade-off",
+          "description": "Uses an example such as a configured client, callback, or factory and notes that captured mutable or large state must be controlled.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "client factory",
+            "configured callback",
+            "private state",
+            "captured state",
+            "memory retention"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_js_scope_closure_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Does a closure capture a fixed value or a binding whose value may later change?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Lexikális hatókör és closure",
+          "prompt": "Mit jelent a lexikális hatókör és a closure JavaScriptben, és hol hasznos a closure egy Node.js integrációs szolgáltatásban?",
+          "answerStructureHint": "Definíció, konkrét használat például kliensgyárban vagy callbackben, valamint a befogott állapot egyik kockázata.",
+          "expectedPoints": {
+            "luxair_js_scope_definition": {
+              "label": "Elmagyarázza a lexikális hatókört",
+              "description": "Elmondja, hogy a változók elérését a függvény definíciójának helye, nem pedig a későbbi meghívás helye határozza meg."
+            },
+            "luxair_js_closure_definition": {
+              "label": "Elmagyarázza a closure működését",
+              "description": "Elmondja, hogy egy visszaadott vagy később futó függvény továbbra is eléri az eredeti külső hatókör változóit."
+            },
+            "luxair_js_closure_use": {
+              "label": "Gyakorlati példát és kompromisszumot ad",
+              "description": "Például konfigurált klienst, callbacket vagy factoryt említ, és kitér a nagy vagy módosítható befogott állapot kezelésére."
+            }
+          },
+          "followUps": {
+            "luxair_js_scope_closure_followup": "A closure egy rögzített értéket másol le, vagy egy olyan kötést őriz meg, amelynek értéke később változhat?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_js_var_let_loop_005",
+      "title": "var, let, and delayed loop callbacks",
+      "prompt": "A loop schedules asynchronous callbacks and every callback prints the same final index. Why can this happen with var, and how would let or another design fix it?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "luxair_javascript_scope_closures"
+      ],
+      "expectedDurationSeconds": 150,
+      "thinkingTimeSeconds": 35,
+      "answerStructureHint": "Function scope versus block scope, one shared binding, and a clean fix.",
+      "expectedPoints": [
+        {
+          "id": "luxair_js_var_scope",
+          "label": "Explains the shared var binding",
+          "description": "Explains that var is function-scoped, so the delayed callbacks close over the same binding after the loop has completed.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "function scoped",
+            "same binding",
+            "loop already finished",
+            "closure over var",
+            "final index"
+          ]
+        },
+        {
+          "id": "luxair_js_let_scope",
+          "label": "Uses a per-iteration binding",
+          "description": "Explains that let creates a new block-scoped binding for each iteration, so each callback sees the expected value.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "block scoped",
+            "per iteration",
+            "use let",
+            "separate binding",
+            "expected value"
+          ]
+        },
+        {
+          "id": "luxair_js_alternative_fix",
+          "label": "Knows an alternative fix",
+          "description": "Mentions passing the value as a function argument or creating an explicit scope rather than relying on shared mutable state.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "backend_developer": 3,
+            "fullstack_developer": 3
+          },
+          "acceptedSignals": [
+            "function argument",
+            "new scope",
+            "capture parameter",
+            "avoid shared state"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_js_var_let_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How is const different from let in this example?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "var, let és késleltetett ciklus-callbackek",
+          "prompt": "Egy ciklus aszinkron callbackeket ütemez, de mindegyik ugyanazt a végső indexet írja ki. Miért történhet ez var használatakor, és hogyan javítja meg a let vagy egy másik megoldás?",
+          "answerStructureHint": "Függvényhatókör és blokkhatókör, egy közös kötés, majd egy tiszta javítás.",
+          "expectedPoints": {
+            "luxair_js_var_scope": {
+              "label": "Elmagyarázza a közös var kötést",
+              "description": "Elmondja, hogy a var függvényhatókörű, ezért a később futó callbackek ugyanazt a kötést használják a ciklus befejezése után."
+            },
+            "luxair_js_let_scope": {
+              "label": "Iterációnként külön kötést használ",
+              "description": "Elmondja, hogy a let minden iterációhoz új blokkhatókörű kötést hoz létre, ezért a callbackek a várt értéket látják."
+            },
+            "luxair_js_alternative_fix": {
+              "label": "Ismer másik javítási lehetőséget",
+              "description": "Megemlíti az érték függvényparaméterként való átadását vagy külön hatókör létrehozását a közös módosítható állapot helyett."
+            }
+          },
+          "followUps": {
+            "luxair_js_var_let_followup": "Miben különbözne a const a lettől ebben a példában?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_js_closure_retention_006",
+      "title": "When a closure retains too much state",
+      "prompt": "A long-lived event handler closes over a large partner payload and memory usage keeps growing. How would you reason about the problem and redesign the handler?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting",
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_javascript_scope_closures"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Reachability, listener lifetime, smaller captured state, cleanup, and measurement.",
+      "expectedPoints": [
+        {
+          "id": "luxair_js_retention_reason",
+          "label": "Connects the closure to reachability",
+          "description": "Explains that the payload cannot be collected while a reachable handler still references it through its closure.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "still reachable",
+            "captured payload",
+            "garbage collection",
+            "listener reference",
+            "retained object"
+          ]
+        },
+        {
+          "id": "luxair_js_retention_fix",
+          "label": "Reduces lifetime and captured data",
+          "description": "Captures only the required identifiers, removes obsolete listeners or timers, and stores large data in a shorter-lived scope.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "remove listener",
+            "capture identifier",
+            "clear timer",
+            "smaller closure",
+            "shorter lifetime"
+          ]
+        },
+        {
+          "id": "luxair_js_retention_verify",
+          "label": "Verifies the diagnosis",
+          "description": "Uses heap snapshots, allocation evidence, or a reproducible load test to confirm that retained objects disappear after the fix.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 3
+          },
+          "acceptedSignals": [
+            "heap snapshot",
+            "allocation profile",
+            "retained objects",
+            "load test",
+            "memory stabilizes"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_js_closure_retention_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why is a closure not automatically a memory leak?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Amikor egy closure túl sok állapotot tart meg",
+          "prompt": "Egy hosszú életű eseménykezelő closure-ben megőriz egy nagy partneradatcsomagot, és a memóriahasználat folyamatosan nő. Hogyan gondolkodnál a problémáról, és hogyan terveznéd át a kezelőt?",
+          "answerStructureHint": "Elérhetőség, az eseményfigyelő élettartama, kisebb befogott állapot, takarítás és mérés.",
+          "expectedPoints": {
+            "luxair_js_retention_reason": {
+              "label": "Összeköti a closure-t az elérhetőséggel",
+              "description": "Elmondja, hogy az adatcsomag nem szabadítható fel, amíg egy elérhető kezelő a closure-ön keresztül hivatkozik rá."
+            },
+            "luxair_js_retention_fix": {
+              "label": "Csökkenti az élettartamot és a befogott adatot",
+              "description": "Csak a szükséges azonosítókat fogja be, eltávolítja a felesleges eseményfigyelőket vagy timereket, a nagy adatot pedig rövidebb életű hatókörben tartja."
+            },
+            "luxair_js_retention_verify": {
+              "label": "Ellenőrzi a diagnózist",
+              "description": "Heap snapshotot, allokációs adatot vagy reprodukálható terhelési tesztet használ annak igazolására, hogy a megtartott objektumok a javítás után eltűnnek."
+            }
+          },
+          "followUps": {
+            "luxair_js_closure_retention_followup": "Miért nem jelent minden closure automatikusan memóriaszivárgást?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_http_async_status_003",
+      "title": "HTTP contract for a long-running operation",
+      "prompt": "A partner starts an import that may take several minutes. What HTTP contract would you expose instead of keeping the original connection open until the work finishes?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design",
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_http_api_semantics"
+      ],
+      "expectedDurationSeconds": 210,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "202 Accepted, operation resource, status states, polling or callback, errors, and idempotent start.",
+      "expectedPoints": [
+        {
+          "id": "luxair_http_async_accept",
+          "label": "Returns an explicit asynchronous acceptance",
+          "description": "Uses 202 Accepted and returns an operation identifier or Location URL instead of implying that the import has completed.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "202 accepted",
+            "operation id",
+            "location header",
+            "not completed",
+            "status url"
+          ]
+        },
+        {
+          "id": "luxair_http_async_state",
+          "label": "Defines a useful operation resource",
+          "description": "Defines states such as queued, running, succeeded, failed, or cancelled and exposes a result or machine-readable failure when terminal.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "queued state",
+            "running state",
+            "terminal status",
+            "result link",
+            "error details"
+          ]
+        },
+        {
+          "id": "luxair_http_async_reliability",
+          "label": "Makes starting and observing reliable",
+          "description": "Uses an idempotency key for retries and chooses polling, webhook notification, or both with sensible retry guidance.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "idempotency key",
+            "safe retry",
+            "poll status",
+            "webhook callback",
+            "retry after"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_http_async_status_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would 201 Created be more accurate than 202 Accepted?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hosszú művelet HTTP-szerződése",
+          "prompt": "Egy partner több percig tartó importot indít. Milyen HTTP-szerződést adnál ahelyett, hogy az eredeti kapcsolatot a munka befejezéséig nyitva tartanád?",
+          "answerStructureHint": "202 Accepted, műveleti erőforrás, állapotok, lekérdezés vagy callback, hibák és idempotens indítás.",
+          "expectedPoints": {
+            "luxair_http_async_accept": {
+              "label": "Egyértelmű aszinkron elfogadást ad vissza",
+              "description": "202 Accepted választ ad műveletazonosítóval vagy Location URL-lel, és nem állítja, hogy az import már befejeződött."
+            },
+            "luxair_http_async_state": {
+              "label": "Használható műveleti erőforrást definiál",
+              "description": "Olyan állapotokat ad meg, mint várakozik, fut, sikeres, sikertelen vagy megszakítva, a végállapotban pedig eredményt vagy géppel feldolgozható hibát közöl."
+            },
+            "luxair_http_async_reliability": {
+              "label": "Megbízhatóvá teszi az indítást és követést",
+              "description": "Újrapróbáláskor idempotenciakulcsot használ, és megfelelő állapotlekérdezést, webhookos értesítést vagy mindkettőt kínál újrapróbálkozási útmutatással."
+            }
+          },
+          "followUps": {
+            "luxair_http_async_status_followup": "Mikor lenne pontosabb a 201 Created, mint a 202 Accepted?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_stream_backpressure_concept_003",
+      "title": "Backpressure in Node.js streams",
+      "prompt": "What is backpressure in Node.js streams, and how do pipe, pipeline, or the writable drain signal prevent uncontrolled buffering?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_nodejs_streams_backpressure"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Producer and consumer speeds, pause or wait behavior, error handling, and bounded memory.",
+      "expectedPoints": [
+        {
+          "id": "luxair_stream_bp_definition",
+          "label": "Defines backpressure",
+          "description": "Explains that the slower consumer signals the faster producer to pause or wait instead of allowing data to accumulate without a bound.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "consumer slower",
+            "producer pauses",
+            "flow control",
+            "bounded buffer",
+            "wait for capacity"
+          ]
+        },
+        {
+          "id": "luxair_stream_bp_api",
+          "label": "Explains the Node.js mechanism",
+          "description": "Explains that pipe or pipeline coordinates flow, while manual writes must respect a false return value and wait for drain.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "pipe handles",
+            "pipeline handles",
+            "write returns false",
+            "wait for drain",
+            "pause reading"
+          ]
+        },
+        {
+          "id": "luxair_stream_bp_cleanup",
+          "label": "Handles failure and cleanup",
+          "description": "Uses pipeline or explicit error handling so failures close the involved streams and do not leave partial work or open resources.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 3
+          },
+          "acceptedSignals": [
+            "pipeline errors",
+            "close streams",
+            "cleanup resources",
+            "partial output",
+            "error propagation"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_stream_backpressure_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What happens if code ignores a false return value from writable.write()?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Backpressure Node.js streamekben",
+          "prompt": "Mit jelent a backpressure Node.js streamekben, és hogyan akadályozza meg a pipe, pipeline vagy a writable drain jelzése a korlátlan pufferelést?",
+          "answerStructureHint": "A termelő és a fogyasztó sebessége, szüneteltetés vagy várakozás, hibakezelés és korlátozott memória.",
+          "expectedPoints": {
+            "luxair_stream_bp_definition": {
+              "label": "Definiálja a backpressure-t",
+              "description": "Elmondja, hogy a lassabb fogyasztó jelzi a gyorsabb producernek, hogy álljon meg vagy várjon, ahelyett hogy korlátlanul gyűlne az adat."
+            },
+            "luxair_stream_bp_api": {
+              "label": "Elmagyarázza a Node.js mechanizmust",
+              "description": "Elmondja, hogy a pipe vagy pipeline összehangolja az adatfolyamot, kézi írásnál pedig figyelni kell a false visszatérési értékre és meg kell várni a drain eseményt."
+            },
+            "luxair_stream_bp_cleanup": {
+              "label": "Kezeli a hibát és az erőforrásokat",
+              "description": "Pipeline-t vagy kifejezett hibakezelést használ, hogy a hiba lezárja az érintett streameket, és ne maradjon félkész munka vagy nyitott erőforrás."
+            }
+          },
+          "followUps": {
+            "luxair_stream_backpressure_followup": "Mi történik, ha a kód figyelmen kívül hagyja a writable.write() false visszatérési értékét?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_nodejs_health_checks_004",
+      "title": "Startup, readiness, and liveness checks",
+      "prompt": "What should startup, readiness, and liveness checks prove for a Node.js service, and what should they avoid checking?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_nodejs_service_lifecycle"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Purpose of each check, traffic control, and avoiding restart cascades.",
+      "expectedPoints": [
+        {
+          "id": "luxair_health_startup",
+          "label": "Uses startup for initialization",
+          "description": "Explains that startup protects a slow-initializing process from premature liveness failure until local initialization completes.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "startup check",
+            "initialization complete",
+            "slow startup",
+            "before liveness"
+          ]
+        },
+        {
+          "id": "luxair_health_readiness",
+          "label": "Uses readiness to control traffic",
+          "description": "Readiness is false when the instance cannot safely accept new work, including while starting or draining.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "readiness false",
+            "stop new traffic",
+            "starting or draining",
+            "accept work"
+          ]
+        },
+        {
+          "id": "luxair_health_liveness",
+          "label": "Keeps liveness narrow",
+          "description": "Liveness detects a stuck or unrecoverable process and avoids depending on a shared third-party service that could restart every instance together.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "stuck process",
+            "unrecoverable state",
+            "avoid external dependency",
+            "restart cascade",
+            "narrow liveness"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_nodejs_health_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can checking a third-party API in liveness create a restart storm?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Indulási, készenléti és életjel-ellenőrzések",
+          "prompt": "Mit kell bizonyítania egy Node.js szolgáltatás indulási, készenléti és életjel-ellenőrzésének, és mit nem szabad ezekkel ellenőrizni?",
+          "answerStructureHint": "Az ellenőrzések célja, a forgalom vezérlése és az újraindítási láncreakció elkerülése.",
+          "expectedPoints": {
+            "luxair_health_startup": {
+              "label": "Az indulási ellenőrzést inicializálásra használja",
+              "description": "Elmagyarázza, hogy az indulási ellenőrzés megvédi a lassan inicializálódó folyamatot a túl korai életjelhibától, amíg a helyi inicializálás be nem fejeződik."
+            },
+            "luxair_health_readiness": {
+              "label": "A készenléti ellenőrzéssel vezérli a forgalmat",
+              "description": "A készenléti jel hamis, amikor a példány nem tud biztonságosan új munkát fogadni, például indulás vagy leürítés közben."
+            },
+            "luxair_health_liveness": {
+              "label": "Szűken tartja az életjel-ellenőrzést",
+              "description": "Az életjel-ellenőrzés beragadt vagy helyrehozhatatlan folyamatot keres, és nem függ olyan közös külső szolgáltatástól, amely egyszerre minden példányt újraindíthatna."
+            }
+          },
+          "followUps": {
+            "luxair_nodejs_health_followup": "Miért okozhat újraindítási vihart, ha az életjel-ellenőrzés egy külső partner API-ját is vizsgálja?"
+          }
+        }
+      }
+    }
+  ]
+}

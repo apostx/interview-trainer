@@ -1,0 +1,805 @@
+{
+  "id": "luxair_integration_distributed_workflows",
+  "name": "Luxair Integration - Distributed Workflows",
+  "description": "Orchestration, choreography, and recovery of multi-service integration workflows.",
+  "sources": [
+    "luxair_software_developer_integration_job_ad"
+  ],
+  "topics": [
+    {
+      "id": "luxair_orchestration_choreography",
+      "name": "Orchestration versus Choreography",
+      "description": "Orchestration uses one coordinator to direct a multi-step workflow. Choreography lets services react to events without one component controlling the complete sequence.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "luxair_integration_architecture",
+        "luxair_sync_async_workflows",
+        "luxair_saga_recovery",
+        "luxair_queue_vs_pubsub"
+      ],
+      "studyContent": {
+        "mentalModel": "Orchestration means one component tells participants what step comes next. Choreography means participants react to events and no single component controls the whole flow.",
+        "problem": "A fully central workflow can become tightly coupled and difficult to change. A fully event-driven workflow can hide the current business state, make ordering unclear, and force operators to reconstruct what happened from many services.",
+        "example": "A booking orchestrator calls payment and seat reservation because both results are required before confirmation. After confirmation, it publishes an event that notification, analytics, and loyalty services consume independently.",
+        "howItWorks": [
+          "Use orchestration when steps require a visible sequence, shared deadline, or coordinated recovery.",
+          "Use choreography for independent reactions that should be added without changing the producer.",
+          "Give events clear business meaning and make every consumer idempotent.",
+          "Record workflow state and correlation so operators can see progress and recover failures."
+        ],
+        "commonMistakes": [
+          "Using events for required sequential steps and then rebuilding a hidden orchestrator across consumers.",
+          "Putting every optional reaction into one central workflow, which couples unrelated teams and releases.",
+          "Assuming choreography removes the need for ownership, observability, retry policy, and recovery."
+        ],
+        "keyTerms": [
+          {
+            "term": "orchestrator",
+            "definition": "a component that records workflow state and instructs participants which action to perform"
+          },
+          {
+            "term": "choreography",
+            "definition": "coordination where services react to published events rather than commands from one controller"
+          },
+          {
+            "term": "business event",
+            "definition": "a durable statement that something meaningful has already happened in the business process"
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": "Orchesztráció és koreográfia",
+          "description": "Az orchesztrációban egy koordinátor irányítja a több lépésből álló folyamatot. A koreográfiában a szolgáltatások eseményekre reagálnak, és nincs egyetlen komponens, amely a teljes sorrendet vezérli.",
+          "studyContent": {
+            "mentalModel": "Az orchesztráció azt jelenti, hogy egy komponens mondja meg a résztvevőknek a következő lépést. A koreográfiában a résztvevők eseményekre reagálnak, és nincs egyetlen komponens, amely az egész folyamatot irányítja.",
+            "problem": "Egy teljesen központi folyamat szorosan csatolttá és nehezen módosíthatóvá válhat. Egy teljesen eseményvezérelt folyamat elrejtheti az aktuális üzleti állapotot, bizonytalanná teheti a sorrendet, és az üzemeltetőknek sok szolgáltatásból kell összerakniuk, mi történt.",
+            "example": "Egy foglalási folyamat központi vezérlője meghívja a fizetési és helyfoglalási lépést, mert mindkét eredmény szükséges a megerősítéshez. A megerősítés után eseményt publikál, amelyet az értesítési, analitikai és hűségprogram-szolgáltatások egymástól függetlenül dolgoznak fel.",
+            "howItWorks": [
+              "Használj orchesztrációt, ha a lépésekhez látható sorrend, közös határidő vagy koordinált helyreállítás szükséges.",
+              "Használj koreográfiát olyan független reakciókhoz, amelyeket a küldő módosítása nélkül szeretnél hozzáadni.",
+              "Az eseményeknek legyen egyértelmű üzleti jelentése, és minden fogyasztó legyen idempotens.",
+              "Rögzítsd a folyamat állapotát és korrelációját, hogy az üzemeltetők lássák a haladást és helyreállíthassák a hibákat."
+            ],
+            "commonMistakes": [
+              "Eseményeket használni kötelező sorrendi lépésekhez, majd a fogyasztók között újra felépíteni egy rejtett központi vezérlőt.",
+              "Minden opcionális reakciót egy központi folyamatba tenni, ami összekapcsolja a független csapatokat és kiadásokat.",
+              "Azt feltételezni, hogy a koreográfia megszünteti a felelősség, megfigyelhetőség, újrapróbálkozás és helyreállítás szükségességét."
+            ],
+            "keyTerms": [
+              {
+                "term": "központi vezérlő",
+                "definition": "olyan komponens, amely rögzíti a folyamat állapotát és megmondja a résztvevőknek, melyik műveletet hajtsák végre"
+              },
+              {
+                "term": "koreográfia",
+                "definition": "olyan koordináció, amelyben a szolgáltatások egy központi vezérlő utasításai helyett publikált eseményekre reagálnak"
+              },
+              {
+                "term": "üzleti esemény",
+                "definition": "tartós közlés arról, hogy az üzleti folyamatban valami jelentős már megtörtént"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_saga_recovery",
+      "name": "Saga Recovery for Multi-Service Workflows",
+      "description": "A saga keeps a multi-service business workflow recoverable by recording progress and defining what to do when a later step fails after earlier steps already committed.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "luxair_orchestration_choreography",
+        "luxair_sync_async_workflows",
+        "luxair_idempotent_processing"
+      ],
+      "studyContent": {
+        "mentalModel": "Saga recovery means treating a distributed business operation as durable local steps, with an explicit recovery action when the whole workflow cannot finish.",
+        "problem": "Separate services cannot usually share one atomic transaction. A payment, seat reservation, or notification may already be committed when a later step fails, so the system needs a truthful state and a safe way to continue or compensate.",
+        "example": "A booking workflow reserves a seat and then charges a card. The charge succeeds but confirmation fails. The saga records every completed step, retries the safe step, and if completion is impossible, starts an idempotent refund and marks the booking for review.",
+        "howItWorks": [
+          "Store the workflow identifier, current state, and result of each local step durably.",
+          "Make commands and compensation handlers idempotent so retries do not repeat side effects.",
+          "Classify a failure as retryable, compensatable, or requiring manual review.",
+          "Run the next step or compensation, and expose stuck workflows through metrics and alerts."
+        ],
+        "commonMistakes": [
+          "Calling compensation a database rollback even though another service may already have exposed the earlier action.",
+          "Keeping workflow progress only in process memory, so a restart loses the recovery path.",
+          "Retrying every failure forever instead of defining a terminal or manual-review state."
+        ],
+        "keyTerms": [
+          {
+            "term": "saga",
+            "definition": "a distributed workflow made of local commits with explicit recovery between steps"
+          },
+          {
+            "term": "compensation",
+            "definition": "a business action that counteracts a completed step when the workflow cannot finish"
+          },
+          {
+            "term": "workflow state",
+            "definition": "durable data showing which steps completed and what should happen next"
+          }
+        ]
+      },
+      "importance": 2,
+      "i18n": {
+        "hu": {
+          "name": "Saga-alapú helyreállítás több szolgáltatásból álló munkafolyamatoknál",
+          "description": "A saga az előrehaladás rögzítésével és kompenzáló lépésekkel teszi helyreállíthatóvá a több szolgáltatáson átívelő üzleti folyamatot, ha egy későbbi lépés a korábbiak véglegesítése után hibázik.",
+          "studyContent": {
+            "mentalModel": "A saga egy több szolgáltatáson átívelő üzleti műveletet tartós helyi lépésekre bont, rögzíti az előrehaladást, és meghatározza a helyreállítást arra az esetre, ha a teljes folyamat nem fejezhető be.",
+            "problem": "Külön szolgáltatások általában nem oszthatnak egy atomi tranzakciót. Egy fizetés, helyfoglalás vagy értesítés már véglegesítésre kerülhet, amikor egy későbbi lépés hibázik, ezért valós állapot és biztonságos folytatási vagy kompenzációs út kell.",
+            "example": "Egy foglalás munkafolyamat helyet foglal, majd megterheli a kártyát. A terhelés sikerül, de a megerősítés hibázik. A saga minden lépést eltárol, újrapróbálja a biztonságos lépést, és ha nincs megoldás, idempotens visszatérítést indít és manuális felülvizsgálati állapotba teszi a foglalást.",
+            "howItWorks": [
+              "Tartósan tárold a munkafolyamat azonosítóját, aktuális állapotát és minden lokális lépés eredményét.",
+              "A parancsok és a kompenzációs kezelők legyenek idempotensek, hogy az újrapróbálkozás ne ismételjen meg mellékhatást.",
+              "A hibát sorold újrapróbálható, kompenzálható vagy manuális felülvizsgálatot igénylő kategóriába.",
+              "Indítsd a következő lépést vagy kompenzációt, a beragadt munkafolyamatokat pedig tedd láthatóvá metrikával és riasztással."
+            ],
+            "commonMistakes": [
+              "A kompenzációt adatbázis-visszaállításnak nevezni, bár egy másik szolgáltatás már láthatta a korábbi műveletet.",
+              "A munkafolyamat állapotát csak a folyamat memóriájában tartani, ezért újraindítás után elveszik a helyreállítási út.",
+              "Minden hibát örökké újrapróbálni terminális vagy manuális felülvizsgálati állapot nélkül."
+            ],
+            "keyTerms": [
+              {
+                "term": "saga",
+                "definition": "helyi véglegesítésekből és a lépések közötti egyértelmű helyreállításból álló elosztott munkafolyamat"
+              },
+              {
+                "term": "kompenzáció",
+                "definition": "üzleti művelet, amely ellensúlyoz egy befejezett lépést, ha a munkafolyamat nem fejezhető be"
+              },
+              {
+                "term": "munkafolyamat-állapot",
+                "definition": "tartós adat arról, mely lépések készültek el és mi következik"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "luxair_arch_orchestration_choreography_002",
+      "title": "Orchestration or choreography for a booking flow",
+      "prompt": "A booking must trigger billing, loyalty, operations, and partner notifications. Would you use orchestration, choreography, or a mixture, and why?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "system_design"
+      ],
+      "topicIds": [
+        "luxair_orchestration_choreography"
+      ],
+      "expectedDurationSeconds": 270,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Separate required sequencing from independent reactions, discuss ownership, failure visibility, and operational complexity.",
+      "expectedPoints": [
+        {
+          "id": "luxair_arch_sequence_need",
+          "label": "Identifies required sequencing",
+          "description": "Uses orchestration where steps must happen in a controlled order or a central outcome must be tracked.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "controlled sequence",
+            "central outcome",
+            "workflow state",
+            "required order",
+            "orchestrator"
+          ]
+        },
+        {
+          "id": "luxair_arch_independent_reactions",
+          "label": "Uses events for independent reactions",
+          "description": "Uses choreography for consumers that can react independently without blocking the booking result.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "independent consumers",
+            "publish event",
+            "non blocking",
+            "event subscribers",
+            "loose coupling"
+          ]
+        },
+        {
+          "id": "luxair_arch_visibility_tradeoff",
+          "label": "Addresses visibility and failure handling",
+          "description": "Explains that choreography reduces direct coupling but needs correlation, tracing, retries, and clear ownership to remain understandable.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 3
+          },
+          "acceptedSignals": [
+            "distributed tracing",
+            "correlation id",
+            "retry handling",
+            "flow visibility",
+            "clear ownership"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_arch_orchestration_choreography_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you show support engineers the end-to-end state of one booking across this mixed workflow?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Orchesztráció vagy koreográfia egy foglalási folyamatban",
+          "prompt": "Egy foglalásnak el kell indítania a számlázást, a hűségprogramot, az üzemeltetést és a partnerértesítéseket. Orchesztrációt, koreográfiát vagy keveréket használnál, és miért?",
+          "answerStructureHint": "Válaszd külön a kötelező sorrendet a független reakcióktól, és térj ki a tulajdonlásra, a hibaláthatóságra és az üzemeltetési összetettségre.",
+          "expectedPoints": {
+            "luxair_arch_sequence_need": {
+              "label": "Felismeri a kötelező sorrendet",
+              "description": "Orchesztrációt használ ott, ahol a lépéseknek szabályozott sorrendben kell futniuk, vagy központilag kell követni az eredményt."
+            },
+            "luxair_arch_independent_reactions": {
+              "label": "Eseményt használ a független reakciókhoz",
+              "description": "Koreográfiát használ azoknál a fogyasztóknál, amelyek a foglalás eredményének blokkolása nélkül, önállóan reagálhatnak."
+            },
+            "luxair_arch_visibility_tradeoff": {
+              "label": "Kezeli a láthatóságot és a hibákat",
+              "description": "Elmagyarázza, hogy a koreográfia csökkenti a közvetlen csatolást, de korreláció, elosztott nyomkövetés, újrapróbálkozás és világos tulajdonlás kell az átláthatósághoz."
+            }
+          },
+          "followUps": {
+            "luxair_arch_orchestration_choreography_followup": "Hogyan mutatnád meg az ügyféltámogatásnak egyetlen foglalás teljes állapotát ebben a vegyes folyamatban?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_arch_orchestration_change_003",
+      "title": "Adding a new reaction to an existing workflow",
+      "prompt": "A new analytics and compliance consumer must react to booking completion. Would you add steps to the central orchestrator or publish an event, and what conditions would change your choice?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "luxair_orchestration_choreography"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Required versus independent work, coupling, delivery guarantees, replay, and operational visibility.",
+      "expectedPoints": [
+        {
+          "id": "luxair_orch_independent_reaction",
+          "label": "Separates independent reactions from required steps",
+          "description": "Publishes an event when the new consumers are independent reactions and keeps them off the critical booking path.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "independent consumer",
+            "publish event",
+            "off critical path",
+            "optional reaction",
+            "fan out"
+          ]
+        },
+        {
+          "id": "luxair_orch_required_step",
+          "label": "Keeps required sequencing visible",
+          "description": "Uses orchestration when booking completion depends on the result, ordering, deadline, or coordinated compensation.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "required result",
+            "strict ordering",
+            "shared deadline",
+            "coordinated recovery",
+            "workflow state"
+          ]
+        },
+        {
+          "id": "luxair_orch_operability",
+          "label": "Plans reliable and observable consumption",
+          "description": "Covers durable publication, idempotent consumers, retry and replay, correlation, and ownership of failures.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "durable event",
+            "idempotent consumer",
+            "safe replay",
+            "correlation id",
+            "failure ownership"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_orch_compliance_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What if compliance processing must complete before the booking may be considered final?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Új reakció hozzáadása egy meglévő folyamathoz",
+          "prompt": "Egy új analitikai és megfelelőségi fogyasztónak reagálnia kell a foglalás befejezésére. Új lépéseket tennél a központi vezérlőbe, vagy eseményt publikálnál, és milyen feltételek változtatnák meg a döntésedet?",
+          "answerStructureHint": "Kötelező és független munka, csatolás, kézbesítési garanciák, újrajátszás és üzemeltetési láthatóság.",
+          "expectedPoints": {
+            "luxair_orch_independent_reaction": {
+              "label": "Elválasztja a független reakciókat a kötelező lépésektől",
+              "description": "Eseményt publikál, ha az új fogyasztók független reakciók, és nem teszi őket a foglalás kritikus útvonalára."
+            },
+            "luxair_orch_required_step": {
+              "label": "Láthatóan tartja a kötelező sorrendet",
+              "description": "Orchesztrációt használ, ha a foglalás befejezése az eredménytől, sorrendtől, határidőtől vagy koordinált kompenzációtól függ."
+            },
+            "luxair_orch_operability": {
+              "label": "Megbízható és megfigyelhető feldolgozást tervez",
+              "description": "Kitér a tartós publikálásra, idempotens fogyasztókra, újrapróbálkozásra és újrajátszásra, korrelációra és a hibák felelősére."
+            }
+          },
+          "followUps": {
+            "luxair_orch_compliance_followup": "Mi változik, ha a megfelelőségi feldolgozásnak be kell fejeződnie, mielőtt a foglalás véglegesnek tekinthető?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_saga_partial_failure_001",
+      "title": "Recovering a partially completed booking workflow",
+      "prompt": "A workflow reserves a seat, charges a payment provider, and sends confirmation. Payment succeeds, but the seat reservation is later rejected. How would you design the recovery?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "luxair_saga_recovery"
+      ],
+      "expectedDurationSeconds": 300,
+      "thinkingTimeSeconds": 60,
+      "answerStructureHint": "Workflow state, failure classification, compensation, retries, and operator visibility.",
+      "expectedPoints": [
+        {
+          "id": "luxair_saga_state",
+          "label": "Keeps durable workflow state",
+          "description": "Records which steps completed, their external identifiers, and the current workflow status so recovery does not depend on process memory.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "durable workflow state",
+            "step status",
+            "correlation id",
+            "persist progress",
+            "state machine"
+          ]
+        },
+        {
+          "id": "luxair_saga_compensation",
+          "label": "Defines a business compensation",
+          "description": "Chooses an explicit recovery such as refunding or voiding the payment, while recognising that compensation is a new business action rather than an atomic rollback.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "compensating action",
+            "refund payment",
+            "void payment",
+            "not atomic rollback",
+            "business reversal"
+          ]
+        },
+        {
+          "id": "luxair_saga_recovery_controls",
+          "label": "Makes recovery safe and observable",
+          "description": "Uses idempotent steps, bounded retries, a manual-review state for unresolved cases, and alerts or metrics that expose stuck workflows.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "idempotent steps",
+            "bounded retry",
+            "manual review",
+            "stuck workflow",
+            "alert operator"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_saga_partial_failure_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would you prefer orchestration over choreography for this recovery flow?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Részben befejezett foglalás munkafolyamat helyreállítása",
+          "prompt": "Egy munkafolyamat ülőhelyet foglal, megterheli az összeget a fizetési szolgáltatónál, majd megerősítést küld. A fizetés sikerül, de az ülőhelyfoglalást később elutasítják. Hogyan terveznéd meg a helyreállítást?",
+          "answerStructureHint": "Munkafolyamat-állapot, hibakategória, kompenzáció, újrapróbálkozás és üzemeltetői láthatóság.",
+          "expectedPoints": {
+            "luxair_saga_state": {
+              "label": "Tartós munkafolyamat-állapotot vezet",
+              "description": "Eltárolja, melyik lépések készültek el, mik a külső azonosítóik és mi az aktuális munkafolyamat-állapot, így a helyreállítás nem a folyamat memóriájára épül."
+            },
+            "luxair_saga_compensation": {
+              "label": "Üzleti kompenzációt határoz meg",
+              "description": "Explicit helyreállítást választ, például visszatérítést vagy a fizetés érvénytelenítését, és felismeri, hogy a kompenzáció új üzleti művelet, nem atomi visszaállítás."
+            },
+            "luxair_saga_recovery_controls": {
+              "label": "Biztonságossá és láthatóvá teszi a helyreállítást",
+              "description": "Idempotens lépéseket, korlátozott újrapróbálkozást, megoldatlan esetekhez manuális felülvizsgálati állapotot, valamint beragadt munkafolyamatokat jelző riasztást vagy metrikát használ."
+            }
+          },
+          "followUps": {
+            "luxair_saga_partial_failure_followup": "Mikor választanál orchesztrációt koreográfia helyett ehhez a helyreállítási folyamathoz?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_saga_compensation_failure_002",
+      "title": "When a compensating action also fails",
+      "prompt": "A saga decides to refund a successful payment, but the payment provider times out and the refund status is unknown. What should the workflow do next?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_saga_recovery"
+      ],
+      "expectedDurationSeconds": 240,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Unknown outcome, idempotent reconciliation, retry bounds, and escalation.",
+      "expectedPoints": [
+        {
+          "id": "luxair_saga_unknown_outcome",
+          "label": "Treats the outcome as unknown",
+          "description": "Does not assume the timeout means failure; records an uncertain compensation state and keeps the external operation identifier for reconciliation.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "unknown outcome",
+            "not definite failure",
+            "operation id",
+            "uncertain state",
+            "record status"
+          ]
+        },
+        {
+          "id": "luxair_saga_reconcile",
+          "label": "Reconciles without duplicating the refund",
+          "description": "Queries the provider or retries with an idempotency key so the workflow can learn the real result without issuing a second refund.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "query provider",
+            "idempotency key",
+            "safe retry",
+            "reconcile status",
+            "avoid double refund"
+          ]
+        },
+        {
+          "id": "luxair_saga_escalate",
+          "label": "Defines a bounded escalation path",
+          "description": "Uses delayed bounded retries, alerts on age or attempt count, and moves unresolved cases to manual review without losing the workflow context.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "bounded retry",
+            "delayed retry",
+            "manual review",
+            "alert threshold",
+            "preserve context"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_saga_compensation_failure_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which metrics would show that compensation workflows are becoming unhealthy?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Amikor a kompenzáló művelet is hibázik",
+          "prompt": "Egy saga visszatérítené a korábban sikeres fizetést, de a fizetési szolgáltató túllépi az időkorlátot, ezért a visszatérítés állapota ismeretlen. Mit tegyen ezután a munkafolyamat?",
+          "answerStructureHint": "Ismeretlen eredmény, idempotens egyeztetés, újrapróbálkozási korlát és eszkaláció.",
+          "expectedPoints": {
+            "luxair_saga_unknown_outcome": {
+              "label": "Ismeretlenként kezeli az eredményt",
+              "description": "Nem feltételezi, hogy az időkorlát biztos hibát jelent; bizonytalan kompenzációs állapotot tárol, és megőrzi a külső műveletazonosítóját az egyeztetéshez."
+            },
+            "luxair_saga_reconcile": {
+              "label": "Kettős visszatérítés nélkül egyeztet",
+              "description": "Lekérdezi a szolgáltatót vagy idempotenciakulccsal újrapróbálkozik, így megtudhatja a valódi eredményt egy második visszatérítés kiadása nélkül."
+            },
+            "luxair_saga_escalate": {
+              "label": "Korlátozott eszkalációs utat ad",
+              "description": "Késleltetett és korlátozott újrapróbálkozást használ, életkor vagy próbálkozásszám alapján riasztást küld, a megoldatlan esetet pedig a munkafolyamat-környezet megtartásával manuális felülvizsgálatra küldi."
+            }
+          },
+          "followUps": {
+            "luxair_saga_compensation_failure_followup": "Mely metrikák mutatnák, hogy a kompenzáció munkafolyamatok kezdenek egészségtelenné válni?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_arch_orchestration_choreography_001",
+      "title": "Orchestration versus choreography",
+      "prompt": "What is the difference between orchestration and choreography in a distributed workflow, and what are the main trade-offs of each?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "luxair_orchestration_choreography"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 40,
+      "answerStructureHint": "Who controls the flow, where state is visible, coupling, extensibility, and failure diagnosis.",
+      "expectedPoints": [
+        {
+          "id": "luxair_orch_definition",
+          "label": "Defines orchestration",
+          "description": "Explains that one coordinator records or controls the workflow and tells participants which step should happen next.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "central coordinator",
+            "controls sequence",
+            "workflow state",
+            "sends commands",
+            "next step"
+          ]
+        },
+        {
+          "id": "luxair_choreo_definition",
+          "label": "Defines choreography",
+          "description": "Explains that services publish and react to events without one component directing the complete flow.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "react to events",
+            "no central controller",
+            "publish event",
+            "independent consumers",
+            "distributed flow"
+          ]
+        },
+        {
+          "id": "luxair_orch_tradeoffs",
+          "label": "Explains the trade-offs",
+          "description": "Compares central visibility and sequencing with coordinator coupling, and loose event coupling with harder end-to-end visibility and recovery.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "central visibility",
+            "coordinator coupling",
+            "loose coupling",
+            "harder tracing",
+            "failure recovery"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_arch_orch_concept_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which approach would you choose for optional analytics processing after a booking is confirmed?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Orchesztráció és koreográfia összehasonlítása",
+          "prompt": "Mi a különbség az orchesztráció és a koreográfia között egy elosztott folyamatban, és melyek a fő kompromisszumaik?",
+          "answerStructureHint": "Ki irányítja a folyamatot, hol látható az állapot, csatolás, bővíthetőség és hibakeresés.",
+          "expectedPoints": {
+            "luxair_orch_definition": {
+              "label": "Definiálja az orchesztrációt",
+              "description": "Elmondja, hogy egy koordinátor nyilvántartja vagy irányítja a munkafolyamatot, és megmondja a résztvevőknek, melyik lépés következik."
+            },
+            "luxair_choreo_definition": {
+              "label": "Definiálja a koreográfiát",
+              "description": "Elmondja, hogy a szolgáltatások eventeket publikálnak és azokra reagálnak anélkül, hogy egy komponens a teljes folyamatot irányítaná."
+            },
+            "luxair_orch_tradeoffs": {
+              "label": "Elmagyarázza a kompromisszumokat",
+              "description": "Összeveti a központi láthatóságot és sorrendvezérlést a koordinátorhoz való csatolással, valamint a laza eseményalapú csatolást a nehezebb end-to-end követéssel és helyreállítással."
+            }
+          },
+          "followUps": {
+            "luxair_arch_orch_concept_followup": "Melyik megközelítést választanád egy megerősített foglalás utáni opcionális analitikai feldolgozáshoz?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_saga_concept_003",
+      "title": "Saga fundamentals and compensation",
+      "prompt": "What is a saga, why is it used instead of one database transaction across services, and why is compensation not the same as rollback?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "luxair_saga_recovery"
+      ],
+      "expectedDurationSeconds": 190,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Local commits, durable workflow state, compensation as a new business action, and failure handling.",
+      "expectedPoints": [
+        {
+          "id": "luxair_saga_local_steps",
+          "label": "Explains local committed steps",
+          "description": "Explains that each service commits its own local transaction and the workflow records progress because one shared atomic transaction is usually unavailable.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "local transaction",
+            "durable workflow",
+            "record progress",
+            "no shared transaction",
+            "multiple services"
+          ]
+        },
+        {
+          "id": "luxair_saga_compensation_meaning",
+          "label": "Explains compensation accurately",
+          "description": "Explains that compensation is a new business action that counteracts an earlier result and may be imperfect, delayed, or itself fail.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "business reversal",
+            "not rollback",
+            "new action",
+            "may fail",
+            "compensating action"
+          ]
+        },
+        {
+          "id": "luxair_saga_operability",
+          "label": "Makes the saga recoverable",
+          "description": "Mentions idempotent steps, retries with limits, visible workflow states, and manual review when automatic recovery cannot determine a safe outcome.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "fullstack_developer": 4
+          },
+          "acceptedSignals": [
+            "idempotent steps",
+            "bounded retries",
+            "workflow state",
+            "manual review",
+            "operator visibility"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_saga_concept_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would manual review be safer than an automatic compensating action?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "A saga alapjai és a kompenzáció",
+          "prompt": "Mi a saga, miért használjuk szolgáltatásokon átívelő egyetlen adatbázis-tranzakció helyett, és miért nem ugyanaz a kompenzáció, mint a tranzakció visszagörgetése?",
+          "answerStructureHint": "Helyi véglegesítések, tartós munkafolyamat-állapot, a kompenzáció mint új üzleti művelet és hibakezelés.",
+          "expectedPoints": {
+            "luxair_saga_local_steps": {
+              "label": "Elmagyarázza a helyileg véglegesített lépéseket",
+              "description": "Elmondja, hogy minden szolgáltatás a saját helyi tranzakcióját véglegesíti, a munkafolyamat pedig nyilvántartja a haladást, mert közös atomikus tranzakció általában nem érhető el."
+            },
+            "luxair_saga_compensation_meaning": {
+              "label": "Pontosan magyarázza a kompenzációt",
+              "description": "Elmondja, hogy a kompenzáció egy korábbi eredményt ellensúlyozó új üzleti művelet, amely lehet tökéletlen, késleltetett vagy maga is sikertelen."
+            },
+            "luxair_saga_operability": {
+              "label": "Helyreállíthatóvá teszi a sagát",
+              "description": "Megemlíti az idempotens lépéseket, korlátozott újrapróbálkozást, látható munkafolyamat-állapotokat és manuális felülvizsgálatot, amikor az automatikus helyreállítás nem tud biztonságos eredményt meghatározni."
+            }
+          },
+          "followUps": {
+            "luxair_saga_concept_followup": "Mikor biztonságosabb a manuális felülvizsgálat egy automatikus kompenzáló műveletnél?"
+          }
+        }
+      }
+    }
+  ]
+}
