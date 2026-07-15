@@ -1,0 +1,1745 @@
+{
+  "id": "felix_giorgetti_delivery_ownership",
+  "name": "Félix Giorgetti - Distributed Delivery and Ownership",
+  "description": "Interview preparation for microservices, distributed resilience, Azure Functions, CI/CD, .NET maintenance, and project ownership.",
+  "sources": [
+    "felix_giorgetti_experienced_nodejs_developer_job_description"
+  ],
+  "topics": [
+    {
+      "id": "fg_microservice_boundaries",
+      "name": "Microservice Boundaries and Integration Choices",
+      "description": "A microservice boundary groups business capabilities, data ownership, and change responsibility so the service can evolve independently without constant cross-service coordination.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "microservices",
+        "api_integration"
+      ],
+      "studyContent": {
+        "mentalModel": "A good microservice boundary keeps related business rules and data ownership together, then exposes explicit synchronous APIs or asynchronous events to other services.",
+        "problem": "Splitting by technical layer or database table creates chatty calls and distributed transactions. A service that needs several other services for every request is not operationally independent, while duplicated ownership creates conflicting sources of truth.",
+        "example": "Order Management owns order state and its database. It calls Inventory synchronously only when an immediate reservation decision is required, then publishes OrderPlaced so Billing and Analytics can react independently.",
+        "howItWorks": [
+          "Start from business capabilities, invariants, and teams rather than framework layers.",
+          "Give each service clear ownership of its data and write operations.",
+          "Use synchronous calls when the caller needs an immediate answer and asynchronous events for independent reactions.",
+          "Measure coupling through deployment coordination, chatty calls, failure propagation, and shared data."
+        ],
+        "commonMistakes": [
+          "Creating one service per database table or CRUD entity.",
+          "Letting several services write the same database schema.",
+          "Choosing asynchronous messaging only to hide an unclear ownership boundary."
+        ],
+        "keyTerms": [
+          {
+            "term": "service boundary",
+            "definition": "the responsibility and data owned by one independently operated service"
+          },
+          {
+            "term": "business capability",
+            "definition": "a coherent area of business behaviour and rules"
+          },
+          {
+            "term": "data ownership",
+            "definition": "the rule that one service controls writes to its authoritative data"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Microservice boundaryk és integrációs döntések",
+          "description": "A microservice boundary business capabilityt, data ownershipet és change responsibilityt fog össze, hogy a service folyamatos cross-service koordináció nélkül fejlődhessen.",
+          "studyContent": {
+            "mentalModel": "Egy jó microservice boundary összetartja a kapcsolódó business rule-okat és data ownershipet, majd explicit szinkron API-t vagy aszinkron eventet ad más service-eknek.",
+            "problem": "Technical layer vagy database table alapján szétvágva chatty callok és distributed transactionök keletkeznek. Az a service, amely minden requesthez több másikat igényel, nem operationally independent; a duplikált ownership pedig több source of trutht hoz létre.",
+            "example": "Az Order Management tulajdonolja az order state-et és database-t. Inventoryt csak akkor hív szinkron, ha azonnali reservation decision kell, majd OrderPlaced eventet publish-el, hogy Billing és Analytics függetlenül reagáljon.",
+            "howItWorks": [
+              "Business capabilityből, invariantből és team responsibilityből indulj ki, ne framework layerből.",
+              "Minden service kapjon egyértelmű data ownershipet és write responsibilityt.",
+              "Szinkron call kell azonnali válaszhoz, aszinkron event a független reakciókhoz.",
+              "A couplingot deployment koordinációval, chatty callokkal, failure propagationnel és shared datával mérd."
+            ],
+            "commonMistakes": [
+              "Minden database table vagy CRUD entity számára külön service-t létrehozni.",
+              "Több service-nek ugyanazt a database schema-t írnia.",
+              "Aszinkron messaginget választani csak azért, hogy elrejtsen egy tisztázatlan ownership boundaryt."
+            ],
+            "keyTerms": [
+              {
+                "term": "service boundary",
+                "definition": "egy önállóan üzemeltetett service responsibilityje és tulajdonolt adata"
+              },
+              {
+                "term": "business capability",
+                "definition": "összefüggő business behaviour és rule terület"
+              },
+              {
+                "term": "data ownership",
+                "definition": "az a szabály, hogy az authoritative adat write műveleteit egy service kontrollálja"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_distributed_resilience",
+      "name": "Distributed Failure Handling and Observability",
+      "description": "Distributed resilience limits how dependency failures spread, while observability provides the traces, metrics, and logs needed to understand a request across services.",
+      "category": "observability",
+      "relatedTopicIds": [
+        "reliability",
+        "observability",
+        "retries"
+      ],
+      "studyContent": {
+        "mentalModel": "A distributed call can fail by timeout, partial response, overload, or network uncertainty, so every dependency needs bounded waiting, controlled retries, isolation, and end-to-end diagnostics.",
+        "problem": "Without timeouts, resources wait indefinitely. Without retry limits, one outage multiplies traffic. Without correlation and traces, each service log looks healthy while the whole request fails. Resilience mechanisms must be tuned together because one service’s retry becomes another service’s load.",
+        "example": "A checkout service calls pricing with a 300 ms timeout, retries one safe read with jitter, opens a circuit after sustained failure, and serves a limited fallback. A trace id connects gateway, checkout, pricing, and database spans.",
+        "howItWorks": [
+          "Set explicit deadlines and propagate the remaining time to downstream calls.",
+          "Retry only safe transient failures with a small budget, backoff, and jitter.",
+          "Use circuit breakers, bulkheads, and concurrency limits to isolate overload.",
+          "Correlate structured logs, metrics, and distributed traces around the same request and dependency."
+        ],
+        "commonMistakes": [
+          "Adding retries to every layer so one request is multiplied many times.",
+          "Using a circuit breaker without timeouts or useful fallback behaviour.",
+          "Logging error strings without request, dependency, duration, or outcome context."
+        ],
+        "keyTerms": [
+          {
+            "term": "deadline",
+            "definition": "the latest time by which the complete operation must finish"
+          },
+          {
+            "term": "circuit breaker",
+            "definition": "a control that temporarily stops calls to a repeatedly failing dependency"
+          },
+          {
+            "term": "bulkhead",
+            "definition": "separate resource limits that stop one workload from consuming everything"
+          },
+          {
+            "term": "distributed trace",
+            "definition": "connected timing spans showing one request across services"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Distributed failure handling és observability",
+          "description": "A distributed resilience korlátozza, hogyan terjednek a dependency failure-ök, az observability pedig trace-eket, metric-eket és logokat ad egy request több service-en át történő megértéséhez.",
+          "studyContent": {
+            "mentalModel": "Egy distributed call timeouttal, partial response-zal, overloaddal vagy network uncertaintyvel hibázhat, ezért minden dependencyhez bounded waiting, controlled retry, isolation és end-to-end diagnosztika kell.",
+            "problem": "Timeout nélkül az erőforrások korlátlanul várnak. Retry limit nélkül egy outage megsokszorozza a trafficet. Correlation és trace nélkül minden service logja egészségesnek tűnhet, miközben az egész request hibázik. Egy service retryja a másik service loadja.",
+            "example": "Egy checkout service 300 ms timeouttal hív pricingot, egy safe readet jitterrel egyszer retryol, tartós hiba után circuitet nyit, és korlátozott fallbacket ad. Egy trace id összeköti a gateway, checkout, pricing és database spaneket.",
+            "howItWorks": [
+              "Explicit deadline-t állíts be, és a megmaradt időt add tovább a downstream calloknak.",
+              "Csak safe transient failure-t retryolj kis budgettel, backoffal és jitterrel.",
+              "Circuit breakerrel, bulkheaddel és concurrency limittel izoláld az overloadot.",
+              "Structured logot, metricet és distributed trace-t ugyanazon request és dependency köré korrelálj."
+            ],
+            "commonMistakes": [
+              "Minden layeren retryt hozzáadni, így egy request sokszorosára nő.",
+              "Circuit breakert használni timeout vagy értelmes fallback nélkül.",
+              "Error stringet logolni request-, dependency-, duration- és outcome-context nélkül."
+            ],
+            "keyTerms": [
+              {
+                "term": "deadline",
+                "definition": "a legkésőbbi időpont, ameddig a teljes operationnek be kell fejeződnie"
+              },
+              {
+                "term": "circuit breaker",
+                "definition": "vezérlés, amely átmenetileg leállítja a hívást egy ismételten hibázó dependency felé"
+              },
+              {
+                "term": "bulkhead",
+                "definition": "külön resource limitek, amelyek megakadályozzák, hogy egy workload mindent elfogyasszon"
+              },
+              {
+                "term": "distributed trace",
+                "definition": "összekapcsolt timing spanek egy request több service-en át vezető útjáról"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_azure_functions",
+      "name": "Azure Functions and Serverless Design",
+      "description": "Azure Functions runs event-triggered code on managed infrastructure, but correct design still requires stateless execution, idempotency, bounded work, configuration, and observability.",
+      "category": "cloud",
+      "relatedTopicIds": [
+        "cloud",
+        "background_jobs"
+      ],
+      "studyContent": {
+        "mentalModel": "A serverless function is a short-lived handler started by an HTTP request, timer, queue, event, or other trigger, while the platform manages instances and scaling.",
+        "problem": "Functions may start more than once, run concurrently, scale unexpectedly, or be terminated after a timeout. Process memory is not durable, cold starts affect latency, and downstream databases can be overloaded if scaling is unconstrained.",
+        "example": "A queue-triggered function processes invoice messages. It validates the message, performs an idempotent database update, emits structured telemetry, and lets repeated failures reach a poison queue. Concurrency is limited to database capacity.",
+        "howItWorks": [
+          "Choose the trigger and binding from the event source and delivery requirements.",
+          "Keep durable state in external services and make repeated execution safe.",
+          "Control timeout, concurrency, retry, poison-message, and downstream capacity behaviour.",
+          "Use managed identity, configuration, tracing, and deployment slots or versions where appropriate."
+        ],
+        "commonMistakes": [
+          "Keeping required state only in global process memory between invocations.",
+          "Assuming one event creates exactly one function execution.",
+          "Allowing platform scaling to open more database connections than the database can handle."
+        ],
+        "keyTerms": [
+          {
+            "term": "trigger",
+            "definition": "the event source that starts an Azure Function invocation"
+          },
+          {
+            "term": "cold start",
+            "definition": "extra startup latency when a new function instance must be initialized"
+          },
+          {
+            "term": "managed identity",
+            "definition": "an Azure-provided identity used to access resources without stored credentials"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Azure Functions és serverless design",
+          "description": "Az Azure Functions managed infrastruktúrán futtat event-triggered kódot, de a helyes designhez továbbra is stateless execution, idempotency, bounded work, configuration és observability kell.",
+          "studyContent": {
+            "mentalModel": "A serverless function rövid életű handler, amelyet HTTP request, timer, queue, event vagy más trigger indít, miközben a platform kezeli az instance-okat és scalinget.",
+            "problem": "A function többször is elindulhat, concurrent futhat, váratlanul scale-elhet vagy timeout miatt megszakadhat. A process memory nem durable, a cold start latencyt ad, a korlátlan scaling pedig túlterhelheti a downstream database-t.",
+            "example": "Egy queue-triggered function invoice message-eket dolgoz fel. Validál, idempotent database update-et végez, structured telemetryt küld, az ismételt hibát poison queue-ba engedi. A concurrency a database kapacitásához igazodik.",
+            "howItWorks": [
+              "A triggert és bindinget az event source és delivery requirement alapján válaszd.",
+              "A durable state external service-ben legyen, az ismételt execution pedig legyen safe.",
+              "Kontrolláld a timeoutot, concurrencyt, retryt, poison-message kezelést és downstream capacityt.",
+              "Használj managed identityt, configurationt, tracinget és szükség esetén deployment slotot vagy versiont."
+            ],
+            "commonMistakes": [
+              "Szükséges state-et csak global process memoryban tartani invocationök között.",
+              "Azt feltételezni, hogy egy event pontosan egy function executiont hoz létre.",
+              "Engedni, hogy a platform több database connectiont nyisson, mint amennyit a database kezelni tud."
+            ],
+            "keyTerms": [
+              {
+                "term": "trigger",
+                "definition": "az event source, amely elindít egy Azure Function invocationt"
+              },
+              {
+                "term": "cold start",
+                "definition": "extra startup latency, amikor új function instance inicializálódik"
+              },
+              {
+                "term": "managed identity",
+                "definition": "Azure által biztosított identity erőforrások eléréséhez tárolt credential nélkül"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_cicd_deployment",
+      "name": "CI/CD Pipelines and Safe Deployment",
+      "description": "A CI/CD pipeline turns a reviewed change into a reproducible artifact, verifies it through automated gates, deploys it progressively, and provides a fast recovery path.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deployment",
+        "testing_strategy"
+      ],
+      "studyContent": {
+        "mentalModel": "Continuous delivery means every change passes the same automated build, test, security, packaging, and deployment process so the released artifact is known and repeatable.",
+        "problem": "Manual environment differences and rebuilding during release create untraceable production behaviour. Deploying all instances at once increases blast radius, while a rollback can fail if database migrations are not backward compatible.",
+        "example": "A Node.js commit runs lint, unit, integration, contract, and security checks, then builds one immutable container. The same image moves through staging and production. A canary receives a small traffic share, health metrics decide promotion, and rollback reuses the previous image.",
+        "howItWorks": [
+          "Build one immutable, versioned artifact and promote the same artifact between environments.",
+          "Use automated quality, security, contract, and migration checks before deployment.",
+          "Deploy progressively with readiness checks, observability gates, and controlled traffic movement.",
+          "Keep rollback or roll-forward procedures tested, including backward-compatible database changes."
+        ],
+        "commonMistakes": [
+          "Rebuilding the application separately in production.",
+          "Treating a green deployment command as proof that the service is healthy for users.",
+          "Running a destructive schema migration before old application versions have stopped."
+        ],
+        "keyTerms": [
+          {
+            "term": "immutable artifact",
+            "definition": "a build output that is not changed as it moves between environments"
+          },
+          {
+            "term": "canary deployment",
+            "definition": "releasing to a small share of traffic before wider rollout"
+          },
+          {
+            "term": "quality gate",
+            "definition": "an automated condition that must pass before promotion"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "CI/CD pipeline és safe deployment",
+          "description": "A CI/CD pipeline a reviewed change-ből reproducible artifactot készít, automated gate-ekkel ellenőrzi, fokozatosan deployolja, és gyors recovery pathot biztosít.",
+          "studyContent": {
+            "mentalModel": "A continuous delivery azt jelenti, hogy minden change ugyanazon automated build, test, security, packaging és deployment processen megy át, így a released artifact ismert és reprodukálható.",
+            "problem": "A manual environment difference és release alatti rebuild követhetetlen production behaviourt okoz. Minden instance egyszerre történő deployja növeli a blast radiust, a rollback pedig hibázhat, ha a database migration nem backward compatible.",
+            "example": "Egy Node.js commit lintet, unit, integration, contract és security checket futtat, majd egy immutable containert buildel. Ugyanaz az image megy stagingre és productionre. Canary kap kevés trafficet, health metric alapján történik promotion, rollbacknél az előző image tér vissza.",
+            "howItWorks": [
+              "Egy immutable, versioned artifactot buildelj, és ugyanazt promote-old a környezetek között.",
+              "Deployment előtt automated quality, security, contract és migration check fusson.",
+              "Progressive deploymentet használj readiness checkkel, observability gate-tel és controlled traffic movementtel.",
+              "A rollback vagy roll-forward procedure legyen tesztelt, backward-compatible database change-ekkel együtt."
+            ],
+            "commonMistakes": [
+              "Productionben külön újrabuildelni az applicationt.",
+              "A sikeres deployment commandot user-szintű health bizonyítékának tekinteni.",
+              "Destructive schema migrationt futtatni, mielőtt a régi application versionök leálltak."
+            ],
+            "keyTerms": [
+              {
+                "term": "immutable artifact",
+                "definition": "olyan build output, amely nem változik a környezetek közötti mozgatás során"
+              },
+              {
+                "term": "canary deployment",
+                "definition": "release a traffic kis részére a széles rollout előtt"
+              },
+              {
+                "term": "quality gate",
+                "definition": "automated feltétel, amelynek promotion előtt teljesülnie kell"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_dotnet_maintenance",
+      "name": ".NET/C# Maintenance for a Node.js Developer",
+      "description": "Maintaining a .NET component means understanding its contracts, runtime model, dependency injection, asynchronous code, data access, tests, and deployment well enough to make safe changes.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "api_integration",
+        "testing_strategy"
+      ],
+      "studyContent": {
+        "mentalModel": "Node.js and .NET services can expose the same REST, GraphQL, or messaging contracts, but their language, runtime, build, dependency, and concurrency conventions differ.",
+        "problem": "Copying JavaScript habits directly into C# can create blocking calls, incorrect async usage, lifetime bugs in dependency injection, or resource leaks. Large rewrites are risky when the real requirement is to maintain a stable existing component.",
+        "example": "A Node.js developer must add a field to a C# ASP.NET Core service. They trace the controller, injected service, EF Core query, DTO mapping, tests, and OpenAPI contract, then make an additive change and verify the existing deployment pipeline.",
+        "howItWorks": [
+          "Start from the public API or message contract and trace the request through the existing architecture.",
+          "Understand async Task-based code, cancellation, dependency-injection lifetimes, and disposable resources.",
+          "Use the project’s tests, analyzers, build, and package conventions instead of rewriting the service in Node.js.",
+          "Make small compatible changes and ask for review where framework-specific behaviour is uncertain."
+        ],
+        "commonMistakes": [
+          "Blocking async C# code with .Result or .Wait in request handling.",
+          "Registering a short-lived dependency as a singleton without checking thread safety and lifetime.",
+          "Proposing a rewrite before understanding the component’s contract and operational history."
+        ],
+        "keyTerms": [
+          {
+            "term": "Task",
+            "definition": "the .NET representation of an asynchronous operation"
+          },
+          {
+            "term": "dependency-injection lifetime",
+            "definition": "how long a registered service instance is reused"
+          },
+          {
+            "term": "DTO",
+            "definition": "an object used to transfer data across an API or service boundary"
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": ".NET/C# komponensek karbantartása Node.js fejlesztőként",
+          "description": "Egy .NET komponens karbantartása azt jelenti, hogy a contractot, runtime modellt, dependency injectiont, async kódot, data accesst, teszteket és deploymentet eléggé érted a safe change-hez.",
+          "studyContent": {
+            "mentalModel": "A Node.js és .NET service ugyanazt a REST, GraphQL vagy messaging contractot is expose-olhatja, de a language, runtime, build, dependency és concurrency convention eltér.",
+            "problem": "JavaScript szokások közvetlen átvitele C#-ba blocking callt, hibás async használatot, dependency-injection lifetime bugot vagy resource leaket okozhat. Nagy rewrite kockázatos, ha a valódi feladat egy stabil existing component karbantartása.",
+            "example": "Egy Node.js developer fieldet ad egy C# ASP.NET Core service-hez. Végigköveti a controllert, injected service-t, EF Core queryt, DTO mappinget, testeket és OpenAPI contractot, majd additive change-et készít és a meglévő deployment pipeline-ban validál.",
+            "howItWorks": [
+              "A public API vagy message contractból indulj ki, és kövesd végig a requestet a meglévő architecture-ben.",
+              "Értsd az async Task-alapú kódot, cancellationt, dependency-injection lifetime-ot és disposable resource-okat.",
+              "A project test-, analyzer-, build- és package-conventionjeit használd rewrite helyett.",
+              "Kis kompatibilis change-et készíts, framework-specifikus bizonytalanságnál pedig kérj review-t."
+            ],
+            "commonMistakes": [
+              "Async C# kódot .Result vagy .Wait használatával blokkolni request handling közben.",
+              "Short-lived dependencyt singletonként regisztrálni thread safety és lifetime ellenőrzés nélkül.",
+              "Rewrite-ot javasolni a component contract és operational history megértése előtt."
+            ],
+            "keyTerms": [
+              {
+                "term": "Task",
+                "definition": "egy aszinkron operation .NET reprezentációja"
+              },
+              {
+                "term": "dependency-injection lifetime",
+                "definition": "annak szabálya, hogy egy registered service instance meddig használható újra"
+              },
+              {
+                "term": "DTO",
+                "definition": "API- vagy service boundaryn adatátadásra használt object"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_engineering_ownership",
+      "name": "Engineering Ownership and Technical Debt",
+      "description": "Engineering ownership means carrying a change from requirements through design, delivery, production observation, maintenance, and improvement instead of stopping when the code is merged.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "requirements_clarification",
+        "risk_management"
+      ],
+      "studyContent": {
+        "mentalModel": "Ownership combines clear requirements, explicit trade-offs, maintainable implementation, safe release, production feedback, documentation, and follow-up responsibility.",
+        "problem": "A feature can pass tests and still fail because requirements were ambiguous, rollout was unsafe, dashboards were missing, or nobody owned support after release. Technical debt also grows when teams record problems without deciding risk, priority, or a realistic remediation path.",
+        "example": "A developer receives a request for an external-system integration. They clarify success and failure cases, write the contract, review the design, add tests and telemetry, deploy gradually, monitor the first production traffic, document operations, and create a prioritized follow-up for known limitations.",
+        "howItWorks": [
+          "Clarify functional behaviour, non-functional expectations, dependencies, and acceptance criteria.",
+          "Make design decisions and risks visible through documentation and review.",
+          "Ship with tests, observability, deployment, rollback, and operational ownership.",
+          "Track technical debt by impact, likelihood, cost, owner, and planned action rather than vague discomfort."
+        ],
+        "commonMistakes": [
+          "Equating ownership with working alone or never asking for help.",
+          "Calling every imperfect implementation technical debt without explaining its risk.",
+          "Finishing the task at merge time without verifying production behaviour."
+        ],
+        "keyTerms": [
+          {
+            "term": "acceptance criteria",
+            "definition": "observable conditions that define when the requested behaviour is complete"
+          },
+          {
+            "term": "technical debt",
+            "definition": "a known design or implementation compromise that creates future cost or risk"
+          },
+          {
+            "term": "operational ownership",
+            "definition": "responsibility for how a service behaves after deployment"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Engineering ownership és technical debt",
+          "description": "Az engineering ownership azt jelenti, hogy a change-et requirements, design, delivery, production observation, maintenance és improvement során is viszed, nem állsz meg a merge-nél.",
+          "studyContent": {
+            "mentalModel": "Az ownership világos requirementet, explicit trade-offot, maintainable implementationt, safe release-t, production feedbacket, dokumentációt és follow-up responsibilityt kapcsol össze.",
+            "problem": "Egy feature teszten átmehet, mégis bukhat ambiguous requirement, unsafe rollout, hiányzó dashboard vagy release utáni owner nélkül. A technical debt akkor is nő, ha a csapat csak rögzíti a problémát, de nem dönt riskről, priorityról és remediation pathról.",
+            "example": "Egy developer external-system integrationt kap. Tisztázza a success és failure eseteket, contractot ír, review-ztatja a designt, tesztet és telemetryt ad, fokozatosan deployol, figyeli az első production trafficet, dokumentálja az operationt és priorizált follow-upot készít.",
+            "howItWorks": [
+              "Tisztázd a functional behaviourt, non-functional expectationt, dependencyt és acceptance criteria-t.",
+              "A design decision és risk legyen látható dokumentációban és review-ban.",
+              "Testtel, observabilityvel, deploymenttel, rollbackkel és operational ownershippel ship-elj.",
+              "A technical debtet impact, likelihood, cost, owner és planned action alapján kezeld, ne homályos elégedetlenségként."
+            ],
+            "commonMistakes": [
+              "Az ownershipet azzal azonosítani, hogy valaki egyedül dolgozik és sosem kér segítséget.",
+              "Minden tökéletlen implementációt technical debtnek nevezni risk magyarázata nélkül.",
+              "Merge időpontjában befejezettnek tekinteni a feladatot production verification nélkül."
+            ],
+            "keyTerms": [
+              {
+                "term": "acceptance criteria",
+                "definition": "megfigyelhető feltételek, amelyek meghatározzák a kért behaviour elkészültét"
+              },
+              {
+                "term": "technical debt",
+                "definition": "ismert design- vagy implementation-kompromisszum, amely jövőbeli költséget vagy risket okoz"
+              },
+              {
+                "term": "operational ownership",
+                "definition": "felelősség a service deployment utáni viselkedéséért"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "fg_mb_split_001",
+      "title": "Where would you draw the service boundaries?",
+      "prompt": "A proposed system has Customer, Order, Inventory, Billing, and Notification capabilities. How would you decide which become services and which interactions are synchronous or asynchronous?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "fg_microservice_boundaries"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use business ownership, invariants, data, coupling, and response needs.",
+      "expectedPoints": [
+        {
+          "id": "fg_ms_capability",
+          "label": "Uses business capabilities and invariants",
+          "description": "Groups rules that change together and must remain consistent instead of splitting by technical layer.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "business capability",
+            "bounded context",
+            "business invariants",
+            "change together",
+            "not technical layers"
+          ]
+        },
+        {
+          "id": "fg_ms_data",
+          "label": "Assigns clear data ownership",
+          "description": "Gives authoritative writes for each business area to one service and avoids shared write access.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "data ownership",
+            "one writer",
+            "service database",
+            "source of truth",
+            "no shared writes"
+          ]
+        },
+        {
+          "id": "fg_ms_comm",
+          "label": "Chooses communication by need",
+          "description": "Uses synchronous calls for immediate decisions and events for independent downstream reactions.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "immediate response",
+            "synchronous call",
+            "publish event",
+            "independent reaction",
+            "async integration"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_ms_monolith_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would you keep these capabilities in a modular monolith instead?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hol húznád meg a service boundarykat?",
+          "prompt": "A tervezett rendszer Customer, Order, Inventory, Billing és Notification capabilityket tartalmaz. Hogyan döntenéd el, melyek legyenek service-ek, és mely interaction legyen szinkron vagy aszinkron?",
+          "answerStructureHint": "Használj business ownership, invariant, data, coupling és response-igény szempontokat.",
+          "expectedPoints": {
+            "fg_ms_capability": {
+              "label": "Business capabilityt és invariantet használ",
+              "description": "Az együtt változó és konzisztensen tartandó rule-okat csoportosítja technical layer szerinti split helyett."
+            },
+            "fg_ms_data": {
+              "label": "Világos data ownershipet rendel",
+              "description": "Minden business area authoritative write-ját egy service-hez rendeli, és kerüli a shared write accesst."
+            },
+            "fg_ms_comm": {
+              "label": "Igény alapján választ communicationt",
+              "description": "Szinkron callt használ azonnali decisionhöz, eventet pedig független downstream reactionhöz."
+            }
+          },
+          "followUps": {
+            "fg_ms_monolith_followup": "Mikor tartanád ezeket inkább modular monolithban?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_mb_chatty_002",
+      "title": "Reviewing a chatty microservice design",
+      "prompt": "An endpoint must call six services in sequence and all six must succeed. What does this reveal about the design, and what redesign options would you consider?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "fg_microservice_boundaries"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss latency, availability, ownership, aggregation, and eventual consistency.",
+      "expectedPoints": [
+        {
+          "id": "fg_mc_risk",
+          "label": "Explains compounded failure and latency",
+          "description": "Notes that sequential calls add latency and make request availability depend on every service.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "six sequential calls",
+            "compounded latency",
+            "dependency availability",
+            "failure propagation",
+            "tight coupling"
+          ]
+        },
+        {
+          "id": "fg_mc_boundary",
+          "label": "Questions the boundaries",
+          "description": "Looks for business rules or data split too finely across services and considers merging responsibilities.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "wrong service boundary",
+            "merge services",
+            "distributed monolith",
+            "business ownership",
+            "too fine grained"
+          ]
+        },
+        {
+          "id": "fg_mc_options",
+          "label": "Offers read and workflow alternatives",
+          "description": "Considers API aggregation, denormalized read models, parallel safe calls, or asynchronous workflows with explicit state.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "api aggregation",
+            "read model",
+            "parallel calls",
+            "async workflow",
+            "eventual consistency"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_mc_saga_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would a saga-style workflow be appropriate here?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Chatty microservice design review",
+          "prompt": "Egy endpointnak hat service-t kell sorban meghívnia, és mind a hatnak sikerülnie kell. Mit árul el ez a designról, és milyen redesign opciókat mérlegelnél?",
+          "answerStructureHint": "Térj ki a latencyre, availabilityre, ownershipre, aggregationre és eventual consistencyre.",
+          "expectedPoints": {
+            "fg_mc_risk": {
+              "label": "Elmagyarázza az összetett failure-t és latencyt",
+              "description": "Kimondja, hogy a soros callok összeadják a latencyt, az availability pedig minden service-től függ."
+            },
+            "fg_mc_boundary": {
+              "label": "Megkérdőjelezi a boundarykat",
+              "description": "Túl finoman szétosztott business rule-t vagy datát keres, és felelősségek összevonását mérlegeli."
+            },
+            "fg_mc_options": {
+              "label": "Read- és workflow-alternatívákat ad",
+              "description": "API aggregationt, denormalized read modelt, safe parallel callt vagy explicit state-tel aszinkron workflow-t mérlegel."
+            }
+          },
+          "followUps": {
+            "fg_mc_saga_followup": "Mikor lenne megfelelő itt saga-style workflow?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_dr_timeout_001",
+      "title": "Designing dependency timeouts and retries",
+      "prompt": "A public request has a two-second deadline and calls two downstream services. How would you allocate timeouts and retries without exceeding the user deadline?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "fg_distributed_resilience"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use propagated deadlines, attempt budgets, safe retry conditions, and observability.",
+      "expectedPoints": [
+        {
+          "id": "fg_dt_deadline",
+          "label": "Propagates an overall deadline",
+          "description": "Starts from the two-second budget and passes remaining time rather than giving every call a fresh long timeout.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "overall deadline",
+            "remaining time",
+            "propagate timeout",
+            "request budget",
+            "deadline exceeded"
+          ]
+        },
+        {
+          "id": "fg_dt_retry",
+          "label": "Budgets retries safely",
+          "description": "Retries only idempotent transient failures when enough time remains, with a small attempt limit and jitter.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "retry budget",
+            "idempotent retry",
+            "transient failure",
+            "attempt limit",
+            "jitter"
+          ]
+        },
+        {
+          "id": "fg_dt_measure",
+          "label": "Measures dependency outcomes",
+          "description": "Records attempt count, timeout reason, downstream latency, and final user outcome in traces and metrics.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "attempt count",
+            "downstream latency",
+            "timeout metric",
+            "trace span",
+            "final outcome"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_dt_hedge_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When can hedged requests help, and why can they be dangerous?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Dependency timeout és retry tervezése",
+          "prompt": "Egy public request két másodperces deadline-nal rendelkezik, és két downstream service-t hív. Hogyan osztanád el a timeoutokat és retrykat a user deadline túllépése nélkül?",
+          "answerStructureHint": "Használj propagated deadline-t, attempt budgetet, safe retry conditiont és observabilityt.",
+          "expectedPoints": {
+            "fg_dt_deadline": {
+              "label": "Overall deadline-t propagál",
+              "description": "A két másodperces budgetből indul, és a remaining time-ot adja tovább ahelyett, hogy minden call új hosszú timeoutot kapna."
+            },
+            "fg_dt_retry": {
+              "label": "Biztonságosan budgeteli a retryt",
+              "description": "Csak idempotent transient failure-t retryol, ha elég idő marad, kis attempt limittel és jitterrel."
+            },
+            "fg_dt_measure": {
+              "label": "Méri a dependency outcome-okat",
+              "description": "Trace-ben és metricben rögzíti az attempt countot, timeout reasont, downstream latencyt és final user outcome-ot."
+            }
+          },
+          "followUps": {
+            "fg_dt_hedge_followup": "Mikor segíthet a hedged request, és miért lehet veszélyes?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_dr_incident_002",
+      "title": "One dependency outage overloads the whole platform",
+      "prompt": "A downstream service slows down, callers retry, connection pools fill, and unrelated endpoints fail. How would you stop the cascade and prove recovery?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "fg_distributed_resilience"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Contain the incident, protect shared resources, reduce amplification, and use evidence.",
+      "expectedPoints": [
+        {
+          "id": "fg_di_contain",
+          "label": "Contains the failing dependency",
+          "description": "Applies short timeouts, circuit breaking, concurrency limits, or temporary traffic reduction.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "circuit breaker",
+            "short timeout",
+            "concurrency limit",
+            "shed load",
+            "stop cascade"
+          ]
+        },
+        {
+          "id": "fg_di_amplify",
+          "label": "Reduces retry amplification",
+          "description": "Finds retries at every layer, removes duplicate attempts, adds backoff and jitter, and enforces an overall budget.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "retry storm",
+            "retry amplification",
+            "backoff jitter",
+            "overall retry budget",
+            "remove retries"
+          ]
+        },
+        {
+          "id": "fg_di_prove",
+          "label": "Proves recovery end to end",
+          "description": "Uses traces and metrics to show falling queue or pool pressure, restored tail latency, and no continued error amplification.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "tail latency",
+            "connection pool",
+            "queue depth",
+            "distributed trace",
+            "error rate recovery"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_di_bulkhead_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would a bulkhead keep unrelated endpoints alive?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy dependency outage túlterheli az egész platformot",
+          "prompt": "Egy downstream service lelassul, a callerek retryolnak, a connection poolok megtelnek, és unrelated endpointok is hibáznak. Hogyan állítanád meg a cascade-et és igazolnád a recoveryt?",
+          "answerStructureHint": "Containeld az incidentet, védd a shared resource-okat, csökkentsd az amplificationt, és használj bizonyítékot.",
+          "expectedPoints": {
+            "fg_di_contain": {
+              "label": "Containeli a hibás dependencyt",
+              "description": "Rövid timeoutot, circuit breakert, concurrency limitet vagy ideiglenes traffic reductiont alkalmaz."
+            },
+            "fg_di_amplify": {
+              "label": "Csökkenti a retry amplificationt",
+              "description": "Minden layer retryját megkeresi, eltávolítja a duplikált attemptet, backoffot és jittert ad, overall budgetet alkalmaz."
+            },
+            "fg_di_prove": {
+              "label": "End-to-end igazolja a recoveryt",
+              "description": "Trace és metric alapján mutatja a csökkenő queue- vagy pool pressure-t, helyreállt tail latencyt és megszűnt amplificationt."
+            }
+          },
+          "followUps": {
+            "fg_di_bulkhead_followup": "Hogyan tartaná életben a bulkhead az unrelated endpointokat?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_af_queue_001",
+      "title": "Designing a queue-triggered Azure Function",
+      "prompt": "Design an Azure Function that processes invoice messages reliably. Cover duplicate delivery, retries, poison messages, database capacity, and secrets.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "fg_azure_functions"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe trigger semantics, idempotency, bounded concurrency, failure paths, and identity.",
+      "expectedPoints": [
+        {
+          "id": "fg_aq_idem",
+          "label": "Makes processing idempotent",
+          "description": "Uses a stable invoice or message id and a durable uniqueness check because the trigger can redeliver.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "idempotent function",
+            "message id",
+            "duplicate delivery",
+            "unique constraint",
+            "safe retry"
+          ]
+        },
+        {
+          "id": "fg_aq_failure",
+          "label": "Defines retry and poison handling",
+          "description": "Separates transient and permanent failures, limits retries, and routes exhausted messages to a poison queue with diagnostics.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "retry limit",
+            "poison queue",
+            "transient error",
+            "permanent failure",
+            "failure metadata"
+          ]
+        },
+        {
+          "id": "fg_aq_capacity",
+          "label": "Controls capacity and credentials",
+          "description": "Limits concurrency to database capacity and uses managed identity or a secure configuration service instead of embedded secrets.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "concurrency limit",
+            "database connections",
+            "managed identity",
+            "key vault",
+            "no embedded secret"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_aq_cold_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would cold-start latency matter less for this queue-triggered workload?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Queue-triggered Azure Function tervezése",
+          "prompt": "Tervezz Azure Functiont invoice message-ek megbízható feldolgozásához. Térj ki a duplicate deliveryre, retryra, poison message-re, database capacityre és secret kezelésre.",
+          "answerStructureHint": "Írd le a trigger szemantikát, idempotencyt, bounded concurrencyt, failure pathot és identityt.",
+          "expectedPoints": {
+            "fg_aq_idem": {
+              "label": "Idempotentté teszi a processinget",
+              "description": "Stabil invoice- vagy message id-t és durable uniqueness checket használ, mert a trigger redeliverelhet."
+            },
+            "fg_aq_failure": {
+              "label": "Definiálja a retry és poison kezelést",
+              "description": "Elválasztja a transient és permanent failure-t, korlátozza a retryt, és diagnosztikával poison queue-ba küldi a kifutott message-et."
+            },
+            "fg_aq_capacity": {
+              "label": "Kontrollálja a capacityt és credentialt",
+              "description": "A concurrencyt a database capacityhez korlátozza, és embedded secret helyett managed identityt vagy secure configuration service-t használ."
+            }
+          },
+          "followUps": {
+            "fg_aq_cold_followup": "Mikor kevésbé fontos a cold-start latency ennél a queue-triggered workloadnál?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_af_fit_002",
+      "title": "Serverless function or long-running service?",
+      "prompt": "Compare Azure Functions with a containerized Node.js service for a short event handler, a latency-sensitive API, and a continuously connected stream processor.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_azure_functions"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare execution shape, scaling, latency, connection lifetime, control, and cost.",
+      "expectedPoints": [
+        {
+          "id": "fg_sf_event",
+          "label": "Chooses functions for bursty event work",
+          "description": "Uses Functions for short, stateless, event-triggered workloads that benefit from managed scaling.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "short lived handler",
+            "event triggered",
+            "managed scaling",
+            "bursty workload",
+            "stateless function"
+          ]
+        },
+        {
+          "id": "fg_sf_api",
+          "label": "Evaluates API latency and control",
+          "description": "Considers cold starts, predictable capacity, networking, and runtime control for latency-sensitive APIs.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "cold start",
+            "latency sensitive",
+            "predictable capacity",
+            "runtime control",
+            "always warm"
+          ]
+        },
+        {
+          "id": "fg_sf_stream",
+          "label": "Rejects poor fit for permanent connections",
+          "description": "Prefers a long-running service for continuous stream processing or long-lived connections and explicit lifecycle control.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "long running service",
+            "continuous stream",
+            "long lived connection",
+            "lifecycle control",
+            "container service"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_sf_cost_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which traffic pattern can make serverless more expensive than provisioned containers?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Serverless function vagy long-running service?",
+          "prompt": "Hasonlítsd össze az Azure Functions és a containerized Node.js service használatát rövid event handlerhez, latency-sensitive API-hoz és folyamatosan connected stream processorhoz.",
+          "answerStructureHint": "Hasonlítsd össze az execution shape-et, scalinget, latencyt, connection lifetime-ot, controlt és costot.",
+          "expectedPoints": {
+            "fg_sf_event": {
+              "label": "Functiont választ bursty event munkához",
+              "description": "Functiont használ rövid, stateless, event-triggered workloadhoz, amely profitál a managed scalingből."
+            },
+            "fg_sf_api": {
+              "label": "Értékeli az API latencyt és controlt",
+              "description": "Figyelembe veszi a cold startot, predictable capacityt, networkinget és runtime controlt latency-sensitive API-nál."
+            },
+            "fg_sf_stream": {
+              "label": "Elutasítja a rossz fitet permanent connectionhöz",
+              "description": "Long-running service-t választ continuous stream processinghez vagy long-lived connectionhöz és explicit lifecycle controlhoz."
+            }
+          },
+          "followUps": {
+            "fg_sf_cost_followup": "Milyen traffic pattern teheti a serverlesst drágábbá a provisioned containernél?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_cd_pipeline_001",
+      "title": "Designing a Node.js CI/CD pipeline",
+      "prompt": "Design a CI/CD pipeline for a Node.js API from pull request to production. Which gates, artifacts, deployment strategy, and recovery mechanisms would you include?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "fg_cicd_deployment"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover reproducibility, layered tests, security, progressive rollout, and rollback.",
+      "expectedPoints": [
+        {
+          "id": "fg_cp_artifact",
+          "label": "Builds one immutable artifact",
+          "description": "Pins dependencies, produces a versioned container or package once, records provenance, and promotes the same artifact.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "immutable artifact",
+            "versioned image",
+            "same artifact",
+            "dependency lock",
+            "build provenance"
+          ]
+        },
+        {
+          "id": "fg_cp_gates",
+          "label": "Uses layered automated gates",
+          "description": "Includes lint, unit, integration, contract, migration, dependency, and security checks with clear failure criteria.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "unit tests",
+            "integration tests",
+            "contract tests",
+            "security scan",
+            "migration check",
+            "quality gate"
+          ]
+        },
+        {
+          "id": "fg_cp_release",
+          "label": "Deploys progressively with recovery",
+          "description": "Uses readiness, canary or rolling rollout, observability gates, and a tested rollback or roll-forward path.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "canary deployment",
+            "rolling deployment",
+            "readiness check",
+            "observability gate",
+            "rollback plan"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_cp_secret_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How should secrets and environment-specific configuration enter the deployment?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Node.js CI/CD pipeline tervezése",
+          "prompt": "Tervezz CI/CD pipeline-t Node.js API-hoz pull requesttől productionig. Milyen gate-eket, artifactot, deployment strategyt és recovery mechanizmust használnál?",
+          "answerStructureHint": "Térj ki a reproducibilityre, layered testre, securityre, progressive rolloutra és rollbackre.",
+          "expectedPoints": {
+            "fg_cp_artifact": {
+              "label": "Egy immutable artifactot buildel",
+              "description": "Pineli a dependencyket, egyszer buildel versioned containert vagy package-et, provenance-t rögzít, és ugyanazt az artifactot promote-olja."
+            },
+            "fg_cp_gates": {
+              "label": "Layered automated gate-eket használ",
+              "description": "Lintet, unit, integration, contract, migration, dependency és security checket használ világos failure criteria-val."
+            },
+            "fg_cp_release": {
+              "label": "Progressive módon deployol recoveryvel",
+              "description": "Readinesst, canary vagy rolling rolloutot, observability gate-et és tesztelt rollback vagy roll-forward pathot használ."
+            }
+          },
+          "followUps": {
+            "fg_cp_secret_followup": "Hogyan kerüljön be a secret és environment-specific configuration a deploymentbe?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_cd_migration_002",
+      "title": "Deploying a breaking database change",
+      "prompt": "A release must rename a heavily used database column while old and new application versions overlap during rolling deployment. How would you release it safely?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "fg_cicd_deployment"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use expand-migrate-contract, compatibility, backfill, verification, and delayed cleanup.",
+      "expectedPoints": [
+        {
+          "id": "fg_cm_expand",
+          "label": "Expands compatibly first",
+          "description": "Adds the new column without removing the old one and deploys code that can work during overlap.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "add new column",
+            "backward compatible",
+            "old and new versions",
+            "expand phase",
+            "dual read"
+          ]
+        },
+        {
+          "id": "fg_cm_migrate",
+          "label": "Migrates and verifies data",
+          "description": "Backfills safely, dual-writes or synchronizes during transition, and verifies counts and correctness.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "backfill data",
+            "dual write",
+            "verify counts",
+            "data consistency",
+            "migration batch"
+          ]
+        },
+        {
+          "id": "fg_cm_contract",
+          "label": "Removes only after retirement",
+          "description": "Switches all reads, confirms old versions and consumers are gone, then removes the old column in a later release.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "contract phase",
+            "remove later",
+            "old version retired",
+            "telemetry check",
+            "separate release"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_cm_rollback_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can rollback be dangerous after the backfill has started?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Breaking database change deployolása",
+          "prompt": "Egy release-nek át kell neveznie egy sokat használt database columnt, miközben rolling deployment alatt régi és új application version is fut. Hogyan release-elnéd biztonságosan?",
+          "answerStructureHint": "Használj expand-migrate-contract patternt, compatibilityt, backfillt, verificationt és késleltetett cleanupot.",
+          "expectedPoints": {
+            "fg_cm_expand": {
+              "label": "Először kompatibilisen expandel",
+              "description": "Hozzáadja az új columnt a régi eltávolítása nélkül, és overlap alatt kompatibilis kódot deployol."
+            },
+            "fg_cm_migrate": {
+              "label": "Migrálja és ellenőrzi az adatot",
+              "description": "Biztonságosan backfillel, transition alatt dual-write-ol vagy szinkronizál, és countot, correctness-et ellenőriz."
+            },
+            "fg_cm_contract": {
+              "label": "Csak retirement után távolít el",
+              "description": "Minden readet átállít, igazolja a régi version és consumer megszűnését, majd későbbi release-ben törli a régi columnt."
+            }
+          },
+          "followUps": {
+            "fg_cm_rollback_followup": "Miért lehet veszélyes a rollback a backfill megkezdése után?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_dn_trace_001",
+      "title": "Approaching an unfamiliar .NET service",
+      "prompt": "You must fix a bug in an ASP.NET Core microservice but your strongest experience is Node.js. How would you learn the code path and make a safe change?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "experience_deep_dive"
+      ],
+      "topicIds": [
+        "fg_dotnet_maintenance"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Start from the contract, trace architecture and runtime conventions, test narrowly, and seek focused review.",
+      "expectedPoints": [
+        {
+          "id": "fg_dt_contract",
+          "label": "Starts from observable behaviour",
+          "description": "Reproduces the bug and traces the API or message contract through controller, service, data access, and tests.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "reproduce bug",
+            "trace request",
+            "controller service",
+            "data access",
+            "existing tests"
+          ]
+        },
+        {
+          "id": "fg_dt_conventions",
+          "label": "Learns .NET-specific conventions",
+          "description": "Checks async Task usage, cancellation, dependency-injection lifetimes, disposal, logging, and project analyzers.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "async task",
+            "cancellation token",
+            "dependency injection",
+            "service lifetime",
+            "disposable resource"
+          ]
+        },
+        {
+          "id": "fg_dt_safe",
+          "label": "Makes a small verified change",
+          "description": "Adds a focused regression test, runs the normal build and integration path, documents uncertainty, and requests framework-aware review.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "regression test",
+            "small change",
+            "run build",
+            "code review",
+            "document assumption"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_dt_block_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can using .Result or .Wait on a Task be a warning sign?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Ismeretlen .NET service megközelítése",
+          "prompt": "Bugot kell javítanod egy ASP.NET Core microservice-ben, miközben a legerősebb tapasztalatod Node.js. Hogyan ismernéd meg a code pathot és készítenél safe change-et?",
+          "answerStructureHint": "A contractból indulj, kövesd végig az architecture- és runtime-conventionöket, szűken tesztelj, és kérj fókuszált review-t.",
+          "expectedPoints": {
+            "fg_dt_contract": {
+              "label": "Observable behaviourből indul",
+              "description": "Reprodukálja a bugot, majd az API- vagy message contractot controlleren, service-en, data accessen és testen át követi."
+            },
+            "fg_dt_conventions": {
+              "label": ".NET-specifikus conventionöket tanul",
+              "description": "Ellenőrzi az async Task használatot, cancellationt, dependency-injection lifetime-ot, disposalt, loggingot és analyzer-eket."
+            },
+            "fg_dt_safe": {
+              "label": "Kis, ellenőrzött change-et készít",
+              "description": "Fókuszált regression testet ad, lefuttatja a normál build és integration pathot, dokumentálja a bizonytalanságot és framework-aware review-t kér."
+            }
+          },
+          "followUps": {
+            "fg_dt_block_followup": "Miért warning sign a Task .Result vagy .Wait használata?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_dn_interop_002",
+      "title": "Integrating Node.js and .NET services",
+      "prompt": "A Node.js service must integrate with an existing .NET component. What should be standardized so the boundary remains language-independent and diagnosable?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "fg_dotnet_maintenance"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover contract, serialization, errors, identity, timeouts, observability, and compatibility.",
+      "expectedPoints": [
+        {
+          "id": "fg_ni_contract",
+          "label": "Defines a language-neutral contract",
+          "description": "Uses documented OpenAPI, GraphQL, protobuf, or event schemas with explicit field and compatibility rules.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "open api contract",
+            "protobuf schema",
+            "event schema",
+            "language neutral",
+            "contract versioning"
+          ]
+        },
+        {
+          "id": "fg_ni_runtime",
+          "label": "Standardizes runtime behaviour",
+          "description": "Defines timeout, retry, idempotency, error mapping, authentication, and serialization details.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "timeout policy",
+            "error contract",
+            "idempotency",
+            "authentication",
+            "json serialization",
+            "retry policy"
+          ]
+        },
+        {
+          "id": "fg_ni_obs",
+          "label": "Correlates observability across runtimes",
+          "description": "Propagates trace and correlation context and uses compatible logs, metrics, and health semantics.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "trace context",
+            "correlation id",
+            "structured logs",
+            "distributed tracing",
+            "health checks"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_ni_date_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which cross-language serialization details commonly cause subtle bugs?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Node.js és .NET service integrációja",
+          "prompt": "Egy Node.js service-nek meglévő .NET komponenssel kell integrálódnia. Mit kell standardizálni, hogy a boundary language-independent és diagnosztizálható maradjon?",
+          "answerStructureHint": "Térj ki a contractra, serializationre, errorra, identityre, timeoutra, observabilityre és compatibilityre.",
+          "expectedPoints": {
+            "fg_ni_contract": {
+              "label": "Language-neutral contractot definiál",
+              "description": "Dokumentált OpenAPI, GraphQL, protobuf vagy event schema-t használ explicit field- és compatibility rule-okkal."
+            },
+            "fg_ni_runtime": {
+              "label": "Standardizálja a runtime behaviourt",
+              "description": "Definiálja a timeoutot, retryt, idempotencyt, error mappinget, authenticationt és serialization detailt."
+            },
+            "fg_ni_obs": {
+              "label": "Korrelálja az observabilityt runtime-ok között",
+              "description": "Trace- és correlation contextet propagál, és kompatibilis log, metric és health szemantikát használ."
+            }
+          },
+          "followUps": {
+            "fg_ni_date_followup": "Mely cross-language serialization detail okoz gyakran rejtett bugot?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_own_feature_001",
+      "title": "Owning a feature from requirement to production",
+      "prompt": "Describe how you would take a new integration feature from an ambiguous request through production delivery and maintenance.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "experience_deep_dive"
+      ],
+      "topicIds": [
+        "fg_engineering_ownership"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Structure the answer around clarification, design, implementation, release, observation, and follow-up.",
+      "expectedPoints": [
+        {
+          "id": "fg_of_clarify",
+          "label": "Clarifies behaviour and constraints",
+          "description": "Identifies stakeholders, success and failure cases, non-functional needs, dependencies, and acceptance criteria.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "acceptance criteria",
+            "failure cases",
+            "stakeholder needs",
+            "non functional requirements",
+            "dependency constraints"
+          ]
+        },
+        {
+          "id": "fg_of_design",
+          "label": "Makes the design reviewable",
+          "description": "Documents the contract, data flow, risks, trade-offs, rollout, and operational behaviour before implementation hardens assumptions.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "design document",
+            "api contract",
+            "trade offs",
+            "risk review",
+            "rollout plan"
+          ]
+        },
+        {
+          "id": "fg_of_operate",
+          "label": "Owns release and operation",
+          "description": "Includes tests, telemetry, deployment, verification, documentation, support ownership, and prioritized follow-up work.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "production verification",
+            "monitor deployment",
+            "technical documentation",
+            "support ownership",
+            "follow up task"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_of_change_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you do if a requirement changes after implementation has started?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Feature ownership requirementtől productionig",
+          "prompt": "Mutasd be, hogyan vinnél végig egy új integration feature-t ambiguous requesttől production deliveryn át maintenance-ig.",
+          "answerStructureHint": "A választ clarification, design, implementation, release, observation és follow-up köré strukturáld.",
+          "expectedPoints": {
+            "fg_of_clarify": {
+              "label": "Tisztázza a behaviourt és constraint-eket",
+              "description": "Azonosítja a stakeholdert, success és failure esetet, non-functional igényt, dependencyt és acceptance criteria-t."
+            },
+            "fg_of_design": {
+              "label": "Reviewolhatóvá teszi a designt",
+              "description": "Dokumentálja a contractot, data flow-t, risket, trade-offot, rolloutot és operational behaviourt, mielőtt az implementation rögzíti a feltételezéseket."
+            },
+            "fg_of_operate": {
+              "label": "Tulajdonolja a release-t és operationt",
+              "description": "Testet, telemetryt, deploymentet, verificationt, dokumentációt, support ownershipet és priorizált follow-up munkát tartalmaz."
+            }
+          },
+          "followUps": {
+            "fg_of_change_followup": "Mit tennél, ha a requirement implementation közben megváltozik?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_own_debt_002",
+      "title": "Prioritizing technical debt",
+      "prompt": "A legacy service has poor tests, outdated dependencies, duplicated code, and occasional production failures. How would you decide what to fix first and obtain agreement?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_engineering_ownership"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use evidence, risk, user impact, effort, sequencing, ownership, and measurable outcomes.",
+      "expectedPoints": [
+        {
+          "id": "fg_td_evidence",
+          "label": "Uses evidence and impact",
+          "description": "Ranks items by production incidents, security exposure, delivery friction, user impact, and likelihood rather than personal preference.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "production incidents",
+            "security risk",
+            "user impact",
+            "delivery friction",
+            "evidence based"
+          ]
+        },
+        {
+          "id": "fg_td_plan",
+          "label": "Creates an incremental plan",
+          "description": "Chooses enabling work first, such as characterization tests and observability, then fixes high-risk paths in small releasable steps.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "characterization tests",
+            "incremental refactor",
+            "small releases",
+            "observability first",
+            "risk reduction"
+          ]
+        },
+        {
+          "id": "fg_td_agree",
+          "label": "Makes ownership and outcomes explicit",
+          "description": "Documents cost, expected benefit, owner, milestone, and success metric so stakeholders can make a visible trade-off.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "technical debt register",
+            "named owner",
+            "success metric",
+            "stakeholder agreement",
+            "expected benefit"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_td_rewrite_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What evidence would justify a rewrite instead of incremental improvement?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Technical debt priorizálása",
+          "prompt": "Egy legacy service-nek gyenge testjei, outdated dependencyi, duplicated code-ja és alkalmi production failure-ei vannak. Hogyan döntenéd el, mit javíts először, és hogyan szereznél agreementet?",
+          "answerStructureHint": "Használj bizonyítékot, risket, user impactet, effortot, sequencinget, ownershipet és mérhető outcome-ot.",
+          "expectedPoints": {
+            "fg_td_evidence": {
+              "label": "Evidence-et és impactet használ",
+              "description": "Production incident, security exposure, delivery friction, user impact és likelihood alapján rangsorol, nem személyes preferencia szerint."
+            },
+            "fg_td_plan": {
+              "label": "Incremental plant készít",
+              "description": "Először enabling worköt választ, például characterization testet és observabilityt, majd kis releasable lépésekben javítja a high-risk pathot."
+            },
+            "fg_td_agree": {
+              "label": "Explicitté teszi az ownershipet és outcome-ot",
+              "description": "Dokumentálja a costot, expected benefitet, ownert, milestone-t és success metricet, hogy a stakeholder látható trade-offot tehessen."
+            }
+          },
+          "followUps": {
+            "fg_td_rewrite_followup": "Milyen evidence igazolná a rewrite-ot incremental improvement helyett?"
+          }
+        }
+      }
+    }
+  ]
+}

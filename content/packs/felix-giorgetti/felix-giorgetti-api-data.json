@@ -1,0 +1,1747 @@
+{
+  "id": "felix_giorgetti_api_data",
+  "name": "Félix Giorgetti - APIs and Data",
+  "description": "Interview preparation for REST, GraphQL, relational transactions, SQL performance, MongoDB selection, and Redis patterns.",
+  "sources": [
+    "felix_giorgetti_experienced_nodejs_developer_job_description"
+  ],
+  "topics": [
+    {
+      "id": "fg_rest_api_contracts",
+      "name": "REST API Contracts and HTTP Semantics",
+      "description": "A REST API contract defines resources, operations, representations, status codes, and compatibility rules that clients can rely on.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "rest",
+        "api_design",
+        "idempotency"
+      ],
+      "studyContent": {
+        "mentalModel": "A REST API uses HTTP to expose resource-oriented operations with predictable methods, status codes, headers, and representations.",
+        "problem": "When endpoints are designed as unrelated remote procedures, clients cannot infer behaviour, retries become unsafe, errors vary, and small response changes can break consumers. A stable contract is more important than matching a fashionable URL style.",
+        "example": "A client creates an order with POST /orders and receives 201 with a Location header. It reads the order with GET, replaces a full representation with PUT, and performs a partial change with PATCH. Validation errors use one documented error shape.",
+        "howItWorks": [
+          "Model stable domain resources and choose methods according to their meaning.",
+          "Use status codes and headers to communicate outcome, caching, location, and concurrency conditions.",
+          "Define request, response, and error schemas as a versioned contract.",
+          "Design retries and idempotency deliberately for operations with side effects."
+        ],
+        "commonMistakes": [
+          "Treating every endpoint as POST because it is convenient.",
+          "Returning 200 for every outcome and hiding errors inside the body.",
+          "Changing or removing response fields without considering existing clients."
+        ],
+        "keyTerms": [
+          {
+            "term": "resource",
+            "definition": "a domain object or collection addressed by the API"
+          },
+          {
+            "term": "idempotent method",
+            "definition": "an operation whose repeated execution has the same intended effect as one execution"
+          },
+          {
+            "term": "representation",
+            "definition": "the JSON or other format used to describe a resource"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "REST API contractok és HTTP szemantika",
+          "description": "A REST API contract meghatározza az erőforrásokat, műveleteket, reprezentációkat, status code-okat és kompatibilitási szabályokat, amelyekre a kliensek építhetnek.",
+          "studyContent": {
+            "mentalModel": "Egy REST API a HTTP-t használja resource-orientált műveletekhez, kiszámítható methodokkal, status code-okkal, headerekkel és reprezentációkkal.",
+            "problem": "Ha az endpointok egymástól független remote procedure-ökként készülnek, a kliensek nem tudják előre jelezni a viselkedést, a retry veszélyessé válik, az error shape-ek eltérnek, és kis response-változások is törhetik a consumeröket. A stabil contract fontosabb a divatos URL-formánál.",
+            "example": "A kliens POST /orders hívással létrehoz egy ordert, majd 201 választ és Location headert kap. GET-tel olvassa, PUT-tal teljes reprezentációt cserél, PATCH-csel részleges módosítást végez. A validation errorok egy dokumentált formát követnek.",
+            "howItWorks": [
+              "Stabil domain resource-okat modellezz, és a methodot a jelentése alapján válaszd.",
+              "Status code-okkal és headerekkel közöld az eredményt, cachinget, locationt és concurrency feltételeket.",
+              "A request, response és error schema együtt legyen verziózott contract.",
+              "Side effectet okozó műveleteknél tudatosan tervezz retryt és idempotencyt."
+            ],
+            "commonMistakes": [
+              "Minden endpointot POST-ként kezelni csak azért, mert kényelmes.",
+              "Minden kimenetre 200-at adni, és az error állapotot a bodyban elrejteni.",
+              "Response fieldet eltávolítani vagy megváltoztatni a meglévő kliensek figyelembevétele nélkül."
+            ],
+            "keyTerms": [
+              {
+                "term": "resource",
+                "definition": "az API által címezhető domain object vagy collection"
+              },
+              {
+                "term": "idempotent method",
+                "definition": "olyan művelet, amelynek ismételt végrehajtása ugyanazt a tervezett hatást eredményezi, mint egyszeri futtatása"
+              },
+              {
+                "term": "representation",
+                "definition": "egy resource leírására használt JSON vagy más formátum"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_graphql_backend",
+      "name": "GraphQL Backend Design",
+      "description": "GraphQL lets clients request a typed graph of fields through one schema, while the server resolves those fields from underlying services and data stores.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "api_design",
+        "caching",
+        "authorization"
+      ],
+      "studyContent": {
+        "mentalModel": "GraphQL exposes a typed schema where clients choose the fields they need, and resolvers fetch or compute each part of the response.",
+        "problem": "GraphQL reduces over-fetching for flexible clients, but careless resolver design can multiply database calls, bypass authorization, create expensive queries, and make HTTP caching less direct. The schema is still a public contract that must evolve safely.",
+        "example": "A product query requests product data and its category name. A naive resolver loads the category once per product. A request-scoped DataLoader batches category ids into one query and caches repeated ids only for that request.",
+        "howItWorks": [
+          "Define types and operations in a schema that represents the domain contract.",
+          "Resolve fields from databases or services while enforcing authorization at the correct boundary.",
+          "Batch and cache repeated resolver access to prevent N+1 calls.",
+          "Limit query depth, complexity, time, and result size to protect the server."
+        ],
+        "commonMistakes": [
+          "Assuming one GraphQL request means one database query.",
+          "Putting authorization only in the UI or top-level resolver.",
+          "Allowing arbitrary query complexity without limits or observability."
+        ],
+        "keyTerms": [
+          {
+            "term": "schema",
+            "definition": "the typed contract describing available GraphQL fields and operations"
+          },
+          {
+            "term": "resolver",
+            "definition": "the function that produces the value of a GraphQL field"
+          },
+          {
+            "term": "N+1 problem",
+            "definition": "one initial query followed by one extra query for every returned item"
+          },
+          {
+            "term": "DataLoader",
+            "definition": "a request-scoped pattern that batches and deduplicates data access"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "GraphQL backend tervezés",
+          "description": "A GraphQL lehetővé teszi, hogy a kliens egy typed graph mezőit kérje le egy schema alapján, a server pedig resolverekkel állítsa össze az adatot a háttérrendszerekből.",
+          "studyContent": {
+            "mentalModel": "A GraphQL typed schema-t ad, amelyből a kliens kiválasztja a szükséges field-eket, a resolverek pedig lekérik vagy kiszámítják a response egyes részeit.",
+            "problem": "A GraphQL csökkentheti az over-fetchinget rugalmas klienseknél, de rossz resolver design megsokszorozhatja a database hívásokat, megkerülheti az authorizationt, túl drága queryket engedhet, és nehezebbé teheti a HTTP cachinget. A schema továbbra is publikus contract.",
+            "example": "Egy product query lekéri a productokat és a category nevét. A naiv resolver minden producthoz külön tölti be a categoryt. Egy request-scoped DataLoader egy querybe batch-eli a category id-kat, és csak azon a requesten belül cache-el.",
+            "howItWorks": [
+              "A domain contractot típusokkal és operationökkel írd le a schemában.",
+              "A resolverek database-ből vagy service-ből töltenek, miközben a megfelelő boundaryn authorizationt végeznek.",
+              "Batch-eld és cache-eld az ismétlődő resolver-hozzáférést az N+1 elkerülésére.",
+              "Query depth, complexity, time és result-size limitekkel védd a servert."
+            ],
+            "commonMistakes": [
+              "Azt feltételezni, hogy egy GraphQL request egy database queryt jelent.",
+              "Az authorizationt csak a UI-ban vagy a top-level resolverben elhelyezni.",
+              "Korlátlan query complexityt engedni monitoring nélkül."
+            ],
+            "keyTerms": [
+              {
+                "term": "schema",
+                "definition": "a GraphQL field-eket és operationöket leíró typed contract"
+              },
+              {
+                "term": "resolver",
+                "definition": "az a function, amely előállítja egy GraphQL field értékét"
+              },
+              {
+                "term": "N+1 problem",
+                "definition": "egy kezdő query után minden visszaadott elemhez külön további query fut"
+              },
+              {
+                "term": "DataLoader",
+                "definition": "request-scoped pattern, amely batch-eli és deduplikálja a data access műveleteket"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_database_transactions",
+      "name": "Database Transactions and Isolation",
+      "description": "A database transaction groups related reads and writes into one atomic unit, while isolation controls what concurrent transactions can observe.",
+      "category": "database",
+      "relatedTopicIds": [
+        "transactions",
+        "reliability"
+      ],
+      "studyContent": {
+        "mentalModel": "A transaction makes a set of database changes succeed together or fail together, and its isolation level defines which concurrent anomalies are allowed.",
+        "problem": "Without the correct boundary, partial updates leave inconsistent business state. With weak concurrency control, two requests can overwrite each other or both act on a condition that was true only before either committed. Very large transactions also hold locks and connections too long.",
+        "example": "Two workers try to reserve the last seat. Each transaction checks availability and updates the row. A row lock or atomic conditional update ensures only one commit succeeds, while the losing request receives a conflict instead of overselling.",
+        "howItWorks": [
+          "Start the transaction around the smallest set of database operations that must be atomic.",
+          "Use constraints, locks, or optimistic version checks to protect concurrent business rules.",
+          "Choose an isolation level based on the anomalies the use case cannot tolerate.",
+          "Commit quickly and handle deadlocks or serialization failures as retryable transaction outcomes."
+        ],
+        "commonMistakes": [
+          "Keeping a transaction open while calling slow external services.",
+          "Assuming application-level checks alone prevent concurrent races.",
+          "Retrying an entire business operation after a transaction error without checking side effects."
+        ],
+        "keyTerms": [
+          {
+            "term": "atomicity",
+            "definition": "all changes in the transaction commit together or none commit"
+          },
+          {
+            "term": "isolation level",
+            "definition": "the rule controlling what concurrent transactions can observe"
+          },
+          {
+            "term": "optimistic locking",
+            "definition": "detecting a concurrent update with a version value instead of locking first"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Database transactionök és isolation",
+          "description": "A database transaction összetartozó read és write műveleteket fog össze egy atomic egységbe, az isolation pedig szabályozza, mit láthatnak egymásból a concurrent transactionök.",
+          "studyContent": {
+            "mentalModel": "A transaction biztosítja, hogy egy database-változássorozat együtt sikerüljön vagy együtt bukjon el, az isolation level pedig meghatározza, milyen concurrent anomáliák engedettek.",
+            "problem": "Helytelen boundary esetén a részleges update inkonzisztens business state-et hagy. Gyenge concurrency control mellett két request felülírhatja egymást, vagy mindkettő ugyanarra a már elavult feltételre reagálhat. A túl nagy transaction túl sokáig tart lockot és connectiont.",
+            "example": "Két worker az utolsó helyet próbálja lefoglalni. Mindkét transaction ellenőrzi az elérhetőséget és update-eli a sort. Row lock vagy atomic conditional update biztosítja, hogy csak az egyik commit sikerüljön, a másik pedig conflictot kapjon.",
+            "howItWorks": [
+              "A transaction a lehető legkisebb, de üzletileg atomic database műveletsor köré kerüljön.",
+              "Constraint, lock vagy optimistic version check védje a concurrent business rule-t.",
+              "Az isolation levelt azok alapján az anomáliák alapján válaszd, amelyeket a use case nem tolerál.",
+              "Gyorsan commitolj, a deadlockot vagy serialization failure-t pedig retryolható transaction outcome-ként kezeld."
+            ],
+            "commonMistakes": [
+              "Transactiont nyitva tartani lassú external service hívása közben.",
+              "Azt feltételezni, hogy az application-level check önmagában megakadályozza a race conditiont.",
+              "Transaction error után az egész business operationt vakon retryolni a side effectek ellenőrzése nélkül."
+            ],
+            "keyTerms": [
+              {
+                "term": "atomicity",
+                "definition": "a transaction minden változása együtt commitol, vagy egyik sem"
+              },
+              {
+                "term": "isolation level",
+                "definition": "az a szabály, amely meghatározza, mit láthatnak a concurrent transactionök"
+              },
+              {
+                "term": "optimistic locking",
+                "definition": "concurrent update észlelése version értékkel előzetes lock helyett"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_sql_query_performance",
+      "name": "SQL Query Performance and Indexes",
+      "description": "SQL performance work starts from the actual query plan and workload, then changes indexes, query shape, or data access based on measured bottlenecks.",
+      "category": "database",
+      "relatedTopicIds": [
+        "indexes",
+        "observability"
+      ],
+      "studyContent": {
+        "mentalModel": "An index is an extra data structure that helps the database find and order rows without scanning the whole table, but it adds storage and write cost.",
+        "problem": "Guessing at indexes can create duplicates that are never used, slow every write, and still leave the real query bottleneck untouched. A slow endpoint may also be caused by too many queries, poor selectivity, large result sets, lock waits, or connection-pool pressure.",
+        "example": "A list endpoint filters by tenant_id and status, orders by created_at, and returns 50 rows. The plan shows a full scan. A composite index beginning with tenant_id and status and continuing with created_at lets the database filter and order far less data.",
+        "howItWorks": [
+          "Capture the exact slow query, parameters, frequency, and end-to-end timing.",
+          "Read the execution plan to identify scans, estimates, joins, sorts, and row counts.",
+          "Design the smallest useful index or query change for the real access pattern.",
+          "Re-measure reads and writes under realistic data volume before keeping the change."
+        ],
+        "commonMistakes": [
+          "Adding an index to every filtered column independently.",
+          "Optimizing a query without its real parameters and production-like data distribution.",
+          "Ignoring N+1 calls, connection waits, or result serialization outside the database."
+        ],
+        "keyTerms": [
+          {
+            "term": "execution plan",
+            "definition": "the database strategy for scanning, joining, sorting, and returning rows"
+          },
+          {
+            "term": "selectivity",
+            "definition": "how strongly a condition narrows the number of matching rows"
+          },
+          {
+            "term": "composite index",
+            "definition": "one index built from several columns in a defined order"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "SQL query performance és indexek",
+          "description": "Az SQL performance javítása a valódi query planből és workloadból indul ki, majd mért bottleneck alapján változtat indexen, query shape-en vagy data accessen.",
+          "studyContent": {
+            "mentalModel": "Az index egy kiegészítő adatstruktúra, amely segít a database-nek sorokat megtalálni vagy rendezni full table scan nélkül, de storage- és write-költsége van.",
+            "problem": "A találomra hozzáadott indexek feleslegesen duplikálódhatnak, lassíthatnak minden write-ot, és a valódi query bottlenecket sem oldják meg. Egy lassú endpoint oka lehet túl sok query, gyenge selectivity, nagy result set, lock wait vagy connection-pool pressure is.",
+            "example": "Egy list endpoint tenant_id és status alapján filterez, created_at szerint rendez, és 50 sort ad vissza. A plan full scant mutat. Egy tenant_id, status, created_at sorrendű composite index jóval kevesebb adatból tud szűrni és rendezni.",
+            "howItWorks": [
+              "Rögzítsd a pontos lassú queryt, paramétereket, gyakoriságot és end-to-end timingot.",
+              "Olvasd el az execution plant: scanek, estimate-ek, joinok, sortok és row countok.",
+              "A valós access patternhez tervezz minimális, hasznos indexet vagy query-módosítást.",
+              "Production-szerű adatméret és workload mellett mérd újra a read és write hatást."
+            ],
+            "commonMistakes": [
+              "Minden filterezett oszlopra külön indexet létrehozni.",
+              "Valós paraméterek és production-szerű adatdistribution nélkül optimalizálni.",
+              "A database-en kívüli N+1 hívásokat, connection waitet vagy serializationt figyelmen kívül hagyni."
+            ],
+            "keyTerms": [
+              {
+                "term": "execution plan",
+                "definition": "a database stratégiája a scan, join, sort és row-return műveletekre"
+              },
+              {
+                "term": "selectivity",
+                "definition": "annak mértéke, hogy egy feltétel mennyire csökkenti a találatok számát"
+              },
+              {
+                "term": "composite index",
+                "definition": "több oszlopból, meghatározott sorrendben épülő index"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_nosql_selection",
+      "name": "Choosing MongoDB, Redis, or a Relational Database",
+      "description": "Database choice should follow the data model, access patterns, consistency needs, lifecycle, and operational constraints instead of a simple SQL-versus-NoSQL label.",
+      "category": "database",
+      "relatedTopicIds": [
+        "sql",
+        "nosql",
+        "transactions"
+      ],
+      "studyContent": {
+        "mentalModel": "Relational databases fit strongly related data and transactional rules, MongoDB fits document-shaped aggregates with flexible structure, and Redis fits fast temporary or derived data kept by key.",
+        "problem": "Choosing by popularity can force joins into application code, weaken business constraints, or store durable source-of-truth data in a system designed mainly for speed. Different stores also create backup, security, monitoring, and consistency work.",
+        "example": "An order system stores orders, payments, and inventory in PostgreSQL because they need constraints and transactions. Product catalog documents with varying attributes may fit MongoDB. Short-lived session data and rate-limit counters fit Redis.",
+        "howItWorks": [
+          "Describe the main read and write patterns before choosing a store.",
+          "Identify which relationships, constraints, and transactions must be enforced atomically.",
+          "Decide whether the data is durable source of truth, a document aggregate, or temporary derived state.",
+          "Include operational maturity, backup, scaling, and failure recovery in the decision."
+        ],
+        "commonMistakes": [
+          "Calling MongoDB schemaless; applications still depend on document shape and migration rules.",
+          "Using Redis as the only durable store without understanding persistence and recovery trade-offs.",
+          "Introducing several databases before one database has a proven limitation."
+        ],
+        "keyTerms": [
+          {
+            "term": "access pattern",
+            "definition": "the way the application reads, writes, filters, and updates data"
+          },
+          {
+            "term": "aggregate",
+            "definition": "a group of related data changed together as one business unit"
+          },
+          {
+            "term": "source of truth",
+            "definition": "the authoritative durable version of data"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "MongoDB, Redis vagy relational database választása",
+          "description": "A database-választást a data model, access pattern, consistency igény, életciklus és üzemeltetési korlátok határozzák meg, nem egy egyszerű SQL-versus-NoSQL címke.",
+          "studyContent": {
+            "mentalModel": "A relational database jól illik erősen kapcsolódó adatokhoz és transactional rule-okhoz, a MongoDB dokumentum alakú aggregate-ekhez, a Redis pedig gyors, kulcs alapján elért ideiglenes vagy származtatott adathoz.",
+            "problem": "Népszerűség alapján választva a joinok az application code-ba kerülhetnek, gyengülhetnek a business constraint-ek, vagy tartós source-of-truth adat kerülhet főként sebességre tervezett rendszerbe. Minden új store külön backup-, security- és monitoring-feladat.",
+            "example": "Egy order rendszer PostgreSQL-ben tárol ordert, paymentet és inventoryt, mert constraint és transaction kell. Változó attribútumú product catalog dokumentumok illhetnek MongoDB-be. Rövid életű session és rate-limit counter illik Redisbe.",
+            "howItWorks": [
+              "A store választása előtt írd le a fő read és write patternöket.",
+              "Azonosítsd, mely kapcsolatokat, constraint-eket és transactionöket kell atomic módon érvényesíteni.",
+              "Döntsd el, hogy durable source of truth, document aggregate vagy ideiglenes derived state az adat.",
+              "Vedd figyelembe az üzemeltetési érettséget, backupot, scalinget és failure recoveryt."
+            ],
+            "commonMistakes": [
+              "A MongoDB-t schemalessnek nevezni; az application továbbra is document shape-re és migration rule-okra épül.",
+              "A Redist egyetlen durable store-ként használni a persistence és recovery trade-offok megértése nélkül.",
+              "Több database-t bevezetni, mielőtt egyetlen database bizonyított korlátba ütközött volna."
+            ],
+            "keyTerms": [
+              {
+                "term": "access pattern",
+                "definition": "ahogyan az application adatot olvas, ír, filterez és módosít"
+              },
+              {
+                "term": "aggregate",
+                "definition": "összetartozó adatok csoportja, amely egy business egységként változik"
+              },
+              {
+                "term": "source of truth",
+                "definition": "az adat hiteles, tartós változata"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_redis_patterns",
+      "name": "Redis Caching and Coordination Patterns",
+      "description": "Redis provides fast in-memory key-based operations that are useful for caching, counters, sessions, pub/sub, and short-lived coordination when their consistency limits are understood.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "caching",
+        "reliability"
+      ],
+      "studyContent": {
+        "mentalModel": "Redis is a fast shared data structure server, but each use needs explicit rules for expiry, invalidation, durability, key ownership, and failure behaviour.",
+        "problem": "A cache can return stale data, a hot key can overload one shard, and a missing expiry can turn temporary state into unbounded memory. Coordination code can also become incorrect if it assumes a single command sequence is atomic when it is not.",
+        "example": "A product endpoint uses cache-aside. It reads Redis first, loads PostgreSQL on a miss, stores the result with a TTL, and deletes the cache key after a successful product update. Metrics track hit rate, stale reports, and evictions.",
+        "howItWorks": [
+          "Choose a Redis pattern based on whether the data is cached, temporary, or authoritative.",
+          "Define TTL, invalidation, key naming, maximum size, and behaviour on Redis failure.",
+          "Use atomic commands or scripts when several steps must act as one Redis operation.",
+          "Measure hit rate, latency, evictions, memory, and hot-key distribution."
+        ],
+        "commonMistakes": [
+          "Treating cache invalidation as an implementation detail with no business consequence.",
+          "Allowing permanent keys for user-controlled values without a bound.",
+          "Assuming Redis pub/sub stores messages for disconnected subscribers."
+        ],
+        "keyTerms": [
+          {
+            "term": "cache-aside",
+            "definition": "the application reads the cache first and loads the database on a miss"
+          },
+          {
+            "term": "TTL",
+            "definition": "the time after which a Redis key expires automatically"
+          },
+          {
+            "term": "hot key",
+            "definition": "one key receiving enough traffic to become a bottleneck"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Redis caching és koordinációs patternök",
+          "description": "A Redis gyors, in-memory, key-alapú műveleteket ad cachinghez, counterekhez, sessionökhöz, pub/subhoz és rövid életű koordinációhoz, ha a consistency korlátai ismertek.",
+          "studyContent": {
+            "mentalModel": "A Redis gyors, megosztott data-structure server, de minden use case-hez explicit expiry, invalidation, durability, key ownership és failure behaviour kell.",
+            "problem": "A cache stale adatot adhat, egy hot key egy shardot túlterhelhet, hiányzó expiry pedig a temporary state-et korlátlan memóriává változtathatja. A koordináció hibás lehet, ha több command sorozatát atomicnak feltételezzük, pedig nem az.",
+            "example": "Egy product endpoint cache-aside pattern-t használ. Először Redisből olvas, miss esetén PostgreSQL-ből tölt, TTL-lel cache-el, sikeres product update után pedig törli a cache keyt. Méri a hit rate-et, stale reportokat és evictionöket.",
+            "howItWorks": [
+              "A Redis patternt az alapján válaszd, hogy cached, temporary vagy authoritative adatról van-e szó.",
+              "Definiáld a TTL-t, invalidationt, key naminget, maximum size-ot és a Redis failure esetén követett viselkedést.",
+              "Atomic commandot vagy scriptet használj, ha több lépésnek egyetlen Redis operationként kell viselkednie.",
+              "Mérd a hit rate-et, latencyt, evictionöket, memoryt és hot-key distributiont."
+            ],
+            "commonMistakes": [
+              "A cache invalidationt üzleti következmény nélküli implementációs részletnek tekinteni.",
+              "User-controlled értékekhez korlátlan, lejárat nélküli keyket engedni.",
+              "Azt feltételezni, hogy a Redis pub/sub megőrzi az üzenetet a lekapcsolt subscribereknek."
+            ],
+            "keyTerms": [
+              {
+                "term": "cache-aside",
+                "definition": "az application először a cache-ből olvas, miss esetén a database-ből tölt"
+              },
+              {
+                "term": "TTL",
+                "definition": "az az idő, amely után egy Redis key automatikusan lejár"
+              },
+              {
+                "term": "hot key",
+                "definition": "olyan key, amely akkora trafficet kap, hogy bottleneckké válik"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "fg_rest_method_semantics_001",
+      "title": "Choosing HTTP methods and status codes",
+      "prompt": "Design create, read, full update, partial update, and delete operations for an order resource. Which HTTP methods and key status codes would you use, and why?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "fg_rest_api_contracts"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Map operations to method semantics, outcomes, and retry behaviour.",
+      "expectedPoints": [
+        {
+          "id": "fg_rm_methods",
+          "label": "Uses method semantics",
+          "description": "Maps create to POST, read to GET, full replacement to PUT, partial change to PATCH, and removal to DELETE.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "post create",
+            "get read",
+            "put replace",
+            "patch partial",
+            "delete resource"
+          ]
+        },
+        {
+          "id": "fg_rm_codes",
+          "label": "Uses meaningful status codes",
+          "description": "Uses outcomes such as 201, 204, 400, 404, 409, and 412 according to the contract.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "201 created",
+            "204 no content",
+            "400 bad request",
+            "404 not found",
+            "409 conflict",
+            "412 precondition"
+          ]
+        },
+        {
+          "id": "fg_rm_retry",
+          "label": "Discusses idempotency and retries",
+          "description": "Explains which methods are intended to be idempotent and how create retries need an idempotency mechanism.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "idempotent method",
+            "safe retry",
+            "idempotency key",
+            "duplicate create",
+            "put idempotent"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_rm_etag_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would ETag and If-Match help prevent lost updates?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "HTTP methodok és status code-ok választása",
+          "prompt": "Tervezz create, read, full update, partial update és delete műveleteket egy order resource-hoz. Mely HTTP methodokat és fontos status code-okat használnád, és miért?",
+          "answerStructureHint": "Kapcsold össze a műveleteket a method jelentésével, outcome-mal és retry viselkedéssel.",
+          "expectedPoints": {
+            "fg_rm_methods": {
+              "label": "A method szemantikáját használja",
+              "description": "A create-ot POST-hoz, readet GET-hez, teljes cserét PUT-hoz, részleges módosítást PATCH-hez, törlést DELETE-hez rendeli."
+            },
+            "fg_rm_codes": {
+              "label": "Jelentéssel bíró status code-okat használ",
+              "description": "A contract szerint használ például 201, 204, 400, 404, 409 és 412 kódot."
+            },
+            "fg_rm_retry": {
+              "label": "Tárgyalja az idempotencyt és retryt",
+              "description": "Elmagyarázza, mely methodok tervezetten idempotensek, és hogy create retryhoz idempotency mechanizmus kell."
+            }
+          },
+          "followUps": {
+            "fg_rm_etag_followup": "Hogyan segít az ETag és az If-Match a lost update megelőzésében?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_rest_change_review_002",
+      "title": "Reviewing a breaking API change",
+      "prompt": "A team wants to rename a response field, make an optional request field required, and add a new enum value. Which changes can break clients, and how would you release them safely?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "fg_rest_api_contracts"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Assess producer and consumer compatibility, then propose an evolution plan.",
+      "expectedPoints": [
+        {
+          "id": "fg_rc_breaks",
+          "label": "Identifies obvious breaking changes",
+          "description": "Treats field removal or rename and optional-to-required input as breaking for existing clients.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "field rename",
+            "field removal",
+            "required field",
+            "breaking change",
+            "existing clients"
+          ]
+        },
+        {
+          "id": "fg_rc_enum",
+          "label": "Treats enum expansion carefully",
+          "description": "Explains that adding an enum value can break clients that assume the set is closed or use exhaustive matching.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "new enum value",
+            "exhaustive switch",
+            "unknown value",
+            "closed set",
+            "client compatibility"
+          ]
+        },
+        {
+          "id": "fg_rc_rollout",
+          "label": "Proposes compatible rollout",
+          "description": "Uses additive changes, deprecation, dual fields or versioning, telemetry, and a migration window.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "additive change",
+            "deprecation period",
+            "dual fields",
+            "api versioning",
+            "migration window"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_rc_contract_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What consumer-driven contract test would you add for this change?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Breaking API change review",
+          "prompt": "A csapat át akar nevezni egy response fieldet, egy optional request fieldet kötelezővé tenne, és új enum value-t adna hozzá. Melyik törheti a klienseket, és hogyan release-elnéd biztonságosan?",
+          "answerStructureHint": "Értékeld a producer- és consumer-kompatibilitást, majd adj evolution plant.",
+          "expectedPoints": {
+            "fg_rc_breaks": {
+              "label": "Felismeri a nyilvánvaló breaking change-eket",
+              "description": "A field eltávolítását vagy átnevezését és az optional-to-required inputot breakingnek tekinti."
+            },
+            "fg_rc_enum": {
+              "label": "Óvatosan kezeli az enum bővítését",
+              "description": "Elmagyarázza, hogy új enum value törheti a closed setet feltételező vagy exhaustive matchinget használó klienst."
+            },
+            "fg_rc_rollout": {
+              "label": "Kompatibilis rolloutot javasol",
+              "description": "Additive change-et, deprecationt, dual fieldet vagy versioninget, telemetryt és migration window-t használ."
+            }
+          },
+          "followUps": {
+            "fg_rc_contract_followup": "Milyen consumer-driven contract testet adnál ehhez a változáshoz?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_graphql_rest_001",
+      "title": "REST or GraphQL for a new client?",
+      "prompt": "A mobile client needs different combinations of data on many screens. When would GraphQL be a better fit than REST, and what new server-side risks would you accept?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_graphql_backend"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare client flexibility, contracts, caching, performance, and operational safeguards.",
+      "expectedPoints": [
+        {
+          "id": "fg_gr_fit",
+          "label": "Explains GraphQL fit",
+          "description": "Highlights flexible field selection and aggregation across a typed graph for several clients.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "client selects fields",
+            "typed schema",
+            "multiple clients",
+            "avoid over fetching",
+            "aggregate data"
+          ]
+        },
+        {
+          "id": "fg_gr_cost",
+          "label": "Explains server-side costs",
+          "description": "Names N+1 access, query complexity, resolver authorization, and less direct HTTP caching.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "n plus one",
+            "query complexity",
+            "resolver authorization",
+            "http caching",
+            "expensive queries"
+          ]
+        },
+        {
+          "id": "fg_gr_choice",
+          "label": "Makes a contextual decision",
+          "description": "Avoids treating GraphQL as a universal replacement and keeps simple stable resources in REST when that is clearer.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "not universal",
+            "simple rest endpoint",
+            "context dependent",
+            "operational maturity",
+            "team experience"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_gr_persist_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How can persisted queries reduce security and operational risk?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "REST vagy GraphQL egy új klienshez?",
+          "prompt": "A mobile kliens sok képernyőn különböző adatkombinációkat igényel. Mikor lenne jobb választás a GraphQL, mint a REST, és milyen új server-side kockázatokat vállalnál?",
+          "answerStructureHint": "Hasonlítsd össze a kliens rugalmasságát, contractot, cachinget, performance-t és operational safeguardokat.",
+          "expectedPoints": {
+            "fg_gr_fit": {
+              "label": "Elmagyarázza a GraphQL megfelelő use case-ét",
+              "description": "Kiemeli a rugalmas field selectiont és typed graphon át történő aggregációt több kliens számára."
+            },
+            "fg_gr_cost": {
+              "label": "Elmagyarázza a server-side költségeket",
+              "description": "Megnevezi az N+1-et, query complexityt, resolver authorizationt és a kevésbé közvetlen HTTP cachinget."
+            },
+            "fg_gr_choice": {
+              "label": "Kontextus alapján dönt",
+              "description": "Nem tekinti a GraphQL-t univerzális replacementnek, és az egyszerű stabil resource-okat REST-ben tartja, ha az világosabb."
+            }
+          },
+          "followUps": {
+            "fg_gr_persist_followup": "Hogyan csökkenthetik a persisted queryk a security és operational risket?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_graphql_n1_002",
+      "title": "Finding an N+1 problem in GraphQL",
+      "prompt": "A GraphQL query returns 100 orders and resolves the customer for each order. Production traces show 101 database calls. How would you fix and verify this?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "fg_graphql_backend"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Identify the resolver pattern, batch safely, preserve authorization, and measure.",
+      "expectedPoints": [
+        {
+          "id": "fg_gn_identify",
+          "label": "Identifies the N+1 pattern",
+          "description": "Explains that one parent query triggers one additional customer query for every order.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "n plus one",
+            "one query per row",
+            "resolver per order",
+            "101 queries",
+            "repeated lookup"
+          ]
+        },
+        {
+          "id": "fg_gn_batch",
+          "label": "Batches request-scoped access",
+          "description": "Uses DataLoader or an equivalent batch query keyed by customer id, with request-scoped caching.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "data loader",
+            "batch query",
+            "customer ids",
+            "request scoped cache",
+            "deduplicate ids"
+          ]
+        },
+        {
+          "id": "fg_gn_verify",
+          "label": "Verifies behaviour and security",
+          "description": "Confirms authorization is still applied and traces show a bounded query count and improved latency.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "preserve authorization",
+            "trace query count",
+            "latency improvement",
+            "bounded queries",
+            "load test"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_gn_cache_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why should the DataLoader cache normally live only for one request?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "N+1 probléma felismerése GraphQLban",
+          "prompt": "Egy GraphQL query 100 ordert ad vissza, és mindegyikhez resolve-olja a customert. A production trace 101 database hívást mutat. Hogyan javítanád és ellenőriznéd?",
+          "answerStructureHint": "Azonosítsd a resolver patternt, batch-elj biztonságosan, tartsd meg az authorizationt, majd mérj.",
+          "expectedPoints": {
+            "fg_gn_identify": {
+              "label": "Felismeri az N+1 patternt",
+              "description": "Elmagyarázza, hogy egy parent query után minden orderhez külön customer query fut."
+            },
+            "fg_gn_batch": {
+              "label": "Request-scoped módon batch-el",
+              "description": "DataLoadert vagy ekvivalens customer-id batch queryt használ request-scoped cache-sel."
+            },
+            "fg_gn_verify": {
+              "label": "Ellenőrzi a viselkedést és securityt",
+              "description": "Ellenőrzi, hogy az authorization megmarad, a trace pedig korlátozott query countot és jobb latencyt mutat."
+            }
+          },
+          "followUps": {
+            "fg_gn_cache_followup": "Miért csak egy request idejére érdemes általában DataLoader cache-t használni?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_tx_last_item_001",
+      "title": "Preventing double reservation",
+      "prompt": "Two requests try to reserve the final available item at the same time. How would you make the operation correct in PostgreSQL or SQL Server?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "fg_database_transactions"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define the invariant, database-enforced concurrency control, and conflict result.",
+      "expectedPoints": [
+        {
+          "id": "fg_tl_invariant",
+          "label": "States the business invariant",
+          "description": "Defines that available quantity must never fall below zero and only one reservation may consume the last unit.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "never below zero",
+            "only one reservation",
+            "business invariant",
+            "last item",
+            "prevent oversell"
+          ]
+        },
+        {
+          "id": "fg_tl_db",
+          "label": "Enforces concurrency in the database",
+          "description": "Uses an atomic conditional update, row lock, serializable transaction, or optimistic version check.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "conditional update",
+            "row lock",
+            "serializable transaction",
+            "optimistic locking",
+            "version column"
+          ]
+        },
+        {
+          "id": "fg_tl_conflict",
+          "label": "Returns a controlled conflict",
+          "description": "Treats the losing transaction as a normal conflict, rolls back cleanly, and returns a stable response.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "rollback transaction",
+            "409 conflict",
+            "zero rows updated",
+            "normal conflict",
+            "stable response"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_tl_deadlock_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is a database deadlock safe to retry?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Dupla foglalás megelőzése",
+          "prompt": "Két request egyszerre próbálja lefoglalni az utolsó elérhető elemet. Hogyan tennéd helyessé a műveletet PostgreSQL-ben vagy SQL Serverben?",
+          "answerStructureHint": "Definiáld az invariantet, database által kikényszerített concurrency controlt és a conflict eredményt.",
+          "expectedPoints": {
+            "fg_tl_invariant": {
+              "label": "Kimondja a business invariantet",
+              "description": "Definiálja, hogy az available quantity nem lehet negatív, és az utolsó egységet csak egy reservation fogyaszthatja el."
+            },
+            "fg_tl_db": {
+              "label": "A database-ben kényszeríti ki a concurrency controlt",
+              "description": "Atomic conditional update-et, row lockot, serializable transactiont vagy optimistic version checket használ."
+            },
+            "fg_tl_conflict": {
+              "label": "Kontrollált conflictot ad vissza",
+              "description": "A vesztes transactiont normál conflictként kezeli, tisztán rollbackel, és stabil response-t ad."
+            }
+          },
+          "followUps": {
+            "fg_tl_deadlock_followup": "Mikor biztonságos egy database deadlockot retryolni?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_tx_external_call_002",
+      "title": "A transaction includes an external API call",
+      "prompt": "A code opens a database transaction, writes an order, calls a payment API, then commits. What problems can this cause and how would you redesign it?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "fg_database_transactions"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain long transactions, the dual-write problem, and a reliable coordination pattern.",
+      "expectedPoints": [
+        {
+          "id": "fg_te_locks",
+          "label": "Explains long-transaction cost",
+          "description": "Notes that the external call holds a connection and locks while latency and failure are outside database control.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "holds locks",
+            "holds connection",
+            "external latency",
+            "long transaction",
+            "database contention"
+          ]
+        },
+        {
+          "id": "fg_te_dual",
+          "label": "Identifies the dual-write problem",
+          "description": "Explains that payment and database commit cannot normally be one atomic transaction, so either side can succeed alone.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "dual write",
+            "not atomic",
+            "partial success",
+            "payment succeeded",
+            "commit failed"
+          ]
+        },
+        {
+          "id": "fg_te_pattern",
+          "label": "Proposes durable coordination",
+          "description": "Uses an order state machine with an outbox or durable job, idempotent payment calls, and compensation for failure.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "outbox pattern",
+            "durable job",
+            "idempotent payment",
+            "order state",
+            "compensation"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_te_exact_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why would a distributed transaction usually be a poor default here?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "A transaction external API hívást tartalmaz",
+          "prompt": "A kód database transactiont nyit, ordert ír, payment API-t hív, majd commitol. Milyen problémákat okozhat ez, és hogyan terveznéd át?",
+          "answerStructureHint": "Magyarázd el a hosszú transactiont, a dual-write problémát és egy megbízható koordinációs patternt.",
+          "expectedPoints": {
+            "fg_te_locks": {
+              "label": "Elmagyarázza a hosszú transaction költségét",
+              "description": "Kimondja, hogy az external call connectiont és lockot tart, miközben a latency és failure a database-en kívül van."
+            },
+            "fg_te_dual": {
+              "label": "Felismeri a dual-write problémát",
+              "description": "Elmagyarázza, hogy a payment és database commit általában nem lehet egy atomic transaction, ezért csak az egyik oldal is sikerülhet."
+            },
+            "fg_te_pattern": {
+              "label": "Durable coordinationt javasol",
+              "description": "Order state machine-t, outboxot vagy durable jobot, idempotent payment hívást és kompenzációt használ."
+            }
+          },
+          "followUps": {
+            "fg_te_exact_followup": "Miért rossz alapértelmezés itt általában a distributed transaction?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_sql_slow_endpoint_001",
+      "title": "Investigating a slow SQL endpoint",
+      "prompt": "A list endpoint becomes slow only for a few tenants with large data sets. How would you investigate the query and decide whether an index is the right fix?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "fg_sql_query_performance"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use real parameters, plans, data distribution, and end-to-end evidence.",
+      "expectedPoints": [
+        {
+          "id": "fg_sq_capture",
+          "label": "Captures the real slow case",
+          "description": "Collects the exact query, parameters, tenant data size, frequency, and timing breakdown.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "exact query",
+            "real parameters",
+            "tenant data size",
+            "timing breakdown",
+            "slow query log"
+          ]
+        },
+        {
+          "id": "fg_sq_plan",
+          "label": "Reads the execution plan",
+          "description": "Checks actual rows, estimates, scans, joins, sorts, and whether a candidate index matches the predicates and ordering.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "execution plan",
+            "actual rows",
+            "full scan",
+            "index scan",
+            "sort operation",
+            "row estimates"
+          ]
+        },
+        {
+          "id": "fg_sq_remeasure",
+          "label": "Measures the full trade-off",
+          "description": "Tests the index with realistic data and also measures write cost, storage, and other affected queries.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "realistic data",
+            "write overhead",
+            "index size",
+            "before after",
+            "regression test"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_sq_stats_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How can stale statistics make a good index look unused?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Lassú SQL endpoint vizsgálata",
+          "prompt": "Egy list endpoint csak néhány, nagy adatkészletű tenantnál lassú. Hogyan vizsgálnád a queryt, és hogyan döntenéd el, hogy index a megfelelő javítás?",
+          "answerStructureHint": "Használj valós paramétereket, query plant, data distributiont és end-to-end bizonyítékot.",
+          "expectedPoints": {
+            "fg_sq_capture": {
+              "label": "Rögzíti a valódi lassú esetet",
+              "description": "Összegyűjti a pontos queryt, paramétereket, tenant adatméretet, gyakoriságot és timing breakdown-t."
+            },
+            "fg_sq_plan": {
+              "label": "Elolvassa az execution plant",
+              "description": "Ellenőrzi az actual rowkat, estimate-eket, scaneket, joinokat, sortokat és hogy a jelölt index illik-e a predicate-ekhez és orderinghez."
+            },
+            "fg_sq_remeasure": {
+              "label": "Megméri a teljes trade-offot",
+              "description": "Valós adatokkal teszteli az indexet, és méri a write costot, storage-ot és más érintett queryket is."
+            }
+          },
+          "followUps": {
+            "fg_sq_stats_followup": "Hogyan okozhatja a stale statistics, hogy egy jó index használatlannak tűnik?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_sql_n1_pool_002",
+      "title": "N+1 queries or connection-pool exhaustion?",
+      "prompt": "An endpoint issues hundreds of short queries and times out under load. How would you separate database execution time from an N+1 problem and connection-pool waiting?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "fg_sql_query_performance"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Measure query count, execution, acquisition wait, and application serialization separately.",
+      "expectedPoints": [
+        {
+          "id": "fg_sn_trace",
+          "label": "Traces query count and timing",
+          "description": "Uses request traces to count queries and split connection wait, database execution, and application time.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "query count",
+            "connection wait",
+            "database time",
+            "request trace",
+            "timing breakdown"
+          ]
+        },
+        {
+          "id": "fg_sn_n1",
+          "label": "Recognizes N+1 access",
+          "description": "Looks for one parent query followed by repeated per-row queries and replaces it with a join, batch, or prefetch.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "n plus one",
+            "one query per row",
+            "batch query",
+            "join query",
+            "prefetch data"
+          ]
+        },
+        {
+          "id": "fg_sn_pool",
+          "label": "Treats the pool as capacity control",
+          "description": "Avoids blindly increasing the pool and instead aligns concurrency with database capacity after fixing excess queries.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "pool saturation",
+            "acquisition timeout",
+            "database capacity",
+            "bounded concurrency",
+            "do not just increase"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_sn_poolsize_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What factors would you use to choose a connection-pool size?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "N+1 query vagy connection-pool exhaustion?",
+          "prompt": "Egy endpoint több száz rövid queryt indít, és load alatt timeoutol. Hogyan választanád szét a database execution time-ot, az N+1 problémát és a connection-pool várakozást?",
+          "answerStructureHint": "Külön mérd a query countot, executiont, connection acquisition waitet és application serializationt.",
+          "expectedPoints": {
+            "fg_sn_trace": {
+              "label": "Trace-eli a query countot és timingot",
+              "description": "Request trace segítségével számolja a queryket és külön méri a connection waitet, database executiont és application time-ot."
+            },
+            "fg_sn_n1": {
+              "label": "Felismeri az N+1 data accesst",
+              "description": "Egy parent query után soronként ismétlődő queryket keres, majd joinnal, batch-csel vagy prefetch-csel váltja ki."
+            },
+            "fg_sn_pool": {
+              "label": "Capacity controlként kezeli a poolt",
+              "description": "Nem növeli vakon a poolt, hanem a felesleges queryk javítása után a concurrencyt a database kapacitásához igazítja."
+            }
+          },
+          "followUps": {
+            "fg_sn_poolsize_followup": "Milyen tényezők alapján választanál connection-pool méretet?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_db_choice_001",
+      "title": "Choosing storage for three workloads",
+      "prompt": "Choose a primary store for transactional orders, a flexible product catalog, and short-lived session plus rate-limit data. Explain the trade-offs rather than only naming technologies.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_nosql_selection"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use relationships, consistency, access patterns, durability, and operations.",
+      "expectedPoints": [
+        {
+          "id": "fg_dc_orders",
+          "label": "Chooses relational storage for orders",
+          "description": "Connects orders to transactions, constraints, relationships, and durable source-of-truth requirements.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "relational database",
+            "transactions",
+            "foreign keys",
+            "business constraints",
+            "source of truth"
+          ]
+        },
+        {
+          "id": "fg_dc_catalog",
+          "label": "Explains document-store fit",
+          "description": "Uses MongoDB when product data is naturally read as documents with varying attributes and aggregate-level updates.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "document store",
+            "flexible attributes",
+            "product document",
+            "aggregate update",
+            "mongo db"
+          ]
+        },
+        {
+          "id": "fg_dc_redis",
+          "label": "Explains Redis fit and limits",
+          "description": "Uses Redis for fast temporary key-based state with TTL, while avoiding unsupported durability assumptions.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "redis ttl",
+            "session data",
+            "rate limit counter",
+            "temporary state",
+            "durability tradeoff"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_dc_poly_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What operational cost does adding all three stores create?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Tároló választása három workloadhoz",
+          "prompt": "Válassz primary store-t transactional orderekhez, rugalmas product cataloghoz, valamint rövid életű session és rate-limit adathoz. Ne csak technológiát nevezz meg, hanem a trade-offokat is.",
+          "answerStructureHint": "Használd a relationship, consistency, access pattern, durability és operation szempontokat.",
+          "expectedPoints": {
+            "fg_dc_orders": {
+              "label": "Relational storage-ot választ orderekhez",
+              "description": "Az ordereket transactionökhöz, constraint-ekhez, relationship-ekhez és durable source-of-truth igényhez köti."
+            },
+            "fg_dc_catalog": {
+              "label": "Elmagyarázza a document-store use case-et",
+              "description": "MongoDB-t választ, amikor a product adat természetesen dokumentumként olvasható, változó attribútumokkal és aggregate-level update-tel."
+            },
+            "fg_dc_redis": {
+              "label": "Elmagyarázza a Redis use case-et és korlátait",
+              "description": "Redist használ gyors, temporary, key-based state-hez TTL-lel, de nem feltételez indokolatlan durabilityt."
+            }
+          },
+          "followUps": {
+            "fg_dc_poly_followup": "Milyen operational costot jelent mindhárom store bevezetése?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_db_mongo_model_002",
+      "title": "Reviewing a MongoDB data model",
+      "prompt": "A design embeds an unbounded event history inside each customer document. What risks do you see, and how would you remodel it?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "fg_nosql_selection"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss document growth, access patterns, atomic boundaries, and alternatives.",
+      "expectedPoints": [
+        {
+          "id": "fg_dm_growth",
+          "label": "Identifies unbounded document growth",
+          "description": "Notes document-size limits, growing update cost, large reads, and hot-document contention.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "unbounded array",
+            "document size",
+            "large document",
+            "update cost",
+            "hot document"
+          ]
+        },
+        {
+          "id": "fg_dm_pattern",
+          "label": "Returns to access patterns",
+          "description": "Asks how events are queried, ordered, retained, and updated instead of assuming all data belongs in one document.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "access pattern",
+            "query events",
+            "retention policy",
+            "pagination",
+            "read shape"
+          ]
+        },
+        {
+          "id": "fg_dm_model",
+          "label": "Proposes a bounded model",
+          "description": "Moves the history to a separate collection or bucketed documents while keeping only bounded summary data embedded.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "separate collection",
+            "bucket pattern",
+            "bounded array",
+            "summary fields",
+            "reference documents"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_dm_tx_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would embedding still be the better MongoDB model?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "MongoDB data model review",
+          "prompt": "Egy design korlátlan event historyt embedel minden customer dokumentumba. Milyen kockázatokat látsz, és hogyan modelleznéd át?",
+          "answerStructureHint": "Térj ki a document growth-ra, access patternre, atomic boundaryre és alternatívákra.",
+          "expectedPoints": {
+            "fg_dm_growth": {
+              "label": "Felismeri a korlátlan document growth problémát",
+              "description": "Megnevezi a document-size limitet, növekvő update costot, nagy readeket és hot-document contentiont."
+            },
+            "fg_dm_pattern": {
+              "label": "Visszatér az access patternekhez",
+              "description": "Megkérdezi, hogyan queryzik, rendezik, tartják meg és update-elik az eventeket, ahelyett hogy mindent egy dokumentumba tenne."
+            },
+            "fg_dm_model": {
+              "label": "Korlátozott modellt javasol",
+              "description": "A historyt külön collectionbe vagy bucketelt dokumentumokba mozgatja, és csak korlátozott summary adatot embedel."
+            }
+          },
+          "followUps": {
+            "fg_dm_tx_followup": "Mikor lenne mégis jobb az embedding MongoDB-ben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_redis_cache_001",
+      "title": "Designing cache-aside safely",
+      "prompt": "How would you add Redis cache-aside to a product endpoint while controlling stale data, stampedes, memory growth, and Redis outages?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "fg_redis_patterns"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover read/write flow, TTL, invalidation, overload protection, and fallback.",
+      "expectedPoints": [
+        {
+          "id": "fg_rc_flow",
+          "label": "Defines cache-aside flow",
+          "description": "Reads Redis first, loads the database on a miss, stores with TTL, and invalidates after successful writes.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "cache aside",
+            "cache miss",
+            "load database",
+            "set ttl",
+            "invalidate on write"
+          ]
+        },
+        {
+          "id": "fg_rc_stampede",
+          "label": "Controls stampede and memory",
+          "description": "Uses bounded keys, jittered TTL or single-flight loading, and monitors evictions and hot keys.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "cache stampede",
+            "ttl jitter",
+            "single flight",
+            "bounded keys",
+            "hot key"
+          ]
+        },
+        {
+          "id": "fg_rc_outage",
+          "label": "Degrades safely on Redis failure",
+          "description": "Treats Redis as optional for caching, uses short timeouts, falls back to the database within capacity, and avoids retry storms.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "redis timeout",
+            "database fallback",
+            "optional cache",
+            "retry storm",
+            "graceful degradation"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_rc_negative_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would negative caching be useful, and what risk does it add?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Cache-aside biztonságos tervezése",
+          "prompt": "Hogyan adnál Redis cache-aside megoldást egy product endpointhoz úgy, hogy kontrolláld a stale adatot, cache stampede-et, memory growth-ot és Redis outage-et?",
+          "answerStructureHint": "Térj ki a read/write flow-ra, TTL-re, invalidationre, overload protectionre és fallbackre.",
+          "expectedPoints": {
+            "fg_rc_flow": {
+              "label": "Definiálja a cache-aside flow-t",
+              "description": "Először Redisből olvas, miss esetén database-ből tölt, TTL-lel tárol, sikeres write után invalidál."
+            },
+            "fg_rc_stampede": {
+              "label": "Kontrollálja a stampede-et és memóriát",
+              "description": "Bounded keyeket, jittered TTL-t vagy single-flight loadingot használ, és figyeli az evictionöket, hot keyket."
+            },
+            "fg_rc_outage": {
+              "label": "Biztonságosan degradál Redis hiba esetén",
+              "description": "Caching esetén optional dependencyként kezeli a Redist, rövid timeoutot használ, kapacitáson belül database fallbacket ad, és kerüli a retry stormot."
+            }
+          },
+          "followUps": {
+            "fg_rc_negative_followup": "Mikor hasznos a negative caching, és milyen kockázatot ad hozzá?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_redis_atomic_002",
+      "title": "Atomic rate limiting in Redis",
+      "prompt": "A rate limiter increments a counter and then sets its TTL in a separate command. What race or failure can occur, and how would you make the operation atomic?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "fg_redis_patterns"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Identify the partial update, choose an atomic mechanism, and discuss expiry semantics.",
+      "expectedPoints": [
+        {
+          "id": "fg_ra_race",
+          "label": "Identifies the partial-operation risk",
+          "description": "Explains that a crash between increment and expiry can leave a permanent key or inconsistent window.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "crash between commands",
+            "missing expiry",
+            "permanent key",
+            "partial operation",
+            "race condition"
+          ]
+        },
+        {
+          "id": "fg_ra_atomic",
+          "label": "Uses an atomic Redis operation",
+          "description": "Uses a Lua script, transaction where suitable, or a single command pattern that performs the change atomically.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "lua script",
+            "atomic command",
+            "redis transaction",
+            "single operation",
+            "eval script"
+          ]
+        },
+        {
+          "id": "fg_ra_window",
+          "label": "Defines rate-limit semantics",
+          "description": "Clarifies fixed or sliding window behaviour, key granularity, clock assumptions, and response headers.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "fixed window",
+            "sliding window",
+            "key granularity",
+            "retry after",
+            "rate limit headers"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_ra_cluster_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What changes if the Redis deployment is clustered and the script touches several keys?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Atomic rate limiting Redisben",
+          "prompt": "Egy rate limiter külön commandban növeli a countert, majd beállítja a TTL-t. Milyen race vagy failure történhet, és hogyan tennéd atomic-ká a műveletet?",
+          "answerStructureHint": "Azonosítsd a partial update-et, válassz atomic mechanizmust, és tárgyald az expiry szemantikáját.",
+          "expectedPoints": {
+            "fg_ra_race": {
+              "label": "Felismeri a részleges művelet kockázatát",
+              "description": "Elmagyarázza, hogy increment és expiry között bekövetkező crash permanent keyt vagy inkonzisztens window-t hagyhat."
+            },
+            "fg_ra_atomic": {
+              "label": "Atomic Redis operationt használ",
+              "description": "Lua scriptet, megfelelő transactiont vagy single-command patternt használ az atomic változtatáshoz."
+            },
+            "fg_ra_window": {
+              "label": "Definiálja a rate-limit szemantikáját",
+              "description": "Tisztázza a fixed vagy sliding window viselkedést, key granularitást, clock feltételezést és response headereket."
+            }
+          },
+          "followUps": {
+            "fg_ra_cluster_followup": "Mi változik clustered Redis esetén, ha a script több keyt érint?"
+          }
+        }
+      }
+    }
+  ]
+}

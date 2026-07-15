@@ -1,0 +1,1742 @@
+{
+  "id": "felix_giorgetti_node_runtime",
+  "name": "Félix Giorgetti - Node.js Runtime and Production",
+  "description": "Interview preparation for Node.js runtime behaviour, concurrency, streams, performance diagnosis, CPU scaling, and production failure handling.",
+  "sources": [
+    "felix_giorgetti_experienced_nodejs_developer_job_description"
+  ],
+  "topics": [
+    {
+      "id": "fg_node_event_loop",
+      "name": "Node.js Event Loop and Non-blocking I/O",
+      "description": "The Node.js event loop coordinates JavaScript callbacks while the runtime delegates many I/O operations to the operating system or a worker pool.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "scalability",
+        "observability"
+      ],
+      "studyContent": {
+        "mentalModel": "The Node.js event loop lets one JavaScript thread manage many pending I/O operations by running short pieces of callback code one at a time.",
+        "problem": "A Node.js service can accept thousands of connections, but one long synchronous task blocks every request sharing that process. Latency rises even when CPU usage does not look fully saturated.",
+        "example": "An API starts a database query and continues serving other requests. When the database result is ready, its callback is queued. A synchronous JSON transformation taking two seconds would delay all queued callbacks.",
+        "howItWorks": [
+          "JavaScript starts an asynchronous operation and returns control instead of waiting.",
+          "The operating system or Node.js worker pool performs the waiting work.",
+          "When the result is ready, a callback is queued for a later event-loop turn.",
+          "The event loop runs the callback only after the current JavaScript work finishes."
+        ],
+        "commonMistakes": [
+          "Saying Node.js is fully single-threaded; JavaScript is usually single-threaded, but the runtime uses operating-system facilities and worker threads.",
+          "Assuming async syntax makes CPU-heavy JavaScript non-blocking.",
+          "Ignoring event-loop delay and looking only at average request time."
+        ],
+        "keyTerms": [
+          {
+            "term": "event loop",
+            "definition": "the scheduler that decides which ready JavaScript callback runs next"
+          },
+          {
+            "term": "non-blocking I/O",
+            "definition": "starting an I/O operation without keeping the JavaScript thread waiting"
+          },
+          {
+            "term": "event-loop delay",
+            "definition": "the time ready work waits because JavaScript is busy"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Node.js event loop és non-blocking I/O",
+          "description": "A Node.js event loop a JavaScript callbackok futását koordinálja, miközben a runtime sok I/O műveletet az operációs rendszerre vagy egy worker poolra bíz.",
+          "studyContent": {
+            "mentalModel": "A Node.js event loop lehetővé teszi, hogy egy JavaScript thread sok függőben lévő I/O műveletet kezeljen úgy, hogy egyszerre mindig csak egy rövid callbacket futtat.",
+            "problem": "Egy Node.js service több ezer kapcsolatot is fogadhat, de egy hosszú szinkron feladat blokkol minden requestet ugyanabban a processben. A latency akkor is megugrik, ha a CPU nem látszik teljesen terheltnek.",
+            "example": "Egy API elindít egy database queryt, majd közben más requesteket szolgál ki. Amikor az eredmény elkészül, a callback queue-ba kerül. Egy két másodperces szinkron JSON feldolgozás viszont minden várakozó callbacket késleltetne.",
+            "howItWorks": [
+              "A JavaScript elindít egy aszinkron műveletet, majd várakozás helyett visszaadja a vezérlést.",
+              "A várakozással járó munkát az operációs rendszer vagy a Node.js worker pool végzi.",
+              "Amikor az eredmény elkészül, egy callback bekerül a következő event-loop körök egyikébe.",
+              "Az event loop csak az aktuális JavaScript munka befejezése után futtatja a callbacket."
+            ],
+            "commonMistakes": [
+              "Azt mondani, hogy a Node.js teljesen single-threaded; a JavaScript általában az, de a runtime OS funkciókat és worker threadeket is használ.",
+              "Azt feltételezni, hogy az async szintaxis a CPU-heavy JavaScriptet is non-blockinggá teszi.",
+              "Csak az átlagos response time-ot figyelni, és az event-loop delayt figyelmen kívül hagyni."
+            ],
+            "keyTerms": [
+              {
+                "term": "event loop",
+                "definition": "az ütemező, amely eldönti, melyik futásra kész JavaScript callback következik"
+              },
+              {
+                "term": "non-blocking I/O",
+                "definition": "I/O művelet indítása anélkül, hogy a JavaScript thread várakozna rá"
+              },
+              {
+                "term": "event-loop delay",
+                "definition": "az idő, ameddig a futásra kész munka a foglalt JavaScript thread miatt vár"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_async_concurrency",
+      "name": "Async Concurrency in Node.js",
+      "description": "Async concurrency controls how many independent operations a Node.js service starts at once and how their results and failures are coordinated.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "retries",
+        "error_handling"
+      ],
+      "studyContent": {
+        "mentalModel": "Async concurrency means overlapping operations that spend most of their time waiting, while bounded concurrency limits how many are active at once.",
+        "problem": "Running independent calls sequentially wastes time, but starting thousands with Promise.all can exhaust sockets, database connections, memory, or a dependency rate limit. The correct level depends on the slowest shared resource.",
+        "example": "A service must enrich 1,000 records through an external API. It processes 20 records at a time, waits for that batch to settle, and then continues. This is much faster than one-by-one processing without creating 1,000 simultaneous calls.",
+        "howItWorks": [
+          "Identify which operations are independent and can overlap safely.",
+          "Choose a concurrency limit based on downstream capacity and local resources.",
+          "Collect failures explicitly and decide whether one failure should stop, retry, or only mark one item failed.",
+          "Measure throughput, latency, and rejection rates before increasing the limit."
+        ],
+        "commonMistakes": [
+          "Using await inside every loop even when operations are independent.",
+          "Using unbounded Promise.all for a large input list.",
+          "Confusing concurrency with parallel CPU execution."
+        ],
+        "keyTerms": [
+          {
+            "term": "bounded concurrency",
+            "definition": "a fixed maximum number of operations allowed to be active together"
+          },
+          {
+            "term": "Promise.all",
+            "definition": "a promise that succeeds when all inputs succeed and rejects when the first input rejects"
+          },
+          {
+            "term": "Promise.allSettled",
+            "definition": "a promise that reports every input result without failing fast"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Aszinkron concurrency Node.js-ben",
+          "description": "Az async concurrency azt szabályozza, hogy egy Node.js service hány független műveletet indít egyszerre, és hogyan kezeli azok eredményeit és hibáit.",
+          "studyContent": {
+            "mentalModel": "Az async concurrency egymással átfedésben futó, főként várakozó műveleteket jelent; a bounded concurrency pedig korlátozza, hogy egyszerre hány lehessen aktív.",
+            "problem": "A független hívások soros futtatása lassú, de több ezer művelet Promise.all-lal történő indítása kimerítheti a socketeket, database connectionöket, memóriát vagy egy dependency rate limitjét. A jó érték a legszűkebb közös erőforrástól függ.",
+            "example": "Egy service 1000 rekordot egészít ki egy külső API-n keresztül. Egyszerre 20 rekordot dolgoz fel, megvárja a batch eredményét, majd folytatja. Ez gyorsabb a teljesen soros megoldásnál, de nem indít 1000 párhuzamos hívást.",
+            "howItWorks": [
+              "Azonosítsd, mely műveletek függetlenek és futhatnak biztonságosan átfedésben.",
+              "Válassz concurrency limitet a downstream kapacitása és a helyi erőforrások alapján.",
+              "Kezeld külön a hibákat, és döntsd el, hogy egy hiba leállítson, retryt kapjon, vagy csak egy elemet jelöljön sikertelennek.",
+              "A limit emelése előtt mérd a throughputot, latencyt és rejection rate-et."
+            ],
+            "commonMistakes": [
+              "Minden loopban awaitet használni akkor is, amikor a műveletek függetlenek.",
+              "Nagy input listára korlátlan Promise.all-t indítani.",
+              "Összekeverni a concurrencyt a CPU-munka valódi párhuzamos futásával."
+            ],
+            "keyTerms": [
+              {
+                "term": "bounded concurrency",
+                "definition": "előre meghatározott felső korlát az egyszerre aktív műveletek számára"
+              },
+              {
+                "term": "Promise.all",
+                "definition": "akkor teljesül, ha minden input sikeres, és az első hibánál rejectel"
+              },
+              {
+                "term": "Promise.allSettled",
+                "definition": "minden input eredményét visszaadja anélkül, hogy az első hibánál leállna"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_node_streams_backpressure",
+      "name": "Node.js Streams and Backpressure",
+      "description": "Node.js streams process data in chunks, while backpressure prevents a fast producer from overwhelming a slower consumer.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "scalability"
+      ],
+      "studyContent": {
+        "mentalModel": "A stream moves data piece by piece instead of loading everything into memory, and backpressure tells the producer when the consumer needs it to pause.",
+        "problem": "Without streaming, a large file or response can consume excessive memory. Without backpressure, queued chunks grow faster than they are processed, so memory rises and latency becomes unstable.",
+        "example": "An API uploads a multi-gigabyte file to object storage. It pipes the request stream into the storage client. When the destination cannot accept more data, the source pauses and resumes only after the destination drains.",
+        "howItWorks": [
+          "The readable side produces chunks only as they are requested or accepted.",
+          "The writable side returns a signal when its internal buffer is full.",
+          "The producer pauses until a drain signal shows that more data can be accepted.",
+          "Pipeline-style composition forwards errors and closes all connected streams."
+        ],
+        "commonMistakes": [
+          "Reading the entire payload into a Buffer before processing it.",
+          "Ignoring the return value of writable.write and continuing to produce data.",
+          "Handling stream errors on only one stage of a multi-stage pipeline."
+        ],
+        "keyTerms": [
+          {
+            "term": "chunk",
+            "definition": "one portion of data flowing through a stream"
+          },
+          {
+            "term": "backpressure",
+            "definition": "a signal from a busy consumer asking the producer to slow down"
+          },
+          {
+            "term": "drain",
+            "definition": "the event that says a writable stream can accept more data again"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Node.js streamek és backpressure",
+          "description": "A Node.js streamek chunkokban dolgozzák fel az adatot, a backpressure pedig megakadályozza, hogy egy gyors producer túlterheljen egy lassabb consumert.",
+          "studyContent": {
+            "mentalModel": "A stream az adatot kisebb részekben mozgatja ahelyett, hogy mindent memóriába töltene; a backpressure jelzi a producernek, amikor a consumernek szünetre van szüksége.",
+            "problem": "Streaming nélkül egy nagy fájl vagy response túl sok memóriát foglalhat. Backpressure nélkül a chunkok gyorsabban gyűlnek, mint ahogy feldolgozhatók, ezért nő a memóriahasználat és instabillá válik a latency.",
+            "example": "Egy API több gigabájtos fájlt tölt fel object storage-ba. A request streamet közvetlenül a storage kliensbe pipe-olja. Ha a cél nem tud több adatot fogadni, a forrás megáll, és csak drain után folytatódik.",
+            "howItWorks": [
+              "A readable oldal csak akkor termel chunkokat, amikor azokat kérik vagy fogadni tudják.",
+              "A writable oldal jelzi, amikor a belső buffer megtelt.",
+              "A producer megáll, amíg a drain jel nem mutatja, hogy ismét fogadható adat.",
+              "A pipeline-szerű összekötés továbbítja a hibákat és lezárja az összes kapcsolódó streamet."
+            ],
+            "commonMistakes": [
+              "A teljes payloadot Bufferbe olvasni a feldolgozás előtt.",
+              "Figyelmen kívül hagyni a writable.write visszatérési értékét és tovább küldeni az adatot.",
+              "Többlépcsős pipeline esetén csak egyetlen stream hibáit kezelni."
+            ],
+            "keyTerms": [
+              {
+                "term": "chunk",
+                "definition": "az adat egy kisebb része, amely a streamen keresztül halad"
+              },
+              {
+                "term": "backpressure",
+                "definition": "a terhelt consumer jelzése a producer felé, hogy lassítson"
+              },
+              {
+                "term": "drain",
+                "definition": "az esemény, amely jelzi, hogy a writable stream ismét tud adatot fogadni"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_node_memory_leaks",
+      "name": "Node.js Memory Leaks and Heap Diagnosis",
+      "description": "A Node.js memory leak occurs when objects remain reachable after the application no longer needs them, so garbage collection cannot reclaim their memory.",
+      "category": "observability",
+      "relatedTopicIds": [
+        "observability",
+        "error_handling"
+      ],
+      "studyContent": {
+        "mentalModel": "A memory leak means the heap keeps references to data that should have become unreachable, so memory grows across repeated work instead of returning to a stable level.",
+        "problem": "A leaking service eventually spends more time in garbage collection, becomes slow, or is killed for exceeding its memory limit. Restarting hides the symptom but does not remove the retaining reference.",
+        "example": "A request handler stores every user object in a process-wide Map without eviction. A heap snapshot shows the Map retaining millions of entries. Adding a bounded cache with expiry stops the long-term growth.",
+        "howItWorks": [
+          "Confirm a repeated upward trend in heap usage after garbage collection, not only short-lived spikes.",
+          "Reproduce the growth under a controlled workload and capture heap snapshots at different times.",
+          "Compare retaining paths to find which object keeps unwanted data reachable.",
+          "Fix ownership or eviction, then repeat the same workload to verify a stable heap."
+        ],
+        "commonMistakes": [
+          "Calling every high memory reading a leak; buffers and temporary allocations can create legitimate peaks.",
+          "Treating automatic restarts as the fix.",
+          "Capturing a snapshot only after the process is already too unstable to inspect safely."
+        ],
+        "keyTerms": [
+          {
+            "term": "heap",
+            "definition": "memory used for JavaScript objects managed by the garbage collector"
+          },
+          {
+            "term": "retaining path",
+            "definition": "the chain of references that keeps an object reachable"
+          },
+          {
+            "term": "heap snapshot",
+            "definition": "a point-in-time graph of objects and their references"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Node.js memory leak és heap diagnosztika",
+          "description": "Node.js memory leak akkor alakul ki, amikor már felesleges objectek továbbra is elérhetők maradnak, ezért a garbage collector nem tudja felszabadítani a memóriájukat.",
+          "studyContent": {
+            "mentalModel": "A memory leak azt jelenti, hogy a heap olyan adatokra is megtart referenciákat, amelyeknek már elérhetetlenné kellett volna válniuk, ezért a memória ismételt munka során folyamatosan nő.",
+            "problem": "A szivárgó service egyre több időt tölt garbage collectionnel, belassul, vagy a memory limit túllépése miatt leáll. A restart elfedi a tünetet, de nem szünteti meg a megtartó referenciát.",
+            "example": "Egy request handler minden user objectet egy process-wide Mapben tárol eviction nélkül. A heap snapshot megmutatja, hogy a Map milliónyi elemet tart életben. Egy korlátozott, lejáró cache megszünteti a tartós növekedést.",
+            "howItWorks": [
+              "Erősítsd meg, hogy garbage collection után is ismétlődő emelkedő trend látszik, nem csak rövid memória-csúcs.",
+              "Kontrollált workload mellett reprodukáld a növekedést, és készíts több időpontban heap snapshotot.",
+              "A retaining pathok összehasonlításával keresd meg, melyik object tartja elérhetően a felesleges adatot.",
+              "Javítsd az ownershipet vagy evictiont, majd ugyanazzal a workloaddal ellenőrizd a stabil heapet."
+            ],
+            "commonMistakes": [
+              "Minden magas memóriaértéket leaknek nevezni; bufferek és ideiglenes allocationök jogos csúcsokat okozhatnak.",
+              "Az automatikus restartot végleges javításnak tekinteni.",
+              "Csak akkor snapshotot készíteni, amikor a process már túl instabil a biztonságos vizsgálathoz."
+            ],
+            "keyTerms": [
+              {
+                "term": "heap",
+                "definition": "a garbage collector által kezelt JavaScript objectek memóriaterülete"
+              },
+              {
+                "term": "retaining path",
+                "definition": "a referencialánc, amely egy objectet továbbra is elérhetően tart"
+              },
+              {
+                "term": "heap snapshot",
+                "definition": "az objectek és referenciáik egy adott időpontban rögzített gráfja"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_node_cpu_scaling",
+      "name": "CPU-bound Work and Node.js Scaling",
+      "description": "CPU-bound work spends most of its time computing rather than waiting for I/O, so it must be isolated or parallelized to keep the event loop responsive.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "scalability",
+        "deployment"
+      ],
+      "studyContent": {
+        "mentalModel": "CPU-bound JavaScript blocks the event loop until the calculation ends, so Node.js services usually move heavy work to worker threads, separate processes, or background services.",
+        "problem": "Adding async keywords does not stop a long calculation from monopolizing the JavaScript thread. During that time health checks, timers, and unrelated requests all wait, which can trigger timeouts and cascading retries.",
+        "example": "An image-processing endpoint sends each job to a worker-thread pool and immediately returns a job id. The API remains responsive while a fixed number of workers use multiple CPU cores without creating a new thread per request.",
+        "howItWorks": [
+          "Measure whether time is spent on CPU or waiting for I/O.",
+          "Move expensive calculations away from the request event loop.",
+          "Use a bounded worker or process pool so overload becomes visible.",
+          "Scale processes or containers horizontally when requests are independent."
+        ],
+        "commonMistakes": [
+          "Assuming Promise-based code is automatically non-blocking.",
+          "Creating an unlimited number of worker threads.",
+          "Using process clustering as a substitute for understanding one slow request path."
+        ],
+        "keyTerms": [
+          {
+            "term": "CPU-bound",
+            "definition": "work limited mainly by available processor time"
+          },
+          {
+            "term": "worker thread",
+            "definition": "a separate JavaScript execution thread inside the same Node.js process"
+          },
+          {
+            "term": "horizontal scaling",
+            "definition": "running more service instances and distributing work between them"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "CPU-bound munka és Node.js skálázás",
+          "description": "A CPU-bound munka főként számolással tölti az időt, nem I/O-ra vár, ezért izolálni vagy párhuzamosítani kell, hogy az event loop reszponzív maradjon.",
+          "studyContent": {
+            "mentalModel": "A CPU-bound JavaScript az egész számítás végéig blokkolja az event loopot, ezért a Node.js service-ek a nehéz munkát gyakran worker threadbe, külön processbe vagy background service-be helyezik.",
+            "problem": "Az async kulcsszó nem akadályozza meg, hogy egy hosszú számítás lefoglalja a JavaScript threadet. Ezalatt a health checkek, timerek és független requestek is várnak, ami timeoutokat és láncreakciós retrykat okozhat.",
+            "example": "Egy képfeldolgozó endpoint minden jobot egy worker-thread poolba küld, majd azonnal visszaad egy job id-t. Az API reszponzív marad, miközben fix számú worker több CPU magot használ új thread létrehozása nélkül minden requesthez.",
+            "howItWorks": [
+              "Mérd meg, hogy az idő CPU-számításra vagy I/O-várakozásra megy el.",
+              "A drága számításokat mozgasd ki a request event loopjából.",
+              "Használj korlátozott worker- vagy process poolt, hogy az overload látható legyen.",
+              "Független requesteknél több process vagy container indításával skálázz horizontálisan."
+            ],
+            "commonMistakes": [
+              "Azt feltételezni, hogy a Promise-alapú kód automatikusan non-blocking.",
+              "Korlátlan számú worker threadet létrehozni.",
+              "A process clusteringet használni egy lassú request path megértése helyett."
+            ],
+            "keyTerms": [
+              {
+                "term": "CPU-bound",
+                "definition": "olyan munka, amelyet főként a rendelkezésre álló processzoridő korlátoz"
+              },
+              {
+                "term": "worker thread",
+                "definition": "külön JavaScript execution thread ugyanazon Node.js processen belül"
+              },
+              {
+                "term": "horizontal scaling",
+                "definition": "több service instance futtatása és a munka elosztása közöttük"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_node_failure_handling",
+      "name": "Node.js Failure Handling and Graceful Shutdown",
+      "description": "Production failure handling classifies errors, returns safe responses, preserves diagnostics, and shuts down unhealthy processes without dropping accepted work unnecessarily.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "error_handling",
+        "reliability"
+      ],
+      "studyContent": {
+        "mentalModel": "Failure handling means expected operational errors are handled locally, while unexpected process-level failures are logged and followed by a controlled shutdown and restart.",
+        "problem": "Catching every error and continuing can leave corrupted state or hide a broken invariant. Crashing immediately without draining connections can also lose in-flight work. A service needs a clear boundary between recoverable request errors and unsafe process state.",
+        "example": "A database timeout becomes a 503 response with a correlation id. An uncaught programming error is logged once, readiness is disabled, new traffic stops, open requests receive a short drain period, and the process exits for the supervisor to restart.",
+        "howItWorks": [
+          "Classify validation, dependency, domain, and programmer errors differently.",
+          "Convert internal failures into stable API responses without exposing secrets or stack traces.",
+          "Attach context such as request id, operation, dependency, and original cause to logs.",
+          "On an unsafe process failure, stop new traffic, drain briefly, close resources, and exit."
+        ],
+        "commonMistakes": [
+          "Swallowing errors after logging them and pretending the operation succeeded.",
+          "Returning raw exception messages to clients.",
+          "Continuing indefinitely after an uncaught exception."
+        ],
+        "keyTerms": [
+          {
+            "term": "operational error",
+            "definition": "an expected runtime failure such as invalid input or a dependency timeout"
+          },
+          {
+            "term": "programmer error",
+            "definition": "a bug that violates an assumption in the code"
+          },
+          {
+            "term": "graceful shutdown",
+            "definition": "stopping new work and closing active resources before process exit"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Node.js hibakezelés és graceful shutdown",
+          "description": "A production hibakezelés osztályozza a hibákat, biztonságos response-t ad, megőrzi a diagnosztikai információt, és kontrolláltan állítja le az egészségtelen processt.",
+          "studyContent": {
+            "mentalModel": "A hibakezelés azt jelenti, hogy a várható operational errorokat helyben kezeljük, a váratlan process-szintű hibákat pedig naplózás után kontrollált leállítás és restart követi.",
+            "problem": "Minden hibát elkapni és tovább futni sérült állapotot hagyhat maga után, vagy elrejthet egy megszegett invariantet. Az azonnali crash viszont in-flight munkát dobhat el. Világos határ kell a kezelhető request hibák és a nem biztonságos process állapot között.",
+            "example": "Egy database timeout 503 response lesz correlation id-val. Egy uncaught programhiba egyszer naplózódik, a readiness kikapcsol, új traffic nem érkezik, a futó requestek rövid drain időt kapnak, majd a process kilép és a supervisor újraindítja.",
+            "howItWorks": [
+              "Külön kezeld a validation, dependency, domain és programmer errorokat.",
+              "A belső hibát stabil API response-zá alakítsd anélkül, hogy secretet vagy stack trace-t adnál ki.",
+              "A loghoz add hozzá a request id-t, operationt, dependencyt és az eredeti cause-t.",
+              "Nem biztonságos processhiba esetén állítsd le az új trafficet, röviden drainelj, zárd le az erőforrásokat, majd lépj ki."
+            ],
+            "commonMistakes": [
+              "A hibát logolás után lenyelni, majd sikeresnek mutatni a műveletet.",
+              "Nyers exception message-et visszaadni a kliensnek.",
+              "Uncaught exception után korlátlan ideig tovább futni."
+            ],
+            "keyTerms": [
+              {
+                "term": "operational error",
+                "definition": "várható runtime hiba, például hibás input vagy dependency timeout"
+              },
+              {
+                "term": "programmer error",
+                "definition": "olyan bug, amely megsért egy kódbeli feltételezést"
+              },
+              {
+                "term": "graceful shutdown",
+                "definition": "új munka leállítása és aktív erőforrások lezárása a process kilépése előtt"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "fg_event_loop_explain_001",
+      "title": "Explain the Node.js event loop",
+      "prompt": "How can Node.js handle many concurrent I/O operations with one main JavaScript thread, and what kinds of work still block it?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "fg_node_event_loop"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain delegation, callback scheduling, and blocking work.",
+      "expectedPoints": [
+        {
+          "id": "fg_el_single_thread",
+          "label": "Explains the JavaScript thread",
+          "description": "States that JavaScript callbacks normally run one at a time on the event-loop thread.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "single javascript thread",
+            "one callback at time",
+            "event loop thread",
+            "runs one task"
+          ]
+        },
+        {
+          "id": "fg_el_delegation",
+          "label": "Explains I/O delegation",
+          "description": "Explains that the operating system or Node.js worker pool performs waiting I/O work.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "operating system",
+            "worker pool",
+            "libuv",
+            "delegates io",
+            "non blocking io"
+          ]
+        },
+        {
+          "id": "fg_el_blocking",
+          "label": "Identifies blocking work",
+          "description": "Names synchronous or CPU-heavy JavaScript as work that delays all other callbacks.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "cpu heavy",
+            "synchronous work",
+            "blocks event loop",
+            "long callback",
+            "event loop delay"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_el_phase_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where would promise callbacks run relative to timers and I/O callbacks?",
+          "expectedPoints": []
+        },
+        {
+          "id": "fg_el_measure_followup",
+          "trigger": {
+            "type": "rubric_covered",
+            "rubricItemId": "fg_el_blocking"
+          },
+          "prompt": "How would you detect event-loop blocking in production?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Magyarázd el a Node.js event loopot",
+          "prompt": "Hogyan képes a Node.js sok concurrent I/O műveletet kezelni egy fő JavaScript threaddel, és milyen munka blokkolja mégis?",
+          "answerStructureHint": "Térj ki a delegálásra, a callbackek ütemezésére és a blokkoló munkára.",
+          "expectedPoints": {
+            "fg_el_single_thread": {
+              "label": "Elmagyarázza a JavaScript thread szerepét",
+              "description": "Kimondja, hogy a JavaScript callbackek általában egyenként futnak az event-loop threaden."
+            },
+            "fg_el_delegation": {
+              "label": "Elmagyarázza az I/O delegálását",
+              "description": "Elmagyarázza, hogy a várakozó I/O munkát az operációs rendszer vagy a Node.js worker pool végzi."
+            },
+            "fg_el_blocking": {
+              "label": "Felismeri a blokkoló munkát",
+              "description": "A szinkron vagy CPU-heavy JavaScriptet olyan munkaként azonosítja, amely minden más callbacket késleltet."
+            }
+          },
+          "followUps": {
+            "fg_el_phase_followup": "Hol futnak a Promise callbackek a timerekhez és I/O callbackekhez képest?",
+            "fg_el_measure_followup": "Hogyan észlelnéd productionben az event-loop blokkolását?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_event_loop_incident_002",
+      "title": "Diagnosing sudden Node.js latency",
+      "prompt": "A Node.js API has low database latency and moderate CPU usage, but p99 response time suddenly rises. How would you investigate whether the event loop is blocked?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "fg_node_event_loop"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use measurements, isolate the blocking path, and verify the fix.",
+      "expectedPoints": [
+        {
+          "id": "fg_el_metric",
+          "label": "Measures event-loop delay",
+          "description": "Uses event-loop delay or utilization together with request latency and CPU profiles.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "event loop delay",
+            "event loop utilization",
+            "cpu profile",
+            "p99 latency",
+            "perf hooks"
+          ]
+        },
+        {
+          "id": "fg_el_isolate",
+          "label": "Finds the blocking code path",
+          "description": "Correlates traces, profiles, or controlled load tests to a synchronous or CPU-heavy operation.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "correlate traces",
+            "flame graph",
+            "load test",
+            "synchronous function",
+            "blocking path"
+          ]
+        },
+        {
+          "id": "fg_el_fix_verify",
+          "label": "Verifies the remediation",
+          "description": "Moves or bounds the heavy work and repeats the same workload while watching tail latency.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "worker thread",
+            "move off loop",
+            "repeat workload",
+            "tail latency",
+            "before after"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_el_json_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Could a large JSON.parse or JSON.stringify call cause this symptom? Why?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hirtelen Node.js latency diagnosztizálása",
+          "prompt": "Egy Node.js API database latencyje alacsony, CPU-használata közepes, de a p99 response time hirtelen megugrik. Hogyan vizsgálnád meg, hogy blokkolódik-e az event loop?",
+          "answerStructureHint": "Méréssel igazold a problémát, izoláld a blokkoló pathot, majd ellenőrizd a javítást.",
+          "expectedPoints": {
+            "fg_el_metric": {
+              "label": "Méri az event-loop delayt",
+              "description": "Event-loop delayt vagy utilizationt használ request latencyvel és CPU profillal együtt."
+            },
+            "fg_el_isolate": {
+              "label": "Megkeresi a blokkoló kódutat",
+              "description": "Trace, profil vagy kontrollált load test segítségével szinkron vagy CPU-heavy művelethez köti a problémát."
+            },
+            "fg_el_fix_verify": {
+              "label": "Ellenőrzi a javítást",
+              "description": "Áthelyezi vagy korlátozza a nehéz munkát, majd ugyanazzal a workloaddal ellenőrzi a tail latencyt."
+            }
+          },
+          "followUps": {
+            "fg_el_json_followup": "Okozhat ilyen tünetet egy nagy JSON.parse vagy JSON.stringify hívás? Miért?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_async_parallel_001",
+      "title": "Sequential await or controlled concurrency?",
+      "prompt": "You must call an external service for 5,000 records. Compare sequential await, one large Promise.all, and bounded concurrency.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_async_concurrency"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare speed, resource pressure, failure handling, and a practical choice.",
+      "expectedPoints": [
+        {
+          "id": "fg_ac_seq",
+          "label": "Explains sequential execution",
+          "description": "Notes that sequential await is simple and gentle on dependencies but wastes independent waiting time.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "sequential await",
+            "one at time",
+            "slow throughput",
+            "low pressure",
+            "simple control"
+          ]
+        },
+        {
+          "id": "fg_ac_all",
+          "label": "Explains unbounded Promise.all",
+          "description": "Notes that one large Promise.all can overload sockets, memory, connection pools, or the dependency.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "promise all",
+            "unbounded concurrency",
+            "connection pool",
+            "rate limit",
+            "memory pressure"
+          ]
+        },
+        {
+          "id": "fg_ac_bounded",
+          "label": "Chooses bounded concurrency",
+          "description": "Proposes a measured concurrency limit with explicit retry and per-item failure handling.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "bounded concurrency",
+            "concurrency limit",
+            "batch size",
+            "per item failure",
+            "measure capacity"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_ac_settled_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would Promise.allSettled be more appropriate than Promise.all?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Soros await vagy kontrollált concurrency?",
+          "prompt": "Egy külső service-t kell meghívnod 5000 rekordhoz. Hasonlítsd össze a soros awaitet, az egyetlen nagy Promise.all-t és a bounded concurrencyt.",
+          "answerStructureHint": "Hasonlítsd össze a sebességet, az erőforrás-terhelést, a hibakezelést és adj gyakorlati döntést.",
+          "expectedPoints": {
+            "fg_ac_seq": {
+              "label": "Elmagyarázza a soros végrehajtást",
+              "description": "Megjegyzi, hogy a soros await egyszerű és kíméli a dependencyt, de elvesztegeti a független várakozási időt."
+            },
+            "fg_ac_all": {
+              "label": "Elmagyarázza a korlátlan Promise.all-t",
+              "description": "Kimondja, hogy egy nagy Promise.all túlterhelheti a socketeket, memóriát, connection poolt vagy a dependencyt."
+            },
+            "fg_ac_bounded": {
+              "label": "Bounded concurrencyt választ",
+              "description": "Mért concurrency limitet javasol explicit retryjal és elemenkénti hibakezeléssel."
+            }
+          },
+          "followUps": {
+            "fg_ac_settled_followup": "Mikor lenne jobb a Promise.allSettled, mint a Promise.all?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_async_failure_002",
+      "title": "Partial failure in concurrent work",
+      "prompt": "A batch operation starts 20 independent requests. Three fail transiently and one fails validation. How would you return a useful result without retrying everything?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "fg_async_concurrency"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate result collection, error classification, and targeted retry.",
+      "expectedPoints": [
+        {
+          "id": "fg_ac_collect",
+          "label": "Collects every result",
+          "description": "Uses all-settled style handling or per-operation error capture so one failure does not hide the rest.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "all settled",
+            "per item result",
+            "partial success",
+            "collect errors",
+            "do not fail fast"
+          ]
+        },
+        {
+          "id": "fg_ac_classify",
+          "label": "Classifies failures",
+          "description": "Separates retryable dependency failures from permanent validation or domain failures.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "retryable error",
+            "validation failure",
+            "transient failure",
+            "permanent error",
+            "error classification"
+          ]
+        },
+        {
+          "id": "fg_ac_target",
+          "label": "Retries only safe failed items",
+          "description": "Retries only transient failures with limits and returns a structured summary of successes and failures.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "retry failed items",
+            "bounded retries",
+            "structured response",
+            "success and failure",
+            "retry limit"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_ac_idem_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What must be true before retrying a failed item that creates a side effect?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Részleges hiba concurrent munkában",
+          "prompt": "Egy batch operation 20 független requestet indít. Három átmenetileg hibázik, egy pedig validation hibát ad. Hogyan adnál hasznos eredményt anélkül, hogy mindent újrapróbálnál?",
+          "answerStructureHint": "Válaszd szét az eredmények gyűjtését, a hibák osztályozását és a célzott retryt.",
+          "expectedPoints": {
+            "fg_ac_collect": {
+              "label": "Összegyűjti minden művelet eredményét",
+              "description": "All-settled jellegű kezelést vagy műveletenkénti error capture-t használ, hogy egy hiba ne rejtse el a többit."
+            },
+            "fg_ac_classify": {
+              "label": "Osztályozza a hibákat",
+              "description": "Elválasztja a retryolható dependency hibákat a végleges validation vagy domain hibáktól."
+            },
+            "fg_ac_target": {
+              "label": "Csak a biztonságosan újrapróbálható elemeket retryolja",
+              "description": "Csak az átmeneti hibákat retryolja korláttal, majd strukturált success/failure összegzést ad."
+            }
+          },
+          "followUps": {
+            "fg_ac_idem_followup": "Minek kell teljesülnie, mielőtt egy side effectet létrehozó hibás elemet retryolsz?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_stream_upload_001",
+      "title": "Designing a large-file pipeline",
+      "prompt": "How would you implement a Node.js endpoint that validates and forwards very large uploads without loading each file fully into memory?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "fg_node_streams_backpressure"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe streaming stages, backpressure, error propagation, and limits.",
+      "expectedPoints": [
+        {
+          "id": "fg_st_streaming",
+          "label": "Uses a streaming pipeline",
+          "description": "Processes or forwards chunks instead of buffering the complete file.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "streaming pipeline",
+            "process chunks",
+            "request stream",
+            "pipe stream",
+            "no full buffer"
+          ]
+        },
+        {
+          "id": "fg_st_pressure",
+          "label": "Preserves backpressure",
+          "description": "Lets the destination slow the source rather than accumulating an unbounded queue.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "backpressure",
+            "pause source",
+            "drain event",
+            "bounded buffer",
+            "slow consumer"
+          ]
+        },
+        {
+          "id": "fg_st_errors",
+          "label": "Handles errors and limits",
+          "description": "Propagates errors across all stages, aborts downstream work, and enforces size and timeout limits.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "pipeline errors",
+            "abort upload",
+            "size limit",
+            "timeout limit",
+            "cleanup streams"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_st_hash_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How could you calculate a checksum while the upload is being forwarded?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Nagy fájl feldolgozási pipeline tervezése",
+          "prompt": "Hogyan valósítanál meg Node.js endpointot, amely nagyon nagy uploadokat validál és továbbít anélkül, hogy a teljes fájlt memóriába töltené?",
+          "answerStructureHint": "Írd le a streaming lépéseket, a backpressure-t, az error propagationt és a limiteket.",
+          "expectedPoints": {
+            "fg_st_streaming": {
+              "label": "Streaming pipeline-t használ",
+              "description": "Chunkokban dolgozza fel vagy továbbítja az adatot a teljes fájl bufferelése helyett."
+            },
+            "fg_st_pressure": {
+              "label": "Megőrzi a backpressure-t",
+              "description": "Lehetővé teszi, hogy a destination lassítsa a source-ot, és ne nőjön korlátlan queue."
+            },
+            "fg_st_errors": {
+              "label": "Kezeli a hibákat és limiteket",
+              "description": "Minden stage között továbbítja a hibát, megszakítja a downstream munkát, és size/timeout limiteket alkalmaz."
+            }
+          },
+          "followUps": {
+            "fg_st_hash_followup": "Hogyan számolnál checksumot az upload továbbítása közben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_stream_bug_002",
+      "title": "A stream consumer causes rising memory",
+      "prompt": "A producer emits data faster than your custom writable can process it, and process memory keeps rising. What is probably wrong and how would you fix it?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "fg_node_streams_backpressure"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Identify ignored backpressure, explain the signal, and verify bounded memory.",
+      "expectedPoints": [
+        {
+          "id": "fg_st_cause",
+          "label": "Identifies ignored backpressure",
+          "description": "Explains that the producer continues after the writable buffer says it is full.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "ignored backpressure",
+            "buffer is full",
+            "write returned false",
+            "producer too fast",
+            "unbounded buffer"
+          ]
+        },
+        {
+          "id": "fg_st_fix",
+          "label": "Uses pause and drain correctly",
+          "description": "Pauses production when write returns false and resumes after drain, or uses pipeline.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "pause producer",
+            "drain event",
+            "resume after drain",
+            "stream pipeline",
+            "write false"
+          ]
+        },
+        {
+          "id": "fg_st_verify",
+          "label": "Verifies memory stability",
+          "description": "Repeats the same sustained workload and confirms bounded buffers and stable memory.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "sustained load",
+            "stable memory",
+            "bounded buffer",
+            "heap trend",
+            "repeat test"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_st_pipeline_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why is stream.pipeline usually safer than manually chaining pipe calls?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy stream consumer növekvő memóriahasználatot okoz",
+          "prompt": "A producer gyorsabban küld adatot, mint ahogy a custom writable feldolgozza, és a process memóriája folyamatosan nő. Mi lehet a hiba, és hogyan javítanád?",
+          "answerStructureHint": "Azonosítsd a figyelmen kívül hagyott backpressure-t, magyarázd el a jelzést, és igazold a korlátozott memóriahasználatot.",
+          "expectedPoints": {
+            "fg_st_cause": {
+              "label": "Felismeri a figyelmen kívül hagyott backpressure-t",
+              "description": "Elmagyarázza, hogy a producer akkor is tovább küld, amikor a writable buffer már megtelt."
+            },
+            "fg_st_fix": {
+              "label": "Helyesen használja a pause és drain mechanizmust",
+              "description": "Megállítja a termelést, amikor a write false-t ad, majd drain után folytatja, vagy pipeline-t használ."
+            },
+            "fg_st_verify": {
+              "label": "Ellenőrzi a memória stabilitását",
+              "description": "Ugyanazzal a tartós workloaddal megismétli a tesztet, és stabil memóriát, valamint korlátozott buffert igazol."
+            }
+          },
+          "followUps": {
+            "fg_st_pipeline_followup": "Miért biztonságosabb általában a stream.pipeline a kézzel összekötött pipe hívásoknál?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_memory_diagnose_001",
+      "title": "Diagnosing a Node.js memory leak",
+      "prompt": "A service grows from 300 MB to 1.5 GB over several hours and restarts. Walk through how you would determine whether this is a JavaScript heap leak and find the retaining code.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "fg_node_memory_leaks"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Confirm the trend, reproduce, compare snapshots, and verify the fix.",
+      "expectedPoints": [
+        {
+          "id": "fg_ml_confirm",
+          "label": "Confirms a real leak pattern",
+          "description": "Separates heap growth after garbage collection from temporary peaks or external memory.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "heap after gc",
+            "memory trend",
+            "external memory",
+            "temporary spike",
+            "rss versus heap"
+          ]
+        },
+        {
+          "id": "fg_ml_snapshot",
+          "label": "Compares heap snapshots",
+          "description": "Captures snapshots under a repeatable workload and inspects growing object groups and retaining paths.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "heap snapshot",
+            "retaining path",
+            "compare snapshots",
+            "growing objects",
+            "controlled workload"
+          ]
+        },
+        {
+          "id": "fg_ml_verify",
+          "label": "Fixes and verifies ownership",
+          "description": "Removes the retaining reference or adds bounded eviction, then repeats the same test.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "remove reference",
+            "bounded cache",
+            "eviction policy",
+            "repeat test",
+            "stable heap"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_ml_listener_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How can event listeners become a memory leak?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Node.js memory leak diagnosztizálása",
+          "prompt": "Egy service néhány óra alatt 300 MB-ról 1,5 GB-ra nő, majd restartol. Mutasd be, hogyan állapítanád meg, hogy JavaScript heap leakről van-e szó, és hogyan keresnéd meg a megtartó kódot.",
+          "answerStructureHint": "Erősítsd meg a trendet, reprodukáld, hasonlíts össze snapshotokat, majd ellenőrizd a javítást.",
+          "expectedPoints": {
+            "fg_ml_confirm": {
+              "label": "Megerősíti a valódi leak mintát",
+              "description": "Elválasztja a garbage collection után is növekvő heapet az ideiglenes csúcsoktól vagy external memorytól."
+            },
+            "fg_ml_snapshot": {
+              "label": "Heap snapshotokat hasonlít össze",
+              "description": "Ismételhető workload mellett snapshotokat készít, majd a növekvő objectcsoportokat és retaining pathokat vizsgálja."
+            },
+            "fg_ml_verify": {
+              "label": "Javítja és ellenőrzi az ownershipet",
+              "description": "Eltávolítja a megtartó referenciát vagy bounded evictiont ad, majd megismétli ugyanazt a tesztet."
+            }
+          },
+          "followUps": {
+            "fg_ml_listener_followup": "Hogyan válhatnak az event listenerek memory leakké?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_memory_cache_002",
+      "title": "Is an in-memory cache leaking?",
+      "prompt": "A process-wide Map is used as a cache and memory rises with traffic. What design questions would you ask before calling it a leak, and how would you make the cache safe?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "fg_node_memory_leaks"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss ownership, bounds, expiry, key cardinality, and measurements.",
+      "expectedPoints": [
+        {
+          "id": "fg_mc_bound",
+          "label": "Requires a bounded cache",
+          "description": "Asks for maximum entries or memory, an eviction policy, and expiry where appropriate.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "maximum size",
+            "eviction policy",
+            "ttl expiry",
+            "bounded cache",
+            "lru cache"
+          ]
+        },
+        {
+          "id": "fg_mc_keys",
+          "label": "Examines key cardinality and lifetime",
+          "description": "Checks whether keys are unbounded, user-controlled, or retained longer than their useful lifetime.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "key cardinality",
+            "unbounded keys",
+            "user controlled key",
+            "object lifetime",
+            "stale entries"
+          ]
+        },
+        {
+          "id": "fg_mc_metrics",
+          "label": "Adds cache and memory metrics",
+          "description": "Measures hit rate, entry count, evictions, heap growth, and behaviour after traffic falls.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "cache hit rate",
+            "entry count",
+            "eviction count",
+            "heap growth",
+            "memory metrics"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_mc_multi_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What changes when the service runs in several processes or containers?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Memory leakel-e az in-memory cache?",
+          "prompt": "Egy process-wide Map cache-ként működik, és a memória a traffickel együtt nő. Milyen design kérdéseket tennél fel, mielőtt leaknek neveznéd, és hogyan tennéd biztonságossá a cache-t?",
+          "answerStructureHint": "Térj ki az ownershipre, korlátokra, expiryre, key cardinalityre és mérésekre.",
+          "expectedPoints": {
+            "fg_mc_bound": {
+              "label": "Korlátozott cache-t követel meg",
+              "description": "Maximum elemszámot vagy memóriát, eviction policyt és szükség esetén expiryt kér."
+            },
+            "fg_mc_keys": {
+              "label": "Vizsgálja a key cardinalityt és élettartamot",
+              "description": "Ellenőrzi, hogy a key-k korlátlanok, user-controlledak vagy a szükségesnél tovább maradnak-e meg."
+            },
+            "fg_mc_metrics": {
+              "label": "Cache- és memóriametrikákat ad hozzá",
+              "description": "Méri a hit rate-et, elemszámot, evictionöket, heap növekedést és a traffic csökkenése utáni viselkedést."
+            }
+          },
+          "followUps": {
+            "fg_mc_multi_followup": "Mi változik, amikor a service több processben vagy containerben fut?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_cpu_worker_001",
+      "title": "Keeping CPU-heavy work off the event loop",
+      "prompt": "A request performs a 500 ms CPU-heavy transformation. Compare keeping it in the handler, using worker threads, and moving it to a separate background service.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_node_cpu_scaling"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare responsiveness, isolation, operational complexity, and workload shape.",
+      "expectedPoints": [
+        {
+          "id": "fg_cpu_block",
+          "label": "Rejects event-loop blocking",
+          "description": "Explains that the synchronous transformation delays all requests and health checks in the process.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "blocks event loop",
+            "delays all requests",
+            "tail latency",
+            "health check delay",
+            "synchronous cpu"
+          ]
+        },
+        {
+          "id": "fg_cpu_threads",
+          "label": "Explains worker-thread fit",
+          "description": "Uses a bounded worker pool for CPU work that benefits from shared process deployment and low transfer overhead.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "worker thread pool",
+            "bounded workers",
+            "multiple cores",
+            "message passing",
+            "cpu isolation"
+          ]
+        },
+        {
+          "id": "fg_cpu_service",
+          "label": "Explains separate-service fit",
+          "description": "Chooses a background service when independent scaling, durable queues, or stronger failure isolation matters.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "background service",
+            "independent scaling",
+            "durable queue",
+            "failure isolation",
+            "asynchronous job"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_cpu_copy_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What data-transfer cost can worker threads introduce?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "CPU-heavy munka eltávolítása az event loopról",
+          "prompt": "Egy request 500 ms CPU-heavy transzformációt végez. Hasonlítsd össze a handlerben futtatást, a worker thread használatát és a külön background service-be mozgatást.",
+          "answerStructureHint": "Hasonlítsd össze a reszponzivitást, izolációt, üzemeltetési komplexitást és a workload jellegét.",
+          "expectedPoints": {
+            "fg_cpu_block": {
+              "label": "Elutasítja az event-loop blokkolását",
+              "description": "Elmagyarázza, hogy a szinkron transzformáció minden requestet és health checket késleltet a processben."
+            },
+            "fg_cpu_threads": {
+              "label": "Elmagyarázza a worker thread megfelelő használatát",
+              "description": "Bounded worker poolt használ olyan CPU-munkához, amelynél előnyös a közös deployment és alacsony adatátadási overhead."
+            },
+            "fg_cpu_service": {
+              "label": "Elmagyarázza a külön service előnyeit",
+              "description": "Külön background service-t választ, amikor fontos az önálló scaling, durable queue vagy erősebb failure isolation."
+            }
+          },
+          "followUps": {
+            "fg_cpu_copy_followup": "Milyen adatátadási költséget okozhatnak a worker threadek?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_cpu_scale_002",
+      "title": "Scaling a Node.js API across CPU cores",
+      "prompt": "How would you use several CPU cores for a stateless Node.js API, and what state or connection assumptions must change when multiple processes or containers are running?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "fg_node_cpu_scaling"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe process-level scaling, load balancing, external state, and graceful lifecycle.",
+      "expectedPoints": [
+        {
+          "id": "fg_cs_instances",
+          "label": "Runs multiple service instances",
+          "description": "Uses multiple processes or containers behind a load balancer to consume more CPU cores.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "multiple processes",
+            "multiple containers",
+            "load balancer",
+            "horizontal scaling",
+            "cpu cores"
+          ]
+        },
+        {
+          "id": "fg_cs_state",
+          "label": "Removes process-local assumptions",
+          "description": "Stores shared sessions, jobs, locks, or pub/sub state outside one process when consistency requires it.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "external state",
+            "shared session",
+            "redis state",
+            "stateless service",
+            "process local cache"
+          ]
+        },
+        {
+          "id": "fg_cs_lifecycle",
+          "label": "Handles connections during deployment",
+          "description": "Uses readiness, connection draining, and graceful shutdown so instances can be replaced safely.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "readiness check",
+            "connection draining",
+            "graceful shutdown",
+            "rolling deployment",
+            "stop new traffic"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_cs_ws_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What extra issue appears if clients keep long-lived WebSocket connections?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Node.js API skálázása több CPU magra",
+          "prompt": "Hogyan használnál több CPU magot egy stateless Node.js API-hoz, és milyen state- vagy connection-feltételezéseket kell megváltoztatni több process vagy container esetén?",
+          "answerStructureHint": "Írd le a process-szintű skálázást, load balancinget, külső state-et és graceful lifecycle-t.",
+          "expectedPoints": {
+            "fg_cs_instances": {
+              "label": "Több service instance-t futtat",
+              "description": "Több processt vagy containert használ load balancer mögött, hogy több CPU magot használjon."
+            },
+            "fg_cs_state": {
+              "label": "Eltávolítja a process-local feltételezéseket",
+              "description": "A közös sessiont, jobot, lockot vagy pub/sub state-et processen kívül tárolja, amikor konzisztencia kell."
+            },
+            "fg_cs_lifecycle": {
+              "label": "Kezeli a connectionöket deployment közben",
+              "description": "Readinesst, connection draininget és graceful shutdownt használ az instance-ok biztonságos cseréjéhez."
+            }
+          },
+          "followUps": {
+            "fg_cs_ws_followup": "Milyen további probléma jelenik meg hosszú életű WebSocket connectionök esetén?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_failure_boundary_001",
+      "title": "Operational error or programmer error?",
+      "prompt": "How do you distinguish expected operational errors from programmer errors in a Node.js service, and why should the distinction affect process behaviour?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "fg_node_failure_handling"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define both classes, show response behaviour, and explain unsafe state.",
+      "expectedPoints": [
+        {
+          "id": "fg_fh_operational",
+          "label": "Defines operational errors",
+          "description": "Gives examples such as invalid input, not found, conflict, timeout, or unavailable dependency.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "operational error",
+            "invalid input",
+            "dependency timeout",
+            "not found",
+            "expected failure"
+          ]
+        },
+        {
+          "id": "fg_fh_programmer",
+          "label": "Defines programmer errors",
+          "description": "Describes bugs or broken invariants that can leave the process in an unknown state.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "programmer error",
+            "broken invariant",
+            "bug in code",
+            "unknown state",
+            "unexpected exception"
+          ]
+        },
+        {
+          "id": "fg_fh_behaviour",
+          "label": "Chooses different behaviour",
+          "description": "Handles operational errors at the request boundary, but logs and restarts after an unsafe uncaught failure.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "handle request error",
+            "controlled shutdown",
+            "restart process",
+            "stable error response",
+            "do not continue"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_fh_rejection_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How should unhandled promise rejections be treated in production?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Operational error vagy programmer error?",
+          "prompt": "Hogyan különbözteted meg a várható operational errorokat a programmer erroroktól egy Node.js service-ben, és miért kell ennek befolyásolnia a process viselkedését?",
+          "answerStructureHint": "Definiáld mindkét kategóriát, mutasd be a response viselkedést és a nem biztonságos állapotot.",
+          "expectedPoints": {
+            "fg_fh_operational": {
+              "label": "Definiálja az operational errorokat",
+              "description": "Példákat ad, mint invalid input, not found, conflict, timeout vagy unavailable dependency."
+            },
+            "fg_fh_programmer": {
+              "label": "Definiálja a programmer errorokat",
+              "description": "Bugként vagy broken invariantként írja le őket, amelyek ismeretlen process állapotot hagyhatnak."
+            },
+            "fg_fh_behaviour": {
+              "label": "Eltérő viselkedést választ",
+              "description": "Az operational errorokat request boundaryn kezeli, de nem biztonságos uncaught hiba után logol és restartol."
+            }
+          },
+          "followUps": {
+            "fg_fh_rejection_followup": "Hogyan kell kezelni productionben az unhandled Promise rejectionöket?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_graceful_shutdown_002",
+      "title": "Designing graceful shutdown",
+      "prompt": "A container receives SIGTERM during a rolling deployment. What should a Node.js service do before exiting, and how long should it wait?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "fg_node_failure_handling"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover readiness, draining, resource closure, deadlines, and forced exit.",
+      "expectedPoints": [
+        {
+          "id": "fg_gs_stop",
+          "label": "Stops receiving new work",
+          "description": "Marks the instance unready or closes the listener so the load balancer stops sending traffic.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "mark unready",
+            "stop new traffic",
+            "close listener",
+            "readiness probe",
+            "connection draining"
+          ]
+        },
+        {
+          "id": "fg_gs_drain",
+          "label": "Drains and closes resources",
+          "description": "Waits for in-flight work within a deadline and closes database, broker, timer, and worker resources.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "in flight requests",
+            "close database",
+            "close broker",
+            "shutdown deadline",
+            "drain connections"
+          ]
+        },
+        {
+          "id": "fg_gs_bound",
+          "label": "Uses a bounded shutdown deadline",
+          "description": "Chooses a deadline shorter than the platform kill timeout and forces exit if cleanup does not finish.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "bounded timeout",
+            "force exit",
+            "kill timeout",
+            "shutdown deadline",
+            "do not wait forever"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_gs_queue_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How should a message consumer stop without losing or duplicating work unnecessarily?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Graceful shutdown tervezése",
+          "prompt": "Egy container SIGTERM-et kap rolling deployment közben. Mit kell tennie a Node.js service-nek kilépés előtt, és meddig várjon?",
+          "answerStructureHint": "Térj ki a readinessre, drainingre, resource closure-re, deadline-ra és a kényszerített kilépésre.",
+          "expectedPoints": {
+            "fg_gs_stop": {
+              "label": "Leállítja az új munka fogadását",
+              "description": "Unready állapotba teszi az instance-t vagy lezárja a listenert, hogy a load balancer ne küldjön új trafficet."
+            },
+            "fg_gs_drain": {
+              "label": "Draineli és lezárja az erőforrásokat",
+              "description": "Deadline-on belül megvárja az in-flight munkát, és lezárja a database, broker, timer és worker erőforrásokat."
+            },
+            "fg_gs_bound": {
+              "label": "Korlátozott shutdown deadline-t használ",
+              "description": "A platform kill timeoutjánál rövidebb deadline-t választ, és force exitet alkalmaz, ha a cleanup nem fejeződik be."
+            }
+          },
+          "followUps": {
+            "fg_gs_queue_followup": "Hogyan álljon le egy message consumer úgy, hogy lehetőleg ne veszítsen és ne duplikáljon munkát?"
+          }
+        }
+      }
+    }
+  ]
+}

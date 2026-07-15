@@ -1,0 +1,3408 @@
+{
+  "id": "react_deep_dive",
+  "name": "React Deep Dive — Artec 3D",
+  "description": "React rendering, SSR, state ownership, application structure, legacy migration, quality gates, memoization, and responsible AI-assisted delivery for the Artec 3D senior frontend interview.",
+  "sources": [
+    "artec_3d_job_description_and_interview_notes_en"
+  ],
+  "topics": [
+    {
+      "id": "react_rendering_model",
+      "name": "React Rendering Model",
+      "description": "React turns state and props into a new UI description, compares it with the previous one, and commits only the required host changes.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react",
+        "react_memoization"
+      ],
+      "studyContent": {
+        "mentalModel": "React rendering means calling components to calculate what the UI should look like. React then reconciles that result with the previous tree and commits the necessary DOM changes.",
+        "problem": "Without this model, developers often assume that every render rewrites the DOM, mutate state in place, or place side effects inside rendering. Those mistakes create stale interfaces, unpredictable behavior, and optimizations that solve the wrong problem.",
+        "example": "A product filter changes one state value. The page component runs again, React compares the new element tree with the previous one, and only the changed result count and active filter label are updated in the DOM.",
+        "howItWorks": [
+          "A state update, a parent render, or a consumed context change can make a component render again.",
+          "During the render phase, components calculate the next element tree and must remain pure.",
+          "Reconciliation compares element types, positions, props, and keys to preserve or replace component identity.",
+          "During the commit phase, React applies the required DOM changes and then runs the relevant effects."
+        ],
+        "commonMistakes": [
+          "Assuming a render always means a DOM update.",
+          "Mutating an object and expecting React to notice a meaningful state change.",
+          "Using unstable keys, which makes React lose item identity and local state."
+        ],
+        "keyTerms": [
+          {
+            "term": "render phase",
+            "definition": "The phase in which React calls components and calculates the next UI description."
+          },
+          {
+            "term": "reconciliation",
+            "definition": "The comparison that decides which existing elements can be reused and which must change."
+          },
+          {
+            "term": "commit phase",
+            "definition": "The phase in which React applies the selected changes to the DOM."
+          },
+          {
+            "term": "key",
+            "definition": "A stable identifier that helps React preserve sibling identity across list changes."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "A React renderelési modellje",
+          "description": "A React state-ből és propokból új UI-leírást készít, összeveti az előzővel, majd csak a szükséges DOM-változásokat alkalmazza.",
+          "studyContent": {
+            "mentalModel": "A React renderelés azt jelenti, hogy a komponensek kiszámítják, hogyan kell kinéznie a felületnek. A React ezt összeveti az előző fával, majd a szükséges DOM-változásokat commitolja.",
+            "problem": "E modell nélkül könnyű azt hinni, hogy minden render teljes DOM-újraírást jelent, state-et mutálni, vagy side effectet tenni a renderbe. Ezek stale UI-hoz, kiszámíthatatlan működéshez és rossz helyen végzett optimalizáláshoz vezetnek.",
+            "example": "Egy termékszűrő módosít egy state-értéket. Az oldal komponense újra lefut, a React összehasonlítja az új element tree-t a régivel, és a DOM-ban csak a találatszámot és az aktív szűrő címkéjét frissíti.",
+            "howItWorks": [
+              "State update, szülői render vagy egy használt context változása új renderelést válthat ki.",
+              "A render fázisban a komponensek kiszámítják a következő element tree-t, ezért ennek a munkának tisztának kell maradnia.",
+              "A reconciliation az elemtípust, pozíciót, propokat és key-ket vizsgálja az identitás megőrzéséhez vagy cseréjéhez.",
+              "A commit fázisban a React alkalmazza a szükséges DOM-változásokat, majd lefuttatja a megfelelő effecteket."
+            ],
+            "commonMistakes": [
+              "Azt feltételezni, hogy minden render DOM-módosítást jelent.",
+              "Egy objektumot helyben mutálni, és azt várni, hogy a React ezt megfelelő state-változásként érzékelje.",
+              "Instabil key-ket használni, amelyek miatt elveszik az elemek identitása és lokális state-je."
+            ],
+            "keyTerms": [
+              {
+                "term": "render fázis",
+                "definition": "Az a fázis, amelyben a React meghívja a komponenseket és kiszámítja a következő UI-leírást."
+              },
+              {
+                "term": "reconciliation",
+                "definition": "Az összehasonlítás, amely eldönti, mely elemek használhatók újra, és melyek változnak."
+              },
+              {
+                "term": "commit fázis",
+                "definition": "Az a fázis, amelyben a React alkalmazza a kiválasztott DOM-változásokat."
+              },
+              {
+                "term": "key",
+                "definition": "Stabil azonosító, amely listaváltozáskor segít megőrizni a testvérelemek identitását."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "ssr_csr",
+      "name": "SSR vs CSR",
+      "description": "SSR creates HTML on the server, while CSR creates the initial interface in the browser. The right choice depends on discoverability, first-load behavior, personalization, and operational cost.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "frontend_performance",
+        "core_web_vitals"
+      ],
+      "studyContent": {
+        "mentalModel": "SSR means producing useful HTML on the server before the browser runs the application. CSR sends a JavaScript application that builds most of the initial interface in the browser.",
+        "problem": "Public pages may need content that search engines and users can see quickly, while internal tools may value a simpler client-only architecture. Choosing SSR automatically can add server cost, hydration constraints, caching decisions, and more failure modes without meaningful benefit.",
+        "example": "A public scanner product page is server-rendered so its title, description, price, and main image arrive as HTML. After hydration, the browser activates the purchase controls. The internal CRM remains a CSR application because it is authenticated and not search-indexed.",
+        "howItWorks": [
+          "Decide which content must be present before client JavaScript runs.",
+          "SSR renders the initial HTML on the server for a request; static generation can produce it earlier during a build.",
+          "The browser hydrates server HTML by attaching React behavior to matching markup.",
+          "Client navigation can continue as an SPA after the initial server-rendered response."
+        ],
+        "commonMistakes": [
+          "Claiming that SSR always makes an application faster.",
+          "Treating Next.js itself as an SEO guarantee instead of checking rendered content and crawlability.",
+          "Rendering different values on server and client, which causes hydration mismatches."
+        ],
+        "keyTerms": [
+          {
+            "term": "SSR",
+            "definition": "Server-side rendering, where HTML is produced on the server for the initial response."
+          },
+          {
+            "term": "CSR",
+            "definition": "Client-side rendering, where JavaScript builds the initial interface in the browser."
+          },
+          {
+            "term": "hydration",
+            "definition": "The process that attaches client-side React behavior to server-generated HTML."
+          },
+          {
+            "term": "SSG",
+            "definition": "Static generation, where HTML is produced ahead of requests, usually during a build."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "SSR és CSR",
+          "description": "SSR esetén a szerver készíti el a HTML-t, CSR esetén a böngésző építi fel a kezdeti felületet. A választás a felfedezhetőségtől, első betöltéstől, személyre szabástól és üzemeltetési költségtől függ.",
+          "studyContent": {
+            "mentalModel": "SSR azt jelenti, hogy a szerver már az alkalmazás böngészőbeli futása előtt használható HTML-t készít. CSR esetén egy JavaScript-alkalmazás érkezik, amely a kezdeti felület nagy részét a böngészőben építi fel.",
+            "problem": "A nyilvános oldalaknál fontos lehet, hogy a kereső és a felhasználó gyorsan lássa a tartalmat, míg egy belső eszköznél egyszerűbb lehet a kliensoldali architektúra. Az automatikusan választott SSR szerverköltséget, hydration-korlátokat, cache-döntéseket és új hibamódokat hozhat valódi előny nélkül.",
+            "example": "Egy nyilvános scanner-termékoldal SSR-rel adja vissza a címet, leírást, árat és fő képet. Hydration után aktiválódnak a vásárlási vezérlők. A belső CRM CSR marad, mert autentikált és nem kell keresőben indexelni.",
+            "howItWorks": [
+              "Döntsd el, mely tartalomnak kell már a kliens JavaScript futása előtt látszania.",
+              "SSR kéréskor a szerveren készíti el a kezdeti HTML-t; static generation ezt korábban, build során is megteheti.",
+              "A böngésző hydration során React-viselkedést kapcsol az egyező szerveroldali HTML-hez.",
+              "A kezdeti válasz után a kliensoldali navigáció továbbra is SPA-ként működhet."
+            ],
+            "commonMistakes": [
+              "Azt állítani, hogy az SSR minden alkalmazást automatikusan gyorsabbá tesz.",
+              "A Next.js-t önmagában SEO-garanciának tekinteni a renderelt tartalom és crawlability vizsgálata nélkül.",
+              "Eltérő értéket renderelni szerveren és kliensen, ami hydration mismatchhez vezet."
+            ],
+            "keyTerms": [
+              {
+                "term": "SSR",
+                "definition": "Szerveroldali renderelés, amelynél a kezdeti válasz HTML-je a szerveren készül."
+              },
+              {
+                "term": "CSR",
+                "definition": "Kliensoldali renderelés, amelynél a JavaScript a böngészőben építi fel a kezdeti felületet."
+              },
+              {
+                "term": "hydration",
+                "definition": "A folyamat, amely kliensoldali React-viselkedést kapcsol a szerver által generált HTML-hez."
+              },
+              {
+                "term": "SSG",
+                "definition": "Statikus generálás, amely előre, jellemzően build során készíti el a HTML-t."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "react_state_strategies",
+      "name": "React State Strategy",
+      "description": "A state strategy places each value in the smallest suitable owner and distinguishes local UI state, shared client state, URL state, and cached server data.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "state_management",
+        "redux_toolkit",
+        "artec_tanstack_query"
+      ],
+      "studyContent": {
+        "mentalModel": "React state strategy means choosing ownership according to a value's lifetime and users. A temporary form field, a shareable route filter, authenticated user data, and cached API data are not the same kind of state.",
+        "problem": "Putting everything in Redux or Context creates broad coupling and unnecessary updates. Keeping too much state local causes prop drilling and duplicated sources of truth. Copying server responses into several client stores creates synchronization bugs and stale data.",
+        "example": "A CRM customer page keeps the open accordion section as local state, stores the selected tab in the URL, reads customer records through a server-state cache, and keeps only the current session and global UI preferences in shared client state.",
+        "howItWorks": [
+          "Classify the value as local UI, shared client, URL, server, or derived state.",
+          "Keep the value in the smallest owner that must change it or coordinate it.",
+          "Use a server-state library for remote data freshness, retries, and mutation synchronization.",
+          "Derive values during rendering when they can be calculated from existing sources instead of storing duplicates."
+        ],
+        "commonMistakes": [
+          "Using a global store for every input field.",
+          "Copying query results into another store without a clear ownership reason.",
+          "Storing a derived value and then trying to keep it synchronized manually."
+        ],
+        "keyTerms": [
+          {
+            "term": "source of truth",
+            "definition": "The authoritative place from which a value is read and updated."
+          },
+          {
+            "term": "server state",
+            "definition": "Remote data whose freshness and synchronization are controlled outside the browser."
+          },
+          {
+            "term": "derived state",
+            "definition": "A value calculated from other state or props rather than stored independently."
+          },
+          {
+            "term": "URL state",
+            "definition": "Navigation or filter state encoded in the address so it can be shared or restored."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "State-stratégia Reactben",
+          "description": "A state-stratégia minden értéket a legkisebb megfelelő tulajdonoshoz helyez, és megkülönbözteti a lokális UI-state-et, megosztott kliensstate-et, URL-state-et és cache-elt szerveradatot.",
+          "studyContent": {
+            "mentalModel": "A React state-stratégia az érték élettartama és használói alapján választ tulajdonost. Egy ideiglenes formmező, megosztható route-szűrő, autentikált useradat és cache-elt API-adat nem ugyanaz a state-típus.",
+            "problem": "Ha minden Reduxba vagy Contextbe kerül, széles csatolás és fölösleges frissítés keletkezik. A túl sok lokális state prop drillinghez és több source of truthhoz vezethet. A szerverválaszok több kliensstore-ba másolása szinkronizációs hibát és stale adatot okoz.",
+            "example": "Egy CRM ügyféloldal lokális state-ben tartja a nyitott accordion részt, URL-ben a kiválasztott tabot, server-state cache-en keresztül az ügyféladatot, és csak a sessiont meg globális UI-beállításokat teszi megosztott kliensstate-be.",
+            "howItWorks": [
+              "Osztályozd az értéket lokális UI-, megosztott kliens-, URL-, szerver- vagy derived state-ként.",
+              "Tartsd annál a legkisebb tulajdonosnál, amelynek módosítania vagy koordinálnia kell.",
+              "Távoli adatok frissességéhez, retry-jához és mutációinak szinkronizálásához használj server-state könyvtárat.",
+              "A kiszámítható értékeket render közben derive-old, ne tárold őket külön másolatként."
+            ],
+            "commonMistakes": [
+              "Minden inputmezőt globális store-ban tartani.",
+              "Query-eredményt másik store-ba másolni egyértelmű tulajdonlási ok nélkül.",
+              "Derived értéket state-ben tárolni, majd manuálisan szinkronban tartani."
+            ],
+            "keyTerms": [
+              {
+                "term": "source of truth",
+                "definition": "Az a hiteles hely, ahonnan egy értéket olvasunk és frissítünk."
+              },
+              {
+                "term": "server state",
+                "definition": "Távoli adat, amelynek frissességét és szinkronizációját a böngészőn kívüli rendszer is meghatározza."
+              },
+              {
+                "term": "derived state",
+                "definition": "Más state-ből vagy propból kiszámított, nem önállóan tárolt érték."
+              },
+              {
+                "term": "URL state",
+                "definition": "A címbe kódolt navigációs vagy szűrőállapot, amely megosztható és visszaállítható."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "frontend_app_structure",
+      "name": "App Structure and Reusable Components",
+      "description": "A maintainable frontend groups code around stable product capabilities and separates reusable design-system primitives from feature-specific components.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "artec_design_system_architecture",
+        "api_contract_design"
+      ],
+      "studyContent": {
+        "mentalModel": "Frontend structure means organizing code so that a feature can be understood, changed, tested, and removed without searching across unrelated global folders. Reusable components capture a stable repeated pattern rather than every possible future variation.",
+        "problem": "A project organized only by file type scatters one feature across components, hooks, services, and tests. A single universal component with many Boolean props becomes difficult to understand. Copying similar UI instead causes visual and behavioral drift.",
+        "example": "A checkout feature keeps its route, components, hooks, API adapter, tests, and domain types together. It uses shared Button and Field primitives from the design system, but the CheckoutSummary remains feature-owned because it contains product rules.",
+        "howItWorks": [
+          "Choose product or feature boundaries that match how work is planned and released.",
+          "Keep feature-specific code close together and expose a small public entry point.",
+          "Place visual primitives and stable interaction patterns in the shared design system.",
+          "Extract reuse after the common behavior is understood, then keep the component API focused."
+        ],
+        "commonMistakes": [
+          "Creating a global shared folder that contains unrelated business components.",
+          "Abstracting from one example before a stable repeated pattern exists.",
+          "Designing a component with many Boolean switches instead of composition."
+        ],
+        "keyTerms": [
+          {
+            "term": "feature boundary",
+            "definition": "A code boundary around one product capability and its related behavior."
+          },
+          {
+            "term": "design-system primitive",
+            "definition": "A shared low-level component that applies consistent visual and interaction rules."
+          },
+          {
+            "term": "composition",
+            "definition": "Building larger behavior by combining focused components."
+          },
+          {
+            "term": "public API",
+            "definition": "The small supported surface through which other code uses a module."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Alkalmazásstruktúra és újrafelhasználható komponensek",
+          "description": "Egy karbantartható frontend stabil termékképességek köré rendezi a kódot, és különválasztja a design system primitíveket a feature-specifikus komponensektől.",
+          "studyContent": {
+            "mentalModel": "A frontend struktúra célja, hogy egy feature megérthető, módosítható, tesztelhető és eltávolítható legyen anélkül, hogy sok független globális mappát kellene átnézni. Az újrafelhasználható komponens stabilan ismétlődő mintát foglal össze.",
+            "problem": "A csak fájltípus szerint rendezett projekt szétszórja a feature-t komponensek, hookok, service-ek és tesztek között. A sok Boolean propot használó univerzális komponens nehezen érthető. A másolás viszont vizuális és működésbeli eltérést okoz.",
+            "example": "Egy checkout feature együtt tartja a route-ot, komponenseket, hookokat, API-adaptert, teszteket és domain type-okat. A design system Button és Field primitívjeit használja, de a CheckoutSummary feature-tulajdon marad, mert üzleti szabályokat ismer.",
+            "howItWorks": [
+              "Olyan product- vagy feature-határokat válassz, amelyek illeszkednek a tervezéshez és release-hez.",
+              "Tartsd közel egymáshoz a feature-specifikus kódot, és adj neki kis nyilvános belépési pontot.",
+              "A vizuális primitíveket és stabil interakciós mintákat tedd a közös design systembe.",
+              "A közös viselkedés megértése után emeld ki a reuse-t, és tartsd fókuszáltan a component API-t."
+            ],
+            "commonMistakes": [
+              "Globális shared mappába tenni egymástól független üzleti komponenseket.",
+              "Egyetlen példából absztrahálni, mielőtt stabil ismétlődő minta látszik.",
+              "Sok Boolean kapcsolóval konfigurálható komponenst tervezni kompozíció helyett."
+            ],
+            "keyTerms": [
+              {
+                "term": "feature-határ",
+                "definition": "Egy termékképesség és a hozzá tartozó viselkedés köré szervezett kódhatár."
+              },
+              {
+                "term": "design system primitív",
+                "definition": "Közös alacsony szintű komponens, amely következetes vizuális és interakciós szabályokat alkalmaz."
+              },
+              {
+                "term": "kompozíció",
+                "definition": "Nagyobb viselkedés felépítése fókuszált komponensek kombinálásával."
+              },
+              {
+                "term": "public API",
+                "definition": "Az a kis támogatott felület, amelyen keresztül más kód egy modult használ."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "react_legacy_migration",
+      "name": "Legacy Frontend Migration",
+      "description": "Legacy migration replaces old UI technology in small production-safe slices while preserving behavior and allowing old and new code to coexist temporarily.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "migration_strategy",
+        "artec_react_upgrade"
+      ],
+      "studyContent": {
+        "mentalModel": "Legacy frontend migration means moving from old templates, jQuery, or an outdated React stack without stopping normal delivery. The team introduces a controlled seam where the old and new implementations can coexist until each slice is retired.",
+        "problem": "A big-bang rewrite postpones value and must rediscover years of hidden behavior. An unplanned incremental migration can also fail if bridge code becomes permanent, styling conflicts spread, or two sources of truth control the same page.",
+        "example": "A Rails storefront keeps its server-rendered shell. One account page mounts a React 19 application inside a defined container, reads authentication from an agreed contract, and sends analytics through a shared adapter. After parity tests and rollout, the old jQuery page is removed.",
+        "howItWorks": [
+          "Inventory critical behavior, integrations, analytics, permissions, and browser constraints before replacing code.",
+          "Choose a migration seam such as a route, page, or isolated widget.",
+          "Define contracts for data, navigation, authentication, styling, and events between old and new code.",
+          "Ship a small slice, compare behavior and metrics, then remove the replaced code and temporary bridge."
+        ],
+        "commonMistakes": [
+          "Starting a multi-year rewrite with no independently shippable milestones.",
+          "Letting old and new code mutate the same state without a clear owner.",
+          "Keeping compatibility layers indefinitely because no removal criteria were defined."
+        ],
+        "keyTerms": [
+          {
+            "term": "migration seam",
+            "definition": "A controlled boundary at which old and new implementations connect."
+          },
+          {
+            "term": "strangler pattern",
+            "definition": "Replacing a legacy system one independently deliverable boundary at a time."
+          },
+          {
+            "term": "behavior parity",
+            "definition": "Evidence that the new implementation preserves the required user-visible behavior."
+          },
+          {
+            "term": "bridge",
+            "definition": "Temporary code that allows old and new parts to communicate during migration."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Legacy frontend migráció",
+          "description": "A legacy migráció kis, production-safe szeletekben cseréli le a régi UI-technológiát, miközben megőrzi a viselkedést, és ideiglenesen együtt futtatja a régi és új kódot.",
+          "studyContent": {
+            "mentalModel": "A legacy frontend migráció régi template-ekről, jQueryről vagy elavult React stackről vált úgy, hogy a normál delivery nem áll le. A csapat ellenőrzött seamet vezet be, ahol a régi és új implementáció együtt élhet az adott szelet kivezetéséig.",
+            "problem": "A big-bang újraírás sokáig nem szállít értéket, és újra fel kell fedeznie évek rejtett viselkedését. A terv nélküli fokozatos migráció is hibázhat, ha a bridge állandóvá válik, a style-konfliktusok terjednek, vagy két source of truth irányítja ugyanazt az oldalt.",
+            "example": "Egy Rails storefront megtartja a szerveroldali shellt. Egy account oldal egy definiált containerben React 19 appot mountol, megállapodott contractból olvassa az autentikációt, és közös adapteren küldi az analytics eseményeket. Parity teszt és rollout után a jQuery oldal eltávolítható.",
+            "howItWorks": [
+              "A csere előtt térképezd fel a kritikus viselkedést, integrációkat, analytics-et, permissionöket és böngészőkorlátokat.",
+              "Válassz migrációs seamet, például route-ot, oldalt vagy izolált widgetet.",
+              "Definiálj contractokat az adat, navigáció, autentikáció, styling és események átadására.",
+              "Szállíts kis szeletet, hasonlítsd össze a viselkedést és metrikákat, majd távolítsd el a lecserélt kódot és az ideiglenes bridge-et."
+            ],
+            "commonMistakes": [
+              "Többéves újraírást indítani önállóan szállítható mérföldkövek nélkül.",
+              "Engedni, hogy régi és új kód ugyanazt a state-et mutálja egyértelmű tulajdonos nélkül.",
+              "A compatibility réteget határozatlan ideig megtartani, mert nincs eltávolítási kritérium."
+            ],
+            "keyTerms": [
+              {
+                "term": "migration seam",
+                "definition": "Ellenőrzött határ, ahol a régi és új implementáció kapcsolódik."
+              },
+              {
+                "term": "strangler pattern",
+                "definition": "Legacy rendszer fokozatos cseréje önállóan szállítható határonként."
+              },
+              {
+                "term": "behavior parity",
+                "definition": "Bizonyíték arra, hogy az új implementáció megőrzi a szükséges felhasználói viselkedést."
+              },
+              {
+                "term": "bridge",
+                "definition": "Ideiglenes kód, amely migráció közben összeköti a régi és új részeket."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "frontend_quality_gates",
+      "name": "Frontend Quality Gates",
+      "description": "Frontend quality gates combine automated checks, focused tests, review, and rollout controls so common regressions are caught before or shortly after release.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "testing_strategy",
+        "artec_visual_regression",
+        "core_web_vitals"
+      ],
+      "studyContent": {
+        "mentalModel": "Frontend quality gates are repeatable checks that a change must pass before it is merged, deployed, or fully released. Different gates detect different problems: types catch contract mistakes, linting catches unsafe patterns, tests check behavior, and monitoring checks reality.",
+        "problem": "Relying only on manual testing is slow and inconsistent. Relying only on one large end-to-end suite creates slow and flaky feedback. A green pipeline still cannot prove that production users, browsers, data, and network conditions will behave exactly like the test environment.",
+        "example": "A pull request runs TypeScript, ESLint, unit and component tests, accessibility checks, and Chromatic snapshots. A small end-to-end suite covers checkout. After deployment, a feature flag limits exposure while error rate and Web Vitals are monitored.",
+        "howItWorks": [
+          "Run formatting, linting, type checking, and fast tests on every change.",
+          "Use component and integration tests for behavior, with a small number of critical end-to-end journeys.",
+          "Use visual and accessibility checks where layout and interaction consistency matter.",
+          "Deploy with monitoring, staged rollout, and a rollback path because production is another validation stage."
+        ],
+        "commonMistakes": [
+          "Adding slow flaky gates that developers repeatedly bypass.",
+          "Treating snapshots as a substitute for behavior assertions.",
+          "Assuming a passing pipeline removes the need for production monitoring."
+        ],
+        "keyTerms": [
+          {
+            "term": "quality gate",
+            "definition": "A check or review condition that must pass before work progresses."
+          },
+          {
+            "term": "visual regression",
+            "definition": "Comparison of rendered screenshots to detect unintended visual changes."
+          },
+          {
+            "term": "staged rollout",
+            "definition": "Releasing to a limited audience before full exposure."
+          },
+          {
+            "term": "rollback",
+            "definition": "A prepared way to return to the previous safe version."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Frontend minőségi kapuk",
+          "description": "A frontend quality gate-ek automatizált ellenőrzést, fókuszált tesztelést, review-t és rollout-kontrollt kombinálnak, hogy a gyakori regressziók release előtt vagy közvetlenül utána kiderüljenek.",
+          "studyContent": {
+            "mentalModel": "A frontend quality gate ismételhető ellenőrzés, amelyen egy változtatásnak merge, deployment vagy teljes rollout előtt át kell mennie. Más gate más hibát talál: a type check contracthibát, a lint veszélyes mintát, a teszt viselkedést, a monitoring pedig a valós működést ellenőrzi.",
+            "problem": "A csak manuális tesztelés lassú és következetlen. Egyetlen nagy end-to-end suite lassú és flaky visszajelzést adhat. A zöld pipeline sem bizonyítja, hogy production userrel, böngészővel, adattal és hálózattal minden pontosan úgy működik, mint tesztben.",
+            "example": "Egy pull request TypeScriptet, ESLintet, unit- és component teszteket, accessibility checket és Chromatic snapshotot futtat. Kevés E2E teszt védi a checkoutot. Deployment után feature flag korlátozza az elérést, miközben error rate-et és Web Vitals-t figyelnek.",
+            "howItWorks": [
+              "Minden változtatásnál futtass formázást, lintet, type checket és gyors teszteket.",
+              "Viselkedéshez használj component- és integration teszteket, kevés kritikus end-to-end folyamattal.",
+              "Ahol layout- és interakciókonzisztencia fontos, használj visual és accessibility ellenőrzést.",
+              "Monitoringgal, fokozatos rollouttal és rollback úttal deployolj, mert a production egy újabb validációs szint."
+            ],
+            "commonMistakes": [
+              "Lassú, flaky gate-eket hozzáadni, amelyeket a fejlesztők rendszeresen megkerülnek.",
+              "Snapshotot viselkedési assertion helyett használni.",
+              "Azt feltételezni, hogy a sikeres pipeline feleslegessé teszi a production monitoringot."
+            ],
+            "keyTerms": [
+              {
+                "term": "quality gate",
+                "definition": "Ellenőrzés vagy review-feltétel, amelynek teljesülnie kell a továbblépéshez."
+              },
+              {
+                "term": "visual regression",
+                "definition": "Renderelt képek összehasonlítása nem szándékos vizuális változás keresésére."
+              },
+              {
+                "term": "staged rollout",
+                "definition": "Korlátozott közönségnek történő release a teljes aktiválás előtt."
+              },
+              {
+                "term": "rollback",
+                "definition": "Előkészített lehetőség az előző biztonságos verzióra való visszatéréshez."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "ai_assisted_development",
+      "name": "AI-Assisted Development",
+      "description": "AI-assisted development uses models to generate or review code, but the developer still owns requirements, verification, security, and maintainability.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "artec_ai_generated_ui_review",
+        "frontend_quality_gates"
+      ],
+      "studyContent": {
+        "mentalModel": "AI-assisted development means using a model as a fast contributor whose output must be reviewed like untrusted code. It can create components, tests, documentation, migrations, or alternatives, but it does not take engineering responsibility.",
+        "problem": "Generated code can look convincing while misunderstanding product behavior, using an outdated API, weakening accessibility, duplicating existing abstractions, or introducing security and performance problems. Faster generation only helps when verification remains cheaper than writing and debugging the result manually.",
+        "example": "An AI tool converts a Figma section into React components. The developer checks the design-system primitives, responsive states, keyboard behavior, loading and error states, data contracts, bundle impact, and tests before accepting or rewriting the result.",
+        "howItWorks": [
+          "Provide relevant code, constraints, examples, and a clear definition of done.",
+          "Keep tasks bounded so the generated result can be reviewed and tested.",
+          "Review architecture, correctness, security, accessibility, performance, and maintainability instead of checking only visual similarity.",
+          "Measure whether the workflow improves delivery or quality and adjust where review cost becomes too high."
+        ],
+        "commonMistakes": [
+          "Merging generated code because it compiles or looks correct.",
+          "Sending secrets or private data to an unapproved service.",
+          "Using AI to avoid understanding a critical design or migration decision."
+        ],
+        "keyTerms": [
+          {
+            "term": "verification",
+            "definition": "Independent evidence, such as tests and execution, that generated output behaves correctly."
+          },
+          {
+            "term": "prompt context",
+            "definition": "The relevant requirements, constraints, examples, and code supplied to the model."
+          },
+          {
+            "term": "hallucination",
+            "definition": "A plausible-looking but incorrect generated statement or implementation."
+          },
+          {
+            "term": "human ownership",
+            "definition": "The engineer remains accountable for the accepted result."
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": "AI-val támogatott fejlesztés",
+          "description": "Az AI-val támogatott fejlesztés modelleket használ kód generálására vagy review-jára, de a követelményekért, ellenőrzésért, biztonságért és karbantarthatóságért továbbra is a fejlesztő felel.",
+          "studyContent": {
+            "mentalModel": "Az AI-val támogatott fejlesztés a modellt gyors közreműködőként kezeli, amelynek eredményét nem megbízható kódként kell review-zni. Komponenst, tesztet, dokumentációt, migrációt vagy alternatívát készíthet, de mérnöki felelősséget nem vállal.",
+            "problem": "A generált kód meggyőző lehet, miközben félreérti a termékviselkedést, elavult API-t használ, rontja az accessibilityt, duplikál meglévő absztrakciót, vagy security- és performance-problémát hoz be. A gyors generálás csak akkor előny, ha az ellenőrzés olcsóbb marad a kézi fejlesztésnél és hibajavításnál.",
+            "example": "Egy AI-eszköz React komponensekké alakít egy Figma-részletet. A fejlesztő ellenőrzi a design system primitíveket, responsive állapotokat, billentyűzetes működést, loading/error state-eket, adatcontractot, bundle-hatást és teszteket, majd elfogadja vagy átírja az eredményt.",
+            "howItWorks": [
+              "Adj releváns kódot, korlátokat, példákat és világos definition of done-t.",
+              "Tartsd a feladatot körülhatároltan, hogy a generált eredmény review-zható és tesztelhető legyen.",
+              "Az architektúrát, helyességet, securityt, accessibilityt, performance-ot és karbantarthatóságot is vizsgáld, ne csak a vizuális egyezést.",
+              "Mérd, hogy a workflow javítja-e a deliveryt vagy minőséget, és módosítsd, ahol túl magas a review költsége."
+            ],
+            "commonMistakes": [
+              "Generált kódot merge-elni csak azért, mert fordul vagy jól néz ki.",
+              "Titkot vagy privát adatot nem jóváhagyott szolgáltatásnak elküldeni.",
+              "AI-val elkerülni egy kritikus design- vagy migrációs döntés megértését."
+            ],
+            "keyTerms": [
+              {
+                "term": "verification",
+                "definition": "Független bizonyíték, például teszt és futtatás arra, hogy a generált eredmény helyesen működik."
+              },
+              {
+                "term": "prompt context",
+                "definition": "A modellnek adott releváns követelmények, korlátok, példák és kód."
+              },
+              {
+                "term": "hallucináció",
+                "definition": "Hihetőnek tűnő, de hibás generált állítás vagy implementáció."
+              },
+              {
+                "term": "emberi felelősség",
+                "definition": "Az elfogadott eredményért továbbra is a mérnök számoltatható el."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "react_memoization",
+      "name": "React Memoization",
+      "description": "React memoization can reuse component results, values, or function references when inputs stay equal, but it should follow profiling and structural fixes.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react_rendering_model",
+        "frontend_performance",
+        "artec_list_virtualization"
+      ],
+      "studyContent": {
+        "mentalModel": "Memoization means reusing previous work when the inputs relevant to that work have not changed. React.memo can skip some child renders, useMemo can reuse a calculated value, and useCallback can reuse a function reference.",
+        "problem": "Unnecessary rendering may waste time, but memoization adds comparisons, retained values, dependency management, and cognitive cost. It cannot repair incorrect state ownership or an effect loop, and fresh object or function props can defeat a memoized child.",
+        "example": "A product table is slow because filtering ten thousand records runs on every unrelated state change. Profiling confirms the calculation is expensive. The filtered result is memoized by the actual filter and records, while row components receive stable primitive props. The team does not memoize the small toolbar.",
+        "howItWorks": [
+          "Profile the interaction and identify which component or calculation is expensive.",
+          "Reduce the changing state scope, split components, and remove unnecessary derived state before adding caches.",
+          "Use React.memo when a costly child often receives equal props.",
+          "Use useMemo or useCallback only when a stable result or reference supports a measured optimization."
+        ],
+        "commonMistakes": [
+          "Adding useMemo and useCallback to every value and function.",
+          "Omitting dependencies to force a stable reference.",
+          "Assuming React.memo prevents every render or that useMemo is a correctness guarantee."
+        ],
+        "keyTerms": [
+          {
+            "term": "referential equality",
+            "definition": "Whether two references point to the same object, array, or function."
+          },
+          {
+            "term": "React.memo",
+            "definition": "A component optimization that may skip rendering when props compare equal."
+          },
+          {
+            "term": "useMemo",
+            "definition": "A Hook that may reuse a calculated value between renders."
+          },
+          {
+            "term": "useCallback",
+            "definition": "A Hook that may reuse a function reference between renders."
+          },
+          {
+            "term": "profiling",
+            "definition": "Measurement used to locate expensive rendering or JavaScript work."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Memoizáció Reactben",
+          "description": "A React memoizáció újra felhasználhat komponenseredményt, értéket vagy függvényreferenciát, ha a bemenetek változatlanok, de profilozás és strukturális javítás után érdemes alkalmazni.",
+          "studyContent": {
+            "mentalModel": "A memoizáció korábbi munkát használ újra, ha az ahhoz tartozó bemenetek nem változtak. A React.memo kihagyhat bizonyos child rendereket, a useMemo újra felhasználhat egy számított értéket, a useCallback pedig egy függvényreferenciát.",
+            "problem": "A fölösleges render időt pazarolhat, de a memoizáció összehasonlítást, megtartott értékeket, dependencykezelést és megértési költséget hoz. Nem javít rossz state ownershipöt vagy effect loopot, a friss object- vagy function prop pedig hatástalaníthatja a memoizált childot.",
+            "example": "Egy product table lassú, mert tízezer rekord szűrése minden független state-változásnál lefut. A profiling igazolja a költséget. A szűrt eredmény a tényleges filter és rekordlista alapján memoizált, a row komponensek stabil primitív propokat kapnak. A kis toolbar nem kap fölösleges memoizációt.",
+            "howItWorks": [
+              "Profilozd az interakciót, és keresd meg a drága komponenst vagy számítást.",
+              "Cache előtt szűkítsd a változó state hatókörét, bontsd a komponenseket és szüntesd meg a fölösleges derived state-et.",
+              "Akkor használj React.memo-t, ha egy költséges child gyakran azonos propokat kap.",
+              "useMemo-t vagy useCallbackot csak akkor használj, ha stabil eredmény vagy referencia mért optimalizációt támogat."
+            ],
+            "commonMistakes": [
+              "Minden értékre és függvényre useMemo-t vagy useCallbackot tenni.",
+              "Dependencyt kihagyni csak a stabil referencia kedvéért.",
+              "Azt feltételezni, hogy React.memo minden rendert megakadályoz, vagy a useMemo helyességi garancia."
+            ],
+            "keyTerms": [
+              {
+                "term": "referenciaegyenlőség",
+                "definition": "Azt jelzi, hogy két referencia ugyanarra az objektumra, tömbre vagy függvényre mutat-e."
+              },
+              {
+                "term": "React.memo",
+                "definition": "Komponensoptimalizáció, amely azonos propoknál kihagyhat egy rendert."
+              },
+              {
+                "term": "useMemo",
+                "definition": "Hook, amely renderek között újra felhasználhat egy számított értéket."
+              },
+              {
+                "term": "useCallback",
+                "definition": "Hook, amely renderek között újra felhasználhat egy függvényreferenciát."
+              },
+              {
+                "term": "profilozás",
+                "definition": "Mérés, amely segít megtalálni a drága renderelést vagy JavaScript-munkát."
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "hybrid_optimizing_unnecessary_re_renders",
+      "title": "Optimizing unnecessary re-renders",
+      "prompt": "A React page feels slow and appears to re-render too much. How would you investigate and optimize it, and when would virtualization be more important than memoization?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "react_memoization",
+        "react_rendering_model",
+        "artec_list_virtualization"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_optimizing_unnecessary_re_renders_point_1",
+          "label": "Measures before changing code",
+          "description": "Uses React Profiler or browser tooling to identify the expensive interaction and component rather than guessing.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "react profiler",
+            "performance profile",
+            "measure first",
+            "browser performance",
+            "flame chart"
+          ]
+        },
+        {
+          "id": "hybrid_optimizing_unnecessary_re_renders_point_2",
+          "label": "Fixes state and component boundaries",
+          "description": "Narrows state ownership, splits expensive subtrees, and avoids passing unnecessary changing props before adding caches.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "local state",
+            "split components",
+            "state scope",
+            "trim props",
+            "component boundary"
+          ]
+        },
+        {
+          "id": "hybrid_optimizing_unnecessary_re_renders_point_3",
+          "label": "Applies memoization selectively",
+          "description": "Explains when React.memo, useMemo, and useCallback help and how fresh references can defeat them.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "react memo",
+            "usememo",
+            "usecallback",
+            "stable references",
+            "referential equality"
+          ]
+        },
+        {
+          "id": "hybrid_optimizing_unnecessary_re_renders_point_4",
+          "label": "Uses virtualization for large DOMs",
+          "description": "Recognizes that a huge mounted list needs windowing or pagination because memoization alone does not reduce DOM size.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "list virtualization",
+            "windowing",
+            "visible rows",
+            "react window",
+            "pagination"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_optimizing_unnecessary_re_renders_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What evidence would convince you that the optimization improved the real user experience rather than only a synthetic benchmark?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Fölösleges újrarenderelések optimalizálása",
+          "prompt": "Egy React-oldal lassúnak érződik, és túl sokszor renderel újra. Hogyan vizsgálnád ki és optimalizálnád, és mikor fontosabb a virtualizáció a memoizációnál?",
+          "answerStructureHint": "Kiinduló mérés, strukturális javítások, célzott optimalizáció, ellenőrzés.",
+          "expectedPoints": {
+            "hybrid_optimizing_unnecessary_re_renders_point_1": {
+              "label": "Mérésből indul ki",
+              "description": "React Profilerrel vagy böngészős eszközzel azonosítja a drága interakciót és komponenst, nem találomra optimalizál."
+            },
+            "hybrid_optimizing_unnecessary_re_renders_point_2": {
+              "label": "Javítja a state- és komponenshatárokat",
+              "description": "Szűkíti a state ownershipöt, bontja a drága részfát, és csökkenti a fölöslegesen változó propokat cache előtt."
+            },
+            "hybrid_optimizing_unnecessary_re_renders_point_3": {
+              "label": "Szelektíven memoizál",
+              "description": "Elmagyarázza, mikor segít a React.memo, useMemo és useCallback, illetve hogyan tehetik hatástalanná őket a friss referenciák."
+            },
+            "hybrid_optimizing_unnecessary_re_renders_point_4": {
+              "label": "Nagy DOM-nál virtualizál",
+              "description": "Felismeri, hogy egy hatalmas mountolt lista windowingot vagy paginationt igényel, mert a memoizáció önmagában nem csökkenti a DOM méretét."
+            }
+          },
+          "followUps": {
+            "hybrid_optimizing_unnecessary_re_renders_followup_1": "Milyen bizonyíték győzne meg arról, hogy az optimalizáció a valódi user experience-et javította, nem csak egy szintetikus benchmarkot?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_what_triggers_a_react_re_render",
+      "title": "What triggers a React re-render?",
+      "prompt": "What can cause a React function component to render again, and which of those renders necessarily produce DOM changes?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "react_rendering_model"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_what_triggers_a_react_re_render_point_1",
+          "label": "Names the main triggers",
+          "description": "Covers state updates, parent renders, and changes to consumed context, while noting that external stores can also schedule updates.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "state update",
+            "parent render",
+            "context change",
+            "store update",
+            "props changed"
+          ]
+        },
+        {
+          "id": "hybrid_what_triggers_a_react_re_render_point_2",
+          "label": "Separates render from commit",
+          "description": "Explains that component execution calculates a candidate UI and does not automatically mean that the DOM changes.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "render phase",
+            "commit phase",
+            "dom unchanged",
+            "not every render",
+            "candidate ui"
+          ]
+        },
+        {
+          "id": "hybrid_what_triggers_a_react_re_render_point_3",
+          "label": "Mentions identity and bailouts",
+          "description": "Explains that memoization, equal props, unchanged state, and stable element identity can let React avoid or minimize work.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "react memo",
+            "equal props",
+            "same state",
+            "stable key",
+            "bail out"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_what_triggers_a_react_re_render_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Can setting state to the same value still result in some component code running, and why should correctness not depend on a bailout?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mi vált ki React re-rendert?",
+          "prompt": "Mi okozhatja egy React function component újrarenderelését, és ezek közül melyik jelent szükségszerűen DOM-változást?",
+          "answerStructureHint": "Triggerek, render és commit különbsége, lehetséges bailoutok.",
+          "expectedPoints": {
+            "hybrid_what_triggers_a_react_re_render_point_1": {
+              "label": "Megnevezi a fő triggereket",
+              "description": "Kitér a state update-re, parent renderre és használt context változására, valamint megemlíti, hogy külső store is ütemezhet frissítést."
+            },
+            "hybrid_what_triggers_a_react_re_render_point_2": {
+              "label": "Elválasztja a rendert a committól",
+              "description": "Elmagyarázza, hogy a komponens lefutása egy lehetséges UI-t számít ki, és ez nem jelenti automatikusan a DOM módosítását."
+            },
+            "hybrid_what_triggers_a_react_re_render_point_3": {
+              "label": "Beszél az identitásról és bailoutokról",
+              "description": "Elmagyarázza, hogy memoizáció, azonos prop, változatlan state és stabil element identity csökkentheti vagy kihagyhatja a munkát."
+            }
+          },
+          "followUps": {
+            "hybrid_what_triggers_a_react_re_render_followup_1": "Azonos értékre történő state update mellett is lefuthat-e component code, és miért nem szabad a helyességet bailoutokra építeni?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_reconciliation_after_state_change_001",
+      "title": "Reconciliation after a state change",
+      "prompt": "After a state update, how does React determine what should be preserved, updated, or replaced in the UI?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "react_rendering_model"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_reconciliation_after_state_change_001_point_1",
+          "label": "Creates a new element description",
+          "description": "Explains that React calls the affected components to calculate a new element tree from current state and props.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "new element tree",
+            "component functions",
+            "current state",
+            "render phase",
+            "ui description"
+          ]
+        },
+        {
+          "id": "artec_reconciliation_after_state_change_001_point_2",
+          "label": "Compares type, position, and keys",
+          "description": "Explains that reconciliation uses element type and sibling position, with keys providing stable identity in lists.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "element type",
+            "sibling position",
+            "stable keys",
+            "reconciliation",
+            "preserve identity"
+          ]
+        },
+        {
+          "id": "artec_reconciliation_after_state_change_001_point_3",
+          "label": "Commits only required host changes",
+          "description": "Distinguishes the comparison from the commit that applies selected DOM mutations and effects.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "dom changes",
+            "commit phase",
+            "minimal updates",
+            "host changes",
+            "run effects"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_reconciliation_after_state_change_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What happens to a child component's local state if its element type or key changes?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Reconciliation state-változás után",
+          "prompt": "Egy state update után hogyan dönti el a React, hogy mit őrizzen meg, frissítsen vagy cseréljen le a UI-ban?",
+          "answerStructureHint": "Új UI-leírás, identitás-összehasonlítás, commit.",
+          "expectedPoints": {
+            "artec_reconciliation_after_state_change_001_point_1": {
+              "label": "Új element leírást készít",
+              "description": "Elmagyarázza, hogy a React meghívja az érintett komponenseket, és az aktuális state-ből meg propokból új element tree-t számít."
+            },
+            "artec_reconciliation_after_state_change_001_point_2": {
+              "label": "Típust, pozíciót és key-t hasonlít",
+              "description": "Elmagyarázza, hogy a reconciliation az element type-ot és sibling pozíciót használja, listában pedig a key ad stabil identitást."
+            },
+            "artec_reconciliation_after_state_change_001_point_3": {
+              "label": "Csak a szükséges host-változást commitolja",
+              "description": "Különválasztja az összehasonlítást a committól, amely a kiválasztott DOM-módosításokat és effecteket alkalmazza."
+            }
+          },
+          "followUps": {
+            "artec_reconciliation_after_state_change_001_followup_1": "Mi történik egy child component lokális state-jével, ha az element type vagy a key megváltozik?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_ssr_vs_csr_do_you_need_next_js",
+      "title": "SSR vs CSR — do you need Next.js?",
+      "prompt": "You are choosing an architecture for a public storefront and an authenticated internal CRM. Where would you use CSR, SSR, or static generation, and does choosing Next.js automatically improve SEO?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "ssr_csr",
+        "core_web_vitals"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_ssr_vs_csr_do_you_need_next_js_point_1",
+          "label": "Starts from product requirements",
+          "description": "Uses public discoverability, first content, personalization, update frequency, and operational constraints to choose a rendering model.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "public content",
+            "search indexing",
+            "first content",
+            "personalization",
+            "operational complexity"
+          ]
+        },
+        {
+          "id": "hybrid_ssr_vs_csr_do_you_need_next_js_point_2",
+          "label": "Explains rendering options",
+          "description": "Correctly distinguishes CSR, request-time SSR, and build-time static generation, including hydration where needed.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "client rendering",
+            "server rendering",
+            "static generation",
+            "request time",
+            "hydration"
+          ]
+        },
+        {
+          "id": "hybrid_ssr_vs_csr_do_you_need_next_js_point_3",
+          "label": "Rejects framework-as-SEO guarantee",
+          "description": "Explains that Next.js enables rendering strategies but SEO also depends on rendered content, crawlability, metadata, performance, and site quality.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "not automatic",
+            "rendered html",
+            "crawlability",
+            "metadata",
+            "site performance"
+          ]
+        },
+        {
+          "id": "hybrid_ssr_vs_csr_do_you_need_next_js_point_4",
+          "label": "Accounts for complexity",
+          "description": "Mentions server cost, caching, hydration mismatches, browser-only APIs, and deployment complexity as trade-offs.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "server cost",
+            "hydration mismatch",
+            "caching strategy",
+            "browser api",
+            "deployment complexity"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_ssr_vs_csr_do_you_need_next_js_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would your answer change for a product detail page whose price is personalized per customer?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "SSR vagy CSR – kell-e Next.js?",
+          "prompt": "Egy nyilvános storefront és egy autentikált belső CRM architektúráját választod. Hol használnál CSR-t, SSR-t vagy static generationt, és a Next.js önmagában javítja-e a SEO-t?",
+          "answerStructureHint": "Követelmények, renderelési opciók, SEO, trade-offok.",
+          "expectedPoints": {
+            "hybrid_ssr_vs_csr_do_you_need_next_js_point_1": {
+              "label": "Productkövetelményből indul",
+              "description": "A public discoverability, first content, personalization, frissítési gyakoriság és üzemeltetési korlátok alapján választ renderelési modellt."
+            },
+            "hybrid_ssr_vs_csr_do_you_need_next_js_point_2": {
+              "label": "Elmagyarázza a renderelési opciókat",
+              "description": "Helyesen megkülönbözteti a CSR-t, request-time SSR-t és build-time static generationt, szükség esetén hydrationnel."
+            },
+            "hybrid_ssr_vs_csr_do_you_need_next_js_point_3": {
+              "label": "Elutasítja a framework mint SEO-garancia gondolatát",
+              "description": "Elmagyarázza, hogy a Next.js renderelési lehetőséget ad, de a SEO a renderelt tartalomtól, crawlabilitytől, metadatától, performance-tól és site qualitytől is függ."
+            },
+            "hybrid_ssr_vs_csr_do_you_need_next_js_point_4": {
+              "label": "Számol az összetettséggel",
+              "description": "Megemlíti a server costot, cache-stratégiát, hydration mismatch-et, browser-only API-kat és deployment complexityt."
+            }
+          },
+          "followUps": {
+            "hybrid_ssr_vs_csr_do_you_need_next_js_followup_1": "Hogyan változna a válaszod egy olyan product detail page-nél, ahol az ár ügyfelenként személyre szabott?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_ssr_main_advantage_001",
+      "title": "What is the main advantage of SSR?",
+      "prompt": "What is the primary advantage of server-side rendering, and in which applications might that advantage not justify the added complexity?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "ssr_csr"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_ssr_main_advantage_001_point_1",
+          "label": "States the initial HTML advantage",
+          "description": "Explains that useful content can arrive as HTML before the client application finishes loading and running.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "initial html",
+            "content before javascript",
+            "server generated",
+            "first response",
+            "useful markup"
+          ]
+        },
+        {
+          "id": "artec_ssr_main_advantage_001_point_2",
+          "label": "Connects it to users and crawlers",
+          "description": "Relates the advantage to first content, constrained devices or networks, link previews, and search-engine discovery.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "first content",
+            "search crawler",
+            "slow device",
+            "link preview",
+            "discoverability"
+          ]
+        },
+        {
+          "id": "artec_ssr_main_advantage_001_point_3",
+          "label": "Names cases with limited benefit",
+          "description": "Recognizes that authenticated internal tools or highly interactive applications may gain little from SSR relative to its cost.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "internal crm",
+            "authenticated app",
+            "limited seo",
+            "server complexity",
+            "client only"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_ssr_main_advantage_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can a server-rendered page still feel slow or become interactive late?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mi az SSR fő előnye?",
+          "prompt": "Mi a server-side rendering elsődleges előnye, és mely alkalmazásoknál nem biztos, hogy ez indokolja a plusz összetettséget?",
+          "answerStructureHint": "Kezdeti HTML, user- és crawlerelőny, korlátozott használati esetek.",
+          "expectedPoints": {
+            "artec_ssr_main_advantage_001_point_1": {
+              "label": "Kimondja a kezdeti HTML előnyét",
+              "description": "Elmagyarázza, hogy használható tartalom érkezhet HTML-ként még a kliensapp teljes betöltése és futása előtt."
+            },
+            "artec_ssr_main_advantage_001_point_2": {
+              "label": "Userhez és crawlerhez köti",
+              "description": "Az előnyt first contenthez, gyenge eszközhöz vagy hálózathoz, link preview-hoz és search discoveryhez kapcsolja."
+            },
+            "artec_ssr_main_advantage_001_point_3": {
+              "label": "Megnevezi a korlátozott előnyű eseteket",
+              "description": "Felismeri, hogy autentikált belső tool vagy erősen interaktív app kevés előnyt kaphat SSR-ből a költségéhez képest."
+            }
+          },
+          "followUps": {
+            "artec_ssr_main_advantage_001_followup_1": "Miért érezhet egy server-rendered page mégis lassúnak, vagy miért válhat későn interaktívvá?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_nextjs_seo_001",
+      "title": "Plain React vs Next.js for SEO",
+      "prompt": "Does a plain React application or a Next.js application have an inherent search-ranking advantage? Explain what actually determines whether a page is discoverable and indexable.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "ssr_csr",
+        "core_web_vitals"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_nextjs_seo_001_point_1",
+          "label": "Rejects an inherent ranking bonus",
+          "description": "Explains that search engines do not rank a site higher merely because it uses Next.js or lower merely because it uses React.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "no inherent bonus",
+            "framework neutral",
+            "not nextjs alone",
+            "not react alone",
+            "ranking factors"
+          ]
+        },
+        {
+          "id": "artec_nextjs_seo_001_point_2",
+          "label": "Explains rendering and crawlability",
+          "description": "Covers whether meaningful HTML, links, metadata, status codes, and canonical URLs are available to crawlers.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "rendered content",
+            "crawlable links",
+            "metadata",
+            "status codes",
+            "canonical url"
+          ]
+        },
+        {
+          "id": "artec_nextjs_seo_001_point_3",
+          "label": "Includes performance and content quality",
+          "description": "Mentions user-centric performance, mobile usability, structured data where relevant, and useful unique content.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "core web vitals",
+            "mobile usability",
+            "structured data",
+            "unique content",
+            "page performance"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_nextjs_seo_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you verify that a client-rendered page is actually indexable instead of assuming that modern crawlers execute it correctly?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Plain React vagy Next.js SEO szempontból",
+          "prompt": "Van-e egy plain React vagy Next.js alkalmazásnak önmagában search-ranking előnye? Magyarázd el, mitől lesz egy oldal valóban felfedezhető és indexelhető.",
+          "answerStructureHint": "Nincs framework-bónusz, renderelt tartalom, technikai SEO és performance.",
+          "expectedPoints": {
+            "artec_nextjs_seo_001_point_1": {
+              "label": "Elutasítja az automatikus rankingelőnyt",
+              "description": "Elmagyarázza, hogy a kereső nem rangsorol magasabbra pusztán Next.js miatt, és nem alacsonyabbra pusztán React miatt."
+            },
+            "artec_nextjs_seo_001_point_2": {
+              "label": "Elmagyarázza a renderelést és crawlabilityt",
+              "description": "Kitér arra, hogy a crawler számára elérhető-e a jelentős HTML, link, metadata, status code és canonical URL."
+            },
+            "artec_nextjs_seo_001_point_3": {
+              "label": "Performance-ot és tartalomminőséget is említ",
+              "description": "Megemlíti a user-centric performance-ot, mobile usabilityt, releváns structured datát és hasznos egyedi tartalmat."
+            }
+          },
+          "followUps": {
+            "artec_nextjs_seo_001_followup_1": "Hogyan ellenőriznéd, hogy egy client-rendered page valóban indexelhető, ahelyett hogy feltételeznéd, hogy a modern crawler helyesen futtatja?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_state_management_without_redux",
+      "title": "State management without Redux",
+      "prompt": "A team proposes putting all application state into Redux Toolkit. How would you decide what should remain local, what belongs in the URL, what is server state, and what genuinely needs a shared client store?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "design_review"
+      ],
+      "topicIds": [
+        "react_state_strategies",
+        "redux_toolkit",
+        "artec_tanstack_query"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_state_management_without_redux_point_1",
+          "label": "Classifies state by ownership",
+          "description": "Distinguishes local UI state, shared client state, URL state, server state, and derived values.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "local state",
+            "server state",
+            "url state",
+            "shared state",
+            "derived state"
+          ]
+        },
+        {
+          "id": "hybrid_state_management_without_redux_point_2",
+          "label": "Keeps ownership narrow",
+          "description": "Places state at the smallest common owner and avoids global storage for temporary interaction details.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "smallest owner",
+            "lift state",
+            "avoid global",
+            "component state",
+            "nearest parent"
+          ]
+        },
+        {
+          "id": "hybrid_state_management_without_redux_point_3",
+          "label": "Uses specialized tools deliberately",
+          "description": "Uses URL state for shareable navigation, TanStack Query for remote data, and Redux only for cross-cutting client-owned domains that need it.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "query cache",
+            "redux toolkit",
+            "shareable url",
+            "remote data",
+            "cross cutting"
+          ]
+        },
+        {
+          "id": "hybrid_state_management_without_redux_point_4",
+          "label": "Avoids duplicate sources of truth",
+          "description": "Warns against copying query results or derived values into another store and maintaining manual synchronization.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "single source",
+            "avoid duplication",
+            "do not copy",
+            "stale data",
+            "manual sync"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_state_management_without_redux_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give an example of state that initially appears global but should probably remain inside one feature boundary.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "State management Redux nélkül",
+          "prompt": "Egy csapat az összes application state-et Redux Toolkitbe tenné. Hogyan döntöd el, mi maradjon local, mi kerüljön URL-be, mi server state, és mi igényel valóban shared client store-t?",
+          "answerStructureHint": "State-típusok, ownership, célzott eszközválasztás, source of truth.",
+          "expectedPoints": {
+            "hybrid_state_management_without_redux_point_1": {
+              "label": "Tulajdonlás szerint osztályoz",
+              "description": "Megkülönbözteti a local UI state-et, shared client state-et, URL state-et, server state-et és derived értéket."
+            },
+            "hybrid_state_management_without_redux_point_2": {
+              "label": "Szűken tartja az ownershipöt",
+              "description": "A state-et a legkisebb közös ownernél tartja, és ideiglenes interakciós részlethez nem használ globális store-t."
+            },
+            "hybrid_state_management_without_redux_point_3": {
+              "label": "Célzottan választ eszközt",
+              "description": "URL-state-et használ megosztható navigációhoz, TanStack Queryt remote adathoz, Reduxot pedig indokolt cross-cutting client-owned domainhez."
+            },
+            "hybrid_state_management_without_redux_point_4": {
+              "label": "Kerüli a több source of truthot",
+              "description": "Figyelmeztet query-eredmény vagy derived érték másik store-ba másolására és manuális szinkronizálására."
+            }
+          },
+          "followUps": {
+            "hybrid_state_management_without_redux_followup_1": "Mondj példát olyan state-re, amely elsőre globálisnak tűnik, de valószínűleg egy feature boundaryn belül kell maradnia."
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_which_state_goes_where",
+      "title": "Which state goes where?",
+      "prompt": "For a CRM page with filters, a customer record, an unsaved edit form, an open modal, and the logged-in user's permissions, place each kind of state and justify the ownership.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "react_state_strategies",
+        "artec_forms_architecture",
+        "artec_tanstack_query"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_which_state_goes_where_point_1",
+          "label": "Places navigation state in the URL",
+          "description": "Stores shareable filters, sort order, selected tab, or pagination in the URL where appropriate.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "url parameters",
+            "search params",
+            "shareable filters",
+            "browser history",
+            "deep link"
+          ]
+        },
+        {
+          "id": "hybrid_which_state_goes_where_point_2",
+          "label": "Treats records as server state",
+          "description": "Keeps the customer record in a query cache with freshness and mutation handling rather than duplicating it globally.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "query cache",
+            "server state",
+            "customer record",
+            "invalidate query",
+            "remote data"
+          ]
+        },
+        {
+          "id": "hybrid_which_state_goes_where_point_3",
+          "label": "Keeps drafts and ephemeral UI local",
+          "description": "Places unsaved form values and modal visibility in the feature or component that owns the interaction.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "form draft",
+            "local state",
+            "modal state",
+            "feature state",
+            "component owner"
+          ]
+        },
+        {
+          "id": "hybrid_which_state_goes_where_point_4",
+          "label": "Handles permissions as shared session data",
+          "description": "Treats logged-in identity and permissions as shared, stable session data consumed through a focused boundary.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "session state",
+            "user permissions",
+            "auth context",
+            "shared identity",
+            "authorization"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_which_state_goes_where_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What changes if the form must survive a page refresh and be shareable with another user?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Melyik state hova kerüljön?",
+          "prompt": "Egy CRM oldalon filterek, customer record, nem mentett edit form, nyitott modal és a bejelentkezett user permissionjei vannak. Helyezd el mindegyik state-et, és indokold az ownershipöt.",
+          "answerStructureHint": "URL, server state, lokális draft és shared session.",
+          "expectedPoints": {
+            "hybrid_which_state_goes_where_point_1": {
+              "label": "A navigációs state-et URL-be teszi",
+              "description": "A megosztható filtert, sort ordert, selected tabot vagy paginationt szükség szerint URL-ben tartja."
+            },
+            "hybrid_which_state_goes_where_point_2": {
+              "label": "A rekordot server state-ként kezeli",
+              "description": "A customer recordot query cache-ben tartja frissesség- és mutationkezeléssel, nem duplikálja globálisan."
+            },
+            "hybrid_which_state_goes_where_point_3": {
+              "label": "A draftot és ephemeral UI-t localban tartja",
+              "description": "A nem mentett formértéket és modal visibilityt az interakciót birtokló feature-ben vagy componentben tartja."
+            },
+            "hybrid_which_state_goes_where_point_4": {
+              "label": "A permissiont shared session adatként kezeli",
+              "description": "A bejelentkezett identityt és permissiont fókuszált határon keresztül használt shared, stabil session adatként kezeli."
+            }
+          },
+          "followUps": {
+            "hybrid_which_state_goes_where_followup_1": "Mi változik, ha a formnak túl kell élnie a page refresht, és másik userrel is megoszthatónak kell lennie?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_structuring_a_large_react_app",
+      "title": "Structuring a large React application",
+      "prompt": "How would you structure a large React codebase used by several teams so that features remain understandable and shared components do not become a dumping ground?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "design_review"
+      ],
+      "topicIds": [
+        "frontend_app_structure",
+        "artec_design_system_architecture"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_structuring_a_large_react_app_point_1",
+          "label": "Uses feature-oriented boundaries",
+          "description": "Groups a feature's components, hooks, tests, API adapters, and types near each other with a small public entry point.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "feature folders",
+            "feature boundary",
+            "colocate tests",
+            "public entry",
+            "domain modules"
+          ]
+        },
+        {
+          "id": "hybrid_structuring_a_large_react_app_point_2",
+          "label": "Separates primitives from business components",
+          "description": "Keeps design-system primitives generic while product components remain within the domain that understands their business meaning.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "design system",
+            "ui primitives",
+            "business component",
+            "domain ownership",
+            "shared library"
+          ]
+        },
+        {
+          "id": "hybrid_structuring_a_large_react_app_point_3",
+          "label": "Defines dependency direction",
+          "description": "Prevents shared layers from importing feature code and uses explicit APIs rather than reaching into module internals.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "dependency direction",
+            "no circular imports",
+            "module api",
+            "encapsulation",
+            "import boundary"
+          ]
+        },
+        {
+          "id": "hybrid_structuring_a_large_react_app_point_4",
+          "label": "Avoids speculative abstraction",
+          "description": "Extracts reusable code from demonstrated stable patterns and prefers composition over large configurable components.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "avoid abstraction",
+            "stable pattern",
+            "composition",
+            "boolean props",
+            "three uses"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_structuring_a_large_react_app_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you enforce these boundaries without making local development frustrating?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Nagy React alkalmazás strukturálása",
+          "prompt": "Hogyan strukturálnál több csapat által használt nagy React codebase-t úgy, hogy a feature-ök érthetők maradjanak, és a shared components ne váljon gyűjtőhellyé?",
+          "answerStructureHint": "Feature-határok, design system, dependency direction, megfelelő absztrakció.",
+          "expectedPoints": {
+            "hybrid_structuring_a_large_react_app_point_1": {
+              "label": "Feature-orientált határokat használ",
+              "description": "Egy feature componentjeit, hookjait, tesztjeit, API-adaptereit és type-jait egymás közelében tartja kis public entry pointtal."
+            },
+            "hybrid_structuring_a_large_react_app_point_2": {
+              "label": "Elválasztja a primitívet a business componenttől",
+              "description": "A design-system primitívet általánosan tartja, a business jelentést ismerő product component pedig a saját domainjében marad."
+            },
+            "hybrid_structuring_a_large_react_app_point_3": {
+              "label": "Meghatározza a dependency directiont",
+              "description": "Megakadályozza, hogy shared layer feature-kódot importáljon, és belső részletek helyett explicit API-t használ."
+            },
+            "hybrid_structuring_a_large_react_app_point_4": {
+              "label": "Kerüli a spekulatív absztrakciót",
+              "description": "Bizonyított stabil mintából emel ki reusable kódot, és nagy konfigurálható component helyett kompozíciót részesít előnyben."
+            }
+          },
+          "followUps": {
+            "hybrid_structuring_a_large_react_app_followup_1": "Hogyan érvényesítenéd ezeket a határokat anélkül, hogy frusztrálóvá tennéd a local developmentet?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_migrating_a_jquery_ui_to_react",
+      "title": "Migrating a jQuery UI to React",
+      "prompt": "A Rails storefront uses HAML or ERB templates, jQuery, and vanilla JavaScript. How would you migrate it incrementally to a React 19 SPA without stopping feature delivery?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "react_legacy_migration",
+        "artec_react_upgrade",
+        "artec_tanstack_router"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_migrating_a_jquery_ui_to_react_point_1",
+          "label": "Chooses a safe migration seam",
+          "description": "Selects routes, pages, or isolated widgets where old and new code can coexist and be released independently.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "route by route",
+            "migration seam",
+            "strangler pattern",
+            "coexist",
+            "incremental migration"
+          ]
+        },
+        {
+          "id": "hybrid_migrating_a_jquery_ui_to_react_point_2",
+          "label": "Defines cross-boundary contracts",
+          "description": "Makes authentication, navigation, data, permissions, analytics, events, and styling boundaries explicit.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "api contract",
+            "auth boundary",
+            "analytics events",
+            "permission contract",
+            "style isolation"
+          ]
+        },
+        {
+          "id": "hybrid_migrating_a_jquery_ui_to_react_point_3",
+          "label": "Protects behavior with evidence",
+          "description": "Inventories hidden behavior and uses tests, monitoring, visual comparison, and staged rollout to verify parity.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "behavior parity",
+            "characterization tests",
+            "visual regression",
+            "staged rollout",
+            "monitor errors"
+          ]
+        },
+        {
+          "id": "hybrid_migrating_a_jquery_ui_to_react_point_4",
+          "label": "Removes temporary architecture",
+          "description": "Defines exit criteria and deletes old code and bridges after each migrated slice is stable.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "remove legacy",
+            "delete bridge",
+            "exit criteria",
+            "deprecation plan",
+            "single owner"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_migrating_a_jquery_ui_to_react_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you prevent both jQuery and React from trying to own the same DOM region?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "jQuery UI migrálása Reactre",
+          "prompt": "Egy Rails storefront HAML vagy ERB template-et, jQueryt és vanilla JavaScriptet használ. Hogyan migrálnád fokozatosan React 19 SPA-vá a feature delivery leállítása nélkül?",
+          "answerStructureHint": "Migrációs seam, contractok, parity, legacy eltávolítása.",
+          "expectedPoints": {
+            "hybrid_migrating_a_jquery_ui_to_react_point_1": {
+              "label": "Biztonságos migrációs seamet választ",
+              "description": "Route-ot, page-et vagy izolált widgetet választ, ahol régi és új kód együtt élhet és külön release-elhető."
+            },
+            "hybrid_migrating_a_jquery_ui_to_react_point_2": {
+              "label": "Definiálja a határok közötti contractokat",
+              "description": "Explicitté teszi az authentication, navigation, data, permission, analytics, event és styling határokat."
+            },
+            "hybrid_migrating_a_jquery_ui_to_react_point_3": {
+              "label": "Bizonyítékkal védi a viselkedést",
+              "description": "Feltérképezi a rejtett viselkedést, és teszttel, monitoringgal, visual comparisonnel és staged rollouttal igazolja a parityt."
+            },
+            "hybrid_migrating_a_jquery_ui_to_react_point_4": {
+              "label": "Eltávolítja az átmeneti architektúrát",
+              "description": "Exit criteriát definiál, majd stabil szelet után törli a régi kódot és bridge-et."
+            }
+          },
+          "followUps": {
+            "hybrid_migrating_a_jquery_ui_to_react_followup_1": "Hogyan akadályoznád meg, hogy a jQuery és a React ugyanazt a DOM-régiót próbálja birtokolni?"
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_frontend_quality_and_safe_releases",
+      "title": "Frontend quality and safe releases",
+      "prompt": "What checks and delivery practices would you use to keep a React storefront, CRM, and shared UI library safe as several teams change them?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "frontend_quality_gates",
+        "artec_visual_regression",
+        "testing_strategy"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_frontend_quality_and_safe_releases_point_1",
+          "label": "Builds a fast base pipeline",
+          "description": "Runs formatting, ESLint, TypeScript, unit and component tests, and dependency or build checks on every change.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "eslint",
+            "typescript check",
+            "unit tests",
+            "component tests",
+            "ci pipeline"
+          ]
+        },
+        {
+          "id": "hybrid_frontend_quality_and_safe_releases_point_2",
+          "label": "Uses targeted higher-level checks",
+          "description": "Adds accessibility and visual regression for components plus a small number of critical end-to-end journeys.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "accessibility tests",
+            "visual regression",
+            "chromatic",
+            "end to end",
+            "critical journeys"
+          ]
+        },
+        {
+          "id": "hybrid_frontend_quality_and_safe_releases_point_3",
+          "label": "Protects shared-library consumers",
+          "description": "Tests component contracts and representative consuming applications, versions breaking changes, and provides migration guidance.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "consumer tests",
+            "semantic versioning",
+            "migration guide",
+            "component contract",
+            "breaking change"
+          ]
+        },
+        {
+          "id": "hybrid_frontend_quality_and_safe_releases_point_4",
+          "label": "Treats production as validation",
+          "description": "Uses staged rollout, monitoring, Web Vitals, error tracking, and a tested rollback or feature-flag path.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "feature flag",
+            "staged rollout",
+            "error monitoring",
+            "web vitals",
+            "rollback"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_frontend_quality_and_safe_releases_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which checks would you make blocking, and which would you keep advisory to avoid a slow or flaky pipeline?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Frontend quality és safe release",
+          "prompt": "Milyen ellenőrzéseket és delivery gyakorlatokat használnál, hogy több csapat változtatásai mellett biztonságos maradjon a React storefront, CRM és shared UI library?",
+          "answerStructureHint": "Gyors gate-ek, célzott tesztek, consumer safety, rollout és monitoring.",
+          "expectedPoints": {
+            "hybrid_frontend_quality_and_safe_releases_point_1": {
+              "label": "Gyors alap pipeline-t épít",
+              "description": "Minden változtatásnál formázást, ESLintet, TypeScriptet, unit- és component tesztet, valamint dependency- vagy build checket futtat."
+            },
+            "hybrid_frontend_quality_and_safe_releases_point_2": {
+              "label": "Célzott magasabb szintű checket használ",
+              "description": "Componentekhez accessibility és visual regression checket, valamint kevés kritikus end-to-end journeyt ad."
+            },
+            "hybrid_frontend_quality_and_safe_releases_point_3": {
+              "label": "Védi a shared library fogyasztóit",
+              "description": "Component contractot és reprezentatív consuming appot tesztel, breaking change-et verzióz, és migration guidance-ot ad."
+            },
+            "hybrid_frontend_quality_and_safe_releases_point_4": {
+              "label": "A productiont is validációnak tekinti",
+              "description": "Staged rolloutot, monitoringot, Web Vitals-t, error trackinget és tesztelt rollback- vagy feature-flag utat használ."
+            }
+          },
+          "followUps": {
+            "hybrid_frontend_quality_and_safe_releases_followup_1": "Mely checkeket tennéd blockinggá, és melyeket hagynád advisorynak a lassú vagy flaky pipeline elkerülésére?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_code_quality_tooling_001",
+      "title": "Code quality tooling",
+      "prompt": "Which tools and checks help guarantee frontend code quality, and what can each one prove or not prove?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "design_review"
+      ],
+      "topicIds": [
+        "frontend_quality_gates",
+        "testing_strategy"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_code_quality_tooling_001_point_1",
+          "label": "Explains static checks",
+          "description": "Describes TypeScript, ESLint, formatting, and build validation as fast checks for types, patterns, consistency, and compilation.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "typescript",
+            "eslint",
+            "prettier",
+            "type checking",
+            "production build"
+          ]
+        },
+        {
+          "id": "artec_code_quality_tooling_001_point_2",
+          "label": "Explains test layers",
+          "description": "Distinguishes unit, component or integration, visual, accessibility, and end-to-end tests by the failures they detect.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "unit test",
+            "component test",
+            "integration test",
+            "visual test",
+            "end to end"
+          ]
+        },
+        {
+          "id": "artec_code_quality_tooling_001_point_3",
+          "label": "Includes review and CI enforcement",
+          "description": "Mentions code review, CI, branch protection, dependency scanning, and repeatable local commands.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "code review",
+            "continuous integration",
+            "branch protection",
+            "dependency scan",
+            "pre commit"
+          ]
+        },
+        {
+          "id": "artec_code_quality_tooling_001_point_4",
+          "label": "States their limits",
+          "description": "Explains that passing tools cannot prove product correctness, usability, production behavior, or sound architecture.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "not proof",
+            "production monitoring",
+            "manual review",
+            "product behavior",
+            "architecture judgment"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_code_quality_tooling_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What is one example of a code-quality rule that should be automated and one that still needs human judgment?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Code quality tooling",
+          "prompt": "Mely eszközök és checkek segítenek garantálni a frontend kód minőségét, és mit tud vagy nem tud bizonyítani mindegyik?",
+          "answerStructureHint": "Statikus checkek, tesztrétegek, CI és korlátok.",
+          "expectedPoints": {
+            "artec_code_quality_tooling_001_point_1": {
+              "label": "Elmagyarázza a statikus checkeket",
+              "description": "A TypeScriptet, ESLintet, formázást és buildvalidációt gyors type-, pattern-, consistency- és compilation checkként írja le."
+            },
+            "artec_code_quality_tooling_001_point_2": {
+              "label": "Elmagyarázza a tesztrétegeket",
+              "description": "Megkülönbözteti a unit, component vagy integration, visual, accessibility és end-to-end teszteket az általuk talált hibák szerint."
+            },
+            "artec_code_quality_tooling_001_point_3": {
+              "label": "Review-t és CI enforcementet is tartalmaz",
+              "description": "Megemlíti a code review-t, CI-t, branch protectiont, dependency scanninget és ismételhető local commandokat."
+            },
+            "artec_code_quality_tooling_001_point_4": {
+              "label": "Kimondja a korlátaikat",
+              "description": "Elmagyarázza, hogy a sikeres toolok nem bizonyítják a product correctnesset, usabilityt, production behaviort vagy jó architektúrát."
+            }
+          },
+          "followUps": {
+            "artec_code_quality_tooling_001_followup_1": "Mondj egy code-quality szabályt, amelyet automatizálni kell, és egyet, amely továbbra is emberi megítélést igényel."
+          }
+        }
+      }
+    },
+    {
+      "id": "hybrid_how_do_you_use_ai_in_development",
+      "title": "How do you use AI in development?",
+      "prompt": "Describe a productive and safe AI-assisted development workflow. Where does AI save time, and where must the engineer remain directly responsible?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "experience_deep_dive",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "ai_assisted_development",
+        "artec_ai_generated_ui_review"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "hybrid_how_do_you_use_ai_in_development_point_1",
+          "label": "Uses bounded verifiable tasks",
+          "description": "Gives AI focused work with relevant context, constraints, examples, and a clear definition of done.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "bounded task",
+            "clear context",
+            "constraints",
+            "definition of done",
+            "small diff"
+          ]
+        },
+        {
+          "id": "hybrid_how_do_you_use_ai_in_development_point_2",
+          "label": "Reviews output as untrusted code",
+          "description": "Checks architecture, correctness, security, accessibility, performance, and maintainability rather than accepting plausible output.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "untrusted code",
+            "human review",
+            "security review",
+            "accessibility check",
+            "architecture review"
+          ]
+        },
+        {
+          "id": "hybrid_how_do_you_use_ai_in_development_point_3",
+          "label": "Verifies independently",
+          "description": "Uses types, tests, execution, documentation, and comparison with existing code, without relying only on AI-generated tests.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "run tests",
+            "type check",
+            "execute code",
+            "independent verification",
+            "check docs"
+          ]
+        },
+        {
+          "id": "hybrid_how_do_you_use_ai_in_development_point_4",
+          "label": "Protects data and measures value",
+          "description": "Keeps sensitive data within approved tools and evaluates whether AI improves lead time or quality after review cost.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "no secrets",
+            "approved tools",
+            "review cost",
+            "measure productivity",
+            "data policy"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "hybrid_how_do_you_use_ai_in_development_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Tell me about a generated change you would reject even if all generated tests passed.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hogyan használsz AI-t fejlesztéshez?",
+          "prompt": "Mutass be egy produktív és biztonságos AI-assisted development workflow-t. Hol takarít meg időt az AI, és miért kell közvetlenül a mérnöknek felelősséget vállalnia?",
+          "answerStructureHint": "Körülhatárolt feladat, review, független verification, adatvédelem és mérés.",
+          "expectedPoints": {
+            "hybrid_how_do_you_use_ai_in_development_point_1": {
+              "label": "Körülhatárolt, ellenőrizhető feladatot ad",
+              "description": "Fókuszált munkát ad releváns contexttel, korlátokkal, példákkal és világos definition of done-nal."
+            },
+            "hybrid_how_do_you_use_ai_in_development_point_2": {
+              "label": "Nem megbízható kódként review-zza",
+              "description": "Az architektúrát, helyességet, securityt, accessibilityt, performance-ot és karbantarthatóságot ellenőrzi, nem fogad el pusztán hihető outputot."
+            },
+            "hybrid_how_do_you_use_ai_in_development_point_3": {
+              "label": "Függetlenül verifikál",
+              "description": "Type checket, tesztet, futtatást, dokumentációt és existing code összevetést használ, nem csak AI-generated tesztre támaszkodik."
+            },
+            "hybrid_how_do_you_use_ai_in_development_point_4": {
+              "label": "Védi az adatot és méri az értéket",
+              "description": "Érzékeny adatot csak jóváhagyott eszközben használ, és review költséggel együtt méri, javul-e a lead time vagy quality."
+            }
+          },
+          "followUps": {
+            "hybrid_how_do_you_use_ai_in_development_followup_1": "Mondj példát olyan generált változtatásra, amelyet akkor is elutasítanál, ha minden generált teszt átment."
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_review_ai_generated_ui_001",
+      "title": "Reviewing AI-generated UI from Figma",
+      "prompt": "An AI tool generates React UI directly from a Figma design. Walk through the review you would perform before allowing the code into a shared production codebase.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "artec_ai_generated_ui_review",
+        "artec_design_system_architecture",
+        "frontend_quality_gates"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_review_ai_generated_ui_001_point_1",
+          "label": "Validates behavior beyond appearance",
+          "description": "Checks loading, empty, error, permission, responsive, interaction, and data states that a static design may not show.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "loading state",
+            "empty state",
+            "error state",
+            "responsive behavior",
+            "permission state"
+          ]
+        },
+        {
+          "id": "artec_review_ai_generated_ui_001_point_2",
+          "label": "Aligns with the existing system",
+          "description": "Reuses design-system primitives, feature boundaries, API types, naming, and established patterns instead of accepting duplication.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "design system",
+            "reuse components",
+            "feature boundary",
+            "api types",
+            "avoid duplication"
+          ]
+        },
+        {
+          "id": "artec_review_ai_generated_ui_001_point_3",
+          "label": "Checks user and technical quality",
+          "description": "Reviews semantic HTML, keyboard and screen-reader behavior, security, image loading, rendering cost, and bundle impact.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "semantic html",
+            "keyboard navigation",
+            "screen reader",
+            "bundle size",
+            "image performance"
+          ]
+        },
+        {
+          "id": "artec_review_ai_generated_ui_001_point_4",
+          "label": "Requires independent evidence",
+          "description": "Runs types, linting, behavior tests, visual regression, and the actual application, and keeps the diff small enough to review.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "type check",
+            "behavior tests",
+            "visual regression",
+            "run application",
+            "reviewable diff"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_review_ai_generated_ui_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you respond if the generated code looks pixel-perfect but duplicates several design-system components?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Figma alapján generált AI UI review-ja",
+          "prompt": "Egy AI-eszköz közvetlenül Figma designból generál React UI-t. Mutasd be a review-t, amelyet a shared production codebase-be engedés előtt elvégeznél.",
+          "answerStructureHint": "Viselkedés, existing architecture, accessibility/performance/security, független verification.",
+          "expectedPoints": {
+            "artec_review_ai_generated_ui_001_point_1": {
+              "label": "A megjelenésen túli viselkedést validál",
+              "description": "Ellenőrzi a loading, empty, error, permission, responsive, interaction és data state-eket, amelyeket a statikus design nem feltétlenül mutat."
+            },
+            "artec_review_ai_generated_ui_001_point_2": {
+              "label": "A meglévő rendszerhez igazít",
+              "description": "Design-system primitívet, feature boundaryt, API type-ot, naminget és established patternt használ duplikáció elfogadása helyett."
+            },
+            "artec_review_ai_generated_ui_001_point_3": {
+              "label": "User- és technikai qualityt ellenőriz",
+              "description": "Review-zza a semantic HTML-t, keyboard és screen-reader működést, securityt, image loadingot, rendering costot és bundle impactet."
+            },
+            "artec_review_ai_generated_ui_001_point_4": {
+              "label": "Független bizonyítékot kér",
+              "description": "Type checket, lintet, behavior tesztet, visual regressiont és valós appot futtat, a diffet pedig review-zható méretben tartja."
+            }
+          },
+          "followUps": {
+            "artec_review_ai_generated_ui_001_followup_1": "Hogyan reagálnál, ha a generált kód pixel-perfect, de több design-system componentet duplikál?"
+          }
+        }
+      }
+    },
+    {
+      "id": "rdd_api_contract",
+      "title": "Agreeing an API contract with the backend",
+      "prompt": "A new storefront feature needs data and permission decisions from a Rails backend. How would you agree an API contract that both frontend and backend teams can implement and change safely?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "design_review"
+      ],
+      "topicIds": [
+        "api_contract_design",
+        "rest",
+        "authorization"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "rdd_api_contract_point_1",
+          "label": "Clarifies user and permission behavior",
+          "description": "Defines user actions, authorization outcomes, loading and error states, and who owns each rule before discussing payload shape.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "user flow",
+            "permission rules",
+            "authorization failure",
+            "error states",
+            "business rules"
+          ]
+        },
+        {
+          "id": "rdd_api_contract_point_2",
+          "label": "Defines request and response contracts",
+          "description": "Agrees methods, paths, identifiers, schemas, nullability, validation, status codes, and error representation.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "request schema",
+            "response schema",
+            "status codes",
+            "validation errors",
+            "nullability"
+          ]
+        },
+        {
+          "id": "rdd_api_contract_point_3",
+          "label": "Plans evolution and verification",
+          "description": "Uses generated or shared types where useful, contract tests, version-compatible changes, examples, and observability.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "contract tests",
+            "shared schema",
+            "backward compatible",
+            "api examples",
+            "request tracing"
+          ]
+        },
+        {
+          "id": "rdd_api_contract_point_4",
+          "label": "Avoids leaking backend internals",
+          "description": "Shapes the contract around product needs rather than exposing database tables or framework-specific structures.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "product contract",
+            "not database model",
+            "stable api",
+            "hide internals",
+            "consumer needs"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "rdd_api_contract_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What should happen when the backend adds a new enum value that an older frontend does not recognize?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "API-contract egyeztetése a backenddel",
+          "prompt": "Egy új storefront feature adatot és permissiondöntéseket igényel a Rails backendtől. Hogyan egyeztetnél olyan API-contractot, amelyet mindkét csapat biztonságosan implementálhat és változtathat?",
+          "answerStructureHint": "User behavior, schema és hibák, evolúció és stabil boundary.",
+          "expectedPoints": {
+            "rdd_api_contract_point_1": {
+              "label": "Tisztázza a user- és permissionviselkedést",
+              "description": "A payload előtt definiálja a user actiont, authorization outcome-ot, loading/error state-et és az egyes szabályok ownerét."
+            },
+            "rdd_api_contract_point_2": {
+              "label": "Definiálja a request- és response-contractot",
+              "description": "Egyezteti a methodot, pathot, identifiert, schemát, nullabilityt, validációt, status code-ot és error representationt."
+            },
+            "rdd_api_contract_point_3": {
+              "label": "Evolúciót és verificationt tervez",
+              "description": "Szükség szerint shared vagy generated type-ot, contract testet, backward-compatible változást, példát és observabilityt használ."
+            },
+            "rdd_api_contract_point_4": {
+              "label": "Nem szivárogtat backend internalt",
+              "description": "A contractot productigény köré formálja, nem adatbázistáblát vagy framework-specifikus struktúrát exponál."
+            }
+          },
+          "followUps": {
+            "rdd_api_contract_followup_1": "Mi történjen, ha a backend új enumértéket ad hozzá, amelyet egy régebbi frontend nem ismer?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_javascript_event_loop_001",
+      "title": "How does the JavaScript event loop work?",
+      "prompt": "Explain the JavaScript event loop in a browser, including the call stack, tasks, microtasks, rendering opportunities, and why long synchronous work freezes the UI.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "js_event_loop"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_javascript_event_loop_001_point_1",
+          "label": "Explains single-threaded execution",
+          "description": "States that JavaScript runs one call stack at a time and synchronous code must finish before another callback can execute.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "single call stack",
+            "run to completion",
+            "synchronous code",
+            "one at time",
+            "main thread"
+          ]
+        },
+        {
+          "id": "artec_javascript_event_loop_001_point_2",
+          "label": "Distinguishes tasks and microtasks",
+          "description": "Explains that timers and events enqueue tasks while Promise reactions enqueue microtasks that are drained before the next task.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "task queue",
+            "microtask queue",
+            "promise callbacks",
+            "timer callback",
+            "drain microtasks"
+          ]
+        },
+        {
+          "id": "artec_javascript_event_loop_001_point_3",
+          "label": "Connects scheduling to rendering",
+          "description": "Explains that the browser gets rendering opportunities between turns and long tasks block input, painting, and timers.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "render opportunity",
+            "long task",
+            "blocks ui",
+            "input delay",
+            "paint"
+          ]
+        },
+        {
+          "id": "artec_javascript_event_loop_001_point_4",
+          "label": "Names practical mitigation",
+          "description": "Mentions splitting CPU work, yielding, workers, avoiding microtask starvation, and measuring long tasks.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "web worker",
+            "split work",
+            "yield main thread",
+            "microtask starvation",
+            "long task api"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_javascript_event_loop_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "In what order do a synchronous log, Promise.then, queueMicrotask, and setTimeout callback normally run?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hogyan működik a JavaScript event loop?",
+          "prompt": "Magyarázd el a browser JavaScript event loopját a call stackkel, taskokkal, microtaskokkal, render opportunitykkel, és azt, miért fagyasztja le a UI-t a hosszú synchronous munka.",
+          "answerStructureHint": "Call stack, task és microtask, rendering, gyakorlati következmény.",
+          "expectedPoints": {
+            "artec_javascript_event_loop_001_point_1": {
+              "label": "Elmagyarázza az egyszálú végrehajtást",
+              "description": "Kimondja, hogy egyszerre egy JavaScript call stack fut, és a synchronous kódnak be kell fejeződnie más callback előtt."
+            },
+            "artec_javascript_event_loop_001_point_2": {
+              "label": "Megkülönbözteti a taskot és microtaskot",
+              "description": "Elmagyarázza, hogy timer és event taskot, Promise reaction microtaskot ütemez, amely a következő task előtt kiürül."
+            },
+            "artec_javascript_event_loop_001_point_3": {
+              "label": "A schedulingot rendereléshez köti",
+              "description": "Elmagyarázza, hogy a browser turnök között kaphat render opportunityt, a long task pedig blokkolja az inputot, paintet és timert."
+            },
+            "artec_javascript_event_loop_001_point_4": {
+              "label": "Gyakorlati megoldást nevez meg",
+              "description": "Megemlíti a CPU-munka darabolását, yieldinget, Web Workert, microtask starvation kerülését és long task mérését."
+            }
+          },
+          "followUps": {
+            "artec_javascript_event_loop_001_followup_1": "Milyen sorrendben fut általában egy synchronous log, Promise.then, queueMicrotask és setTimeout callback?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_rest_definition_001",
+      "title": "What does REST stand for?",
+      "prompt": "What does REST stand for, what are its central constraints, and how is a RESTful HTTP API different from any API that happens to use JSON over HTTP?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "rest",
+        "api_design"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_rest_definition_001_point_1",
+          "label": "Expands and defines REST",
+          "description": "States Representational State Transfer and explains that resources are manipulated through representations under a constrained architectural style.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "representational state transfer",
+            "resources",
+            "representations",
+            "architectural style",
+            "resource state"
+          ]
+        },
+        {
+          "id": "artec_rest_definition_001_point_2",
+          "label": "Covers core constraints",
+          "description": "Mentions client-server separation, stateless requests, cacheability, uniform interface, layered system, and optional code-on-demand.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "client server",
+            "stateless",
+            "cacheable",
+            "uniform interface",
+            "layered system"
+          ]
+        },
+        {
+          "id": "artec_rest_definition_001_point_3",
+          "label": "Connects HTTP semantics",
+          "description": "Uses resource-oriented URLs, standard methods, status codes, idempotency, and content negotiation meaningfully.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "http methods",
+            "status codes",
+            "resource urls",
+            "idempotent methods",
+            "content negotiation"
+          ]
+        },
+        {
+          "id": "artec_rest_definition_001_point_4",
+          "label": "Rejects JSON-over-HTTP shorthand",
+          "description": "Explains that using HTTP and JSON alone does not satisfy REST constraints or create a uniform resource interface.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "not just json",
+            "not rpc",
+            "rest constraints",
+            "uniform resource",
+            "http alone"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_rest_definition_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Is an endpoint named POST /getCustomer automatically non-RESTful, and what would you examine before answering?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mit jelent a REST?",
+          "prompt": "Mit jelent a REST rövidítés, mik a központi constraintjei, és miben különbözik egy RESTful HTTP API attól, amely csak JSON-t használ HTTP felett?",
+          "answerStructureHint": "Definíció, constraint-ek, HTTP-szemantika és ellenpélda.",
+          "expectedPoints": {
+            "artec_rest_definition_001_point_1": {
+              "label": "Feloldja és definiálja a REST-et",
+              "description": "Kimondja a Representational State Transfer jelentését, és elmagyarázza, hogy resource-okat representationökön keresztül kezelünk egy constrained architectural style-ban."
+            },
+            "artec_rest_definition_001_point_2": {
+              "label": "Kitér a fő constraint-ekre",
+              "description": "Megemlíti a client-server separationt, stateless requestet, cacheabilityt, uniform interface-t, layered systemet és optional code-on-demandot."
+            },
+            "artec_rest_definition_001_point_3": {
+              "label": "HTTP-szemantikához köti",
+              "description": "A resource-oriented URL-t, standard methodot, status code-ot, idempotencyt és content negotiationt jelentésük szerint használja."
+            },
+            "artec_rest_definition_001_point_4": {
+              "label": "Elutasítja a JSON-over-HTTP rövidítést",
+              "description": "Elmagyarázza, hogy HTTP és JSON önmagában nem teljesíti a REST constraint-eket, és nem hoz létre uniform resource interface-t."
+            }
+          },
+          "followUps": {
+            "artec_rest_definition_001_followup_1": "Egy POST /getCustomer nevű endpoint automatikusan nem RESTful, és mit vizsgálnál meg a válasz előtt?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_core_web_vitals_001",
+      "title": "Core Web Vitals",
+      "prompt": "What are Core Web Vitals, what do the current metrics measure, and how would you use them to investigate a slow storefront?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "core_web_vitals",
+        "frontend_performance"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_core_web_vitals_001_point_1",
+          "label": "Names the current metrics",
+          "description": "Correctly identifies LCP, INP, and CLS as the core user-centric loading, interaction, and visual-stability metrics.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "largest contentful paint",
+            "interaction to next paint",
+            "cumulative layout shift",
+            "lcp",
+            "inp"
+          ]
+        },
+        {
+          "id": "artec_core_web_vitals_001_point_2",
+          "label": "Explains what each measures",
+          "description": "Describes largest meaningful content appearance, interaction response latency across a visit, and unexpected layout movement.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "largest element",
+            "interaction latency",
+            "visual stability",
+            "unexpected shift",
+            "response paint"
+          ]
+        },
+        {
+          "id": "artec_core_web_vitals_001_point_3",
+          "label": "Distinguishes field and lab data",
+          "description": "Uses real-user monitoring for production experience and lab tools for repeatable diagnosis, recognizing that the results can differ.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "field data",
+            "real user monitoring",
+            "lab data",
+            "lighthouse",
+            "crux"
+          ]
+        },
+        {
+          "id": "artec_core_web_vitals_001_point_4",
+          "label": "Connects symptoms to causes",
+          "description": "Relates LCP to server, image, CSS, and render path; INP to long tasks; and CLS to missing dimensions or late content.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "optimize images",
+            "long tasks",
+            "reserve space",
+            "critical css",
+            "server response"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_core_web_vitals_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can a Lighthouse score look good while real users still report poor Core Web Vitals?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Core Web Vitals",
+          "prompt": "Mik a Core Web Vitals metrikák, mit mérnek az aktuális mutatók, és hogyan használnád őket egy lassú storefront kivizsgálására?",
+          "answerStructureHint": "Metrikák, jelentésük, field és lab adatok, diagnózis.",
+          "expectedPoints": {
+            "artec_core_web_vitals_001_point_1": {
+              "label": "Megnevezi az aktuális metrikákat",
+              "description": "Helyesen azonosítja az LCP, INP és CLS metrikát mint loading, interaction és visual stability user-centric mutatót."
+            },
+            "artec_core_web_vitals_001_point_2": {
+              "label": "Elmagyarázza, mit mérnek",
+              "description": "Leírja a legnagyobb jelentős tartalom megjelenését, a visit interakciós válaszidejét és a nem várt layoutmozgást."
+            },
+            "artec_core_web_vitals_001_point_3": {
+              "label": "Megkülönbözteti a field és lab adatot",
+              "description": "Real-user monitoringot használ a production experience-hez, lab toolt ismételhető diagnózishoz, és felismeri, hogy az eredmény eltérhet."
+            },
+            "artec_core_web_vitals_001_point_4": {
+              "label": "Okokhoz köti a tüneteket",
+              "description": "Az LCP-t serverhez, image-hez, CSS-hez és render pathhoz; az INP-t long taskhoz; a CLS-t hiányzó mérethez vagy késői contenthez kapcsolja."
+            }
+          },
+          "followUps": {
+            "artec_core_web_vitals_001_followup_1": "Miért lehet jó a Lighthouse score, miközben a valódi userek Core Web Vitals értékei rosszak?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_typescript_contracts_001",
+      "title": "TypeScript as a frontend quality tool",
+      "prompt": "How does TypeScript improve a large React codebase, and which important classes of runtime problems can it still not prevent?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "typescript_essentials",
+        "frontend_quality_gates"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_typescript_contracts_001_point_1",
+          "label": "Explains compile-time contracts",
+          "description": "Describes types as executable feedback for component props, function inputs, state shapes, and refactoring across module boundaries.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "compile time",
+            "component props",
+            "function inputs",
+            "safe refactor",
+            "module contracts"
+          ]
+        },
+        {
+          "id": "artec_typescript_contracts_001_point_2",
+          "label": "Uses narrowing and domain modeling",
+          "description": "Mentions unions, discriminated states, generics, unknown, and exhaustiveness to model valid application states.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "discriminated union",
+            "type narrowing",
+            "generic types",
+            "unknown type",
+            "exhaustive check"
+          ]
+        },
+        {
+          "id": "artec_typescript_contracts_001_point_3",
+          "label": "States the runtime boundary",
+          "description": "Explains that external JSON, storage, user input, permissions, and server behavior require runtime validation and tests.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "runtime validation",
+            "external data",
+            "api response",
+            "user input",
+            "schema validation"
+          ]
+        },
+        {
+          "id": "artec_typescript_contracts_001_point_4",
+          "label": "Avoids false safety",
+          "description": "Warns that any, unsafe assertions, incorrect declarations, and logically wrong code can all compile.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "any type",
+            "type assertion",
+            "wrong types",
+            "still compiles",
+            "logic bug"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_typescript_contracts_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you validate an API response without manually duplicating the same schema in several places?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "TypeScript mint frontend quality tool",
+          "prompt": "Hogyan javítja a TypeScript egy nagy React codebase minőségét, és mely fontos runtime problémákat nem tudja továbbra sem megakadályozni?",
+          "answerStructureHint": "Compile-time contract, domainmodellezés, runtime boundary és korlátok.",
+          "expectedPoints": {
+            "artec_typescript_contracts_001_point_1": {
+              "label": "Elmagyarázza a compile-time contractokat",
+              "description": "A type-okat component prop, function input, state shape és module boundaryk közötti refactor visszajelzéseként írja le."
+            },
+            "artec_typescript_contracts_001_point_2": {
+              "label": "Narrowingot és domainmodellezést használ",
+              "description": "Megemlíti a uniont, discriminated state-et, genericet, unknownt és exhaustiveness-t valid application state modellezésére."
+            },
+            "artec_typescript_contracts_001_point_3": {
+              "label": "Kimondja a runtime határt",
+              "description": "Elmagyarázza, hogy external JSON, storage, user input, permission és server behavior runtime validációt és tesztet igényel."
+            },
+            "artec_typescript_contracts_001_point_4": {
+              "label": "Kerüli a hamis biztonságot",
+              "description": "Figyelmeztet, hogy any, unsafe assertion, hibás declaration és logikailag rossz kód is lefordulhat."
+            }
+          },
+          "followUps": {
+            "artec_typescript_contracts_001_followup_1": "Hogyan validálnál API-választ anélkül, hogy ugyanazt a schemát több helyen manuálisan duplikálnád?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_css_layout_debugging_001",
+      "title": "Debugging a difficult CSS layout",
+      "prompt": "A design from Figma looks correct at one desktop width but breaks in real content and smaller viewports. How would you diagnose and redesign the CSS rather than adding one-off overrides?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "responsive_design",
+        "css_box_sizing",
+        "artec_design_system_architecture"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_css_layout_debugging_001_point_1",
+          "label": "Reproduces with realistic constraints",
+          "description": "Tests long text, localization, zoom, different viewport sizes, loading states, and actual browser DevTools measurements.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "long content",
+            "different viewport",
+            "browser devtools",
+            "localization",
+            "zoom testing"
+          ]
+        },
+        {
+          "id": "artec_css_layout_debugging_001_point_2",
+          "label": "Examines layout mechanics",
+          "description": "Checks containing blocks, intrinsic sizes, flex or grid constraints, min-width behavior, overflow, and box sizing.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "flex shrink",
+            "min width zero",
+            "css grid",
+            "overflow",
+            "box sizing"
+          ]
+        },
+        {
+          "id": "artec_css_layout_debugging_001_point_3",
+          "label": "Designs fluid behavior",
+          "description": "Uses content-driven breakpoints, wrapping, minmax or clamp where suitable, and avoids fixed dimensions copied blindly from Figma.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "fluid layout",
+            "content breakpoint",
+            "css clamp",
+            "minmax",
+            "avoid fixed width"
+          ]
+        },
+        {
+          "id": "artec_css_layout_debugging_001_point_4",
+          "label": "Protects consistency and accessibility",
+          "description": "Uses shared tokens, semantic order, keyboard and zoom checks, and visual regression for representative states.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "design tokens",
+            "semantic order",
+            "keyboard access",
+            "visual regression",
+            "responsive story"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_css_layout_debugging_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give an example where adding overflow: hidden would hide the symptom but make the product worse.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Nehéz CSS-layout debugolása",
+          "prompt": "Egy Figma design egy desktop szélességen helyes, de valós tartalommal és kisebb viewporton szétesik. Hogyan diagnosztizálnád és terveznéd újra a CSS-t egyszeri override-ok hozzáadása helyett?",
+          "answerStructureHint": "Reprodukció, layout mechanics, fluid design és quality check.",
+          "expectedPoints": {
+            "artec_css_layout_debugging_001_point_1": {
+              "label": "Reális korlátokkal reprodukál",
+              "description": "Hosszú szöveggel, localizationnel, zoommal, eltérő viewporttal, loading state-tel és browser DevTools méréssel tesztel."
+            },
+            "artec_css_layout_debugging_001_point_2": {
+              "label": "Megvizsgálja a layout mechanikát",
+              "description": "Ellenőrzi a containing blockot, intrinsic size-t, flex vagy grid constraintet, min-width behaviort, overflow-t és box sizingot."
+            },
+            "artec_css_layout_debugging_001_point_3": {
+              "label": "Fluid viselkedést tervez",
+              "description": "Content-driven breakpointot, wrappinget, szükség szerint minmaxot vagy clampet használ, és nem másol vakon fix Figma-méreteket."
+            },
+            "artec_css_layout_debugging_001_point_4": {
+              "label": "Védi a konzisztenciát és accessibilityt",
+              "description": "Shared tokent, semantic ordert, keyboard- és zoomchecket, valamint reprezentatív state-ekhez visual regressiont használ."
+            }
+          },
+          "followUps": {
+            "artec_css_layout_debugging_001_followup_1": "Mondj példát, amikor az overflow: hidden elrejti a tünetet, de rosszabbá teszi a terméket."
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_autonomous_frontend_decision_001",
+      "title": "Owning a frontend technical decision",
+      "prompt": "There is no frontend lead above you. The team needs to choose how to migrate routing across the CRM and storefront. How would you make, communicate, and own that decision?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "experience_deep_dive",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "artec_frontend_technical_ownership",
+        "artec_tanstack_router",
+        "react_legacy_migration"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_autonomous_frontend_decision_001_point_1",
+          "label": "Clarifies decision context",
+          "description": "Collects product goals, public URL constraints, SEO, permissions, analytics, deployment, timelines, and team capability.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "product goals",
+            "url constraints",
+            "team capability",
+            "migration timeline",
+            "permission needs"
+          ]
+        },
+        {
+          "id": "artec_autonomous_frontend_decision_001_point_2",
+          "label": "Compares realistic options",
+          "description": "Evaluates keeping the current router, incremental migration, and replacement against cost, risk, compatibility, and reversibility.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "compare options",
+            "migration risk",
+            "compatibility",
+            "reversible decision",
+            "cost tradeoff"
+          ]
+        },
+        {
+          "id": "artec_autonomous_frontend_decision_001_point_3",
+          "label": "Makes the decision visible",
+          "description": "Writes a concise decision record, includes rejected alternatives and assumptions, and asks relevant teams to review it.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "decision record",
+            "document assumptions",
+            "rejected options",
+            "stakeholder review",
+            "architecture decision"
+          ]
+        },
+        {
+          "id": "artec_autonomous_frontend_decision_001_point_4",
+          "label": "Owns delivery and evidence",
+          "description": "Breaks work into safe slices, defines metrics and rollback, mentors contributors, and revises the plan if evidence changes.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "incremental rollout",
+            "rollback plan",
+            "monitor metrics",
+            "mentor team",
+            "revise decision"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_autonomous_frontend_decision_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you do if a more junior developer strongly disagreed with your preferred option?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Frontend technikai döntés ownershipje",
+          "prompt": "Nincs fölötted frontend lead. A csapatnak el kell döntenie, hogyan migrálja a routingot a CRM-ben és storefrontban. Hogyan hoznád meg, kommunikálnád és vállalnád a döntést?",
+          "answerStructureHint": "Kontextus, opciók, decision record, incremental delivery és visszacsatolás.",
+          "expectedPoints": {
+            "artec_autonomous_frontend_decision_001_point_1": {
+              "label": "Tisztázza a döntési kontextust",
+              "description": "Összegyűjti a product célt, public URL-korlátot, SEO-t, permissiont, analytics-et, deploymentet, timeline-t és team capabilityt."
+            },
+            "artec_autonomous_frontend_decision_001_point_2": {
+              "label": "Reális opciókat hasonlít össze",
+              "description": "A jelenlegi router megtartását, incremental migrationt és cserét költség, kockázat, compatibility és reversibility alapján értékeli."
+            },
+            "artec_autonomous_frontend_decision_001_point_3": {
+              "label": "Láthatóvá teszi a döntést",
+              "description": "Rövid decision recordot ír, tartalmazza az elutasított alternatívákat és assumptionöket, és releváns csapatoktól review-t kér."
+            },
+            "artec_autonomous_frontend_decision_001_point_4": {
+              "label": "A deliveryt és bizonyítékot is birtokolja",
+              "description": "Biztonságos szeletekre bont, metrikát és rollbacket definiál, mentorálja a résztvevőket, és bizonyíték változásakor módosítja a tervet."
+            }
+          },
+          "followUps": {
+            "artec_autonomous_frontend_decision_001_followup_1": "Mit tennél, ha egy juniorabb fejlesztő határozottan nem értene egyet a preferált opcióddal?"
+          }
+        }
+      }
+    }
+  ]
+}

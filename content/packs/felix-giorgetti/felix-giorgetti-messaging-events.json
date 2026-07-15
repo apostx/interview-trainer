@@ -1,0 +1,1760 @@
+{
+  "id": "felix_giorgetti_messaging_events",
+  "name": "Félix Giorgetti - Messaging and Event-Driven Systems",
+  "description": "Interview preparation for messaging patterns, delivery semantics, RabbitMQ, NATS, Kafka, and event contract evolution.",
+  "sources": [
+    "felix_giorgetti_experienced_nodejs_developer_job_description"
+  ],
+  "topics": [
+    {
+      "id": "fg_messaging_patterns",
+      "name": "Messaging Patterns: Queue, Pub/Sub, Request/Reply, and Topics",
+      "description": "Messaging patterns define who receives a message, whether work is shared or copied, and whether the sender waits for a response.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "message_queue",
+        "event_driven"
+      ],
+      "studyContent": {
+        "mentalModel": "A queue distributes work among competing consumers, pub/sub gives each subscription its own copy, request/reply asks for a correlated response, and topics route messages by subject or key.",
+        "problem": "Using the wrong pattern changes system behaviour. A queue may accidentally send a business event to only one interested service, while pub/sub may cause every subscriber to repeat work that should happen once. Request/reply over a broker can also recreate tight synchronous coupling.",
+        "example": "After an order is placed, billing and analytics each need the event, so they use separate subscriptions. Inside billing, several workers compete on one queue so only one worker processes each payment task.",
+        "howItWorks": [
+          "Start from whether the message represents a command, event, query, or reply.",
+          "Choose whether one consumer or every interested subscription should receive it.",
+          "Define routing, ordering, durability, expiry, and retry behaviour for that pattern.",
+          "Include correlation and timeout rules when a response is expected."
+        ],
+        "commonMistakes": [
+          "Calling every broker interaction pub/sub even when consumers compete for one message.",
+          "Using request/reply when the caller cannot tolerate an unavailable responder.",
+          "Assuming a topic name alone defines delivery, ordering, and durability guarantees."
+        ],
+        "keyTerms": [
+          {
+            "term": "competing consumers",
+            "definition": "several consumers sharing work from one queue"
+          },
+          {
+            "term": "subscription",
+            "definition": "a consumer-specific stream or copy of published messages"
+          },
+          {
+            "term": "correlation id",
+            "definition": "an identifier that connects a reply to its request"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Messaging patternök: queue, pub/sub, request/reply és topic",
+          "description": "A messaging pattern meghatározza, ki kapja meg az üzenetet, a munka megoszlik-e vagy másolódik, és a sender vár-e válaszra.",
+          "studyContent": {
+            "mentalModel": "A queue competing consumerek között osztja szét a munkát, a pub/sub minden subscriptionnek külön példányt ad, a request/reply korrelált választ vár, a topic pedig subject vagy key alapján route-ol.",
+            "problem": "Rossz pattern választásakor a rendszer viselkedése is megváltozik. Egy queue miatt egy business eventet csak egy service kaphat meg, miközben többnek kellene. Pub/sub esetén viszont minden subscriber megismételhet olyan munkát, amelynek csak egyszer kell futnia. A brokeres request/reply újra tight couplingot hozhat létre.",
+            "example": "Order létrehozása után a billing és analytics is megkapja az eventet, ezért külön subscriptiont használnak. A billingen belül több worker egy queue-ról versenyez, így minden payment taskot csak egy worker dolgoz fel.",
+            "howItWorks": [
+              "Először döntsd el, hogy command, event, query vagy reply az üzenet.",
+              "Válaszd ki, hogy egy consumer vagy minden érdekelt subscription kapja meg.",
+              "Definiáld a routing, ordering, durability, expiry és retry viselkedést.",
+              "Válasz esetén adj correlation és timeout szabályokat."
+            ],
+            "commonMistakes": [
+              "Minden broker interactiont pub/subnak nevezni akkor is, ha a consumerek egy message-ért versenyeznek.",
+              "Request/replyt használni, amikor a caller nem tolerálja a responder kiesését.",
+              "Azt feltételezni, hogy a topic neve önmagában meghatározza a delivery, ordering és durability garanciákat."
+            ],
+            "keyTerms": [
+              {
+                "term": "competing consumers",
+                "definition": "több consumer, amelyek egy queue munkáján osztoznak"
+              },
+              {
+                "term": "subscription",
+                "definition": "consumer-specifikus stream vagy a published message-ek külön példánya"
+              },
+              {
+                "term": "correlation id",
+                "definition": "azonosító, amely összeköti a replyt az eredeti requesttel"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_delivery_idempotency",
+      "name": "Message Delivery Semantics and Idempotent Consumers",
+      "description": "Most durable messaging systems can redeliver messages, so consumers must make repeated processing safe and acknowledge only after the required work is durable.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "idempotency",
+        "retries",
+        "message_queue"
+      ],
+      "studyContent": {
+        "mentalModel": "At-least-once delivery means a message is not intentionally lost, but it may be processed more than once, so the consumer must detect or tolerate duplicates.",
+        "problem": "A consumer can finish a database write and crash before acknowledging. The broker then redelivers the same message. If processing is not idempotent, the system may charge twice, send duplicate emails, or apply the same state transition twice.",
+        "example": "A payment consumer stores the message id in the same database transaction as the payment result. On redelivery, the unique message-id constraint shows that the event was already applied, so the consumer acknowledges without charging again.",
+        "howItWorks": [
+          "Give each logical message a stable identifier or business idempotency key.",
+          "Make the side effect and duplicate record atomic where possible.",
+          "Acknowledge only after the durable outcome has succeeded.",
+          "Retry transient failures with limits and send poison messages to a review path."
+        ],
+        "commonMistakes": [
+          "Claiming exactly-once delivery removes the need for idempotent business logic.",
+          "Acknowledging before the database or external side effect is durable.",
+          "Using an in-memory set for deduplication in a horizontally scaled service."
+        ],
+        "keyTerms": [
+          {
+            "term": "at-least-once",
+            "definition": "delivery that may repeat a message but avoids intentional loss"
+          },
+          {
+            "term": "acknowledgement",
+            "definition": "the consumer signal that a message can be removed or advanced"
+          },
+          {
+            "term": "deduplication",
+            "definition": "detecting a repeated logical message before repeating its effect"
+          },
+          {
+            "term": "poison message",
+            "definition": "a message that repeatedly fails for a non-transient reason"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Message delivery semantics és idempotent consumer",
+          "description": "A legtöbb durable messaging rendszer újraküldhet message-eket, ezért a consumernek biztonságossá kell tennie az ismételt feldolgozást, és csak durable munka után szabad ackolnia.",
+          "studyContent": {
+            "mentalModel": "Az at-least-once delivery célja, hogy a message ne vesszen el, de többször is feldolgozódhat, ezért a consumernek észlelnie vagy tolerálnia kell a duplikációt.",
+            "problem": "A consumer befejezhet egy database write-ot, majd ack előtt crashelhet. A broker ekkor újraküldi ugyanazt a message-et. Idempotency nélkül dupla charge, duplicate email vagy kétszer alkalmazott state transition keletkezhet.",
+            "example": "Egy payment consumer ugyanabban a database transactionben tárolja a message id-t és a payment eredményt. Redeliverykor a unique constraint jelzi, hogy az event már feldolgozódott, így új charge nélkül ackolható.",
+            "howItWorks": [
+              "Minden logikai message kapjon stabil identifier-t vagy business idempotency keyt.",
+              "A side effect és a duplicate record lehetőleg atomic módon kerüljön mentésre.",
+              "Csak a durable outcome sikere után ackolj.",
+              "A transient hibákat korlátozottan retryold, a poison message-eket pedig külön review pathra küldd."
+            ],
+            "commonMistakes": [
+              "Azt állítani, hogy az exactly-once delivery feleslegessé teszi az idempotent business logicot.",
+              "A database vagy external side effect tartóssá válása előtt ackolni.",
+              "In-memory Setet használni deduplicationre horizontally scaled service-ben."
+            ],
+            "keyTerms": [
+              {
+                "term": "at-least-once",
+                "definition": "olyan delivery, amely duplikálhat, de nem veszít szándékosan message-et"
+              },
+              {
+                "term": "acknowledgement",
+                "definition": "a consumer jelzése, hogy a message eltávolítható vagy az offset továbbléphet"
+              },
+              {
+                "term": "deduplication",
+                "definition": "ismételt logikai message felismerése a side effect megismétlése előtt"
+              },
+              {
+                "term": "poison message",
+                "definition": "nem transient okból ismételten hibázó message"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_rabbitmq_routing",
+      "name": "RabbitMQ Exchanges, Queues, and Reliability",
+      "description": "RabbitMQ routes published messages through exchanges into queues, where consumers acknowledge work and retry or dead-letter failures according to queue policy.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "message_queue",
+        "retries"
+      ],
+      "studyContent": {
+        "mentalModel": "In RabbitMQ, producers publish to an exchange, bindings route messages into queues, and consumers receive from queues rather than directly from the exchange.",
+        "problem": "If exchange type, routing keys, acknowledgement mode, prefetch, and dead-letter policy are not designed together, messages may disappear, flood one consumer, retry forever, or route to no queue at all. Durable infrastructure also does not guarantee a message was confirmed by the broker.",
+        "example": "A topic exchange receives order.created.eu. One queue binds order.created.* for regional processing and another binds order.# for auditing. Consumers use manual acknowledgements and limited prefetch. Repeated failures are dead-lettered after controlled retries.",
+        "howItWorks": [
+          "Choose direct, topic, fanout, or headers routing from the required matching rule.",
+          "Declare durable exchanges and queues and publish persistent messages when required.",
+          "Use publisher confirms and mandatory routing when loss before enqueueing matters.",
+          "Set manual acknowledgement, prefetch, retry, and dead-letter policies for consumers."
+        ],
+        "commonMistakes": [
+          "Publishing to a routing key and assuming a queue with that name receives it automatically.",
+          "Requeueing a poison message forever without delay or limit.",
+          "Setting very high prefetch and then wondering why one consumer holds all work."
+        ],
+        "keyTerms": [
+          {
+            "term": "exchange",
+            "definition": "the RabbitMQ component that routes published messages"
+          },
+          {
+            "term": "binding",
+            "definition": "a rule connecting an exchange to a queue"
+          },
+          {
+            "term": "prefetch",
+            "definition": "the maximum number of unacknowledged messages delivered to a consumer"
+          },
+          {
+            "term": "dead-letter exchange",
+            "definition": "an exchange that receives rejected, expired, or over-retried messages"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "RabbitMQ exchange-ek, queue-k és megbízhatóság",
+          "description": "A RabbitMQ a published message-eket exchange-eken keresztül queue-kba route-olja, ahol a consumerek ackolják a munkát, a hibák pedig policy alapján retryt vagy dead-letter kezelést kapnak.",
+          "studyContent": {
+            "mentalModel": "RabbitMQ-ban a producer exchange-re publish-el, a bindingek queue-kba route-olják a message-et, a consumerek pedig queue-ból olvasnak, nem közvetlenül az exchange-ről.",
+            "problem": "Ha az exchange type, routing key, acknowledgement mode, prefetch és dead-letter policy nincs együtt megtervezve, message-ek tűnhetnek el, egy consumer túl sokat kaphat, végtelen retry indulhat, vagy egyetlen queue-ba sem kerül az üzenet. A durable infrastruktúra önmagában nem broker confirm.",
+            "example": "Egy topic exchange order.created.eu message-et kap. Egy queue order.created.* bindinggel regionális feldolgozást végez, egy másik order.# bindinggel auditál. A consumerek manual ackot és korlátozott prefetch-et használnak. Az ismételt hibák dead-letterbe kerülnek.",
+            "howItWorks": [
+              "A direct, topic, fanout vagy headers routingot a szükséges matching rule alapján válaszd.",
+              "Szükség esetén durable exchange-et és queue-t, valamint persistent message-et használj.",
+              "Publisher confirmot és mandatory routingot használj, ha fontos az enqueue előtti loss felismerése.",
+              "A consumerhez manual acknowledgement, prefetch, retry és dead-letter policy tartozzon."
+            ],
+            "commonMistakes": [
+              "Routing keyre publish-elni és feltételezni, hogy az azonos nevű queue automatikusan megkapja.",
+              "Poison message-et korlát és késleltetés nélkül örökké requeue-zni.",
+              "Nagyon magas prefetch-et beállítani, majd meglepődni, hogy egy consumer tartja az összes munkát."
+            ],
+            "keyTerms": [
+              {
+                "term": "exchange",
+                "definition": "a RabbitMQ komponens, amely a published message-eket route-olja"
+              },
+              {
+                "term": "binding",
+                "definition": "egy exchange-et queue-val összekötő routing szabály"
+              },
+              {
+                "term": "prefetch",
+                "definition": "egy consumernek kiküldött, még nem ackolt message-ek felső korlátja"
+              },
+              {
+                "term": "dead-letter exchange",
+                "definition": "rejected, expired vagy túl sokszor retryolt message-ek cél-exchange-e"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_nats_messaging",
+      "name": "NATS Core, Request/Reply, and JetStream",
+      "description": "NATS Core provides very low-latency subject-based messaging, while JetStream adds persistence, replay, acknowledgements, and durable consumers.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "event_driven",
+        "message_queue"
+      ],
+      "studyContent": {
+        "mentalModel": "NATS Core is ephemeral messaging for connected subscribers, request/reply, and queue groups; JetStream stores messages so consumers can acknowledge, replay, and resume.",
+        "problem": "Using Core NATS for work that must survive disconnects can lose messages. Using JetStream for every transient request adds storage and operational behaviour that may not be needed. Subject design also becomes an API contract because publishers and subscribers depend on its hierarchy.",
+        "example": "A service sends inventory.lookup as request/reply over Core NATS with a short timeout because the result is immediately needed. Inventory.changed events go to JetStream so a disconnected projection consumer can resume and replay them later.",
+        "howItWorks": [
+          "Choose Core NATS for ephemeral connected messaging and JetStream for durable streams.",
+          "Design hierarchical subjects and wildcard subscriptions as stable contracts.",
+          "Use queue groups when one member should handle each Core NATS message.",
+          "For JetStream, define retention, acknowledgement, redelivery, and consumer durability."
+        ],
+        "commonMistakes": [
+          "Assuming a disconnected Core NATS subscriber receives missed messages later.",
+          "Treating request/reply as reliable just because it uses a broker.",
+          "Designing overly broad wildcard subjects that expose unrelated traffic."
+        ],
+        "keyTerms": [
+          {
+            "term": "subject",
+            "definition": "the hierarchical NATS routing name used by publishers and subscribers"
+          },
+          {
+            "term": "queue group",
+            "definition": "a group where one connected member receives each matching Core NATS message"
+          },
+          {
+            "term": "JetStream",
+            "definition": "the NATS persistence layer for stored streams and durable consumption"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "NATS Core, request/reply és JetStream",
+          "description": "A NATS Core nagyon alacsony latencyjű, subject-alapú messaginget ad, a JetStream pedig persistence-et, replayt, acknowledgementet és durable consumereket tesz hozzá.",
+          "studyContent": {
+            "mentalModel": "A NATS Core ephemeral messaginget ad connected subscriberekhez, request/replyhoz és queue groupokhoz; a JetStream tárolja a message-eket, így ack, replay és resume is lehetséges.",
+            "problem": "Ha durable munkához Core NATS-ot használunk, disconnect alatt message loss történhet. Ha minden transient requesthez JetStreamet használunk, felesleges storage és operational viselkedés kerül a rendszerbe. A subject design API contracttá válik.",
+            "example": "Egy service inventory.lookup request/replyt küld Core NATS-on rövid timeouttal, mert az eredmény azonnal kell. Az inventory.changed event JetStreambe kerül, így a lekapcsolt projection consumer később folytathatja és replayelheti.",
+            "howItWorks": [
+              "Core NATS-ot ephemeral connected messaginghez, JetStreamet durable streamhez válassz.",
+              "A hierarchical subject és wildcard subscription stabil contract legyen.",
+              "Queue groupot használj, ha minden Core NATS message-et csak egy group member kezeljen.",
+              "JetStreamnél definiáld a retentiont, acknowledgementet, redeliveryt és consumer durabilityt."
+            ],
+            "commonMistakes": [
+              "Azt feltételezni, hogy a disconnected Core NATS subscriber később megkapja a kimaradt message-eket.",
+              "A request/replyt csak azért reliable-nek tekinteni, mert brokeren megy.",
+              "Túl széles wildcard subjectet tervezni, amely unrelated trafficet is megnyit."
+            ],
+            "keyTerms": [
+              {
+                "term": "subject",
+                "definition": "a publisher és subscriber által használt hierarchical NATS routing név"
+              },
+              {
+                "term": "queue group",
+                "definition": "group, amelyben minden matching Core NATS message-et egy connected member kap"
+              },
+              {
+                "term": "JetStream",
+                "definition": "a NATS persistence layer stored streamekhez és durable consumptionhöz"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_kafka_streaming",
+      "name": "Kafka Partitions, Consumer Groups, and Event Logs",
+      "description": "Kafka stores ordered records in partitioned append-only logs, and consumer groups divide partitions among members to process a stream in parallel.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "event_driven",
+        "scalability"
+      ],
+      "studyContent": {
+        "mentalModel": "Kafka keeps records in ordered partitions, tracks consumer position as an offset, and retains records independently of whether a consumer has already read them.",
+        "problem": "A poor partition key can destroy required ordering or create hot partitions. More consumers than partitions do not increase one group’s parallelism. Committing offsets before business work is durable can lose processing, while committing after work can produce duplicates after a crash.",
+        "example": "Order events use order_id as the partition key, so one order’s events stay ordered. A six-partition topic allows at most six active consumers in one group. Each consumer writes its result, then commits the offset; duplicates are handled idempotently.",
+        "howItWorks": [
+          "Choose a partition key from ordering and load-distribution requirements.",
+          "Use consumer groups so each partition is owned by one group member at a time.",
+          "Commit offsets only after the required result is durable.",
+          "Monitor consumer lag, rebalance behaviour, hot partitions, and processing failures."
+        ],
+        "commonMistakes": [
+          "Saying Kafka guarantees global ordering across a topic.",
+          "Adding consumers without considering the partition count.",
+          "Treating Kafka exactly-once features as automatic exactly-once business effects."
+        ],
+        "keyTerms": [
+          {
+            "term": "partition",
+            "definition": "one ordered shard of a Kafka topic"
+          },
+          {
+            "term": "offset",
+            "definition": "a record position inside a partition"
+          },
+          {
+            "term": "consumer group",
+            "definition": "consumers that share partitions so each record is processed once per group"
+          },
+          {
+            "term": "consumer lag",
+            "definition": "the distance between the latest record and the consumer position"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Kafka partitionök, consumer groupok és event log",
+          "description": "A Kafka ordered recordokat tárol partitionált, append-only logokban, a consumer group pedig a partitionöket osztja szét a tagjai között párhuzamos feldolgozáshoz.",
+          "studyContent": {
+            "mentalModel": "A Kafka ordered partitionökben tárolja a recordokat, a consumer pozícióját offset jelöli, a retention pedig független attól, hogy a consumer már olvasta-e a message-et.",
+            "problem": "Rossz partition key megszüntetheti a szükséges orderinget vagy hot partitiont hozhat létre. Egy groupon belül a partitionök számánál több consumer nem növeli a parallelismet. A business munka előtt commitolt offset loss-hoz, utána commitolt offset crash esetén duplicate-hoz vezethet.",
+            "example": "Az order eventek order_id partition keyt használnak, így egy order eseményei rendezettek maradnak. Hat partition legfeljebb hat aktív consumert enged egy groupban. A consumer először durable eredményt ír, majd offsetet commitol; a duplicate feldolgozás idempotent.",
+            "howItWorks": [
+              "A partition keyt ordering és load-distribution igény alapján válaszd.",
+              "Consumer groupot használj, hogy egy partition egyszerre egy group member tulajdona legyen.",
+              "Csak a szükséges eredmény durable mentése után commitold az offsetet.",
+              "Monitorozd a consumer laget, rebalance-t, hot partitiont és processing failure-t."
+            ],
+            "commonMistakes": [
+              "Azt mondani, hogy Kafka topic-szinten globális orderinget garantál.",
+              "Consumert hozzáadni a partition count figyelembevétele nélkül.",
+              "A Kafka exactly-once feature-eit automatikus exactly-once business effectnek tekinteni."
+            ],
+            "keyTerms": [
+              {
+                "term": "partition",
+                "definition": "egy Kafka topic egyetlen ordered shardja"
+              },
+              {
+                "term": "offset",
+                "definition": "egy record pozíciója a partitionön belül"
+              },
+              {
+                "term": "consumer group",
+                "definition": "consumerek, amelyek megosztják a partitionöket, így minden record group-onként egyszer kerül feldolgozásra"
+              },
+              {
+                "term": "consumer lag",
+                "definition": "a legújabb record és a consumer pozíciója közötti távolság"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_event_contracts",
+      "name": "Event Contracts and Schema Evolution",
+      "description": "An event contract defines the event’s meaning, identity, version, metadata, and payload so independent producers and consumers can evolve without hidden assumptions.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "event_driven",
+        "api_design"
+      ],
+      "studyContent": {
+        "mentalModel": "An event is a durable statement that something happened, and its schema plus semantic meaning form a contract for every current and future consumer.",
+        "problem": "Even a syntactically compatible schema change can break a consumer if meaning changes. Reusing one event for several business moments creates optional-field ambiguity, while publishing internal database rows exposes implementation details that are hard to evolve.",
+        "example": "OrderPlaced contains event_id, event_type, occurred_at, producer, schema_version, order_id, customer_id, currency, and total. A later optional sales_channel field is added. Consumers ignore unknown fields and old events remain readable.",
+        "howItWorks": [
+          "Name the event after a completed business fact and document its semantic meaning.",
+          "Include stable identity, occurrence time, producer, correlation, and schema version metadata.",
+          "Prefer additive backward-compatible changes and make consumers tolerant of unknown fields.",
+          "Validate contracts in CI and plan upcasters, dual publishing, or new event types for breaking changes."
+        ],
+        "commonMistakes": [
+          "Using commands such as ProcessOrder as if they were past-tense events.",
+          "Publishing the producer’s database table as the event payload.",
+          "Changing the meaning of an existing field while keeping the same schema type."
+        ],
+        "keyTerms": [
+          {
+            "term": "event schema",
+            "definition": "the defined structure and types of an event payload and metadata"
+          },
+          {
+            "term": "semantic compatibility",
+            "definition": "preserving the meaning consumers rely on, not only the field types"
+          },
+          {
+            "term": "upcaster",
+            "definition": "code that converts an older event representation into a newer in-memory shape"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Event contractok és schema evolution",
+          "description": "Az event contract meghatározza az event jelentését, identityjét, verzióját, metadata-ját és payloadját, hogy a független producerek és consumerek rejtett feltételezések nélkül fejlődhessenek.",
+          "studyContent": {
+            "mentalModel": "Az event egy tartós állítás arról, hogy valami megtörtént; a schema és a szemantikai jelentés együtt contractot alkot minden jelenlegi és jövőbeli consumer számára.",
+            "problem": "Egy szintaktikailag kompatibilis schema change is törhet consumert, ha a jelentés megváltozik. Egy event több business pillanatra való újrahasználata optional-field bizonytalanságot okoz, a belső database row publish-elése pedig nehezen változtatható implementation detailt szivárogtat.",
+            "example": "Az OrderPlaced tartalmaz event_id-t, event_type-ot, occurred_at-ot, producert, schema_versiont, order_id-t, customer_id-t, currencyt és totalt. Később optional sales_channel field kerül bele. A consumerek ignorálják az ismeretlen field-eket, a régi eventek olvashatók maradnak.",
+            "howItWorks": [
+              "Az event neve befejezett business fact legyen, a szemantikai jelentést pedig dokumentáld.",
+              "Adj stabil identity, occurrence time, producer, correlation és schema version metadata-t.",
+              "Additive backward-compatible change-et használj, a consumer pedig tolerálja az ismeretlen field-eket.",
+              "CI-ben validáld a contractot, breaking change-hez pedig upcastert, dual publishinget vagy új event type-ot tervezz."
+            ],
+            "commonMistakes": [
+              "ProcessOrder jellegű commandot past-tense eventként használni.",
+              "A producer database table-jét event payloadként publish-elni.",
+              "Egy meglévő field jelentését ugyanazon schema type mellett megváltoztatni."
+            ],
+            "keyTerms": [
+              {
+                "term": "event schema",
+                "definition": "az event payload és metadata meghatározott struktúrája és típusai"
+              },
+              {
+                "term": "semantic compatibility",
+                "definition": "nemcsak a field type, hanem a consumer által használt jelentés megőrzése"
+              },
+              {
+                "term": "upcaster",
+                "definition": "régi event representationt újabb in-memory formára alakító kód"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "fg_mp_choose_001",
+      "title": "Queue, pub/sub, or request/reply?",
+      "prompt": "Choose a messaging pattern for distributing image jobs among workers, notifying several services about an order, and asking an inventory service for an immediate answer.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_messaging_patterns"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Map each use case to receiver semantics, response needs, and failure behaviour.",
+      "expectedPoints": [
+        {
+          "id": "fg_mq_queue",
+          "label": "Uses a work queue for jobs",
+          "description": "Chooses competing consumers so each image job is handled by one worker.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "work queue",
+            "competing consumers",
+            "one worker",
+            "share work",
+            "queue based routing"
+          ]
+        },
+        {
+          "id": "fg_mq_pubsub",
+          "label": "Uses pub/sub for business events",
+          "description": "Chooses separate subscriptions so every interested service receives the order event.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "pub sub",
+            "separate subscriptions",
+            "fan out event",
+            "every service",
+            "order event"
+          ]
+        },
+        {
+          "id": "fg_mq_reply",
+          "label": "Uses request/reply deliberately",
+          "description": "Uses a correlated reply with a timeout only when the caller truly needs an immediate answer.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "request reply",
+            "correlation id",
+            "reply subject",
+            "timeout",
+            "immediate response"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_mq_async_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When should the inventory lookup become an asynchronous command instead?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Queue, pub/sub vagy request/reply?",
+          "prompt": "Válassz messaging patternt image jobok workerek közötti szétosztásához, több service orderről való értesítéséhez és inventory service azonnali válaszának lekéréséhez.",
+          "answerStructureHint": "Kapcsold össze a use case-eket a receiver szemantikával, response igénnyel és failure behaviourrel.",
+          "expectedPoints": {
+            "fg_mq_queue": {
+              "label": "Work queue-t használ jobokhoz",
+              "description": "Competing consumert választ, hogy minden image jobot egy worker kezeljen."
+            },
+            "fg_mq_pubsub": {
+              "label": "Pub/subot használ business eventhez",
+              "description": "Külön subscriptionöket választ, hogy minden érdekelt service megkapja az order eventet."
+            },
+            "fg_mq_reply": {
+              "label": "Tudatosan használ request/replyt",
+              "description": "Korrelált replyt és timeoutot használ, csak ha a callernek valóban azonnali válasz kell."
+            }
+          },
+          "followUps": {
+            "fg_mq_async_followup": "Mikor kellene az inventory lookupot inkább aszinkron commanddá alakítani?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_mp_fanout_002",
+      "title": "One event, five downstream systems",
+      "prompt": "Five systems must react independently after a customer is created. How would you prevent one slow or failing consumer from blocking the others?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "fg_messaging_patterns"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use independent subscriptions, isolation, retries, and observability.",
+      "expectedPoints": [
+        {
+          "id": "fg_mf_subs",
+          "label": "Creates independent subscriptions",
+          "description": "Gives each downstream system its own durable queue or subscription rather than sharing one work queue.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "independent subscriptions",
+            "one queue per service",
+            "fan out",
+            "durable subscription",
+            "separate consumers"
+          ]
+        },
+        {
+          "id": "fg_mf_isolate",
+          "label": "Isolates failure and backpressure",
+          "description": "Lets each subscription have its own capacity, retry, dead-letter, and scaling policy.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "failure isolation",
+            "separate retry",
+            "dead letter",
+            "independent scaling",
+            "consumer backpressure"
+          ]
+        },
+        {
+          "id": "fg_mf_obs",
+          "label": "Adds per-consumer observability",
+          "description": "Tracks lag, age, failures, retries, and dead-letter counts for every downstream consumer.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "consumer lag",
+            "message age",
+            "retry count",
+            "dead letter count",
+            "per consumer metrics"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_mf_replay_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would a new sixth consumer process historical events?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy event, öt downstream rendszer",
+          "prompt": "Öt rendszernek egymástól függetlenül kell reagálnia customer létrehozása után. Hogyan akadályoznád meg, hogy egy lassú vagy hibás consumer blokkolja a többit?",
+          "answerStructureHint": "Használj független subscriptiont, izolációt, retryt és observabilityt.",
+          "expectedPoints": {
+            "fg_mf_subs": {
+              "label": "Független subscriptionöket hoz létre",
+              "description": "Minden downstream rendszer saját durable queue-t vagy subscriptiont kap közös work queue helyett."
+            },
+            "fg_mf_isolate": {
+              "label": "Izolálja a failure-t és backpressure-t",
+              "description": "Minden subscription saját capacity, retry, dead-letter és scaling policyt kap."
+            },
+            "fg_mf_obs": {
+              "label": "Consumerenkénti observabilityt ad",
+              "description": "Minden downstream consumerhez lag, age, failure, retry és dead-letter count mérés tartozik."
+            }
+          },
+          "followUps": {
+            "fg_mf_replay_followup": "Hogyan dolgozná fel egy új, hatodik consumer a historikus eventeket?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_di_crash_001",
+      "title": "Crash after side effect, before acknowledgement",
+      "prompt": "A consumer charges a customer successfully, then crashes before acknowledging the message. What happens under at-least-once delivery, and how do you prevent a second charge?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "fg_delivery_idempotency"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain redelivery, idempotency key placement, and acknowledgement timing.",
+      "expectedPoints": [
+        {
+          "id": "fg_dc_redelivery",
+          "label": "Predicts redelivery",
+          "description": "Explains that the broker sees no acknowledgement and delivers the same logical message again.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "message redelivery",
+            "no acknowledgement",
+            "at least once",
+            "same message again",
+            "consumer crash"
+          ]
+        },
+        {
+          "id": "fg_dc_idem",
+          "label": "Uses a durable idempotency key",
+          "description": "Stores a stable message or payment key in durable storage and makes duplicate processing return the original result.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "idempotency key",
+            "deduplication record",
+            "unique constraint",
+            "original result",
+            "durable storage"
+          ]
+        },
+        {
+          "id": "fg_dc_ack",
+          "label": "Acknowledges after durable success",
+          "description": "Acknowledges only after the charge result and deduplication state are safely persisted.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "ack after commit",
+            "durable success",
+            "persist before ack",
+            "manual acknowledgement",
+            "transactional record"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_dc_external_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you handle idempotency if the payment provider supports an idempotency key?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Crash side effect után, acknowledgement előtt",
+          "prompt": "Egy consumer sikeresen megterheli a customert, majd acknowledgement előtt crashel. Mi történik at-least-once deliverynél, és hogyan előzöd meg a második charge-ot?",
+          "answerStructureHint": "Magyarázd el a redeliveryt, az idempotency key helyét és az acknowledgement időzítését.",
+          "expectedPoints": {
+            "fg_dc_redelivery": {
+              "label": "Megjósolja a redeliveryt",
+              "description": "Elmagyarázza, hogy a broker nem lát acknowledgementet, ezért ugyanazt a logikai message-et újraküldi."
+            },
+            "fg_dc_idem": {
+              "label": "Durable idempotency keyt használ",
+              "description": "Stabil message- vagy payment keyt durable storage-ban tárol, a duplicate feldolgozás pedig az eredeti eredményt adja vissza."
+            },
+            "fg_dc_ack": {
+              "label": "Durable siker után ackol",
+              "description": "Csak a charge eredmény és deduplication state biztonságos mentése után ackol."
+            }
+          },
+          "followUps": {
+            "fg_dc_external_followup": "Hogyan kezelnéd az idempotencyt, ha a payment provider támogat idempotency keyt?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_di_poison_002",
+      "title": "Handling a poison message",
+      "prompt": "One malformed message fails immediately on every delivery and is requeued forever. Design a safer retry and dead-letter policy.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "fg_delivery_idempotency"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate transient and permanent errors, limit retries, preserve diagnostics, and support replay.",
+      "expectedPoints": [
+        {
+          "id": "fg_dp_classify",
+          "label": "Classifies the failure",
+          "description": "Does not retry schema or validation failures like transient network failures.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "permanent failure",
+            "validation error",
+            "schema error",
+            "transient error",
+            "error classification"
+          ]
+        },
+        {
+          "id": "fg_dp_limit",
+          "label": "Uses bounded delayed retries",
+          "description": "Applies a retry count with backoff and jitter rather than immediate infinite requeue.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "retry limit",
+            "exponential backoff",
+            "jitter",
+            "delayed retry",
+            "no infinite loop"
+          ]
+        },
+        {
+          "id": "fg_dp_dlq",
+          "label": "Dead-letters with context",
+          "description": "Moves exhausted messages to a dead-letter path with error metadata, alerts, and a controlled replay process.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "dead letter queue",
+            "error metadata",
+            "alert operator",
+            "manual replay",
+            "failed message context"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_dp_fix_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What must you verify before replaying dead-lettered messages after a code fix?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Poison message kezelése",
+          "prompt": "Egy malformed message minden deliverynél azonnal hibázik, és örökké requeue-zódik. Tervezz biztonságosabb retry és dead-letter policyt.",
+          "answerStructureHint": "Válaszd szét a transient és permanent errorokat, korlátozd a retryt, őrizd meg a diagnosztikát és támogasd a replayt.",
+          "expectedPoints": {
+            "fg_dp_classify": {
+              "label": "Osztályozza a hibát",
+              "description": "A schema vagy validation hibát nem kezeli ugyanúgy, mint a transient network failure-t."
+            },
+            "fg_dp_limit": {
+              "label": "Korlátozott, késleltetett retryt használ",
+              "description": "Retry countot, backoffot és jittert használ az azonnali végtelen requeue helyett."
+            },
+            "fg_dp_dlq": {
+              "label": "Contexttel dead-letterbe küld",
+              "description": "A kifutott message-et error metadata-val dead-letter pathra küldi, alertet ad és controlled replayt biztosít."
+            }
+          },
+          "followUps": {
+            "fg_dp_fix_followup": "Mit kell ellenőrizni dead-lettered message-ek replaye előtt egy code fix után?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_rmq_route_001",
+      "title": "Designing RabbitMQ routing",
+      "prompt": "Design RabbitMQ routing for order.created events where regional processors need only their region and an audit service needs every order event.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "fg_rabbitmq_routing"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Choose exchange type, routing keys, bindings, queues, and durability.",
+      "expectedPoints": [
+        {
+          "id": "fg_rr_topic",
+          "label": "Uses a topic exchange",
+          "description": "Publishes with hierarchical keys such as order.created.eu and order.created.us.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "topic exchange",
+            "routing key",
+            "order created eu",
+            "hierarchical key",
+            "wildcard routing"
+          ]
+        },
+        {
+          "id": "fg_rr_bindings",
+          "label": "Defines correct bindings",
+          "description": "Binds regional queues to exact or single-level patterns and the audit queue to a broad order pattern.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "regional queue",
+            "order created wildcard",
+            "audit queue",
+            "binding pattern",
+            "separate queues"
+          ]
+        },
+        {
+          "id": "fg_rr_durable",
+          "label": "Includes durability and confirms",
+          "description": "Declares durable infrastructure, persistent messages, and publisher confirms when loss is unacceptable.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "durable queue",
+            "durable exchange",
+            "persistent message",
+            "publisher confirm",
+            "mandatory publish"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_rr_unrouted_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would the producer detect that a message matched no queue?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "RabbitMQ routing tervezése",
+          "prompt": "Tervezz RabbitMQ routingot order.created eventekhez úgy, hogy a regionális processzorok csak a saját régiójukat, az audit service pedig minden order eventet megkapjon.",
+          "answerStructureHint": "Válassz exchange type-ot, routing keyt, bindinget, queue-kat és durabilityt.",
+          "expectedPoints": {
+            "fg_rr_topic": {
+              "label": "Topic exchange-et használ",
+              "description": "Hierarchical routing keyt használ, például order.created.eu és order.created.us."
+            },
+            "fg_rr_bindings": {
+              "label": "Helyes bindingeket definiál",
+              "description": "A regionális queue-kat exact vagy single-level patternhez, az audit queue-t széles order patternhez bindeli."
+            },
+            "fg_rr_durable": {
+              "label": "Durabilityt és confirmot is tervez",
+              "description": "Durable infrastruktúrát, persistent message-et és publisher confirmot használ, ha loss nem elfogadható."
+            }
+          },
+          "followUps": {
+            "fg_rr_unrouted_followup": "Hogyan észlelné a producer, hogy a message egyetlen queue-val sem match-elt?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_rmq_prefetch_002",
+      "title": "One RabbitMQ consumer holds too many messages",
+      "prompt": "One slow consumer has hundreds of unacknowledged messages while other consumers are idle. What setting and processing behaviour would you inspect?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "fg_rabbitmq_routing"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Focus on prefetch, acknowledgement timing, concurrency, and fair distribution.",
+      "expectedPoints": [
+        {
+          "id": "fg_rp_prefetch",
+          "label": "Inspects prefetch",
+          "description": "Explains that high prefetch lets one consumer reserve many messages before others can receive them.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "prefetch count",
+            "unacknowledged messages",
+            "consumer holds work",
+            "fair dispatch",
+            "qos setting"
+          ]
+        },
+        {
+          "id": "fg_rp_ack",
+          "label": "Checks acknowledgement timing",
+          "description": "Ensures acknowledgement happens after processing and that failures reject or dead-letter correctly.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "manual acknowledgement",
+            "ack after processing",
+            "reject message",
+            "negative acknowledgement",
+            "dead letter"
+          ]
+        },
+        {
+          "id": "fg_rp_tune",
+          "label": "Tunes using measured capacity",
+          "description": "Sets prefetch near safe per-consumer concurrency and measures throughput, latency, and memory.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "consumer concurrency",
+            "measure throughput",
+            "memory usage",
+            "safe prefetch",
+            "processing capacity"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_rp_order_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How can concurrent processing affect message ordering?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy RabbitMQ consumer túl sok message-et tart",
+          "prompt": "Egy lassú consumer több száz unacknowledged message-et tart, miközben más consumerek idle állapotban vannak. Milyen settinget és processing behaviourt vizsgálnál?",
+          "answerStructureHint": "Fókuszálj a prefetchre, acknowledgement timingra, concurrencyre és fair distributionre.",
+          "expectedPoints": {
+            "fg_rp_prefetch": {
+              "label": "Megvizsgálja a prefetch-et",
+              "description": "Elmagyarázza, hogy magas prefetch esetén egy consumer sok message-et lefoglalhat a többiek előtt."
+            },
+            "fg_rp_ack": {
+              "label": "Ellenőrzi az acknowledgement timingot",
+              "description": "Biztosítja, hogy acknowledgement processing után történjen, a failure pedig megfelelő reject vagy dead-letter kezelést kapjon."
+            },
+            "fg_rp_tune": {
+              "label": "Mért kapacitás alapján hangol",
+              "description": "A prefetch-et a biztonságos per-consumer concurrencyhez igazítja, majd throughputot, latencyt és memoryt mér."
+            }
+          },
+          "followUps": {
+            "fg_rp_order_followup": "Hogyan befolyásolja a concurrent processing a message orderinget?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_nats_core_jet_001",
+      "title": "Core NATS or JetStream?",
+      "prompt": "Choose between Core NATS and JetStream for a low-latency service lookup, a durable background job, and an event consumer that may be offline for hours.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_nats_messaging"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare immediacy, persistence, acknowledgement, replay, and timeout behaviour.",
+      "expectedPoints": [
+        {
+          "id": "fg_nj_lookup",
+          "label": "Uses Core NATS for ephemeral lookup",
+          "description": "Chooses Core request/reply with a short timeout when only a currently available responder is useful.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "core nats",
+            "request reply",
+            "short timeout",
+            "ephemeral message",
+            "available responder"
+          ]
+        },
+        {
+          "id": "fg_nj_job",
+          "label": "Uses JetStream for durable work",
+          "description": "Chooses stored messages, explicit acknowledgements, and redelivery for background jobs.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "jet stream",
+            "durable message",
+            "explicit ack",
+            "redelivery",
+            "background job"
+          ]
+        },
+        {
+          "id": "fg_nj_offline",
+          "label": "Uses replay for offline consumers",
+          "description": "Uses a durable JetStream consumer that resumes from its stored position after reconnecting.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "durable consumer",
+            "resume position",
+            "replay events",
+            "offline consumer",
+            "stored stream"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_nj_retention_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which JetStream retention policy would you consider for a work queue versus an event log?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Core NATS vagy JetStream?",
+          "prompt": "Válassz Core NATS és JetStream között low-latency service lookuphoz, durable background jobhoz és olyan event consumerhez, amely órákig offline lehet.",
+          "answerStructureHint": "Hasonlítsd össze az immediacyt, persistence-et, acknowledgementet, replayt és timeout viselkedést.",
+          "expectedPoints": {
+            "fg_nj_lookup": {
+              "label": "Core NATS-ot használ ephemeral lookuphoz",
+              "description": "Core request/replyt választ rövid timeouttal, amikor csak egy jelenleg elérhető responder hasznos."
+            },
+            "fg_nj_job": {
+              "label": "JetStreamet használ durable munkához",
+              "description": "Stored message-et, explicit acknowledgementet és redeliveryt választ background jobhoz."
+            },
+            "fg_nj_offline": {
+              "label": "Replayt használ offline consumerhez",
+              "description": "Durable JetStream consumert használ, amely reconnect után a mentett pozíciótól folytatja."
+            }
+          },
+          "followUps": {
+            "fg_nj_retention_followup": "Mely JetStream retention policy illik work queue-hoz, és melyik event loghoz?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_nats_reply_002",
+      "title": "NATS request/reply under failure",
+      "prompt": "A NATS request/reply call sometimes has no responder or times out. How should the caller distinguish these outcomes and avoid turning retries into an overload loop?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "fg_nats_messaging"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use explicit timeouts, error classification, bounded retry, and fallback.",
+      "expectedPoints": [
+        {
+          "id": "fg_nr_classify",
+          "label": "Distinguishes no-responder and timeout",
+          "description": "Treats immediate no-responder information differently from a request whose reply missed the deadline.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "no responders",
+            "request timeout",
+            "different failure",
+            "reply deadline",
+            "service unavailable"
+          ]
+        },
+        {
+          "id": "fg_nr_retry",
+          "label": "Uses bounded retry with backoff",
+          "description": "Retries only safe transient failures with a limit, backoff, jitter, and an overall deadline.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "bounded retry",
+            "exponential backoff",
+            "jitter",
+            "overall deadline",
+            "safe retry"
+          ]
+        },
+        {
+          "id": "fg_nr_fallback",
+          "label": "Provides a failure path",
+          "description": "Returns a controlled unavailable response, uses cached data, or switches to asynchronous processing when appropriate.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "503 unavailable",
+            "cached fallback",
+            "async fallback",
+            "graceful degradation",
+            "circuit breaker"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_nr_corr_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How is the reply correlated to the correct request in NATS?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "NATS request/reply failure esetén",
+          "prompt": "Egy NATS request/reply hívásnál néha nincs responder vagy timeout történik. Hogyan különböztesse meg ezeket a caller, és hogyan kerülje el, hogy a retry overload loopot okozzon?",
+          "answerStructureHint": "Használj explicit timeoutot, error classificationt, bounded retryt és fallbacket.",
+          "expectedPoints": {
+            "fg_nr_classify": {
+              "label": "Megkülönbözteti a no-responder és timeout esetet",
+              "description": "Másként kezeli az azonnali no-responder információt, mint a deadline-ig meg nem érkező replyt."
+            },
+            "fg_nr_retry": {
+              "label": "Bounded retryt és backoffot használ",
+              "description": "Csak safe transient failure-t retryol limittel, backoffal, jitterrel és overall deadline-nal."
+            },
+            "fg_nr_fallback": {
+              "label": "Failure pathot biztosít",
+              "description": "Kontrollált unavailable response-t, cached adatot vagy megfelelő esetben aszinkron feldolgozást használ."
+            }
+          },
+          "followUps": {
+            "fg_nr_corr_followup": "Hogyan kapcsolódik a reply a megfelelő requesthez NATS-ban?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_kafka_partition_001",
+      "title": "Choosing a Kafka partition key",
+      "prompt": "You need ordered events per account and balanced throughput across the cluster. How would you choose and validate the Kafka partition key?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_kafka_streaming"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Connect ordering scope, key cardinality, skew, and future partition changes.",
+      "expectedPoints": [
+        {
+          "id": "fg_kp_order",
+          "label": "Keys by the ordering entity",
+          "description": "Uses account_id so all events for one account reach the same partition and remain ordered there.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "account id key",
+            "same partition",
+            "per account order",
+            "ordering scope",
+            "partition key"
+          ]
+        },
+        {
+          "id": "fg_kp_balance",
+          "label": "Checks load distribution",
+          "description": "Examines key cardinality and traffic skew so a few accounts do not create hot partitions.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "key cardinality",
+            "hot partition",
+            "traffic skew",
+            "balanced distribution",
+            "high volume account"
+          ]
+        },
+        {
+          "id": "fg_kp_validate",
+          "label": "Validates with production-like data",
+          "description": "Tests partition distribution and ordering under realistic keys and considers remapping when partition count changes.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "partition distribution",
+            "realistic keys",
+            "increase partitions",
+            "key remapping",
+            "load test"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_kp_global_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you do if one account alone exceeds one partition’s capacity?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Kafka partition key választása",
+          "prompt": "Accountonként ordered eventekre és cluster-szinten kiegyensúlyozott throughputra van szükség. Hogyan választanád és validálnád a Kafka partition keyt?",
+          "answerStructureHint": "Kapcsold össze az ordering scope-ot, key cardinalityt, skew-t és a későbbi partition-változásokat.",
+          "expectedPoints": {
+            "fg_kp_order": {
+              "label": "Az ordering entity alapján keyel",
+              "description": "Account_id-t használ, így egy account minden eventje ugyanabba a partitionbe kerül és ott ordered marad."
+            },
+            "fg_kp_balance": {
+              "label": "Ellenőrzi a load distributiont",
+              "description": "Key cardinalityt és traffic skew-t vizsgál, hogy néhány account ne hozzon létre hot partitiont."
+            },
+            "fg_kp_validate": {
+              "label": "Production-szerű adatokkal validál",
+              "description": "Valós keykkel teszteli a partition distributiont és orderinget, valamint figyelembe veszi a partition count változásakor történő remappinget."
+            }
+          },
+          "followUps": {
+            "fg_kp_global_followup": "Mit tennél, ha egyetlen account önmagában meghaladja egy partition kapacitását?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_kafka_offset_002",
+      "title": "Offset commit and duplicate processing",
+      "prompt": "Compare committing a Kafka offset before processing, after processing, and together with a database result. What can each choice lose or duplicate?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "fg_kafka_streaming"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain failure windows, at-least-once behaviour, and atomic coordination limits.",
+      "expectedPoints": [
+        {
+          "id": "fg_ko_before",
+          "label": "Explains commit-before risk",
+          "description": "States that a crash after commit but before durable work can lose processing.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "commit before processing",
+            "message loss",
+            "offset advanced",
+            "crash window",
+            "work not done"
+          ]
+        },
+        {
+          "id": "fg_ko_after",
+          "label": "Explains commit-after duplicates",
+          "description": "States that a crash after the result but before offset commit causes redelivery and possible duplicate effects.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "commit after processing",
+            "message redelivery",
+            "duplicate effect",
+            "at least once",
+            "crash before commit"
+          ]
+        },
+        {
+          "id": "fg_ko_atomic",
+          "label": "Discusses coordinated persistence",
+          "description": "Uses idempotent database writes, an inbox table, or Kafka transactions where applicable, without claiming universal atomicity across arbitrary systems.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "idempotent write",
+            "inbox table",
+            "kafka transaction",
+            "atomic boundary",
+            "deduplication"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_ko_rebalance_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What happens to in-flight work when a consumer-group rebalance occurs?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Offset commit és duplicate processing",
+          "prompt": "Hasonlítsd össze a Kafka offset processing előtti, processing utáni és database eredménnyel együtt történő commitját. Melyik mit veszíthet vagy duplikálhat?",
+          "answerStructureHint": "Magyarázd el a failure window-kat, az at-least-once viselkedést és az atomic koordináció korlátait.",
+          "expectedPoints": {
+            "fg_ko_before": {
+              "label": "Elmagyarázza a processing előtti commit kockázatát",
+              "description": "Kimondja, hogy commit után, durable munka előtt bekövetkező crash processing losst okozhat."
+            },
+            "fg_ko_after": {
+              "label": "Elmagyarázza a processing utáni commit duplikációját",
+              "description": "Kimondja, hogy eredmény után, offset commit előtt bekövetkező crash redeliveryt és duplicate effectet okozhat."
+            },
+            "fg_ko_atomic": {
+              "label": "Tárgyalja a koordinált persistence-et",
+              "description": "Idempotent database write-ot, inbox tablet vagy megfelelő esetben Kafka transactiont használ, de nem állít univerzális atomicitást tetszőleges rendszerek között."
+            }
+          },
+          "followUps": {
+            "fg_ko_rebalance_followup": "Mi történik az in-flight munkával consumer-group rebalance során?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_event_schema_001",
+      "title": "Designing an event contract",
+      "prompt": "Design an OrderPlaced event contract that can be traced, deduplicated, versioned, and safely consumed by teams you do not control.",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "fg_event_contracts"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover event meaning, metadata, payload boundaries, and evolution rules.",
+      "expectedPoints": [
+        {
+          "id": "fg_es_fact",
+          "label": "Defines a clear business fact",
+          "description": "Uses past tense and documents exactly what completed business action the event represents.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "order placed",
+            "past tense event",
+            "business fact",
+            "semantic meaning",
+            "not a command"
+          ]
+        },
+        {
+          "id": "fg_es_meta",
+          "label": "Includes stable metadata",
+          "description": "Includes event id, type, occurred time, producer, schema version, correlation, and causation where useful.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "event id",
+            "schema version",
+            "occurred at",
+            "correlation id",
+            "producer name",
+            "causation id"
+          ]
+        },
+        {
+          "id": "fg_es_payload",
+          "label": "Keeps a stable consumer-oriented payload",
+          "description": "Includes the business data consumers need without exposing an internal database row or requiring a synchronous callback to the producer.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "consumer oriented",
+            "business fields",
+            "not database row",
+            "self contained event",
+            "stable payload"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_es_pii_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you handle personal data that should not live forever in an event log?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Event contract tervezése",
+          "prompt": "Tervezz OrderPlaced event contractot, amely trace-elhető, deduplikálható, verziózható és biztonságosan fogyasztható olyan csapatok által is, amelyeket nem te irányítasz.",
+          "answerStructureHint": "Térj ki az event jelentésére, metadata-ra, payload boundaryre és evolution rule-okra.",
+          "expectedPoints": {
+            "fg_es_fact": {
+              "label": "Világos business factet definiál",
+              "description": "Past tense nevet használ és dokumentálja, pontosan milyen befejezett business actiont jelent az event."
+            },
+            "fg_es_meta": {
+              "label": "Stabil metadata-t tartalmaz",
+              "description": "Event id-t, type-ot, occurred time-ot, producert, schema versiont, correlationt és szükség esetén causationt tartalmaz."
+            },
+            "fg_es_payload": {
+              "label": "Stabil, consumer-orientált payloadot tart",
+              "description": "A consumer számára szükséges business adatot adja, de nem expose-ol belső database row-t és nem kényszerít szinkron callbacket a producerhez."
+            }
+          },
+          "followUps": {
+            "fg_es_pii_followup": "Hogyan kezelnéd azt a personal data-t, amelynek nem szabad örökké event logban maradnia?"
+          }
+        }
+      }
+    },
+    {
+      "id": "fg_event_evolve_002",
+      "title": "Evolving an event schema safely",
+      "prompt": "You need to rename a field and change its meaning while old consumers and historical events still exist. What migration options do you have?",
+      "roles": [
+        "backend_developer",
+        "backend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "fg_event_contracts"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Distinguish additive compatibility from semantic breaking change and plan coexistence.",
+      "expectedPoints": [
+        {
+          "id": "fg_ee_break",
+          "label": "Recognizes semantic breaking change",
+          "description": "Explains that renaming or changing meaning can break consumers even if the wire type remains valid.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "semantic breaking change",
+            "field rename",
+            "meaning changed",
+            "consumer compatibility",
+            "wire compatible"
+          ]
+        },
+        {
+          "id": "fg_ee_options",
+          "label": "Offers safe coexistence options",
+          "description": "Proposes an additive new field, a new event version or type, dual publishing, or an upcaster based on constraints.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "add new field",
+            "new event version",
+            "dual publish",
+            "new event type",
+            "upcaster"
+          ]
+        },
+        {
+          "id": "fg_ee_rollout",
+          "label": "Plans rollout and removal",
+          "description": "Uses schema checks, consumer inventory, telemetry, a migration window, and explicit retirement criteria.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 5,
+            "backend_architect": 4
+          },
+          "acceptedSignals": [
+            "schema registry",
+            "contract test",
+            "consumer inventory",
+            "migration window",
+            "deprecation telemetry"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "fg_ee_unknown_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why should consumers generally ignore unknown fields?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Event schema biztonságos evolúciója",
+          "prompt": "Át kell nevezned egy fieldet és meg kell változtatnod a jelentését, miközben régi consumerek és historical eventek is léteznek. Milyen migration opcióid vannak?",
+          "answerStructureHint": "Válaszd szét az additive compatibilityt a semantic breaking change-től, és tervezz coexistence-et.",
+          "expectedPoints": {
+            "fg_ee_break": {
+              "label": "Felismeri a semantic breaking change-et",
+              "description": "Elmagyarázza, hogy átnevezés vagy jelentésváltozás akkor is törhet consumert, ha a wire type változatlanul valid."
+            },
+            "fg_ee_options": {
+              "label": "Biztonságos coexistence opciókat ad",
+              "description": "Additive új fieldet, új event versiont vagy type-ot, dual publishinget vagy constraint alapján upcastert javasol."
+            },
+            "fg_ee_rollout": {
+              "label": "Megtervezi a rolloutot és eltávolítást",
+              "description": "Schema checket, consumer inventoryt, telemetryt, migration window-t és explicit retirement criteria-t használ."
+            }
+          },
+          "followUps": {
+            "fg_ee_unknown_followup": "Miért érdemes a consumereknek általában ignorálniuk az ismeretlen field-eket?"
+          }
+        }
+      }
+    }
+  ]
+}

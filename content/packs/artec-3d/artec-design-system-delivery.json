@@ -1,0 +1,2134 @@
+{
+  "id": "artec_design_system_delivery",
+  "name": "Artec 3D — Design System and Delivery",
+  "description": "Design systems, Storybook and Chromatic, Vanilla Extract, forms, autonomous technical ownership, and review of AI-generated UI.",
+  "sources": [
+    "artec_3d_job_description_and_interview_notes_en"
+  ],
+  "topics": [
+    {
+      "id": "artec_design_system_architecture",
+      "name": "Design System Architecture",
+      "description": "A design system combines reusable components, visual tokens, interaction rules, documentation, and governance so several products can deliver a consistent UI.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "frontend_app_structure",
+        "web_accessibility"
+      ],
+      "studyContent": {
+        "mentalModel": "A design system is a shared product for developers and designers, not only a component folder. It defines reusable primitives, design tokens, interaction behavior, accessibility expectations, documentation, and a process for evolving public APIs.",
+        "problem": "Without shared rules, storefront and CRM interfaces drift in color, spacing, keyboard behavior, and component semantics. A poorly governed library can create a different problem: breaking changes block product teams, or product-specific options turn simple primitives into unmaintainable universal components.",
+        "example": "A shared Select component defines tokens, keyboard navigation, validation states, and screen-reader labeling. Product teams compose it into CustomerSelector and CountrySelector components that keep their own business rules outside the design-system primitive.",
+        "howItWorks": [
+          "Separate low-level visual and interaction primitives from product-specific business components.",
+          "Define stable component APIs, tokens, states, accessibility behavior, and supported composition points.",
+          "Document components with realistic examples and guidance, not only a prop table.",
+          "Release changes with compatibility rules, migration notes, and a deprecation path.",
+          "Collect product feedback so the system evolves from real repeated needs."
+        ],
+        "commonMistakes": [
+          "Treating the design system as a collection of copied Figma frames.",
+          "Adding product-specific Boolean options to a shared primitive.",
+          "Changing tokens or component behavior without impact analysis and migration support."
+        ],
+        "keyTerms": [
+          {
+            "term": "design token",
+            "definition": "A named value for a shared visual decision such as spacing, color, or typography."
+          },
+          {
+            "term": "primitive",
+            "definition": "A low-level reusable component with general visual and interaction behavior."
+          },
+          {
+            "term": "component API",
+            "definition": "The supported props, events, slots, and composition rules exposed to consumers."
+          },
+          {
+            "term": "governance",
+            "definition": "The process for proposing, reviewing, releasing, and deprecating shared patterns."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Design system architektúra",
+          "description": "A design system újrafelhasználható komponenseket, vizuális tokeneket, interakciós szabályokat, dokumentációt és governance-et kapcsol össze, hogy több termék következetes UI-t szállítson.",
+          "studyContent": {
+            "mentalModel": "A design system közös termék fejlesztők és designerek számára, nem csupán component folder. Újrafelhasználható primitíveket, design tokeneket, interakciós viselkedést, accessibility-elvárást, dokumentációt és public API-evolúciós folyamatot határoz meg.",
+            "problem": "Közös szabályok nélkül a storefront és CRM színben, spacingben, keyboard behaviorben és komponensszemantikában eltér. Rosszul irányított library másik problémát hoz: breaking change blokkolja a product csapatot, vagy product-specifikus opciók karbantarthatatlan univerzális komponenssé teszik a primitívet.",
+            "example": "Egy közös Select komponens definiálja a tokeneket, keyboard navigationt, validation state-eket és screen-reader labelt. A product csapatok CustomerSelector és CountrySelector komponensekké komponálják, miközben az üzleti szabályok a design system primitíven kívül maradnak.",
+            "howItWorks": [
+              "Válaszd külön az alacsony szintű vizuális és interakciós primitíveket a product-specifikus business componentektől.",
+              "Definiálj stabil component API-t, tokeneket, state-eket, accessibility-viselkedést és támogatott composition pontokat.",
+              "Reális példákkal és használati útmutatóval dokumentálj, ne csak prop táblával.",
+              "Compatibility szabállyal, migration note-tal és deprecation úttal release-elj.",
+              "Gyűjts product feedbacket, hogy a rendszer valós ismétlődő igényekből fejlődjön."
+            ],
+            "commonMistakes": [
+              "A design systemet másolt Figma frame-ek gyűjteményének tekinteni.",
+              "Product-specifikus Boolean opciókat adni közös primitívhez.",
+              "Impact analysis és migrációs támogatás nélkül tokent vagy component behavior-t módosítani."
+            ],
+            "keyTerms": [
+              {
+                "term": "design token",
+                "definition": "Közös vizuális döntés, például spacing, szín vagy tipográfia névvel ellátott értéke."
+              },
+              {
+                "term": "primitív",
+                "definition": "Általános vizuális és interakciós viselkedésű alacsony szintű reusable component."
+              },
+              {
+                "term": "component API",
+                "definition": "A fogyasztóknak biztosított támogatott propok, eventek, slotok és composition szabályok."
+              },
+              {
+                "term": "governance",
+                "definition": "Közös minták javaslatának, review-jának, release-ének és deprecationjének folyamata."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_visual_regression",
+      "name": "Visual Regression Testing",
+      "description": "Visual regression testing compares rendered component or page screenshots against approved baselines to detect unintended visual changes.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "frontend_quality_gates",
+        "artec_design_system_architecture"
+      ],
+      "studyContent": {
+        "mentalModel": "Visual regression testing renders a known UI state in a controlled environment and compares its image with an approved baseline. Tools such as Storybook and Chromatic make component states reviewable before a shared library change reaches consuming products.",
+        "problem": "Behavior tests can pass while spacing, typography, overflow, or responsive layout breaks. Screenshot testing can catch those changes, but unstable fonts, animations, dates, network content, or browser differences can create noisy failures that teams learn to ignore.",
+        "example": "A Button story renders default, disabled, loading, focus, and long-label states at supported viewport widths. A token change produces screenshot differences. The reviewer accepts the intended color update but rejects a new text-overflow regression.",
+        "howItWorks": [
+          "Create stories for meaningful component states and representative viewport sizes.",
+          "Make the rendering environment deterministic by controlling data, time, animation, fonts, and network responses.",
+          "Compare screenshots against an approved baseline with a suitable difference threshold.",
+          "Require human review to distinguish intended design changes from regressions.",
+          "Update the baseline only after the change itself has been reviewed."
+        ],
+        "commonMistakes": [
+          "Approving all changed screenshots without inspecting them.",
+          "Capturing only the happy-path default state.",
+          "Allowing nondeterministic content to create flaky comparisons."
+        ],
+        "keyTerms": [
+          {
+            "term": "baseline",
+            "definition": "The approved reference image used for later comparisons."
+          },
+          {
+            "term": "story",
+            "definition": "An isolated documented example of a component in a specific state."
+          },
+          {
+            "term": "visual diff",
+            "definition": "The image difference between the current rendering and the baseline."
+          },
+          {
+            "term": "deterministic",
+            "definition": "Producing the same rendering when the inputs and environment are unchanged."
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": "Visual regression testing",
+          "description": "A visual regression teszt jóváhagyott baseline-okhoz hasonlít renderelt component- vagy page-screenshotokat, hogy észlelje a nem szándékos vizuális változásokat.",
+          "studyContent": {
+            "mentalModel": "A visual regression teszt kontrollált környezetben renderel egy ismert UI-state-et, majd képét jóváhagyott baseline-hoz hasonlítja. A Storybook és Chromatic jellegű eszközök review-zhatóvá teszik a component state-eket, mielőtt egy shared library változás eléri a termékeket.",
+            "problem": "A behavior teszt átmehet akkor is, ha a spacing, tipográfia, overflow vagy responsive layout eltörik. A screenshot teszt ezeket megtalálhatja, de instabil font, animation, dátum, network content vagy browserkülönbség zajos hibát hozhat, amelyet a csapat idővel figyelmen kívül hagy.",
+            "example": "Egy Button story default, disabled, loading, focus és long-label state-et renderel támogatott viewportokon. Egy tokenváltozás screenshot diffet okoz. A reviewer elfogadja a szándékos színmódosítást, de visszautasít egy új text-overflow regressziót.",
+            "howItWorks": [
+              "Készíts storyt jelentős component state-ekhez és reprezentatív viewportméretekhez.",
+              "Tedd determinisztikussá a renderkörnyezetet az adat, idő, animation, font és network response kontrolljával.",
+              "Hasonlítsd a screenshotot jóváhagyott baseline-hoz megfelelő diff threshold mellett.",
+              "Human review különböztesse meg a szándékos design-változást a regressziótól.",
+              "Baseline-t csak a változtatás review-ja után frissíts."
+            ],
+            "commonMistakes": [
+              "Minden megváltozott screenshotot vizsgálat nélkül jóváhagyni.",
+              "Csak a happy-path default state-et lefotózni.",
+              "Nem determinisztikus tartalommal flaky összehasonlítást létrehozni."
+            ],
+            "keyTerms": [
+              {
+                "term": "baseline",
+                "definition": "A későbbi összehasonlításhoz használt jóváhagyott referenciakép."
+              },
+              {
+                "term": "story",
+                "definition": "Egy komponens konkrét állapotának izolált és dokumentált példája."
+              },
+              {
+                "term": "visual diff",
+                "definition": "Az aktuális render és a baseline képi különbsége."
+              },
+              {
+                "term": "determinisztikus",
+                "definition": "Változatlan input és környezet mellett azonos rendert előállító működés."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_vanilla_extract",
+      "name": "Vanilla Extract Styling",
+      "description": "Vanilla Extract defines type-safe styles in TypeScript and generates static CSS at build time, combining code-level composition with runtime-free output.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "artec_frontend_build_tooling",
+        "artec_design_system_architecture"
+      ],
+      "studyContent": {
+        "mentalModel": "Vanilla Extract is a styling approach in which TypeScript files define classes, variables, themes, and recipes while the build produces ordinary static CSS. The browser does not need a styling runtime to create those rules.",
+        "problem": "A large product needs consistent tokens and composable variants without shipping avoidable runtime styling work. However, build-time styling still needs a clear layering strategy, class naming discipline, and rules for dynamic values that cannot be known during the build.",
+        "example": "A design-system Button uses theme variables for color and spacing, a recipe for size and intent variants, and a separate class for focus behavior. A product component combines those classes and passes a CSS variable only for a truly dynamic progress value.",
+        "howItWorks": [
+          "Define shared theme variables and tokens in a stable design-system layer.",
+          "Create focused classes or recipes for supported component variants.",
+          "Let the build extract the style definitions into static CSS files.",
+          "Compose generated classes in React without recreating style rules at runtime.",
+          "Use inline style or CSS variables only for values that are genuinely dynamic."
+        ],
+        "commonMistakes": [
+          "Assuming type-safe style definitions automatically create a good CSS architecture.",
+          "Putting every one-off product rule into the shared theme layer.",
+          "Creating large variant matrices that make component behavior difficult to predict."
+        ],
+        "keyTerms": [
+          {
+            "term": "static CSS",
+            "definition": "CSS generated before runtime and delivered as ordinary stylesheet rules."
+          },
+          {
+            "term": "recipe",
+            "definition": "A typed definition of supported style variants and their combinations."
+          },
+          {
+            "term": "theme variable",
+            "definition": "A named CSS variable representing a design decision that can change by theme."
+          },
+          {
+            "term": "runtime styling",
+            "definition": "Creating or injecting style rules while the application is executing."
+          }
+        ]
+      },
+      "importance": 2,
+      "i18n": {
+        "hu": {
+          "name": "Vanilla Extract styling",
+          "description": "A Vanilla Extract TypeScriptben definiál type-safe style-okat, és build során statikus CSS-t generál, így a kódszintű kompozíció runtime nélküli outputtal párosul.",
+          "studyContent": {
+            "mentalModel": "A Vanilla Extract olyan styling megközelítés, amelyben TypeScript-fájlok classokat, változókat, theme-eket és recipe-ket definiálnak, a build pedig közönséges statikus CSS-t készít. A böngészőnek nincs szüksége styling runtime-ra a szabályok létrehozásához.",
+            "problem": "Egy nagy terméknek következetes tokenek és komponálható variánsok kellenek fölösleges runtime styling nélkül. A build-time stylinghoz is szükséges azonban világos layering, class naming és szabály a buildkor nem ismert dinamikus értékek kezelésére.",
+            "example": "Egy design-system Button theme variable-öket használ színhez és spacinghez, recipe-t a size és intent variánsokhoz, valamint külön classt a focus behaviorhöz. A product component ezeket kombinálja, és csak valóban dinamikus progress értékhez ad CSS variable-t.",
+            "howItWorks": [
+              "Stabil design-system rétegben definiálj közös theme variable-öket és tokeneket.",
+              "Támogatott component variantokhoz készíts fókuszált classokat vagy recipe-ket.",
+              "A build a style-definíciókat statikus CSS-fájlokba emeli ki.",
+              "Reactben a generált classokat komponáld runtime style-szabályok újragyártása nélkül.",
+              "Inline style-t vagy CSS variable-t csak valóban dinamikus értékhez használj."
+            ],
+            "commonMistakes": [
+              "Azt feltételezni, hogy a type-safe style definíció automatikusan jó CSS-architektúrát ad.",
+              "Minden egyszeri product rule-t a közös theme-rétegbe tenni.",
+              "Nagy variantmátrixot létrehozni, amely kiszámíthatatlanná teszi a component behavior-t."
+            ],
+            "keyTerms": [
+              {
+                "term": "statikus CSS",
+                "definition": "Runtime előtt generált, közönséges stylesheet-szabályként szállított CSS."
+              },
+              {
+                "term": "recipe",
+                "definition": "A támogatott style-variantokat és kombinációikat leíró typed definíció."
+              },
+              {
+                "term": "theme variable",
+                "definition": "Theme szerint változtatható design-döntést képviselő névvel ellátott CSS-változó."
+              },
+              {
+                "term": "runtime styling",
+                "definition": "Style-szabály létrehozása vagy injektálása az alkalmazás futása közben."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_forms_architecture",
+      "name": "React Forms Architecture",
+      "description": "A form architecture decides field ownership, validation timing, submission state, accessibility, and server-error handling without duplicating the domain model.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react_state_strategies",
+        "web_accessibility",
+        "api_contract_design"
+      ],
+      "studyContent": {
+        "mentalModel": "React form architecture means treating a form as a user workflow with draft values, validation, submission, and server feedback. Simple forms may use controlled local state, while larger forms benefit from a library that limits renders and manages field registration.",
+        "problem": "Forms become fragile when validation logic is scattered, fields lose labels, server errors are shown only as generic messages, or submitted data differs from the API contract. Storing every keystroke globally also increases coupling without improving the user experience.",
+        "example": "A CRM customer form validates required fields on blur, shows an error beside each field and in a summary, disables duplicate submission while the request is pending, maps a server-side duplicate-email error back to the email field, and restores focus to the first invalid control.",
+        "howItWorks": [
+          "Define the form's draft data separately from the persisted server record.",
+          "Choose controlled or registered fields according to complexity and performance needs.",
+          "Validate at useful moments and keep client rules aligned with the server contract.",
+          "Represent idle, dirty, validating, submitting, success, and failure states explicitly.",
+          "Connect labels, errors, focus movement, and keyboard behavior for accessibility."
+        ],
+        "commonMistakes": [
+          "Using client validation as a replacement for server validation.",
+          "Clearing user input after an unsuccessful submission.",
+          "Showing only a top-level error while leaving the failing field unexplained."
+        ],
+        "keyTerms": [
+          {
+            "term": "controlled field",
+            "definition": "A form control whose current value is stored and updated through React state."
+          },
+          {
+            "term": "dirty state",
+            "definition": "A signal that the draft differs from its initial or saved value."
+          },
+          {
+            "term": "field error",
+            "definition": "A validation or server message associated with one specific input."
+          },
+          {
+            "term": "submission state",
+            "definition": "The current stage of sending and processing the form data."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "React form architektúra",
+          "description": "A form architektúra meghatározza a mezők tulajdonlását, validáció időzítését, submit state-et, accessibilityt és szerverhibák kezelését a domainmodell duplikálása nélkül.",
+          "studyContent": {
+            "mentalModel": "A React form architektúra a formot draft értékekből, validációból, submitból és szerverfeedbackből álló user workflow-ként kezeli. Egyszerű formhoz elég lehet controlled local state, nagyobbnál pedig olyan library hasznos, amely csökkenti a rendereket és kezeli a field registrationt.",
+            "problem": "A form törékennyé válik, ha a validáció szétszórt, a mezőknek nincs labelje, a szerverhiba csak generikus üzenetként jelenik meg, vagy a submitadat eltér az API-contracttól. Minden keystroke globális store-ban tartása is csatolást növel userelőny nélkül.",
+            "example": "Egy CRM customer form blurkor validálja a kötelező mezőket, mező mellett és summaryban is hibát mutat, pending request alatt tiltja a dupla submitot, a szerver duplicate-email hibáját visszaköti az email mezőhöz, és az első invalid controlra viszi a fókuszt.",
+            "howItWorks": [
+              "A form draft adatát válaszd külön a perzisztált szerverrekordtól.",
+              "Komplexitás és performance alapján válassz controlled vagy registered fieldet.",
+              "Hasznos pillanatban validálj, és tartsd összhangban a kliensszabályt a server contracttal.",
+              "Az idle, dirty, validating, submitting, success és failure state legyen explicit.",
+              "Accessibilityhez kösd össze a labelt, errort, fókuszmozgást és keyboard behavior-t."
+            ],
+            "commonMistakes": [
+              "A kliensvalidációt szervervalidáció helyettesítőjeként használni.",
+              "Sikertelen submit után törölni a user inputját.",
+              "Csak top-level errort mutatni úgy, hogy a hibás mező nincs megmagyarázva."
+            ],
+            "keyTerms": [
+              {
+                "term": "controlled field",
+                "definition": "Olyan form control, amelynek aktuális értékét React state tárolja és frissíti."
+              },
+              {
+                "term": "dirty state",
+                "definition": "Jelzés arra, hogy a draft eltér a kezdeti vagy mentett értéktől."
+              },
+              {
+                "term": "field error",
+                "definition": "Egy konkrét inputhoz kapcsolt validációs vagy szerverüzenet."
+              },
+              {
+                "term": "submission state",
+                "definition": "A formadat küldésének és feldolgozásának aktuális szakasza."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_frontend_technical_ownership",
+      "name": "Frontend Technical Ownership",
+      "description": "Technical ownership means making explicit, evidence-based frontend decisions, aligning stakeholders, and remaining accountable for delivery and production outcomes.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "architect_practice",
+        "design_documentation",
+        "risk_management"
+      ],
+      "studyContent": {
+        "mentalModel": "Frontend technical ownership means turning an unclear product need into a deliverable design and following it through implementation, review, release, and operation. Autonomy is not working alone; it includes asking for constraints, involving the right specialists, and making decisions visible.",
+        "problem": "Without ownership, difficult choices remain implicit, backend and frontend contracts diverge, quality work is postponed, and problems are passed between teams. Unreviewed personal preferences can also masquerade as architecture when trade-offs and evidence are not recorded.",
+        "example": "A storefront migration needs a routing decision. The senior developer gathers URL, SEO, analytics, permission, deployment, and team constraints; compares options; records the decision and rollback plan; invites backend, QA, and design review; then monitors the first migrated route.",
+        "howItWorks": [
+          "Clarify functional goals, non-functional constraints, dependencies, and decision deadlines.",
+          "Compare viable options using product impact, technical risk, migration cost, and team capability.",
+          "Document the chosen direction, rejected alternatives, assumptions, and rollback conditions.",
+          "Break delivery into reviewable increments and delegate with clear boundaries where appropriate.",
+          "Monitor production results and revise the decision when evidence changes."
+        ],
+        "commonMistakes": [
+          "Treating autonomy as avoiding collaboration or review.",
+          "Presenting a preferred technology without connecting it to the actual constraints.",
+          "Making a decision but leaving rollout, observability, and ownership undefined."
+        ],
+        "keyTerms": [
+          {
+            "term": "trade-off",
+            "definition": "A choice in which improving one concern usually costs something in another concern."
+          },
+          {
+            "term": "decision record",
+            "definition": "A short document explaining context, options, choice, and consequences."
+          },
+          {
+            "term": "assumption",
+            "definition": "A condition believed to be true but not yet fully verified."
+          },
+          {
+            "term": "ownership",
+            "definition": "Accountability for the decision and its delivered result, not only for writing code."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Frontend technikai ownership",
+          "description": "A technical ownership explicit, bizonyítékokra épülő frontend döntést, stakeholder-egyeztetést és a deliveryért meg production eredményért vállalt felelősséget jelent.",
+          "studyContent": {
+            "mentalModel": "A frontend technical ownership egy homályos product igényt szállítható designná alakít, majd végigkíséri implementáción, review-n, release-en és üzemeltetésen. Az autonómia nem magányos munkát jelent; része a korlátok tisztázása, megfelelő szakértők bevonása és a döntések láthatóvá tétele.",
+            "problem": "Ownership nélkül a nehéz döntések implicitek maradnak, backend és frontend contract eltér, quality munka halasztódik, a problémák pedig csapatok között mozognak. Review nélküli személyes preferencia is architektúrának tűnhet, ha a trade-off és bizonyíték nincs rögzítve.",
+            "example": "Egy storefront migráció routingdöntést igényel. A senior developer összegyűjti az URL-, SEO-, analytics-, permission-, deployment- és teamkorlátokat; összeveti az opciókat; rögzíti a döntést és rollback tervet; backend, QA és design review-t kér; majd monitorozza az első migrált route-ot.",
+            "howItWorks": [
+              "Tisztázd a funkcionális célt, non-functional korlátokat, dependencyket és döntési határidőt.",
+              "Product impact, technikai kockázat, migrációs költség és team capability alapján hasonlítsd össze az opciókat.",
+              "Dokumentáld a választást, elutasított alternatívákat, assumptionöket és rollback feltételeket.",
+              "A deliveryt bontsd review-zható lépésekre, és ahol indokolt, delegálj világos határokkal.",
+              "Monitorozd a production eredményt, és változó bizonyíték esetén vizsgáld felül a döntést."
+            ],
+            "commonMistakes": [
+              "Az autonómiát collaboration vagy review kerüléseként értelmezni.",
+              "Preferált technológiát ajánlani anélkül, hogy az aktuális korlátokhoz kötnéd.",
+              "Döntést hozni úgy, hogy a rollout, observability és ownership nincs meghatározva."
+            ],
+            "keyTerms": [
+              {
+                "term": "trade-off",
+                "definition": "Olyan választás, ahol egy szempont javítása rendszerint más szempont költségével jár."
+              },
+              {
+                "term": "decision record",
+                "definition": "Rövid dokumentum a kontextusról, opciókról, választásról és következményekről."
+              },
+              {
+                "term": "assumption",
+                "definition": "Igaznak feltételezett, de még nem teljesen ellenőrzött feltétel."
+              },
+              {
+                "term": "ownership",
+                "definition": "Felelősség a döntésért és a szállított eredményért, nem csak a kód megírásáért."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_ai_generated_ui_review",
+      "name": "Reviewing AI-Generated UI",
+      "description": "Reviewing AI-generated UI means validating the generated implementation against product behavior, design-system rules, accessibility, security, performance, and maintainability.",
+      "category": "soft_technical",
+      "relatedTopicIds": [
+        "ai_assisted_development",
+        "artec_design_system_architecture",
+        "frontend_quality_gates"
+      ],
+      "studyContent": {
+        "mentalModel": "Reviewing AI-generated UI means treating generated code as a proposal and validating behavior, architecture, accessibility, security, performance, and maintainability.",
+        "problem": "Generated code may duplicate components, hard-code styles, invent APIs, omit edge states, expose unsafe HTML, or pass visual review while failing keyboard and screen-reader users. Large generated diffs also hide defects.",
+        "example": "An AI generates a product card grid from Figma. The reviewer replaces copied buttons with design-system primitives, adds loading and empty states, validates image alt text and focus order, checks API types and permission handling, profiles image loading, and splits the change into smaller reviewable commits.",
+        "howItWorks": [
+          "Confirm the intended user flow, data contract, permissions, and non-happy-path states.",
+          "Compare the implementation with existing design-system components and application boundaries.",
+          "Review semantics, keyboard behavior, screen-reader output, responsive layout, security, and performance.",
+          "Run types, linting, tests, visual checks, and the real application instead of trusting generated tests alone."
+        ],
+        "commonMistakes": [
+          "Reviewing only whether the screen resembles the Figma frame.",
+          "Keeping duplicated primitives because replacing them would take extra time.",
+          "Trusting tests generated by the same model as independent verification."
+        ],
+        "keyTerms": [
+          {
+            "term": "semantic HTML",
+            "definition": "HTML elements chosen according to meaning and behavior, not only appearance."
+          },
+          {
+            "term": "edge state",
+            "definition": "A loading, empty, error, permission, or unusual-data condition outside the normal success case."
+          },
+          {
+            "term": "independent verification",
+            "definition": "Evidence created or checked separately from the system that produced the implementation."
+          },
+          {
+            "term": "reviewable diff",
+            "definition": "A change small and clear enough for a reviewer to understand its behavior and risk."
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": "AI által generált UI review-ja",
+          "description": "Az AI által generált UI review-ja a generált implementációt product behavior, design system, accessibility, security, performance és karbantarthatóság alapján validálja.",
+          "studyContent": {
+            "mentalModel": "Az AI-generated UI review a generált kódot javaslatként kezeli, és viselkedés, architektúra, accessibility, security, performance és karbantarthatóság alapján validálja.",
+            "problem": "A generált kód duplikálhat komponenst, hard-code-olhat style-t, kitalálhat API-t, kihagyhat edge state-et, unsafe HTML-t tehet be, vagy visual review mellett is hibás lehet keyboard- és screen-reader usernek. A nagy diff hibákat rejt el.",
+            "example": "Egy AI Figma alapján product card gridet generál. A reviewer a másolt buttonokat design-system primitívre cseréli, hozzáad loading és empty state-et, ellenőrzi az image alt textet és focus ordert, validálja az API type-ot és permission handlinget, profilozza a képtöltést, majd kisebb review-zható commitokra bont.",
+            "howItWorks": [
+              "Erősítsd meg a user flow-t, data contractot, permissionöket és non-happy-path state-eket.",
+              "Vesd össze az implementációt a meglévő design-system componentekkel és application boundarykkel.",
+              "Review-zd a szemantikát, keyboard behavior-t, screen-reader outputot, responsive layoutot, securityt és performance-ot.",
+              "Futtass type checket, lintet, tesztet, visual checket és valódi appot; ne bízz csak a generált tesztben."
+            ],
+            "commonMistakes": [
+              "Csak azt nézni, hogy a screen hasonlít-e a Figma frame-re.",
+              "Duplikált primitívet megtartani, mert a cseréje plusz idő.",
+              "Ugyanazon modell által generált tesztet független verificationnek tekinteni."
+            ],
+            "keyTerms": [
+              {
+                "term": "semantic HTML",
+                "definition": "Jelentés és viselkedés, nem puszta kinézet alapján választott HTML-element."
+              },
+              {
+                "term": "edge state",
+                "definition": "A normál success eseten kívüli loading, empty, error, permission vagy szokatlan adatállapot."
+              },
+              {
+                "term": "független verification",
+                "definition": "Az implementációt létrehozó rendszertől külön készített vagy ellenőrzött bizonyíték."
+              },
+              {
+                "term": "review-zható diff",
+                "definition": "Elég kicsi és világos változtatás ahhoz, hogy a reviewer megértse a viselkedését és kockázatát."
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "artec_design_system_component_001",
+      "title": "Designing a reusable component",
+      "prompt": "How would you design a reusable Select component for a shared React design system used by both a storefront and an internal CRM?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "design_review"
+      ],
+      "topicIds": [
+        "artec_design_system_architecture",
+        "web_accessibility",
+        "artec_vanilla_extract"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_design_system_component_001_point_1",
+          "label": "Defines a focused public API",
+          "description": "Designs controlled and uncontrolled use deliberately, clear value and event contracts, composition points, and a limited variant surface.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "component api",
+            "controlled value",
+            "event contract",
+            "composition",
+            "limited variants"
+          ]
+        },
+        {
+          "id": "artec_design_system_component_001_point_2",
+          "label": "Builds accessible interaction",
+          "description": "Covers labels, keyboard navigation, focus management, announcements, validation state, and appropriate semantic patterns.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "keyboard navigation",
+            "focus management",
+            "accessible label",
+            "screen reader",
+            "validation state"
+          ]
+        },
+        {
+          "id": "artec_design_system_component_001_point_3",
+          "label": "Separates primitive from product rules",
+          "description": "Keeps general selection behavior in the design system and customer-specific fetching or permissions in product-owned wrappers.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "ui primitive",
+            "product wrapper",
+            "business rules",
+            "separate concerns",
+            "domain component"
+          ]
+        },
+        {
+          "id": "artec_design_system_component_001_point_4",
+          "label": "Documents and tests states",
+          "description": "Provides Storybook examples, behavior and accessibility tests, visual regression, and migration guidance for API changes.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "storybook stories",
+            "component tests",
+            "accessibility tests",
+            "visual regression",
+            "migration guide"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_design_system_component_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you support asynchronous options without turning the base component into a data-fetching framework?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Reusable component tervezése",
+          "prompt": "Hogyan terveznél reusable Select componentet egy storefront és belső CRM által közösen használt React design systemhez?",
+          "answerStructureHint": "Public API, accessibility, primitive/product boundary és dokumentált state-ek.",
+          "expectedPoints": {
+            "artec_design_system_component_001_point_1": {
+              "label": "Fókuszált public API-t definiál",
+              "description": "Tudatosan kezeli a controlled és uncontrolled használatot, világos value/event contractot, composition pointot és korlátozott variant felületet tervez."
+            },
+            "artec_design_system_component_001_point_2": {
+              "label": "Accessible interakciót épít",
+              "description": "Kitér a labelre, keyboard navigationre, focus managementre, announcementre, validation state-re és megfelelő szemantikus patternre."
+            },
+            "artec_design_system_component_001_point_3": {
+              "label": "Elválasztja a primitívet a product rule-tól",
+              "description": "Az általános selection behaviort a design systemben, customer-specifikus fetchinget vagy permissiont product-owned wrapperben tartja."
+            },
+            "artec_design_system_component_001_point_4": {
+              "label": "Dokumentálja és teszteli a state-eket",
+              "description": "Storybook példát, behavior- és accessibility tesztet, visual regressiont és API-változáshoz migration guidance-ot ad."
+            }
+          },
+          "followUps": {
+            "artec_design_system_component_001_followup_1": "Hogyan támogatnád az asynchronous optionöket anélkül, hogy az alapkomponenst data-fetching frameworkké tennéd?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_design_system_adoption_002",
+      "title": "Growing and adopting a design system",
+      "prompt": "Two products already contain many inconsistent components. How would you introduce a shared design system without blocking product delivery or creating a permanent second UI stack?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "system_design"
+      ],
+      "topicIds": [
+        "artec_design_system_architecture",
+        "react_legacy_migration"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_design_system_adoption_002_point_1",
+          "label": "Starts with inventory and priorities",
+          "description": "Finds repeated patterns, accessibility risks, high-change surfaces, and components that offer the greatest product value.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "component inventory",
+            "usage audit",
+            "accessibility risk",
+            "high value",
+            "repeated patterns"
+          ]
+        },
+        {
+          "id": "artec_design_system_adoption_002_point_2",
+          "label": "Builds foundations before breadth",
+          "description": "Establishes tokens, theming, typography, spacing, focus, and a few high-quality primitives rather than copying every existing component.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "design tokens",
+            "theme foundation",
+            "focus styles",
+            "core primitives",
+            "not copy all"
+          ]
+        },
+        {
+          "id": "artec_design_system_adoption_002_point_3",
+          "label": "Migrates incrementally",
+          "description": "Uses wrappers, codemods, feature work, and deprecation milestones to move consumers in shippable slices.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "incremental adoption",
+            "deprecation plan",
+            "codemod",
+            "migration wrapper",
+            "feature by feature"
+          ]
+        },
+        {
+          "id": "artec_design_system_adoption_002_point_4",
+          "label": "Defines governance and exit criteria",
+          "description": "Creates contribution rules, ownership, versioning, support policy, adoption metrics, and criteria for removing old components.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "governance",
+            "component ownership",
+            "version policy",
+            "adoption metrics",
+            "remove legacy"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_design_system_adoption_002_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you handle a product team's request for a one-off variant that conflicts with the shared component model?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Design system növelése és bevezetése",
+          "prompt": "Két termékben már sok inkonzisztens component van. Hogyan vezetnél be shared design systemet product delivery blokkolása és permanens második UI-stack létrehozása nélkül?",
+          "answerStructureHint": "Inventory, foundation, incremental adoption és governance.",
+          "expectedPoints": {
+            "artec_design_system_adoption_002_point_1": {
+              "label": "Inventoryval és prioritással indul",
+              "description": "Feltárja az ismétlődő patternöket, accessibility risket, gyakran változó felületet és legnagyobb product value-t adó componentet."
+            },
+            "artec_design_system_adoption_002_point_2": {
+              "label": "Szélesség előtt foundationt épít",
+              "description": "Tokent, theme-et, typographyt, spacinget, focus behaviort és néhány jó minőségű primitívet épít minden existing component másolása helyett."
+            },
+            "artec_design_system_adoption_002_point_3": {
+              "label": "Fokozatosan migrál",
+              "description": "Wrappert, codemodot, feature worköt és deprecation milestone-t használ shippable szeletekben."
+            },
+            "artec_design_system_adoption_002_point_4": {
+              "label": "Governance-et és exit criteriát definiál",
+              "description": "Contribution rule-t, ownershipöt, versioninget, support policyt, adoption metricet és régi component eltávolítási feltételt hoz létre."
+            }
+          },
+          "followUps": {
+            "artec_design_system_adoption_002_followup_1": "Hogyan kezelnéd egy product team olyan one-off variant kérését, amely ütközik a shared component modellel?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_storybook_chromatic_001",
+      "title": "Storybook and Chromatic in a design system",
+      "prompt": "What roles do Storybook and Chromatic play in a shared component library, and what should a high-quality component story contain?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "design_review"
+      ],
+      "topicIds": [
+        "artec_visual_regression",
+        "artec_design_system_architecture"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_storybook_chromatic_001_point_1",
+          "label": "Explains Storybook's role",
+          "description": "Describes isolated development, documentation, state cataloging, interaction examples, and a review surface for designers and developers.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "isolated components",
+            "component documentation",
+            "state catalog",
+            "interaction stories",
+            "review surface"
+          ]
+        },
+        {
+          "id": "artec_storybook_chromatic_001_point_2",
+          "label": "Explains Chromatic's role",
+          "description": "Describes hosted story builds, screenshot comparison, change review, and approved visual baselines.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "visual snapshots",
+            "chromatic build",
+            "screenshot diff",
+            "visual baseline",
+            "review changes"
+          ]
+        },
+        {
+          "id": "artec_storybook_chromatic_001_point_3",
+          "label": "Includes representative states",
+          "description": "Covers default, disabled, loading, error, focus, overflow, localization, responsive, and theme variations where relevant.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "loading story",
+            "error state",
+            "focus state",
+            "long text",
+            "responsive viewport"
+          ]
+        },
+        {
+          "id": "artec_storybook_chromatic_001_point_4",
+          "label": "Keeps stories deterministic",
+          "description": "Controls data, time, animation, fonts, and network behavior so visual and interaction checks remain stable.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "mock data",
+            "freeze time",
+            "disable animations",
+            "stable fonts",
+            "deterministic story"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_storybook_chromatic_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What is a poor use of Storybook that creates documentation without increasing confidence?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Storybook és Chromatic a design systemben",
+          "prompt": "Milyen szerepet játszik a Storybook és Chromatic egy shared component libraryben, és mit kell tartalmaznia egy jó minőségű component storynak?",
+          "answerStructureHint": "Storybook, Chromatic, reprezentatív state-ek és determinizmus.",
+          "expectedPoints": {
+            "artec_storybook_chromatic_001_point_1": {
+              "label": "Elmagyarázza a Storybook szerepét",
+              "description": "Izolált fejlesztésként, dokumentációként, state catalogként, interaction example-ként és designer/developer review felületként írja le."
+            },
+            "artec_storybook_chromatic_001_point_2": {
+              "label": "Elmagyarázza a Chromatic szerepét",
+              "description": "Hosted story buildként, screenshot comparisonként, change review-ként és approved visual baseline-ként írja le."
+            },
+            "artec_storybook_chromatic_001_point_3": {
+              "label": "Reprezentatív state-eket tartalmaz",
+              "description": "Szükség szerint lefedi a default, disabled, loading, error, focus, overflow, localization, responsive és theme variantokat."
+            },
+            "artec_storybook_chromatic_001_point_4": {
+              "label": "Determinisztikusan tartja a storyt",
+              "description": "Kontrollálja az adatot, időt, animationt, fontot és network behaviort, hogy a visual és interaction check stabil legyen."
+            }
+          },
+          "followUps": {
+            "artec_storybook_chromatic_001_followup_1": "Mi a Storybook rossz használata, amely dokumentációt hoz létre, de confidence-et nem növel?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_visual_regression_flaky_002",
+      "title": "Fixing flaky visual regression tests",
+      "prompt": "Chromatic reports many visual changes on every run even when developers did not modify the UI. How would you diagnose and reduce the noise?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "artec_visual_regression",
+        "frontend_quality_gates"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_visual_regression_flaky_002_point_1",
+          "label": "Finds nondeterministic inputs",
+          "description": "Checks random data, current time, animation, asynchronous fonts, network content, generated IDs, and unstable layout measurement.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "random data",
+            "current time",
+            "animations",
+            "font loading",
+            "generated ids"
+          ]
+        },
+        {
+          "id": "artec_visual_regression_flaky_002_point_2",
+          "label": "Stabilizes the environment",
+          "description": "Pins browser and viewport settings, mocks data, waits for readiness, disables motion, and loads exact fonts before capture.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "fixed viewport",
+            "mock network",
+            "wait for ready",
+            "disable motion",
+            "pin browser"
+          ]
+        },
+        {
+          "id": "artec_visual_regression_flaky_002_point_3",
+          "label": "Uses focused thresholds and stories",
+          "description": "Avoids one huge page screenshot, chooses meaningful component states, and adjusts thresholds only after understanding the difference.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "focused stories",
+            "diff threshold",
+            "component screenshot",
+            "avoid full page",
+            "meaningful states"
+          ]
+        },
+        {
+          "id": "artec_visual_regression_flaky_002_point_4",
+          "label": "Repairs review discipline",
+          "description": "Tracks flaky stories, makes noise visible, and prevents habitual approve-all behavior from destroying the gate's value.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "track flakiness",
+            "approve carefully",
+            "quarantine story",
+            "review discipline",
+            "signal noise"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_visual_regression_flaky_002_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is excluding a story from visual testing justified, and what evidence would you require?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Flaky visual regression tesztek javítása",
+          "prompt": "A Chromatic minden runnál sok visual change-et jelez akkor is, ha a fejlesztők nem módosították a UI-t. Hogyan diagnosztizálnád és csökkentenéd a zajt?",
+          "answerStructureHint": "Nondeterministic input, stabil environment, focused story és review discipline.",
+          "expectedPoints": {
+            "artec_visual_regression_flaky_002_point_1": {
+              "label": "Megkeresi a nem determinisztikus inputot",
+              "description": "Ellenőrzi a random adatot, current time-ot, animationt, async fontot, network contentet, generated ID-t és instabil layout measurementet."
+            },
+            "artec_visual_regression_flaky_002_point_2": {
+              "label": "Stabilizálja a környezetet",
+              "description": "Rögzíti a browser- és viewportbeállítást, mockolja az adatot, megvárja a readiness-t, kikapcsolja a motiont és pontos fontot tölt capture előtt."
+            },
+            "artec_visual_regression_flaky_002_point_3": {
+              "label": "Fókuszált thresholdot és storyt használ",
+              "description": "Kerüli az egyetlen hatalmas page screenshotot, meaningful component state-et választ, és thresholdot csak a különbség megértése után állít."
+            },
+            "artec_visual_regression_flaky_002_point_4": {
+              "label": "Helyreállítja a review-fegyelmet",
+              "description": "Követi a flaky storykat, láthatóvá teszi a zajt, és megakadályozza, hogy az approve-all szokás lerombolja a gate értékét."
+            }
+          },
+          "followUps": {
+            "artec_visual_regression_flaky_002_followup_1": "Mikor indokolt egy storyt kizárni visual testingből, és milyen bizonyítékot kérnél hozzá?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_vanilla_extract_tradeoffs_001",
+      "title": "Vanilla Extract trade-offs",
+      "prompt": "What benefits and trade-offs does Vanilla Extract bring compared with runtime CSS-in-JS, CSS Modules, or plain stylesheets?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "concept_check"
+      ],
+      "topicIds": [
+        "artec_vanilla_extract",
+        "artec_frontend_build_tooling"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_vanilla_extract_tradeoffs_001_point_1",
+          "label": "Explains static extraction",
+          "description": "Describes type-safe definitions and composition that produce static CSS without a client-side style-generation runtime.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "static css",
+            "build time",
+            "type safe styles",
+            "no runtime",
+            "css extraction"
+          ]
+        },
+        {
+          "id": "artec_vanilla_extract_tradeoffs_001_point_2",
+          "label": "Describes design-system strengths",
+          "description": "Connects theme variables, tokens, recipes, typed variants, and shared package integration to consistent component styling.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "design tokens",
+            "theme variables",
+            "style recipes",
+            "typed variants",
+            "shared package"
+          ]
+        },
+        {
+          "id": "artec_vanilla_extract_tradeoffs_001_point_3",
+          "label": "Names build and dynamic-style costs",
+          "description": "Mentions tool integration, generated class debugging, restrictions on runtime-dependent values, and possible variant complexity.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "build plugin",
+            "dynamic values",
+            "generated classes",
+            "variant explosion",
+            "tool integration"
+          ]
+        },
+        {
+          "id": "artec_vanilla_extract_tradeoffs_001_point_4",
+          "label": "Chooses by context",
+          "description": "Compares team skills, SSR or runtime cost, theming needs, existing code, and migration cost rather than declaring a universal winner.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "team skills",
+            "migration cost",
+            "ssr styling",
+            "existing css",
+            "context decision"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_vanilla_extract_tradeoffs_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give an example of a style value that should remain dynamic and how you would represent it safely.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Vanilla Extract trade-offok",
+          "prompt": "Milyen előnyöket és trade-offokat hoz a Vanilla Extract runtime CSS-in-JS-hez, CSS Moduleshoz vagy plain stylesheethez képest?",
+          "answerStructureHint": "Static extraction, design-system előnyök, költségek és kontextusalapú döntés.",
+          "expectedPoints": {
+            "artec_vanilla_extract_tradeoffs_001_point_1": {
+              "label": "Elmagyarázza a static extractiont",
+              "description": "Type-safe definíciót és kompozíciót ír le, amely kliensoldali style-generation runtime nélkül statikus CSS-t készít."
+            },
+            "artec_vanilla_extract_tradeoffs_001_point_2": {
+              "label": "Bemutatja a design-system előnyöket",
+              "description": "A theme variable-t, tokent, recipe-t, typed variantot és shared package integrationt következetes component stylinghoz köti."
+            },
+            "artec_vanilla_extract_tradeoffs_001_point_3": {
+              "label": "Megnevezi a build- és dynamic-style költségeket",
+              "description": "Megemlíti a tool integrationt, generated class debugot, runtime-dependent value korlátját és variant complexityt."
+            },
+            "artec_vanilla_extract_tradeoffs_001_point_4": {
+              "label": "Kontextus alapján választ",
+              "description": "Team skill, SSR- vagy runtime cost, theming need, existing code és migration cost alapján hasonlít, nem hirdet univerzális győztest."
+            }
+          },
+          "followUps": {
+            "artec_vanilla_extract_tradeoffs_001_followup_1": "Mondj példát valóban dinamikus style-értékre, és hogyan reprezentálnád biztonságosan."
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_css_architecture_002",
+      "title": "Styling architecture across several products",
+      "prompt": "How would you organize tokens, themes, component styles, and product-specific overrides across a shared library, a storefront, and a CRM?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "design_review"
+      ],
+      "topicIds": [
+        "artec_vanilla_extract",
+        "artec_design_system_architecture"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_css_architecture_002_point_1",
+          "label": "Creates explicit style layers",
+          "description": "Separates foundation tokens, semantic theme values, component styles, utilities, and product-specific composition.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "token layer",
+            "semantic theme",
+            "component styles",
+            "product layer",
+            "style layers"
+          ]
+        },
+        {
+          "id": "artec_css_architecture_002_point_2",
+          "label": "Controls override mechanisms",
+          "description": "Uses supported variants, class composition, CSS variables, and limited escape hatches rather than specificity battles.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "css variables",
+            "class composition",
+            "supported variants",
+            "escape hatch",
+            "avoid specificity"
+          ]
+        },
+        {
+          "id": "artec_css_architecture_002_point_3",
+          "label": "Prevents product leakage",
+          "description": "Keeps storefront or CRM business styling out of shared primitives and avoids circular dependencies between packages.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "no product imports",
+            "package boundary",
+            "business styling",
+            "avoid circular",
+            "primitive layer"
+          ]
+        },
+        {
+          "id": "artec_css_architecture_002_point_4",
+          "label": "Supports evolution and themes",
+          "description": "Versions token changes, tests representative consumers, and plans dark mode, brand themes, or deprecations without global breakage.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "token versioning",
+            "consumer tests",
+            "dark theme",
+            "deprecate token",
+            "brand theme"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_css_architecture_002_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you stop a product override from depending on the generated internal class name of a design-system component?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Styling architektúra több termék között",
+          "prompt": "Hogyan szerveznéd a tokeneket, theme-eket, component style-okat és product-specific override-okat egy shared library, storefront és CRM között?",
+          "answerStructureHint": "Style layer-ek, kontrollált override, package boundary és evolúció.",
+          "expectedPoints": {
+            "artec_css_architecture_002_point_1": {
+              "label": "Explicit style layer-eket hoz létre",
+              "description": "Elválasztja a foundation tokent, semantic theme value-t, component style-t, utilityt és product-specific compositiont."
+            },
+            "artec_css_architecture_002_point_2": {
+              "label": "Kontrollálja az override mechanizmust",
+              "description": "Supported variantot, class compositiont, CSS variable-t és korlátozott escape hatchet használ specificity battle helyett."
+            },
+            "artec_css_architecture_002_point_3": {
+              "label": "Megakadályozza a product leakage-et",
+              "description": "Storefront- vagy CRM-business stylingot nem tesz shared primitívbe, és kerüli a package-ek circular dependencyjét."
+            },
+            "artec_css_architecture_002_point_4": {
+              "label": "Támogatja az evolúciót és theme-eket",
+              "description": "Tokenváltozást verzióz, representative consumert tesztel, és dark mode-ot, brand theme-et vagy deprecationt global breakage nélkül tervez."
+            }
+          },
+          "followUps": {
+            "artec_css_architecture_002_followup_1": "Hogyan akadályoznád meg, hogy egy product override a design-system component generált internal class nevére épüljön?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_react_forms_001",
+      "title": "Designing a production React form",
+      "prompt": "Design a production-ready customer-edit form in React. Cover state ownership, validation, submission, server errors, accessibility, and unsaved changes.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "artec_forms_architecture",
+        "react_state_strategies",
+        "web_accessibility"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_react_forms_001_point_1",
+          "label": "Separates draft and server data",
+          "description": "Initializes a form draft from the record but avoids silently overwriting edits when the query refreshes.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "form draft",
+            "server record",
+            "dirty fields",
+            "do not overwrite",
+            "initial values"
+          ]
+        },
+        {
+          "id": "artec_react_forms_001_point_2",
+          "label": "Designs validation and errors",
+          "description": "Uses client feedback for usability, server validation for authority, field-level mapping, and a clear summary or focus strategy.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "client validation",
+            "server validation",
+            "field errors",
+            "error summary",
+            "focus first error"
+          ]
+        },
+        {
+          "id": "artec_react_forms_001_point_3",
+          "label": "Models submission states",
+          "description": "Handles pending, duplicate submit prevention, success, failure, retry, cancellation, and conflict or stale-record cases.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "submitting state",
+            "prevent duplicate",
+            "retry submit",
+            "conflict error",
+            "pending request"
+          ]
+        },
+        {
+          "id": "artec_react_forms_001_point_4",
+          "label": "Builds accessible interaction",
+          "description": "Connects labels, descriptions, errors, keyboard order, focus, and status announcements with semantic controls.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "label association",
+            "aria describedby",
+            "keyboard order",
+            "focus management",
+            "status message"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_react_forms_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What should happen if fresh server data arrives while the user has unsaved edits?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Production React form tervezése",
+          "prompt": "Tervezd meg egy production-ready customer-edit form működését Reactben. Térj ki a state ownershipre, validációra, submitra, server errorra, accessibilityre és unsaved change-re.",
+          "answerStructureHint": "Draft/server boundary, validation, submission states és accessible interaction.",
+          "expectedPoints": {
+            "artec_react_forms_001_point_1": {
+              "label": "Elválasztja a draftot és server datát",
+              "description": "A recordból inicializál form draftot, de query refreshnél nem írja felül csendben a user editet."
+            },
+            "artec_react_forms_001_point_2": {
+              "label": "Validációt és errort tervez",
+              "description": "Client feedbacket használ usabilityhez, server validációt authorityként, field-level mappinget és világos summary- vagy focus stratégiát."
+            },
+            "artec_react_forms_001_point_3": {
+              "label": "Modellezi a submission state-eket",
+              "description": "Kezeli a pendinget, duplicate submit preventiont, successt, failure-t, retry-t, cancellationt és conflict vagy stale-record esetet."
+            },
+            "artec_react_forms_001_point_4": {
+              "label": "Accessible interakciót épít",
+              "description": "A labelt, descriptiont, errort, keyboard ordert, focust és status announcementet semantic controlhoz köti."
+            }
+          },
+          "followUps": {
+            "artec_react_forms_001_followup_1": "Mi történjen, ha friss server data érkezik, miközben a usernek nem mentett módosításai vannak?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_form_performance_002",
+      "title": "Form performance and re-renders",
+      "prompt": "A large form becomes sluggish because every keystroke re-renders the whole page. How would you diagnose and improve it without sacrificing validation correctness?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "artec_forms_architecture",
+        "react_memoization",
+        "react_rendering_model"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_form_performance_002_point_1",
+          "label": "Profiles the update path",
+          "description": "Uses React Profiler to find which state owner and components rerender on each field change and measures actual interaction delay.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "react profiler",
+            "input delay",
+            "render path",
+            "measure keystroke",
+            "component flamegraph"
+          ]
+        },
+        {
+          "id": "artec_form_performance_002_point_2",
+          "label": "Narrows field ownership",
+          "description": "Keeps draft state close to fields or uses a form library with subscriptions so unrelated sections do not update.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "field subscription",
+            "local field state",
+            "split form",
+            "narrow state",
+            "form library"
+          ]
+        },
+        {
+          "id": "artec_form_performance_002_point_3",
+          "label": "Controls expensive validation",
+          "description": "Separates cheap synchronous rules from debounced or server validation and cancels obsolete asynchronous checks.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "debounce validation",
+            "async validation",
+            "cancel obsolete",
+            "validation timing",
+            "cheap rules"
+          ]
+        },
+        {
+          "id": "artec_form_performance_002_point_4",
+          "label": "Uses memoization after structure",
+          "description": "Applies stable props and memoization only to measured expensive sections and keeps correctness independent from skipped renders.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "stable props",
+            "react memo",
+            "memo after split",
+            "correct without memo",
+            "measured optimization"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_form_performance_002_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can debouncing the controlled input value itself create a poor user experience?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Form performance és re-render",
+          "prompt": "Egy nagy form lassú, mert minden keystroke újrarendereli az egész oldalt. Hogyan diagnosztizálnád és javítanád a validáció helyességének feláldozása nélkül?",
+          "answerStructureHint": "Profiling, field ownership, validation timing és célzott memoizáció.",
+          "expectedPoints": {
+            "artec_form_performance_002_point_1": {
+              "label": "Profilozza az update pathot",
+              "description": "React Profilerrel megkeresi, mely state owner és component renderel újra field change-nél, és méri a tényleges interaction delayt."
+            },
+            "artec_form_performance_002_point_2": {
+              "label": "Szűkíti a field ownershipöt",
+              "description": "A draft state-et közel tartja a fieldhez, vagy subscriptionös form libraryt használ, hogy unrelated section ne frissüljön."
+            },
+            "artec_form_performance_002_point_3": {
+              "label": "Kontrollálja a drága validációt",
+              "description": "Elválasztja az olcsó synchronous rule-t a debounced vagy server validációtól, és törli az obsolete async checket."
+            },
+            "artec_form_performance_002_point_4": {
+              "label": "Struktúra után memoizál",
+              "description": "Stabil propot és memoizációt csak mért drága sectionre alkalmaz, a helyességet pedig nem skipped renderre építi."
+            }
+          },
+          "followUps": {
+            "artec_form_performance_002_followup_1": "Miért okozhat rossz user experience-et magának a controlled input value-nak a debounce-olása?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_frontend_ownership_001",
+      "title": "Autonomous frontend ownership",
+      "prompt": "Describe how you would take an ambiguous frontend feature from initial request to production when you are the senior engineer responsible for technical decisions.",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "experience_deep_dive",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "artec_frontend_technical_ownership",
+        "design_documentation",
+        "frontend_quality_gates"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_frontend_ownership_001_point_1",
+          "label": "Clarifies the problem and constraints",
+          "description": "Identifies user outcome, scope, permissions, data, accessibility, performance, compatibility, timeline, and success measures.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "user outcome",
+            "clarify scope",
+            "nonfunctional requirements",
+            "success metrics",
+            "constraints"
+          ]
+        },
+        {
+          "id": "artec_frontend_ownership_001_point_2",
+          "label": "Aligns cross-functional contracts",
+          "description": "Works with backend, QA, design, and product on API, states, edge cases, test strategy, and ownership boundaries.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "backend contract",
+            "qa strategy",
+            "design states",
+            "edge cases",
+            "ownership boundary"
+          ]
+        },
+        {
+          "id": "artec_frontend_ownership_001_point_3",
+          "label": "Makes and records trade-offs",
+          "description": "Compares options, documents the decision and assumptions, and defines migration or rollback where risk warrants it.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "compare options",
+            "decision record",
+            "document assumptions",
+            "rollback plan",
+            "risk tradeoff"
+          ]
+        },
+        {
+          "id": "artec_frontend_ownership_001_point_4",
+          "label": "Owns incremental delivery",
+          "description": "Slices work, reviews and mentors, monitors release behavior, and follows through on cleanup and lessons learned.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "incremental delivery",
+            "mentor developers",
+            "monitor release",
+            "cleanup debt",
+            "post release"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_frontend_ownership_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How do you avoid becoming a bottleneck while still owning the technical outcome?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Autonóm frontend ownership",
+          "prompt": "Mutasd be, hogyan vinnél productionig egy homályos frontend feature requestet, amikor senior engineerként te felelsz a technikai döntésekért.",
+          "answerStructureHint": "Problem clarification, cross-functional contract, trade-off és incremental ownership.",
+          "expectedPoints": {
+            "artec_frontend_ownership_001_point_1": {
+              "label": "Tisztázza a problémát és korlátokat",
+              "description": "Azonosítja a user outcome-ot, scope-ot, permissiont, datát, accessibilityt, performance-ot, compatibilityt, timeline-t és success measure-t."
+            },
+            "artec_frontend_ownership_001_point_2": {
+              "label": "Cross-functional contractot egyeztet",
+              "description": "Backenddel, QA-val, designnal és producttal egyeztet API-ról, state-ekről, edge case-ről, test strategyról és ownership boundaryről."
+            },
+            "artec_frontend_ownership_001_point_3": {
+              "label": "Trade-offot hoz és rögzít",
+              "description": "Összeveti az opciókat, dokumentálja a döntést és assumptionöket, és kockázat esetén migration- vagy rollbacktervet ad."
+            },
+            "artec_frontend_ownership_001_point_4": {
+              "label": "Vállalja az incremental deliveryt",
+              "description": "Szeleteli a munkát, review-z és mentorál, monitorozza a release behaviort, majd elvégzi a cleanupot és tanulságfeldolgozást."
+            }
+          },
+          "followUps": {
+            "artec_frontend_ownership_001_followup_1": "Hogyan kerülöd el, hogy bottleneck legyél, miközben továbbra is birtoklod a technikai eredményt?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_code_review_mentoring_002",
+      "title": "Code review and mentoring in a distributed team",
+      "prompt": "How would you review code and mentor less experienced developers in a distributed asynchronous team without turning review into gatekeeping?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "experience_deep_dive"
+      ],
+      "topicIds": [
+        "artec_frontend_technical_ownership",
+        "frontend_quality_gates"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_code_review_mentoring_002_point_1",
+          "label": "Sets review priorities",
+          "description": "Focuses first on correctness, security, accessibility, architecture, and user impact while automating style and mechanical checks.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "correctness first",
+            "security review",
+            "accessibility review",
+            "automate style",
+            "user impact"
+          ]
+        },
+        {
+          "id": "artec_code_review_mentoring_002_point_2",
+          "label": "Explains reasoning constructively",
+          "description": "Distinguishes blocking issues from suggestions, gives context and alternatives, and asks questions that build understanding.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "blocking comment",
+            "nonblocking suggestion",
+            "explain why",
+            "offer alternative",
+            "ask questions"
+          ]
+        },
+        {
+          "id": "artec_code_review_mentoring_002_point_3",
+          "label": "Designs for asynchronous clarity",
+          "description": "Uses small pull requests, clear descriptions, decision links, examples, and response expectations across time zones.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "small pull request",
+            "clear description",
+            "async communication",
+            "decision link",
+            "review expectations"
+          ]
+        },
+        {
+          "id": "artec_code_review_mentoring_002_point_4",
+          "label": "Creates learning and autonomy",
+          "description": "Pairs selectively, delegates bounded ownership, follows up on recurring patterns, and updates documentation or tooling.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "pair programming",
+            "delegate ownership",
+            "follow up",
+            "team documentation",
+            "learning feedback"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_code_review_mentoring_002_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you do if the same review issue appears repeatedly across several developers?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Code review és mentoring distributed teamben",
+          "prompt": "Hogyan review-znál kódot és mentorálnál kevésbé tapasztalt fejlesztőket distributed asynchronous teamben anélkül, hogy a review gatekeepinggé válna?",
+          "answerStructureHint": "Review priority, konstruktív indoklás, async clarity és learning.",
+          "expectedPoints": {
+            "artec_code_review_mentoring_002_point_1": {
+              "label": "Review-prioritást állít",
+              "description": "Először correctnessre, securityre, accessibilityre, architektúrára és user impactre fókuszál, a style és mechanical checket automatizálja."
+            },
+            "artec_code_review_mentoring_002_point_2": {
+              "label": "Konstruktívan magyarázza az indoklást",
+              "description": "Megkülönbözteti a blocking issue-t a suggestiontől, contextet és alternatívát ad, és megértést építő kérdést tesz fel."
+            },
+            "artec_code_review_mentoring_002_point_3": {
+              "label": "Asynchronous clarityre tervez",
+              "description": "Kis pull requestet, világos leírást, decision linket, példát és timezone-ok közötti response expectationt használ."
+            },
+            "artec_code_review_mentoring_002_point_4": {
+              "label": "Tanulást és autonómiát hoz létre",
+              "description": "Szelektíven pair programoz, bounded ownershipöt delegál, recurring patternre visszatér, és dokumentációt vagy toolingot frissít."
+            }
+          },
+          "followUps": {
+            "artec_code_review_mentoring_002_followup_1": "Mit tennél, ha ugyanaz a review issue több fejlesztőnél ismételten megjelenne?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_ai_ui_pipeline_001",
+      "title": "Designing an AI-assisted Figma-to-code workflow",
+      "prompt": "The company generates much of its UI from Figma with AI. How would you design the workflow so that automation improves throughput without lowering code quality?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "design_review"
+      ],
+      "topicIds": [
+        "artec_ai_generated_ui_review",
+        "ai_assisted_development",
+        "frontend_quality_gates"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_ai_ui_pipeline_001_point_1",
+          "label": "Defines machine-readable constraints",
+          "description": "Supplies design-system components, tokens, naming, API schemas, examples, forbidden patterns, and a clear output boundary.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "design system context",
+            "coding constraints",
+            "api schema",
+            "forbidden patterns",
+            "output boundary"
+          ]
+        },
+        {
+          "id": "artec_ai_ui_pipeline_001_point_2",
+          "label": "Generates small reviewable units",
+          "description": "Produces one component or feature slice with traceable design inputs rather than a large opaque application rewrite.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "small generation",
+            "reviewable diff",
+            "one component",
+            "traceable input",
+            "bounded change"
+          ]
+        },
+        {
+          "id": "artec_ai_ui_pipeline_001_point_3",
+          "label": "Runs independent quality gates",
+          "description": "Applies types, lint, behavior, accessibility, visual, security, performance, and consumer checks outside the generation model.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "independent tests",
+            "accessibility gate",
+            "visual gate",
+            "security scan",
+            "performance check"
+          ]
+        },
+        {
+          "id": "artec_ai_ui_pipeline_001_point_4",
+          "label": "Measures end-to-end value",
+          "description": "Tracks generation time, review and rework cost, escaped defects, reuse, and lead time rather than lines of generated code.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "review time",
+            "rework rate",
+            "escaped defects",
+            "lead time",
+            "reuse rate"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_ai_ui_pipeline_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where would you place a hard stop that always requires human approval?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "AI-assisted Figma-to-code workflow tervezése",
+          "prompt": "A cég a UI nagy részét Figma alapján AI-val generálja. Hogyan terveznéd a workflow-t, hogy az automatizáció növelje a throughputot a code quality csökkentése nélkül?",
+          "answerStructureHint": "Constraint, reviewable unit, independent gates és end-to-end measurement.",
+          "expectedPoints": {
+            "artec_ai_ui_pipeline_001_point_1": {
+              "label": "Machine-readable constraintet definiál",
+              "description": "Design-system componentet, tokent, naminget, API schemát, példát, forbidden patternt és világos output boundaryt ad."
+            },
+            "artec_ai_ui_pipeline_001_point_2": {
+              "label": "Kis review-zható egységet generál",
+              "description": "Egy componentet vagy feature slice-ot készít traceable design inputtal, nem nagy opaque app rewrite-ot."
+            },
+            "artec_ai_ui_pipeline_001_point_3": {
+              "label": "Független quality gate-et futtat",
+              "description": "A generation modellen kívül type-, lint-, behavior-, accessibility-, visual-, security-, performance- és consumer checket alkalmaz."
+            },
+            "artec_ai_ui_pipeline_001_point_4": {
+              "label": "End-to-end értéket mér",
+              "description": "Generation time, review- és reworkköltség, escaped defect, reuse és lead time alapján mér, nem generált kódsor szerint."
+            }
+          },
+          "followUps": {
+            "artec_ai_ui_pipeline_001_followup_1": "Hol helyeznél el olyan hard stopot, amely mindig human approvalt igényel?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_ai_generated_security_002",
+      "title": "Security and correctness review of generated frontend code",
+      "prompt": "An AI-generated React component passes visual review and unit tests. What security and correctness risks would you still inspect manually or with independent tooling?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "artec_ai_generated_ui_review",
+        "web_security_frontend",
+        "frontend_quality_gates"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_ai_generated_security_002_point_1",
+          "label": "Checks untrusted data rendering",
+          "description": "Reviews HTML injection, dangerous rendering APIs, URL handling, link behavior, and sanitization at the correct boundary.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "xss risk",
+            "dangerously set innerhtml",
+            "sanitize html",
+            "unsafe url",
+            "untrusted data"
+          ]
+        },
+        {
+          "id": "artec_ai_generated_security_002_point_2",
+          "label": "Checks authorization assumptions",
+          "description": "Ensures hidden controls are not treated as security, permission decisions come from trusted server enforcement, and errors do not leak data.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "server authorization",
+            "not ui security",
+            "permission check",
+            "data leakage",
+            "hidden button"
+          ]
+        },
+        {
+          "id": "artec_ai_generated_security_002_point_3",
+          "label": "Checks browser and supply-chain behavior",
+          "description": "Reviews target blank safety, third-party packages, secrets, analytics data, storage, and network requests.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "noopener",
+            "dependency risk",
+            "no secrets",
+            "analytics privacy",
+            "local storage"
+          ]
+        },
+        {
+          "id": "artec_ai_generated_security_002_point_4",
+          "label": "Challenges generated tests",
+          "description": "Adds adversarial and integration cases, validates external inputs at runtime, and verifies behavior in the actual host application.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "runtime validation",
+            "adversarial test",
+            "integration test",
+            "host application",
+            "independent test"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_ai_generated_security_002_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why are tests generated from the same mistaken assumption as the code especially dangerous?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Generált frontend kód security- és correctness review-ja",
+          "prompt": "Egy AI-generated React component átmegy visual review-n és unit teszten. Milyen security- és correctness risket vizsgálnál még manuálisan vagy independent toolinggal?",
+          "answerStructureHint": "Untrusted rendering, authorization, browser/supply chain és independent tests.",
+          "expectedPoints": {
+            "artec_ai_generated_security_002_point_1": {
+              "label": "Ellenőrzi az untrusted data renderelést",
+              "description": "Review-zza a HTML injectiont, dangerous render API-t, URL handlinget, link behaviort és megfelelő boundaryn végzett sanitizationt."
+            },
+            "artec_ai_generated_security_002_point_2": {
+              "label": "Ellenőrzi az authorization assumptiont",
+              "description": "Biztosítja, hogy hidden control nem security, a permission decision trusted server enforcementből jön, és az error nem leakel adatot."
+            },
+            "artec_ai_generated_security_002_point_3": {
+              "label": "Ellenőrzi a browser- és supply-chain behaviort",
+              "description": "Review-zza a target blank safetyt, third-party package-et, secretet, analytics datát, storage-ot és network requestet."
+            },
+            "artec_ai_generated_security_002_point_4": {
+              "label": "Megkérdőjelezi a generált teszteket",
+              "description": "Adversarial és integration case-et ad, runtime validálja az external inputot, és a valódi host applicationben verifikál."
+            }
+          },
+          "followUps": {
+            "artec_ai_generated_security_002_followup_1": "Miért különösen veszélyesek azok a tesztek, amelyek ugyanabból a hibás assumptionből készülnek, mint a kód?"
+          }
+        }
+      }
+    }
+  ]
+}

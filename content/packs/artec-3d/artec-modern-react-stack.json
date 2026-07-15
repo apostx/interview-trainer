@@ -1,0 +1,2123 @@
+{
+  "id": "artec_modern_react_stack",
+  "name": "Artec 3D — Modern React Stack",
+  "description": "React Hooks, list virtualization, React upgrades, TanStack Query, TanStack Router, and modern frontend build tooling.",
+  "sources": [
+    "artec_3d_job_description_and_interview_notes_en"
+  ],
+  "topics": [
+    {
+      "id": "artec_react_hooks",
+      "name": "React Hooks",
+      "description": "Hooks let function components use React state, effects, context, refs, and reusable stateful logic while preserving a predictable call order.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react",
+        "react_rendering_model"
+      ],
+      "studyContent": {
+        "mentalModel": "React Hooks are functions that connect a function component to React features such as state, lifecycle synchronization, context, and refs. Custom Hooks package reusable stateful logic without sharing component instances.",
+        "problem": "Hooks rely on call order, so conditional calls can associate state with the wrong position. Effects are also overused for values that could be calculated during rendering, creating extra renders and synchronization bugs.",
+        "example": "A search panel uses useState for the draft query, useRef for the input element, and a custom useProducts hook for remote data. The filtered count is calculated during rendering rather than copied into state with an effect.",
+        "howItWorks": [
+          "Call Hooks only at the top level of React components or custom Hooks.",
+          "React links each Hook's state to its stable position in the component's call order.",
+          "Use state for values that affect rendering and refs for mutable values that do not need a render.",
+          "Use effects to synchronize with external systems, not merely to calculate one value from another."
+        ],
+        "commonMistakes": [
+          "Calling a Hook inside a condition, loop, or event handler.",
+          "Using an effect to derive data that could be calculated during rendering.",
+          "Assuming a custom Hook shares one state instance between all callers."
+        ],
+        "keyTerms": [
+          {
+            "term": "Hook",
+            "definition": "A React function that provides access to stateful or lifecycle-related behavior."
+          },
+          {
+            "term": "custom Hook",
+            "definition": "A reusable function beginning with use that composes other Hooks."
+          },
+          {
+            "term": "effect",
+            "definition": "Code that synchronizes a component with something outside React rendering."
+          },
+          {
+            "term": "ref",
+            "definition": "A stable object that stores a mutable value without causing a render when it changes."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "React Hooks",
+          "description": "A Hooks API lehetővé teszi, hogy function componentek React state-et, effectet, contextet, refet és újrafelhasználható stateful logikát használjanak kiszámítható hívási sorrend mellett.",
+          "studyContent": {
+            "mentalModel": "A React Hook olyan függvény, amely function componentet kapcsol React-funkciókhoz, például state-hez, külső rendszerekkel való szinkronizáláshoz, contexthez és refhez. A custom Hook újrafelhasználható stateful logikát csomagol anélkül, hogy component instance-ot osztana meg.",
+            "problem": "A Hookok a hívási sorrendre támaszkodnak, ezért feltételes hívásnál a React rossz pozícióhoz társíthatja a state-et. Effectet is gyakran használnak render közben kiszámítható értékhez, ami extra rendert és szinkronizációs hibát okoz.",
+            "example": "Egy keresőpanel useState-ben tartja a draft queryt, useRefben az input elemet, és egy custom useProducts hookkal olvassa a távoli adatot. A szűrt találatszám render közben számolódik, nem effect másolja külön state-be.",
+            "howItWorks": [
+              "Hookot csak React component vagy custom Hook felső szintjén hívj.",
+              "A React minden Hook state-jét a component hívási sorrendjének stabil pozíciójához köti.",
+              "Renderre ható értékhez state-et, render nélküli mutálható értékhez refet használj.",
+              "Effectet külső rendszerrel való szinkronizációhoz használj, ne pusztán egy érték másikból történő kiszámításához."
+            ],
+            "commonMistakes": [
+              "Hookot conditionben, loopban vagy event handlerben hívni.",
+              "Effectet használni render közben kiszámítható derived adathoz.",
+              "Azt hinni, hogy egy custom Hook minden hívó között közös state instance-ot oszt meg."
+            ],
+            "keyTerms": [
+              {
+                "term": "Hook",
+                "definition": "React-függvény, amely stateful vagy lifecycle-jellegű viselkedéshez ad hozzáférést."
+              },
+              {
+                "term": "custom Hook",
+                "definition": "use előtagú újrafelhasználható függvény, amely más Hookokat komponál."
+              },
+              {
+                "term": "effect",
+                "definition": "Kód, amely a komponenst React-renderelésen kívüli rendszerrel szinkronizálja."
+              },
+              {
+                "term": "ref",
+                "definition": "Stabil objektum, amely mutálható értéket tárol anélkül, hogy változása rendert okozna."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_list_virtualization",
+      "name": "List Virtualization",
+      "description": "Virtualization renders only the visible window of a very large collection and reuses a small number of DOM elements as the user scrolls.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "frontend_performance",
+        "react_memoization"
+      ],
+      "studyContent": {
+        "mentalModel": "List virtualization means keeping the full data set outside the DOM while mounting only the rows visible in the viewport, plus a small buffer. The scroll container simulates the total height so the scrollbar still represents the whole collection.",
+        "problem": "Rendering hundreds of thousands of rows creates expensive React work, layout, style calculation, memory use, and event handling. Pagination alone may reduce fetched data, but it does not solve a page that still mounts too many elements. Virtualization also needs care with dynamic height, keyboard navigation, and accessibility.",
+        "example": "A CRM has one million customer records available through a paginated API. It fetches pages as needed and uses a virtual list that mounts about forty rows. Spacer elements preserve the total scroll range, and stable item keys retain row identity.",
+        "howItWorks": [
+          "Keep the collection data separate from the set of mounted row components.",
+          "Calculate which item indexes intersect the viewport and add a small overscan buffer.",
+          "Position or offset those rows inside a container representing the total estimated size.",
+          "Fetch more data when the visible range approaches unloaded pages.",
+          "Measure row sizes or use estimates when heights are not fixed."
+        ],
+        "commonMistakes": [
+          "Rendering a million hidden rows and calling it virtualization.",
+          "Using array indexes as keys when rows can be inserted or reordered.",
+          "Ignoring focus, screen-reader behavior, or variable row heights."
+        ],
+        "keyTerms": [
+          {
+            "term": "viewport",
+            "definition": "The visible area of the scroll container."
+          },
+          {
+            "term": "windowing",
+            "definition": "Another name for rendering only a moving visible subset of items."
+          },
+          {
+            "term": "overscan",
+            "definition": "Extra rows rendered just outside the viewport to make scrolling smoother."
+          },
+          {
+            "term": "estimated size",
+            "definition": "An initial row-size assumption used before exact measurement is available."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Listavirtualizáció",
+          "description": "A virtualizáció egy nagyon nagy kollekcióból csak a látható ablakot rendereli, és scrollozás közben kevés DOM-elemet használ újra.",
+          "studyContent": {
+            "mentalModel": "A listavirtualizáció a teljes adathalmazt a DOM-on kívül tartja, miközben csak a viewportban látható sorokat és egy kis buffert mountol. A scroll container a teljes magasságot szimulálja, így a scrollbar továbbra is az egész kollekciót képviseli.",
+            "problem": "Több százezer sor renderelése drága React-munkát, layoutot, style calculationt, memóriahasználatot és eventkezelést okoz. A pagination csökkentheti a letöltött adatot, de nem oldja meg, ha egy oldal még mindig túl sok elemet mountol. Dinamikus magasság, billentyűzetes navigáció és accessibility külön figyelmet igényel.",
+            "example": "Egy CRM egymillió ügyfélrekordot ér el lapozott API-n. Szükség szerint tölti be az oldalakat, és virtuális listában körülbelül negyven sort mountol. Spacer elemek őrzik a teljes scrolltartományt, stabil item key-k pedig a sorok identitását.",
+            "howItWorks": [
+              "Tartsd külön a teljes kollekció adatát és a mountolt row komponensek halmazát.",
+              "Számítsd ki, mely indexek metszik a viewportot, és adj hozzá kis overscan buffert.",
+              "A sorokat a teljes becsült méretet képviselő containeren belül pozicionáld vagy offseteld.",
+              "Tölts be további adatot, amikor a látható tartomány a még nem betöltött oldalakhoz közelít.",
+              "Nem fix magasságnál mérd a sorokat vagy használj kezdeti becslést."
+            ],
+            "commonMistakes": [
+              "Egymillió elrejtett sort renderelni, és ezt virtualizációnak nevezni.",
+              "Tömbindexet használni key-ként, ha sorok beszúrhatók vagy átrendezhetők.",
+              "Figyelmen kívül hagyni a fókuszt, screen readert vagy változó sormagasságot."
+            ],
+            "keyTerms": [
+              {
+                "term": "viewport",
+                "definition": "A scroll container látható területe."
+              },
+              {
+                "term": "windowing",
+                "definition": "A mozgó látható elemhalmaz renderelésének másik neve."
+              },
+              {
+                "term": "overscan",
+                "definition": "A viewporton kívül renderelt néhány extra sor a simább scrollozásért."
+              },
+              {
+                "term": "becsült méret",
+                "definition": "Kezdeti sorméret-feltételezés, amelyet pontos mérés előtt használ a rendszer."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_react_upgrade",
+      "name": "React Upgrade Strategy",
+      "description": "A React upgrade is a controlled compatibility project that updates runtime, rendering entry points, dependencies, tests, and behavior in reviewable steps.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react_legacy_migration",
+        "migration_strategy"
+      ],
+      "studyContent": {
+        "mentalModel": "React upgrade strategy means separating a framework version change into observable steps instead of treating it as a package-number edit. The team checks React itself, the DOM renderer, third-party libraries, build tooling, tests, and behavior affected by newer rendering semantics.",
+        "problem": "A direct major-version jump can hide several causes behind one failure. Legacy rendering APIs, incompatible libraries, and effects that depend on accidental timing may break. A long-lived upgrade branch also becomes difficult to merge.",
+        "example": "An older application first updates tests and removes console warnings. It moves from ReactDOM.render to createRoot, upgrades libraries with known compatibility, enables the new root on one entry point, monitors errors, and then rolls the change through the remaining pages.",
+        "howItWorks": [
+          "Inventory deprecated APIs, peer dependencies, browser support, build constraints, and test coverage.",
+          "Upgrade supporting libraries and remove warnings before changing the main rendering behavior.",
+          "Introduce the new root or runtime behind a small entry point or controlled rollout.",
+          "Run behavior, performance, accessibility, and visual checks rather than relying only on compilation."
+        ],
+        "commonMistakes": [
+          "Changing React, router, state library, and build tool in one unreviewable commit.",
+          "Assuming a successful build proves that rendering behavior is unchanged.",
+          "Leaving Strict Mode findings unresolved by disabling the checks."
+        ],
+        "keyTerms": [
+          {
+            "term": "peer dependency",
+            "definition": "A package's declared expectation about which version of another package the application provides."
+          },
+          {
+            "term": "createRoot",
+            "definition": "The modern React DOM root API used for newer rendering behavior."
+          },
+          {
+            "term": "Strict Mode",
+            "definition": "A development aid that exposes unsafe or impure patterns through additional checks."
+          },
+          {
+            "term": "compatibility matrix",
+            "definition": "A record of versions that are expected to work together."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "React upgrade-stratégia",
+          "description": "A React upgrade kontrollált kompatibilitási projekt, amely review-zható lépésekben frissíti a runtime-ot, renderbelépési pontokat, dependencyket, teszteket és viselkedést.",
+          "studyContent": {
+            "mentalModel": "A React upgrade-stratégia egy framework-verzióváltást megfigyelhető lépésekre bont, nem egyszerű package-szám módosításként kezeli. A csapat ellenőrzi a Reactet, a DOM renderert, third-party libraryket, build toolingot, teszteket és az új renderelési szemantikára érzékeny működést.",
+            "problem": "Egy közvetlen major ugrás több hiba okát összemoshatja. Legacy render API, inkompatibilis library és véletlen timingra építő effect eltörhet. A hosszú életű upgrade branch pedig nehezen merge-elhető.",
+            "example": "Egy régi app először javítja a teszteket és megszünteti a console warningokat. ReactDOM.render helyett createRootra vált, kompatibilis dependencyket frissít, egy belépési ponton aktiválja az új rootot, figyeli a hibákat, majd fokozatosan kiterjeszti a változást.",
+            "howItWorks": [
+              "Térképezd fel a deprecated API-kat, peer dependencyket, browser supportot, buildkorlátokat és test coverage-et.",
+              "A fő renderelési viselkedés előtt frissítsd a támogató libraryket és szüntesd meg a warningokat.",
+              "Az új rootot vagy runtime-ot kis belépési ponton vagy kontrollált rolloutban vezesd be.",
+              "Fordulás mellett futtass behavior-, performance-, accessibility- és visual ellenőrzést."
+            ],
+            "commonMistakes": [
+              "Reactet, routert, state libraryt és build toolt egyetlen review-zhatatlan commitban frissíteni.",
+              "A sikeres buildből arra következtetni, hogy a renderelési viselkedés változatlan.",
+              "Strict Mode problémákat az ellenőrzés kikapcsolásával elrejteni."
+            ],
+            "keyTerms": [
+              {
+                "term": "peer dependency",
+                "definition": "Egy package elvárása arról, hogy az alkalmazás mely másik package-verziót biztosítja."
+              },
+              {
+                "term": "createRoot",
+                "definition": "Modern React DOM root API az újabb renderelési viselkedéshez."
+              },
+              {
+                "term": "Strict Mode",
+                "definition": "Fejlesztési segítség, amely extra ellenőrzésekkel tár fel nem biztonságos vagy impure mintákat."
+              },
+              {
+                "term": "kompatibilitási mátrix",
+                "definition": "Nyilvántartás az együtt működőnek tekintett verziókról."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_tanstack_query",
+      "name": "TanStack Query and Server State",
+      "description": "TanStack Query manages remote server data as a cache with freshness, request lifecycle, retries, invalidation, and mutation coordination.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "react_state_strategies",
+        "api_integration"
+      ],
+      "studyContent": {
+        "mentalModel": "TanStack Query treats API responses as server state rather than ordinary client-owned state. A query key identifies cached data, while stale time, refetching, invalidation, and mutations control when that data should be reused or refreshed.",
+        "problem": "Hand-written fetching in effects often duplicates loading, error, cancellation, retry, and race-condition logic. Copying the same response into Redux or local state creates multiple sources of truth. Poor query keys or broad invalidation can also refetch too much or show the wrong cached result.",
+        "example": "A CRM reads a customer with the key ['customer', customerId]. Editing the customer runs a mutation. On success, the cache is updated with the returned record or that exact key is invalidated so only the relevant data is refetched.",
+        "howItWorks": [
+          "Create a stable query key that contains every input affecting the response.",
+          "Define how long cached data can be treated as fresh for the product use case.",
+          "Render loading, error, empty, and success states from the query lifecycle.",
+          "After a mutation, update known cache data or invalidate the smallest affected keys.",
+          "Cancel or ignore obsolete requests when navigation or inputs change."
+        ],
+        "commonMistakes": [
+          "Using one generic key for requests with different parameters.",
+          "Copying every query result into another state store.",
+          "Invalidating the entire cache after every small mutation."
+        ],
+        "keyTerms": [
+          {
+            "term": "query key",
+            "definition": "A stable identifier for one cached request and all inputs that affect its result."
+          },
+          {
+            "term": "stale",
+            "definition": "Cached data that may still be shown but is eligible for refreshing."
+          },
+          {
+            "term": "invalidation",
+            "definition": "Marking cached data as outdated so it can be refetched."
+          },
+          {
+            "term": "mutation",
+            "definition": "An operation that changes remote server data."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "TanStack Query és server state",
+          "description": "A TanStack Query a távoli szerveradatot frissességgel, request-életciklussal, retry-jal, invalidationnel és mutációkoordinációval rendelkező cache-ként kezeli.",
+          "studyContent": {
+            "mentalModel": "A TanStack Query az API-választ server state-ként, nem közönséges kliens-tulajdonú state-ként kezeli. A query key azonosítja a cache-elt adatot, a stale time, refetch, invalidation és mutation pedig meghatározza, mikor használható újra vagy frissítendő.",
+            "problem": "Az effectekbe kézzel írt fetching gyakran duplikálja a loading, error, cancellation, retry és race condition logikát. Ugyanazt a választ Reduxba vagy local state-be másolva több source of truth keletkezik. Rossz query key vagy túl széles invalidation fölösleges refetchet vagy hibás cache-találatot okozhat.",
+            "example": "Egy CRM a ['customer', customerId] kulccsal olvas ügyfelet. Szerkesztéskor mutation fut. Siker után a visszakapott rekord frissíti a cache-t, vagy csak ezt a pontos key-t invalidálják, így kizárólag a releváns adat töltődik újra.",
+            "howItWorks": [
+              "Készíts stabil query key-t, amely minden válaszra ható inputot tartalmaz.",
+              "Az üzleti eset alapján határozd meg, meddig tekinthető frissnek a cache-elt adat.",
+              "A query lifecycle-ból jelenítsd meg a loading, error, empty és success állapotot.",
+              "Mutation után frissítsd az ismert cache-adatot vagy a legszűkebb érintett key-ket invalidáld.",
+              "Navigáció vagy inputváltozás esetén töröld vagy hagyd figyelmen kívül az elavult requestet."
+            ],
+            "commonMistakes": [
+              "Azonos generikus key-t használni eltérő paraméterű requestekhez.",
+              "Minden query-eredményt másik state store-ba másolni.",
+              "Minden kis mutation után a teljes cache-t invalidálni."
+            ],
+            "keyTerms": [
+              {
+                "term": "query key",
+                "definition": "Stabil azonosító egy cache-elt requesthez és minden eredményére ható inputhoz."
+              },
+              {
+                "term": "stale",
+                "definition": "Cache-elt adat, amely még megjeleníthető, de már frissíthető."
+              },
+              {
+                "term": "invalidation",
+                "definition": "Cache-adat elavultnak jelölése, hogy újra lekérhető legyen."
+              },
+              {
+                "term": "mutation",
+                "definition": "Távoli szerveradatot módosító művelet."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_tanstack_router",
+      "name": "TanStack Router",
+      "description": "TanStack Router models navigation as typed route definitions with nested layouts, parameters, search state, loaders, and controlled migration boundaries.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "api_integration",
+        "react_state_strategies"
+      ],
+      "studyContent": {
+        "mentalModel": "TanStack Router is a client routing library that defines how URLs map to React screens and layouts. Its typed route tree can make path parameters, search parameters, navigation, and loader data explicit contracts in TypeScript.",
+        "problem": "Routing affects much more than which component is visible. A careless migration can break deep links, browser history, permissions, analytics, data loading, scroll restoration, and bookmarked URLs. Moving all routes at once also makes failures difficult to isolate.",
+        "example": "A CRM migrates one route branch from its old router. The customer route keeps the same public URL, validates customerId and search filters, runs the permission check before rendering protected content, and records navigation through the existing analytics adapter.",
+        "howItWorks": [
+          "Map the existing route tree, layouts, redirects, parameters, guards, and deep-link requirements.",
+          "Define typed paths and search parameters while preserving public URLs unless a redirect plan exists.",
+          "Move one route branch at a time behind a compatibility boundary.",
+          "Test direct entry, browser back and forward, refresh, permission denial, and invalid parameters.",
+          "Remove old route definitions after traffic and behavior checks confirm parity."
+        ],
+        "commonMistakes": [
+          "Treating routing as only a component-switching concern.",
+          "Changing public URLs during migration without redirects or analytics review.",
+          "Putting every data request in route loaders even when the product needs another cache lifecycle."
+        ],
+        "keyTerms": [
+          {
+            "term": "route tree",
+            "definition": "The hierarchy that maps URL segments to layouts and screens."
+          },
+          {
+            "term": "search parameters",
+            "definition": "Values encoded after the question mark in a URL."
+          },
+          {
+            "term": "deep link",
+            "definition": "A URL that opens a specific nested state directly."
+          },
+          {
+            "term": "route guard",
+            "definition": "Logic that allows, redirects, or blocks navigation based on a condition."
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": "TanStack Router",
+          "description": "A TanStack Router typed route-definíciókkal modellezi a navigációt, nested layoutokat, paramétereket, search state-et, loaderöket és kontrollált migrációs határokat.",
+          "studyContent": {
+            "mentalModel": "A TanStack Router kliensoldali routing library, amely meghatározza, hogyan kapcsolódnak az URL-ek React screenekhez és layoutokhoz. Typed route tree-je TypeScript-contractként teheti explicitté a path paramétereket, search paramétereket, navigációt és loader adatot.",
+            "problem": "A routing jóval több annál, hogy melyik komponens látható. Gondatlan migráció eltörheti a deep linket, browser historyt, permissiont, analytics-et, data loadingot, scroll restorationt és bookmarkolt URL-t. Minden route egyszerre történő mozgatása nehezen izolálható hibát okoz.",
+            "example": "Egy CRM egy route branch-et migrál a régi routerből. A customer route megtartja a nyilvános URL-t, validálja a customerId-t és szűrőket, protected content előtt permission checket futtat, és a meglévő analytics adapteren rögzíti a navigációt.",
+            "howItWorks": [
+              "Térképezd fel a route tree-t, layoutokat, redirecteket, paramétereket, guardokat és deep-link követelményeket.",
+              "Definiálj typed pathot és search paramétert, miközben redirect terv nélkül megőrzöd a nyilvános URL-eket.",
+              "Egy route branch-et mozgass egyszerre compatibility határon keresztül.",
+              "Teszteld a közvetlen belépést, back/forwardot, refresht, permission denialt és hibás paramétert.",
+              "Parity igazolása után távolítsd el a régi route-definíciókat."
+            ],
+            "commonMistakes": [
+              "A routingot pusztán component-váltásnak tekinteni.",
+              "Redirect és analytics review nélkül public URL-t módosítani migráció közben.",
+              "Minden requestet route loaderbe tenni akkor is, ha a terméknek más cache-életciklus kell."
+            ],
+            "keyTerms": [
+              {
+                "term": "route tree",
+                "definition": "Hierarchia, amely URL-szegmenseket layouthoz és screenhez kapcsol."
+              },
+              {
+                "term": "search paraméter",
+                "definition": "A URL kérdőjel utáni részében kódolt érték."
+              },
+              {
+                "term": "deep link",
+                "definition": "Olyan URL, amely közvetlenül egy konkrét nested állapotot nyit meg."
+              },
+              {
+                "term": "route guard",
+                "definition": "Feltétel alapján navigációt engedő, átirányító vagy blokkoló logika."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_frontend_build_tooling",
+      "name": "Frontend Build Tooling",
+      "description": "Modern frontend build tools transform modules and assets for development and production, but their speed, compatibility, plugin model, and output behavior differ.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "deployment",
+        "frontend_performance"
+      ],
+      "studyContent": {
+        "mentalModel": "Frontend build tooling resolves modules, transforms TypeScript and styles, serves development updates, splits production bundles, and emits deployable assets. Vite, Rspack, and webpack can serve similar goals with different architectures and compatibility trade-offs.",
+        "problem": "A build-tool migration can break path aliases, environment variables, CSS handling, test setup, asset URLs, browser targets, or production chunk loading even when local development works. Choosing only by benchmark numbers may ignore plugin compatibility and team knowledge.",
+        "example": "A React storefront moves from webpack to Rspack. The team records current entry points, loaders, plugins, environment behavior, source maps, bundle sizes, and deployment paths. It runs both builds in CI, compares generated assets and browser tests, then switches one application at a time.",
+        "howItWorks": [
+          "Inventory entry points, transformations, plugins, aliases, environment variables, and deployment assumptions.",
+          "Create a production baseline for build time, output size, source maps, and runtime behavior.",
+          "Reproduce required behavior in the new tool before adding unrelated improvements.",
+          "Compare development feedback and production assets in CI.",
+          "Roll out with a fallback and remove the previous configuration after stable releases."
+        ],
+        "commonMistakes": [
+          "Assuming development-server speed is the only important criterion.",
+          "Changing build tool, application architecture, and dependency versions simultaneously.",
+          "Testing only localhost and not the actual static hosting or CDN paths."
+        ],
+        "keyTerms": [
+          {
+            "term": "bundler",
+            "definition": "A tool that resolves application modules and produces browser-ready assets."
+          },
+          {
+            "term": "code splitting",
+            "definition": "Creating smaller chunks that can be loaded only when needed."
+          },
+          {
+            "term": "source map",
+            "definition": "A mapping from generated code back to original source for debugging."
+          },
+          {
+            "term": "hot update",
+            "definition": "A development update that refreshes changed modules without a full reload."
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": "Frontend build tooling",
+          "description": "A modern frontend build tool modulokat és asseteket alakít fejlesztési és production használatra, de sebességben, kompatibilitásban, pluginmodellben és outputban különböznek.",
+          "studyContent": {
+            "mentalModel": "A frontend build tooling modulokat old fel, TypeScriptet és style-okat transzformál, development update-et szolgál ki, production bundle-t darabol és deployolható asseteket készít. A Vite, Rspack és webpack hasonló célokat szolgálhat eltérő architektúrával és compatibility trade-offokkal.",
+            "problem": "A build tool migráció eltörheti a path aliast, environment variable-t, CSS-kezelést, test setupot, asset URL-t, browser targetet vagy production chunk loadingot akkor is, ha lokálisan működik. Pusztán benchmark alapján választva kimaradhat a plugin compatibility és a csapat tudása.",
+            "example": "Egy React storefront webpackről Rspackre vált. A csapat feljegyzi az entry pointokat, loadereket, plugineket, environment viselkedést, source mapet, bundle size-t és deployment pathot. CI-ben mindkét buildet futtatja, összehasonlítja az asseteket és browser teszteket, majd apponként vált.",
+            "howItWorks": [
+              "Térképezd fel az entry pointokat, transzformációkat, plugineket, aliasokat, environment variable-öket és deployment-feltételezéseket.",
+              "Készíts production baseline-t build time-ra, output size-ra, source mapre és runtime viselkedésre.",
+              "Az új toolban először a szükséges viselkedést reprodukáld, ne keverd össze más fejlesztésekkel.",
+              "CI-ben hasonlítsd össze a development feedbacket és production asseteket.",
+              "Fallback mellett rolloutolj, majd stabil release-ek után távolítsd el a régi konfigurációt."
+            ],
+            "commonMistakes": [
+              "A development server sebességét egyetlen fontos kritériumnak tekinteni.",
+              "Build toolt, apparchitektúrát és dependencyverziókat egyszerre változtatni.",
+              "Csak localhoston tesztelni, a valódi static hosting vagy CDN path nélkül."
+            ],
+            "keyTerms": [
+              {
+                "term": "bundler",
+                "definition": "Eszköz, amely feloldja az alkalmazás moduljait és böngészőben futtatható asseteket készít."
+              },
+              {
+                "term": "code splitting",
+                "definition": "Kisebb chunkok létrehozása, amelyek csak szükség esetén töltődnek be."
+              },
+              {
+                "term": "source map",
+                "definition": "A generált kódot az eredeti source-hoz visszakapcsoló mapping debughoz."
+              },
+              {
+                "term": "hot update",
+                "definition": "Fejlesztési frissítés, amely teljes reload nélkül cseréli a módosult modulokat."
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "artec_react_hooks_001",
+      "title": "What are React Hooks?",
+      "prompt": "What are React Hooks, why were they introduced, and what rules must code follow for Hook state to remain predictable?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "artec_react_hooks"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_react_hooks_001_point_1",
+          "label": "Defines Hooks clearly",
+          "description": "Explains that Hooks let function components use state, effects, context, refs, and other React capabilities.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "function components",
+            "use state",
+            "use effects",
+            "react features",
+            "hook functions"
+          ]
+        },
+        {
+          "id": "artec_react_hooks_001_point_2",
+          "label": "Explains reusable stateful logic",
+          "description": "Describes custom Hooks as composition of behavior without sharing one component instance or using inheritance.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "custom hooks",
+            "reusable logic",
+            "compose hooks",
+            "stateful logic",
+            "no inheritance"
+          ]
+        },
+        {
+          "id": "artec_react_hooks_001_point_3",
+          "label": "States the Rules of Hooks",
+          "description": "Covers top-level calls only, React components or custom Hooks only, and stable call order across renders.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "top level",
+            "stable order",
+            "custom hook only",
+            "component only",
+            "rules of hooks"
+          ]
+        },
+        {
+          "id": "artec_react_hooks_001_point_4",
+          "label": "Avoids lifecycle shorthand",
+          "description": "Recognizes that effects synchronize with external systems and should not be treated as a direct replacement for every class lifecycle method.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "synchronize external",
+            "not lifecycle",
+            "avoid effects",
+            "derive in render",
+            "cleanup"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_react_hooks_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why is calling useState inside an if statement unsafe even if the condition rarely changes?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mik a React Hooks?",
+          "prompt": "Mik a React Hooks, miért vezették be őket, és milyen szabályokat kell betartani, hogy a Hook state kiszámítható maradjon?",
+          "answerStructureHint": "Definíció, custom Hook, Rules of Hooks és effect-szemlélet.",
+          "expectedPoints": {
+            "artec_react_hooks_001_point_1": {
+              "label": "Világosan definiálja a Hookokat",
+              "description": "Elmagyarázza, hogy a Hookok function componenteknek adnak state-, effect-, context-, ref- és más React-képességet."
+            },
+            "artec_react_hooks_001_point_2": {
+              "label": "Elmagyarázza a reusable stateful logikát",
+              "description": "A custom Hookot viselkedéskompozícióként írja le közös component instance vagy inheritance nélkül."
+            },
+            "artec_react_hooks_001_point_3": {
+              "label": "Kimondja a Rules of Hooks szabályait",
+              "description": "Kitér a top-level hívásra, kizárólag React component vagy custom Hook környezetre és a stabil renderenkénti hívási sorrendre."
+            },
+            "artec_react_hooks_001_point_4": {
+              "label": "Kerüli a lifecycle-rövidítést",
+              "description": "Felismeri, hogy az effect külső rendszerrel szinkronizál, és nem minden class lifecycle közvetlen megfelelője."
+            }
+          },
+          "followUps": {
+            "artec_react_hooks_001_followup_1": "Miért veszélyes useState-et if ágban hívni akkor is, ha a feltétel ritkán változik?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_hooks_effects_002",
+      "title": "Do you need an effect?",
+      "prompt": "A component uses an effect to calculate filtered data, another effect to reset state when a prop changes, and a third effect to subscribe to a browser API. Which effects would you keep, remove, or redesign?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "design_review",
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "artec_react_hooks",
+        "react_state_strategies"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_hooks_effects_002_point_1",
+          "label": "Removes pure derivation effects",
+          "description": "Calculates filtered data during rendering or memoizes it only if the calculation is measured as expensive.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "derive in render",
+            "remove effect",
+            "usememo if expensive",
+            "filtered data",
+            "no duplicate state"
+          ]
+        },
+        {
+          "id": "artec_hooks_effects_002_point_2",
+          "label": "Questions reset-on-prop-change",
+          "description": "Considers component identity, keys, lifted state, or explicit event handling instead of synchronizing duplicated state after render.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "change key",
+            "reset state",
+            "lift state",
+            "avoid sync",
+            "component identity"
+          ]
+        },
+        {
+          "id": "artec_hooks_effects_002_point_3",
+          "label": "Keeps genuine external synchronization",
+          "description": "Uses an effect for browser subscriptions with correct setup, dependency handling, and cleanup.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "browser subscription",
+            "effect cleanup",
+            "unsubscribe",
+            "dependency array",
+            "external system"
+          ]
+        },
+        {
+          "id": "artec_hooks_effects_002_point_4",
+          "label": "Handles races and stale closures",
+          "description": "Mentions cancellation, current values, cleanup order, and avoiding stale state in asynchronous callbacks.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "abort controller",
+            "stale closure",
+            "cancel request",
+            "cleanup order",
+            "functional update"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_hooks_effects_002_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What symptom might indicate that an effect is only compensating for duplicated state?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Szükség van erre az effectre?",
+          "prompt": "Egy komponens effecttel számít filtered adatot, másik effecttel propváltozáskor state-et resetel, harmadikkal browser API-ra subscribe-ol. Mely effecteket tartanád meg, törölnéd vagy terveznéd át?",
+          "answerStructureHint": "Pure derivation, state ownership, valódi külső szinkronizáció és race-ek.",
+          "expectedPoints": {
+            "artec_hooks_effects_002_point_1": {
+              "label": "Eltávolítja a pure derivation effectet",
+              "description": "A filtered adatot render közben számolja, vagy csak mért költség esetén memoizálja."
+            },
+            "artec_hooks_effects_002_point_2": {
+              "label": "Megkérdőjelezi a propváltozásos resetet",
+              "description": "Component identityt, key-t, lifted state-et vagy explicit event handlinget vizsgál a duplikált state render utáni szinkronizálása helyett."
+            },
+            "artec_hooks_effects_002_point_3": {
+              "label": "Megtartja a valódi external synchronizationt",
+              "description": "Browser subscriptionhöz effectet használ helyes setuppal, dependencykezeléssel és cleanuppal."
+            },
+            "artec_hooks_effects_002_point_4": {
+              "label": "Kezeli a race-t és stale closure-t",
+              "description": "Megemlíti a cancellationt, aktuális értékeket, cleanup ordert és az async callback stale state-jének kerülését."
+            }
+          },
+          "followUps": {
+            "artec_hooks_effects_002_followup_1": "Milyen tünet utalhat arra, hogy egy effect csak duplikált state-et próbál szinkronban tartani?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_million_item_list_001",
+      "title": "Rendering one million items",
+      "prompt": "How would you build a scrollable React list backed by roughly one million records without overwhelming React, the DOM, the network, or the browser?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "artec_list_virtualization",
+        "react_memoization",
+        "frontend_performance"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_million_item_list_001_point_1",
+          "label": "Does not load or mount everything",
+          "description": "Uses server pagination or range fetching and avoids creating one million row elements in memory or the DOM.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "server pagination",
+            "range fetching",
+            "do not mount",
+            "avoid million rows",
+            "incremental loading"
+          ]
+        },
+        {
+          "id": "artec_million_item_list_001_point_2",
+          "label": "Virtualizes the visible window",
+          "description": "Renders only visible rows with overscan and a simulated total height using stable item identity.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "virtualized list",
+            "visible rows",
+            "overscan",
+            "windowing",
+            "stable keys"
+          ]
+        },
+        {
+          "id": "artec_million_item_list_001_point_3",
+          "label": "Plans data and interaction behavior",
+          "description": "Handles sorting, filtering, selection, deep links, keyboard focus, loading, retries, and preserving position across page fetches.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "server sorting",
+            "server filtering",
+            "keyboard focus",
+            "preserve scroll",
+            "loading pages"
+          ]
+        },
+        {
+          "id": "artec_million_item_list_001_point_4",
+          "label": "Measures real bottlenecks",
+          "description": "Profiles rendering, memory, network, long tasks, and dynamic row measurement instead of relying on row count alone.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "profile memory",
+            "long tasks",
+            "network cost",
+            "row measurement",
+            "render profile"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_million_item_list_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would your design change if every row has a dynamic height and can expand inline?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egymillió elem renderelése",
+          "prompt": "Hogyan építenél körülbelül egymillió rekordra támaszkodó scrollozható React listát úgy, hogy ne terheld túl a Reactet, DOM-ot, networköt vagy browsert?",
+          "answerStructureHint": "Adatbetöltés, virtualizáció, interakciók és mérés.",
+          "expectedPoints": {
+            "artec_million_item_list_001_point_1": {
+              "label": "Nem tölt és mountol mindent",
+              "description": "Server paginationt vagy range fetchinget használ, és nem hoz létre egymillió row elementet memóriában vagy DOM-ban."
+            },
+            "artec_million_item_list_001_point_2": {
+              "label": "Virtualizálja a látható ablakot",
+              "description": "Csak a látható row-kat rendereli overscannel és szimulált teljes magassággal, stabil item identity mellett."
+            },
+            "artec_million_item_list_001_point_3": {
+              "label": "Megtervezi az adat- és interakciós viselkedést",
+              "description": "Kezeli a sortingot, filteringet, selectiont, deep linket, keyboard focust, loadingot, retry-t és scrollpositiont page fetch közben."
+            },
+            "artec_million_item_list_001_point_4": {
+              "label": "Valódi bottlenecket mér",
+              "description": "Renderinget, memóriát, networköt, long taskot és dynamic row measurementet profiloz, nem csak a rowszámot nézi."
+            }
+          },
+          "followUps": {
+            "artec_million_item_list_001_followup_1": "Hogyan változna a design, ha minden row dinamikus magasságú és inline kinyitható?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_virtualization_accessibility_002",
+      "title": "Virtualization without breaking usability",
+      "prompt": "A virtualized CRM table scrolls smoothly, but keyboard users lose focus and screen readers announce confusing row counts. How would you improve it?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "design_review"
+      ],
+      "topicIds": [
+        "artec_list_virtualization",
+        "web_accessibility"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_virtualization_accessibility_002_point_1",
+          "label": "Preserves logical focus",
+          "description": "Uses stable row identity, deliberate focus management, and scroll-to-item behavior when focused content leaves the mounted window.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "focus management",
+            "stable identity",
+            "scroll to item",
+            "roving tabindex",
+            "preserve focus"
+          ]
+        },
+        {
+          "id": "artec_virtualization_accessibility_002_point_2",
+          "label": "Communicates collection semantics",
+          "description": "Provides meaningful table or list semantics, row counts or positions where appropriate, and does not expose spacer elements as content.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "aria rowcount",
+            "list semantics",
+            "row index",
+            "hide spacers",
+            "screen reader"
+          ]
+        },
+        {
+          "id": "artec_virtualization_accessibility_002_point_3",
+          "label": "Supports non-pointer navigation",
+          "description": "Tests keyboard selection, page movement, find or jump behavior, and actions that work without relying on hover.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "keyboard navigation",
+            "page down",
+            "no hover only",
+            "selection model",
+            "jump to row"
+          ]
+        },
+        {
+          "id": "artec_virtualization_accessibility_002_point_4",
+          "label": "Questions whether virtualization is appropriate",
+          "description": "Considers pagination or a simpler accessible view when full table semantics cannot be maintained reliably.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "accessible fallback",
+            "pagination option",
+            "simpler view",
+            "progressive enhancement",
+            "tradeoff"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_virtualization_accessibility_002_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What automated and manual tests would you add for this component?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Virtualizáció usability-törés nélkül",
+          "prompt": "Egy virtualizált CRM table simán scrollozik, de keyboard user elveszíti a fókuszt, a screen reader pedig zavaros rowszámokat mond. Hogyan javítanád?",
+          "answerStructureHint": "Focus identity, szemantika, keyboard navigation és fallback.",
+          "expectedPoints": {
+            "artec_virtualization_accessibility_002_point_1": {
+              "label": "Megőrzi a logikai fókuszt",
+              "description": "Stabil row identityt, tudatos focus managementet és scroll-to-item behaviort használ, ha a focused content kikerül a mountolt ablakból."
+            },
+            "artec_virtualization_accessibility_002_point_2": {
+              "label": "Kommunikálja a kollekció szemantikáját",
+              "description": "Értelmes table vagy list szemantikát, szükség szerint row countot vagy pozíciót ad, és a spacer elementet nem mutatja contentként."
+            },
+            "artec_virtualization_accessibility_002_point_3": {
+              "label": "Támogatja a nem pointeres navigációt",
+              "description": "Teszteli a keyboard selectiont, page movementet, find vagy jump behaviort és hover nélkül is működő actionöket."
+            },
+            "artec_virtualization_accessibility_002_point_4": {
+              "label": "Megkérdőjelezi a virtualizáció alkalmasságát",
+              "description": "Paginationt vagy egyszerűbb accessible view-t fontol, ha a teljes table semantics nem tartható megbízhatóan."
+            }
+          },
+          "followUps": {
+            "artec_virtualization_accessibility_002_followup_1": "Milyen automatizált és manuális teszteket adnál ehhez a komponenshez?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_react18_migration_001",
+      "title": "Migrating an older app to React 18",
+      "prompt": "How would you migrate an older production React application to React 18 safely?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "scenario_discussion",
+        "system_design"
+      ],
+      "topicIds": [
+        "artec_react_upgrade",
+        "react_legacy_migration"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_react18_migration_001_point_1",
+          "label": "Creates an upgrade inventory",
+          "description": "Checks deprecated APIs, ReactDOM entry points, third-party compatibility, Strict Mode warnings, tests, and browser requirements.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "deprecated api",
+            "reactdom render",
+            "peer dependencies",
+            "strict mode",
+            "compatibility audit"
+          ]
+        },
+        {
+          "id": "artec_react18_migration_001_point_2",
+          "label": "Separates compatibility changes",
+          "description": "Updates supporting libraries and warnings in smaller changes before enabling the new root and rendering behavior.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "small commits",
+            "upgrade dependencies",
+            "remove warnings",
+            "create root",
+            "separate changes"
+          ]
+        },
+        {
+          "id": "artec_react18_migration_001_point_3",
+          "label": "Tests behavior, not only compilation",
+          "description": "Runs component, integration, visual, accessibility, performance, and production-like tests, including effect and timing-sensitive behavior.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "behavior tests",
+            "visual regression",
+            "effect behavior",
+            "performance baseline",
+            "production build"
+          ]
+        },
+        {
+          "id": "artec_react18_migration_001_point_4",
+          "label": "Rolls out and observes",
+          "description": "Uses a limited entry point, feature exposure, error monitoring, and rollback while expanding the migration.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "incremental rollout",
+            "error monitoring",
+            "rollback",
+            "one entry point",
+            "canary release"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_react18_migration_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which development-only Strict Mode behavior can expose unsafe effects during a React 18 migration?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Régi app migrálása React 18-ra",
+          "prompt": "Hogyan migrálnál biztonságosan egy régebbi production React alkalmazást React 18-ra?",
+          "answerStructureHint": "Inventory, kisebb compatibility lépések, behavior testing és rollout.",
+          "expectedPoints": {
+            "artec_react18_migration_001_point_1": {
+              "label": "Upgrade inventoryt készít",
+              "description": "Ellenőrzi a deprecated API-kat, ReactDOM entry pointot, third-party compatibilityt, Strict Mode warningot, teszteket és browser requirementet."
+            },
+            "artec_react18_migration_001_point_2": {
+              "label": "Elválasztja a compatibility változásokat",
+              "description": "Kisebb változtatásokban frissíti a supporting libraryket és warningokat az új root és rendering behavior aktiválása előtt."
+            },
+            "artec_react18_migration_001_point_3": {
+              "label": "Viselkedést tesztel, nem csak fordulást",
+              "description": "Component, integration, visual, accessibility, performance és production-like tesztet futtat, effect- és timingérzékeny működéssel."
+            },
+            "artec_react18_migration_001_point_4": {
+              "label": "Fokozatosan rolloutol és figyel",
+              "description": "Korlátozott entry pointot, feature exposure-t, error monitoringot és rollbacket használ a migráció kiterjesztésekor."
+            }
+          },
+          "followUps": {
+            "artec_react18_migration_001_followup_1": "Mely development-only Strict Mode behavior tárhat fel unsafe effectet React 18 migráció során?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_react19_upgrade_002",
+      "title": "Planning a React 19 upgrade",
+      "prompt": "The greenfield storefront uses React 19 while another product remains on React 18. How would you manage compatibility across the shared UI library and avoid forcing an unsafe synchronized upgrade?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "system_design"
+      ],
+      "topicIds": [
+        "artec_react_upgrade",
+        "artec_design_system_architecture"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_react19_upgrade_002_point_1",
+          "label": "Defines supported version policy",
+          "description": "Uses peer dependency ranges, a tested compatibility matrix, and explicit support or deprecation windows.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "peer dependency range",
+            "compatibility matrix",
+            "support policy",
+            "deprecation window",
+            "react versions"
+          ]
+        },
+        {
+          "id": "artec_react19_upgrade_002_point_2",
+          "label": "Avoids version-specific internals",
+          "description": "Keeps shared components on stable public APIs and isolates features that require only the newer React version.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "public react api",
+            "avoid internals",
+            "isolate new feature",
+            "compatibility layer",
+            "shared components"
+          ]
+        },
+        {
+          "id": "artec_react19_upgrade_002_point_3",
+          "label": "Tests representative consumers",
+          "description": "Runs the library's behavior, visual, and type tests against both React versions and representative applications.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "test both versions",
+            "consumer app",
+            "visual tests",
+            "type tests",
+            "matrix ci"
+          ]
+        },
+        {
+          "id": "artec_react19_upgrade_002_point_4",
+          "label": "Plans independent migration",
+          "description": "Allows products to upgrade separately with release notes, codemods or migration guidance, and rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "independent upgrade",
+            "migration guide",
+            "release notes",
+            "codemod",
+            "rollback plan"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_react19_upgrade_002_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would maintaining dual-version support cost more than scheduling a coordinated upgrade?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "React 19 upgrade tervezése",
+          "prompt": "A greenfield storefront React 19-et használ, egy másik termék React 18-on marad. Hogyan kezelnéd a shared UI library kompatibilitását unsafe szinkronizált upgrade kikényszerítése nélkül?",
+          "answerStructureHint": "Version policy, public API, consumer matrix és független migráció.",
+          "expectedPoints": {
+            "artec_react19_upgrade_002_point_1": {
+              "label": "Támogatott verziópolitikát definiál",
+              "description": "Peer dependency range-et, tesztelt compatibility matrixot és explicit support vagy deprecation window-t használ."
+            },
+            "artec_react19_upgrade_002_point_2": {
+              "label": "Kerüli a verzióspecifikus internalokat",
+              "description": "A shared componenteket stabil public API-n tartja, és izolálja a csak újabb Reactet igénylő feature-t."
+            },
+            "artec_react19_upgrade_002_point_3": {
+              "label": "Reprezentatív consumereket tesztel",
+              "description": "A library behavior-, visual- és type-tesztjét mindkét React-verzióval és reprezentatív appokkal futtatja."
+            },
+            "artec_react19_upgrade_002_point_4": {
+              "label": "Független migrációt tervez",
+              "description": "Lehetővé teszi a productok külön upgrade-jét release note-tal, codemoddal vagy migration guidance-szal és rollbackkel."
+            }
+          },
+          "followUps": {
+            "artec_react19_upgrade_002_followup_1": "Mikor kerül többe a dual-version support fenntartása, mint egy koordinált upgrade megszervezése?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_tanstack_query_001",
+      "title": "TanStack Query vs client state",
+      "prompt": "When would you use TanStack Query instead of Redux Toolkit or local state, and what problems does it solve beyond calling fetch?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "artec_tanstack_query",
+        "react_state_strategies",
+        "redux_toolkit"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_tanstack_query_001_point_1",
+          "label": "Identifies server state",
+          "description": "Uses TanStack Query for remote data with independent ownership, freshness, latency, and possible concurrent changes.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "server state",
+            "remote data",
+            "data freshness",
+            "query cache",
+            "concurrent changes"
+          ]
+        },
+        {
+          "id": "artec_tanstack_query_001_point_2",
+          "label": "Explains lifecycle features",
+          "description": "Covers caching, deduplication, retries, cancellation, stale handling, background refetch, and mutation coordination.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "request deduplication",
+            "background refetch",
+            "retry requests",
+            "cancel requests",
+            "cache lifecycle"
+          ]
+        },
+        {
+          "id": "artec_tanstack_query_001_point_3",
+          "label": "Keeps client state separate",
+          "description": "Uses local state for ephemeral UI and Redux or Context only for genuinely shared client-owned state.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "local ui state",
+            "client owned",
+            "redux when shared",
+            "separate state",
+            "not everything query"
+          ]
+        },
+        {
+          "id": "artec_tanstack_query_001_point_4",
+          "label": "Avoids duplicate ownership",
+          "description": "Does not copy query results into another store unless a deliberate snapshot or transformation requires it.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "single source",
+            "do not copy",
+            "avoid duplicate cache",
+            "derived data",
+            "query select"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_tanstack_query_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you choose a staleTime for customer data in a CRM?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "TanStack Query vagy client state",
+          "prompt": "Mikor használnál TanStack Queryt Redux Toolkit vagy local state helyett, és milyen problémákat old meg a fetch meghívásán túl?",
+          "answerStructureHint": "Server state, lifecycle feature-ök, client state különválasztása és ownership.",
+          "expectedPoints": {
+            "artec_tanstack_query_001_point_1": {
+              "label": "Azonosítja a server state-et",
+              "description": "TanStack Queryt használ távoli adathoz, amelynek külön ownerje, frissessége, latencyje és lehetséges concurrent változása van."
+            },
+            "artec_tanstack_query_001_point_2": {
+              "label": "Elmagyarázza a lifecycle feature-öket",
+              "description": "Kitér cachingre, deduplicationre, retry-ra, cancellationre, stale kezelésre, background refetchre és mutation coordinationre."
+            },
+            "artec_tanstack_query_001_point_3": {
+              "label": "Külön tartja a client state-et",
+              "description": "Lokális state-et használ ephemeral UI-hoz, Reduxot vagy Contextet pedig csak valóban shared client-owned state-hez."
+            },
+            "artec_tanstack_query_001_point_4": {
+              "label": "Kerüli a duplikált ownershipöt",
+              "description": "Nem másolja query resultot másik store-ba, kivéve ha tudatos snapshot vagy transzformáció indokolja."
+            }
+          },
+          "followUps": {
+            "artec_tanstack_query_001_followup_1": "Hogyan választanál staleTime-ot customer data számára egy CRM-ben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_query_mutation_invalidation_002",
+      "title": "Mutation and cache invalidation",
+      "prompt": "A user edits a customer, but different CRM screens continue showing stale data. How would you design the mutation and cache update strategy?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "troubleshooting",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "artec_tanstack_query"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_query_mutation_invalidation_002_point_1",
+          "label": "Maps affected query keys",
+          "description": "Identifies every cache view derived from the changed customer, including detail, lists, counts, and dependent summaries.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "query keys",
+            "customer detail",
+            "list cache",
+            "dependent queries",
+            "affected views"
+          ]
+        },
+        {
+          "id": "artec_query_mutation_invalidation_002_point_2",
+          "label": "Chooses update or invalidation deliberately",
+          "description": "Directly updates cache when the authoritative result is known and invalidates narrowly when refetching is safer.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "set query data",
+            "invalidate query",
+            "narrow invalidation",
+            "server response",
+            "authoritative result"
+          ]
+        },
+        {
+          "id": "artec_query_mutation_invalidation_002_point_3",
+          "label": "Handles optimistic failure",
+          "description": "Snapshots previous data, applies a reversible optimistic change, rolls back on failure, and reconciles with the server result.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "optimistic update",
+            "rollback cache",
+            "snapshot previous",
+            "mutation error",
+            "reconcile server"
+          ]
+        },
+        {
+          "id": "artec_query_mutation_invalidation_002_point_4",
+          "label": "Prevents race-related stale writes",
+          "description": "Cancels obsolete fetches or ensures an older response cannot overwrite the newer mutation result.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "cancel queries",
+            "race condition",
+            "stale response",
+            "request ordering",
+            "latest result"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_query_mutation_invalidation_002_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is broad invalidation acceptable, even if it causes extra requests?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mutation és cache invalidation",
+          "prompt": "Egy user customert szerkeszt, de különböző CRM screenek stale adatot mutatnak. Hogyan terveznéd a mutation- és cache update-stratégiát?",
+          "answerStructureHint": "Érintett key-k, update vagy invalidation, optimistic rollback és race-ek.",
+          "expectedPoints": {
+            "artec_query_mutation_invalidation_002_point_1": {
+              "label": "Feltérképezi az érintett query key-ket",
+              "description": "Azonosít minden, a módosult customerből származó cache-view-t, például detailt, listát, countot és dependent summaryt."
+            },
+            "artec_query_mutation_invalidation_002_point_2": {
+              "label": "Tudatosan választ update-et vagy invalidationt",
+              "description": "Közvetlenül frissíti a cache-t, ha az authoritative result ismert, és szűken invalidál, ha a refetch biztonságosabb."
+            },
+            "artec_query_mutation_invalidation_002_point_3": {
+              "label": "Kezeli az optimistic failure-t",
+              "description": "Snapshotolja az előző adatot, visszafordítható optimistic változást alkalmaz, hibánál rollbackel, majd egyeztet a server resulttal."
+            },
+            "artec_query_mutation_invalidation_002_point_4": {
+              "label": "Megakadályozza a race miatti stale írást",
+              "description": "Törli az obsolete fetchet, vagy biztosítja, hogy régebbi response ne írja felül az új mutation resultot."
+            }
+          },
+          "followUps": {
+            "artec_query_mutation_invalidation_002_followup_1": "Mikor elfogadható a broad invalidation akkor is, ha extra requesteket okoz?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_tanstack_router_migration_001",
+      "title": "Migrating to TanStack Router",
+      "prompt": "How would you migrate a mature React SPA from its current router to TanStack Router while preserving public URLs, permissions, analytics, and browser behavior?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "system_design",
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "artec_tanstack_router",
+        "react_legacy_migration"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_tanstack_router_migration_001_point_1",
+          "label": "Inventories routing behavior",
+          "description": "Maps route hierarchy, layouts, redirects, params, search state, loaders, guards, analytics, and scroll behavior.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "route inventory",
+            "nested layouts",
+            "redirects",
+            "route guards",
+            "scroll restoration"
+          ]
+        },
+        {
+          "id": "artec_tanstack_router_migration_001_point_2",
+          "label": "Preserves external contracts",
+          "description": "Keeps public URLs and deep links stable or defines explicit redirects and compatibility rules.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "preserve urls",
+            "deep links",
+            "redirect plan",
+            "backward compatible",
+            "bookmarks"
+          ]
+        },
+        {
+          "id": "artec_tanstack_router_migration_001_point_3",
+          "label": "Migrates by route branch",
+          "description": "Runs old and new routing behind a clear boundary and moves one independently testable branch at a time.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "route branch",
+            "incremental migration",
+            "old and new",
+            "compatibility boundary",
+            "small rollout"
+          ]
+        },
+        {
+          "id": "artec_tanstack_router_migration_001_point_4",
+          "label": "Tests browser and permission flows",
+          "description": "Covers direct load, refresh, back or forward, invalid params, denied access, analytics, and error boundaries.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "direct navigation",
+            "browser back",
+            "permission denied",
+            "invalid params",
+            "analytics events"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_tanstack_router_migration_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you prevent route loaders and TanStack Query from creating two competing caches for the same data?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "TanStack Routerre migrálás",
+          "prompt": "Hogyan migrálnál egy mature React SPA-t a jelenlegi routerről TanStack Routerre a public URL-ek, permissionök, analytics és browser behavior megőrzésével?",
+          "answerStructureHint": "Routing inventory, external contract, incremental branch migration és flow testing.",
+          "expectedPoints": {
+            "artec_tanstack_router_migration_001_point_1": {
+              "label": "Feltérképezi a routing behaviort",
+              "description": "Összegyűjti a route hierarchyt, layoutot, redirectet, paramot, search state-et, loadert, guardot, analytics-et és scroll behaviort."
+            },
+            "artec_tanstack_router_migration_001_point_2": {
+              "label": "Megőrzi az external contractokat",
+              "description": "Stabilan tartja a public URL-t és deep linket, vagy explicit redirectet és compatibility szabályt definiál."
+            },
+            "artec_tanstack_router_migration_001_point_3": {
+              "label": "Route branchenként migrál",
+              "description": "Világos boundary mögött együtt futtatja a régi és új routingot, és egyenként mozgat independently testable brancheket."
+            },
+            "artec_tanstack_router_migration_001_point_4": {
+              "label": "Browser- és permissionflow-t tesztel",
+              "description": "Lefedi a direct loadot, refresht, back/forwardot, invalid paramot, denied accesst, analytics-et és error boundaryt."
+            }
+          },
+          "followUps": {
+            "artec_tanstack_router_migration_001_followup_1": "Hogyan akadályoznád meg, hogy a route loader és TanStack Query két versengő cache-t hozzon létre ugyanahhoz az adathoz?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_typed_routing_002",
+      "title": "Typed routing and URL state",
+      "prompt": "What value does typed routing provide, and how would you model path parameters and search parameters without treating every value in the URL as trusted?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "concept_check",
+        "design_review"
+      ],
+      "topicIds": [
+        "artec_tanstack_router",
+        "typescript_essentials"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_typed_routing_002_point_1",
+          "label": "Explains compile-time navigation safety",
+          "description": "Shows how typed route names, parameters, and search values reduce broken links and refactoring mistakes.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "typed params",
+            "safe navigation",
+            "route types",
+            "refactor routes",
+            "compile time"
+          ]
+        },
+        {
+          "id": "artec_typed_routing_002_point_2",
+          "label": "Validates at runtime",
+          "description": "Recognizes that URLs are external input and validates, parses, defaults, or rejects path and search values at the boundary.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "runtime validation",
+            "external input",
+            "parse params",
+            "default values",
+            "reject invalid"
+          ]
+        },
+        {
+          "id": "artec_typed_routing_002_point_3",
+          "label": "Uses URL state appropriately",
+          "description": "Keeps shareable, bookmarkable navigation state in the URL while excluding secrets and unsuitable ephemeral details.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "bookmarkable state",
+            "shareable filters",
+            "no secrets",
+            "navigation state",
+            "search params"
+          ]
+        },
+        {
+          "id": "artec_typed_routing_002_point_4",
+          "label": "Plans compatibility",
+          "description": "Considers old bookmarked URLs, defaults for missing values, canonical forms, and redirect behavior during schema evolution.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "old bookmarks",
+            "missing params",
+            "canonical url",
+            "redirect behavior",
+            "url migration"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_typed_routing_002_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What should the application do with an unknown sort value in a bookmarked URL?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Typed routing és URL-state",
+          "prompt": "Milyen értéket ad a typed routing, és hogyan modelleznéd a path és search paramétereket anélkül, hogy minden URL-értéket megbízhatónak tekintenél?",
+          "answerStructureHint": "Compile-time safety, runtime validation, URL-state és compatibility.",
+          "expectedPoints": {
+            "artec_typed_routing_002_point_1": {
+              "label": "Elmagyarázza a compile-time navigációs safetyt",
+              "description": "Bemutatja, hogy typed route name, param és search value csökkenti a broken linket és refactorhibát."
+            },
+            "artec_typed_routing_002_point_2": {
+              "label": "Runtime validál",
+              "description": "Felismeri, hogy az URL external input, és a határon validálja, parse-olja, defaultolja vagy elutasítja a path és search value-t."
+            },
+            "artec_typed_routing_002_point_3": {
+              "label": "Megfelelően használ URL-state-et",
+              "description": "Megosztható, bookmarkolható navigation state-et URL-ben tart, secretet és nem megfelelő ephemeral detailt nem."
+            },
+            "artec_typed_routing_002_point_4": {
+              "label": "Compatibilityt tervez",
+              "description": "Figyelembe veszi a régi bookmarkot, missing value defaultot, canonical formot és redirect behaviort schemaevolúciókor."
+            }
+          },
+          "followUps": {
+            "artec_typed_routing_002_followup_1": "Mit tegyen az alkalmazás egy bookmarkolt URL ismeretlen sort értékével?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_build_tools_comparison_001",
+      "title": "Rspack vs Vite vs webpack",
+      "prompt": "How would you compare Rspack, Vite, and webpack for a large React application, and which evidence would you gather before migrating?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "tradeoff_decision",
+        "design_review"
+      ],
+      "topicIds": [
+        "artec_frontend_build_tooling"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_build_tools_comparison_001_point_1",
+          "label": "Compares relevant dimensions",
+          "description": "Evaluates development startup and updates, production build, plugin or loader compatibility, output control, debugging, and ecosystem maturity.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "dev server speed",
+            "production build",
+            "plugin compatibility",
+            "source maps",
+            "ecosystem maturity"
+          ]
+        },
+        {
+          "id": "artec_build_tools_comparison_001_point_2",
+          "label": "Starts from current requirements",
+          "description": "Inventories existing configuration, custom transforms, browser targets, test integration, deployment paths, and team knowledge.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "current config",
+            "custom loaders",
+            "browser targets",
+            "test integration",
+            "team knowledge"
+          ]
+        },
+        {
+          "id": "artec_build_tools_comparison_001_point_3",
+          "label": "Uses measurable baselines",
+          "description": "Records cold start, update latency, CI build time, bundle size, chunk behavior, and production runtime before deciding.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "cold start",
+            "hmr latency",
+            "ci build time",
+            "bundle size",
+            "chunk loading"
+          ]
+        },
+        {
+          "id": "artec_build_tools_comparison_001_point_4",
+          "label": "Plans migration risk",
+          "description": "Runs parallel builds or a representative slice, compares assets and tests, and keeps a fallback instead of rewriting everything at once.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "parallel build",
+            "representative slice",
+            "compare assets",
+            "fallback plan",
+            "incremental migration"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_build_tools_comparison_001_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would staying on webpack be the better engineering decision despite slower builds?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Rspack, Vite és webpack összehasonlítása",
+          "prompt": "Hogyan hasonlítanád össze a Rspack, Vite és webpack eszközöket egy nagy React apphoz, és milyen bizonyítékot gyűjtenél migráció előtt?",
+          "answerStructureHint": "Releváns dimenziók, current requirements, baseline és migration risk.",
+          "expectedPoints": {
+            "artec_build_tools_comparison_001_point_1": {
+              "label": "Releváns dimenziókat hasonlít össze",
+              "description": "A dev startupot és update-et, production buildet, plugin/loader compatibilityt, output controlt, debuggingot és ecosystem maturityt értékeli."
+            },
+            "artec_build_tools_comparison_001_point_2": {
+              "label": "Aktuális követelményből indul",
+              "description": "Feltérképezi a jelenlegi configot, custom transformot, browser targetet, test integrationt, deployment pathot és team knowledge-ot."
+            },
+            "artec_build_tools_comparison_001_point_3": {
+              "label": "Mérhető baseline-t használ",
+              "description": "Döntés előtt rögzíti a cold startot, update latencyt, CI build time-ot, bundle size-t, chunk behaviort és production runtime-ot."
+            },
+            "artec_build_tools_comparison_001_point_4": {
+              "label": "Migrációs kockázatot tervez",
+              "description": "Parallel buildet vagy reprezentatív szeletet futtat, összeveti az asseteket és teszteket, és fallbacket tart a teljes egyszeri átírás helyett."
+            }
+          },
+          "followUps": {
+            "artec_build_tools_comparison_001_followup_1": "Mikor lenne jobb mérnöki döntés webpacken maradni a lassabb build ellenére?"
+          }
+        }
+      }
+    },
+    {
+      "id": "artec_build_migration_debug_002",
+      "title": "Debugging a build-tool migration",
+      "prompt": "A new Rspack build works in development but production shows missing assets and lazy-loaded routes fail. How would you investigate?",
+      "roles": [
+        "frontend_developer",
+        "fullstack_developer",
+        "frontend_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "artec_frontend_build_tooling",
+        "artec_tanstack_router"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Definition, reasoning, practical example, and trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "artec_build_migration_debug_002_point_1",
+          "label": "Reproduces the production environment",
+          "description": "Runs the production build behind the same base path, static server, CDN or cache rules, and browser targets used after deployment.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "production build",
+            "base path",
+            "static server",
+            "cdn path",
+            "browser target"
+          ]
+        },
+        {
+          "id": "artec_build_migration_debug_002_point_2",
+          "label": "Inspects generated asset references",
+          "description": "Checks public path, asset URLs, chunk manifest, content hashes, case sensitivity, and deployment completeness.",
+          "importance": "critical",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "public path",
+            "chunk manifest",
+            "asset urls",
+            "content hash",
+            "missing files"
+          ]
+        },
+        {
+          "id": "artec_build_migration_debug_002_point_3",
+          "label": "Checks dynamic import and routing behavior",
+          "description": "Verifies code-splitting boundaries, lazy imports, error handling, and whether old HTML or service-worker caches reference removed chunks.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "dynamic import",
+            "lazy route",
+            "chunk error",
+            "service worker cache",
+            "old html"
+          ]
+        },
+        {
+          "id": "artec_build_migration_debug_002_point_4",
+          "label": "Compares old and new outputs",
+          "description": "Diffs known-good webpack and Rspack output, source maps, environment substitution, and network requests to isolate the change.",
+          "importance": "important",
+          "roleWeight": {
+            "frontend_developer": 5,
+            "fullstack_developer": 4,
+            "frontend_architect": 5
+          },
+          "acceptedSignals": [
+            "compare builds",
+            "network panel",
+            "environment variables",
+            "source maps",
+            "output diff"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "artec_build_migration_debug_002_followup_1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you make lazy-chunk failures recoverable for users during rolling deployments?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Build tool migráció debugolása",
+          "prompt": "Az új Rspack build developmentben működik, productionben viszont assetek hiányoznak és a lazy-loaded route-ok elbuknak. Hogyan vizsgálnád ki?",
+          "answerStructureHint": "Production reprodukció, asset path, dynamic import és output comparison.",
+          "expectedPoints": {
+            "artec_build_migration_debug_002_point_1": {
+              "label": "Reprodukálja a production környezetet",
+              "description": "A production buildet ugyanazzal a base path-tal, static serverrel, CDN/cache rule-lal és browser targettel futtatja, mint deployment után."
+            },
+            "artec_build_migration_debug_002_point_2": {
+              "label": "Megvizsgálja a generált asset referenciákat",
+              "description": "Ellenőrzi a public pathot, asset URL-t, chunk manifestet, content hasht, case sensitivityt és deployment completeness-t."
+            },
+            "artec_build_migration_debug_002_point_3": {
+              "label": "Ellenőrzi a dynamic importot és routing behaviort",
+              "description": "Validálja a code-splitting boundaryt, lazy importot, error handlinget, és hogy old HTML vagy service-worker cache hivatkozik-e törölt chunkra."
+            },
+            "artec_build_migration_debug_002_point_4": {
+              "label": "Összehasonlítja a régi és új outputot",
+              "description": "Összeveti a működő webpack és Rspack outputot, source mapet, environment substitutiont és network requestet a változás izolálásához."
+            }
+          },
+          "followUps": {
+            "artec_build_migration_debug_002_followup_1": "Hogyan tennéd a lazy chunk hibát helyreállíthatóvá a user számára rolling deployment közben?"
+          }
+        }
+      }
+    }
+  ]
+}
