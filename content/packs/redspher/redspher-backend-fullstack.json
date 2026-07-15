@@ -1,0 +1,2435 @@
+{
+  "id": "redspher_backend_fullstack",
+  "name": "Redspher - Node.js and Full-Stack Integration",
+  "description": "Node.js, REST, API contract, feature-design, and testing topics for the Redspher Full Stack Developer interview.",
+  "sources": [
+    "redspher/full_stack_developer_job_description"
+  ],
+  "topics": [
+    {
+      "id": "redspher_node_event_loop",
+      "name": "Node.js Event Loop",
+      "description": "Node.js scales waiting I/O efficiently through an event loop, but synchronous or CPU-heavy work can block every request in the process.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "redspher_node_async_error_handling",
+        "redspher_resilient_integrations"
+      ],
+      "studyContent": {
+        "mentalModel": "Node.js runs JavaScript callbacks on an event loop and delegates many I/O operations to the operating system or worker facilities, allowing one process to handle many waiting tasks.",
+        "problem": "A long synchronous calculation blocks the JavaScript thread. While it runs, the process cannot handle timers, request callbacks, or other ready work, so every user experiences higher latency.",
+        "example": "A service receives many pricing requests and also creates a large PDF synchronously. The PDF work blocks the event loop, so unrelated API responses wait. Moving the CPU-heavy work to a worker or background job restores responsiveness.",
+        "howItWorks": [
+          "JavaScript starts an asynchronous operation and continues instead of waiting for I/O.",
+          "When work completes, its callback or promise continuation becomes ready.",
+          "The event loop runs ready JavaScript work one piece at a time."
+        ],
+        "commonMistakes": [
+          "Calling Node.js fully single-threaded without distinguishing JavaScript execution from delegated I/O and worker threads.",
+          "Running CPU-heavy loops or synchronous filesystem work inside request handlers.",
+          "Assuming async automatically makes CPU work nonblocking."
+        ],
+        "keyTerms": [
+          {
+            "term": "event loop",
+            "definition": "The mechanism that schedules ready JavaScript callbacks and promise continuations."
+          },
+          {
+            "term": "nonblocking I/O",
+            "definition": "Starting I/O without making the JavaScript thread wait for completion."
+          },
+          {
+            "term": "worker thread",
+            "definition": "A separate JavaScript execution thread used for CPU-heavy work that should not block the event loop."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Node.js event loop",
+          "description": "A Node.js az event loop segítségével hatékonyan kezel sok várakozó I/O-műveletet, de a szinkron vagy CPU-igényes munka a folyamat összes kérését blokkolhatja.",
+          "studyContent": {
+            "mentalModel": "A Node.js az event loopon futtatja a JavaScript callbackeket, sok I/O-műveletet pedig az operációs rendszerre vagy workerekre bíz, így egy folyamat sok várakozó feladatot kezelhet.",
+            "problem": "Egy hosszú szinkron számítás blokkolja a JavaScript-szálat. Amíg fut, a folyamat nem tud időzítőket, request callbackeket vagy más kész munkát kezelni, ezért minden felhasználó nagyobb késleltetést tapasztal.",
+            "example": "Egy szolgáltatás sok árazási kérést fogad, közben szinkron módon nagy PDF-et készít. A PDF-generálás blokkolja az event loopot, ezért a többi API-válasz is vár. Workerbe vagy háttérfeladatba mozgatva a rendszer ismét reszponzív lesz.",
+            "howItWorks": [
+              "A JavaScript elindít egy aszinkron műveletet, majd az I/O befejezésére várás helyett tovább fut.",
+              "Amikor a munka befejeződik, a callback vagy Promise-folytatás futásra kész lesz.",
+              "Az event loop a kész JavaScript-munkát egyenként hajtja végre."
+            ],
+            "commonMistakes": [
+              "A Node.js-t teljesen egyszálúnak nevezni anélkül, hogy elkülönítenénk a JavaScript futását a delegált I/O-tól és a worker threadektől.",
+              "CPU-igényes ciklust vagy szinkron fájlműveletet request handlerben futtatni.",
+              "Azt feltételezni, hogy az async kulcsszó automatikusan nem blokkolóvá teszi a CPU-munkát."
+            ],
+            "keyTerms": [
+              {
+                "term": "event loop",
+                "definition": "A mechanizmus, amely ütemezi a futásra kész JavaScript callbackeket és Promise-folytatásokat."
+              },
+              {
+                "term": "nem blokkoló I/O",
+                "definition": "I/O elindítása úgy, hogy a JavaScript-szálnak ne kelljen megvárnia a befejeződést."
+              },
+              {
+                "term": "worker thread",
+                "definition": "Külön JavaScript-végrehajtási szál CPU-igényes munkához, amely nem blokkolhatja az event loopot."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_node_async_error_handling",
+      "name": "Node.js Async Error Handling",
+      "description": "Node.js services should propagate asynchronous failures, deadlines, and cancellation clearly, then translate and log them at stable boundaries.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "redspher_node_event_loop",
+        "redspher_resilient_integrations",
+        "redspher_observability"
+      ],
+      "studyContent": {
+        "mentalModel": "Reliable asynchronous code makes success, failure, timeout, and cancellation explicit, and it handles an error once at the correct boundary.",
+        "problem": "A rejected promise that is not awaited can become an unhandled failure. Repeating catch-and-log blocks can hide the original context, return inconsistent responses, or continue work after the client no longer needs it.",
+        "example": "A pricing request calls two services. The handler sets a deadline, passes an abort signal, converts known failures into typed application errors, and lets one HTTP boundary log the context and map the error to a response.",
+        "howItWorks": [
+          "Await or return every promise so failures remain connected to the request flow.",
+          "Translate low-level failures into a small set of meaningful application errors.",
+          "At the boundary, log once with context and return a controlled result."
+        ],
+        "commonMistakes": [
+          "Starting a promise without awaiting, returning, or intentionally supervising it.",
+          "Logging and rethrowing the same error at every layer.",
+          "Retrying every failure, including validation errors and non-idempotent operations."
+        ],
+        "keyTerms": [
+          {
+            "term": "error boundary",
+            "definition": "The layer responsible for turning internal failures into a stable external response."
+          },
+          {
+            "term": "timeout",
+            "definition": "A limit on how long an operation is allowed to wait before it fails."
+          },
+          {
+            "term": "cancellation",
+            "definition": "A signal that work is no longer needed and should stop when possible."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Aszinkron hibakezelés Node.js-ben",
+          "description": "A Node.js szolgáltatásoknak egyértelműen kell továbbadniuk az aszinkron hibákat, határidőket és megszakítást, majd stabil határokon kell ezeket lefordítaniuk és naplózniuk.",
+          "studyContent": {
+            "mentalModel": "A megbízható aszinkron kód egyértelművé teszi a sikert, hibát, timeoutot és megszakítást, és minden hibát egyszer, a megfelelő határon kezel.",
+            "problem": "Egy nem awaitelt elutasított Promise kezeletlen hibává válhat. Az ismételt catch-and-log blokkok elrejthetik az eredeti kontextust, eltérő válaszokat adhatnak vagy folytathatják a munkát, amikor a kliensnek már nincs rá szüksége.",
+            "example": "Egy árazási kérés két szolgáltatást hív. A handler határidőt állít be, abort signalt ad tovább, az ismert hibákat típusos alkalmazáshibává alakítja, majd egy HTTP-határ naplózza a kontextust és válasszá fordítja a hibát.",
+            "howItWorks": [
+              "Minden Promise-t awaitelünk vagy visszaadunk, hogy a hiba a request folyamathoz kapcsolva maradjon.",
+              "Az alacsony szintű hibákat kis számú, jelentéssel bíró alkalmazáshibává fordítjuk.",
+              "A határon egyszer, kontextussal naplózunk, majd kontrollált eredményt adunk vissza."
+            ],
+            "commonMistakes": [
+              "Promise-t indítani await, return vagy tudatos felügyelet nélkül.",
+              "Ugyanazt a hibát minden rétegben naplózni és újradobni.",
+              "Minden hibát újrapróbálni, beleértve a validációs hibákat és a nem idempotens műveleteket."
+            ],
+            "keyTerms": [
+              {
+                "term": "hibahatár",
+                "definition": "Az a réteg, amely a belső hibát stabil külső válasszá alakítja."
+              },
+              {
+                "term": "timeout",
+                "definition": "Korlát arra, mennyi ideig várhat egy művelet, mielőtt hibával leáll."
+              },
+              {
+                "term": "megszakítás",
+                "definition": "Jelzés arról, hogy a munkára már nincs szükség, ezért lehetőség szerint le kell állítani."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_rest_http_semantics",
+      "name": "REST API and HTTP Semantics",
+      "description": "Predictable REST APIs use resource-oriented contracts and consistent HTTP semantics for success, failure, retries, caching, and evolution.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "redspher_api_contract_validation",
+        "redspher_resilient_integrations"
+      ],
+      "studyContent": {
+        "mentalModel": "A REST-style HTTP API models business resources and uses HTTP methods, status codes, headers, and representations consistently so clients can predict its behavior.",
+        "problem": "When every endpoint is a custom action with unclear status codes, clients need special knowledge for each operation. Retries, caching, validation errors, and version changes become difficult to handle safely.",
+        "example": "A shipment is created with POST /shipments and returns 201 with its location. Updating its address uses PATCH /shipments/{id}, while a repeated cancellation request is designed to produce the same final state.",
+        "howItWorks": [
+          "Choose resource names that represent business concepts rather than UI screens.",
+          "Use method semantics and status codes to communicate the operation and result.",
+          "Define validation, authorization, idempotency, pagination, and versioning behavior as part of the contract."
+        ],
+        "commonMistakes": [
+          "Using 200 for every outcome and putting the real status only in the response body.",
+          "Assuming POST can never be made safe to retry.",
+          "Changing an existing response shape without considering old clients."
+        ],
+        "keyTerms": [
+          {
+            "term": "idempotent",
+            "definition": "An operation whose repeated execution has the same intended effect as one execution."
+          },
+          {
+            "term": "representation",
+            "definition": "The JSON or other format used to describe a resource in an HTTP request or response."
+          },
+          {
+            "term": "contract",
+            "definition": "The agreed behavior, data shapes, errors, and compatibility rules between an API and its clients."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "REST API-k és HTTP-szemantika",
+          "description": "A kiszámítható REST API-k erőforrás-központú szerződéseket és következetes HTTP-szemantikát használnak sikerhez, hibához, újrapróbálkozáshoz, cache-eléshez és fejlődéshez.",
+          "studyContent": {
+            "mentalModel": "A REST-stílusú HTTP API üzleti erőforrásokat modellez, és következetesen használ metódusokat, státuszkódokat, headereket és reprezentációkat, hogy a kliens előre tudja jelezni a viselkedését.",
+            "problem": "Ha minden endpoint egyedi művelet, bizonytalan státuszkóddal, a kliensnek minden művelethez külön tudás kell. Az újrapróbálkozás, cache-elés, validációs hiba és verzióváltás biztonságos kezelése nehézzé válik.",
+            "example": "A POST /shipments létrehoz egy küldeményt, 201-es választ és Location headert ad. A cím részleges módosítása PATCH /shipments/{id}, az ismételt lemondási kérés pedig ugyanahhoz a végállapothoz vezet.",
+            "howItWorks": [
+              "Olyan erőforrásneveket választunk, amelyek üzleti fogalmakat, nem UI-képernyőket jelölnek.",
+              "A metódusszemantika és a státuszkód közli a műveletet és az eredményt.",
+              "A validációt, jogosultságot, idempotenciát, lapozást és verziózást a szerződés részeként definiáljuk."
+            ],
+            "commonMistakes": [
+              "Minden eredményre 200-at adni, és a valódi állapotot csak a response bodyban közölni.",
+              "Azt feltételezni, hogy a POST soha nem tehető biztonságosan újrapróbálhatóvá.",
+              "Meglévő response shape-et megváltoztatni a régi kliensek figyelembevétele nélkül."
+            ],
+            "keyTerms": [
+              {
+                "term": "idempotens",
+                "definition": "Olyan művelet, amely ismételt végrehajtáskor ugyanazt a kívánt hatást eredményezi, mint egyszeri végrehajtáskor."
+              },
+              {
+                "term": "reprezentáció",
+                "definition": "Egy erőforrás leírására használt JSON vagy más formátum HTTP-kérésben vagy -válaszban."
+              },
+              {
+                "term": "szerződés",
+                "definition": "Az API és kliensei közti megállapodás a viselkedésről, adatstruktúrákról, hibákról és kompatibilitásról."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_api_contract_validation",
+      "name": "API Contracts and Validation",
+      "description": "Versioned schemas, runtime validation, and contract tests keep independently deployed frontend and backend systems compatible.",
+      "category": "fullstack",
+      "relatedTopicIds": [
+        "redspher_ts_runtime_boundaries",
+        "redspher_rest_http_semantics"
+      ],
+      "studyContent": {
+        "mentalModel": "An API contract defines what requests and responses mean, while validation enforces the contract at runtime on both sides of the network boundary.",
+        "problem": "Frontend and backend TypeScript types can agree in source code while deployed versions or external callers still send incompatible data. Without validation and contract tests, errors appear only after production traffic reaches a broken path.",
+        "example": "A quote endpoint accepts a destination, weight, and currency. The server validates the request, the client validates the response, and a contract test checks that the documented schema still matches the running provider.",
+        "howItWorks": [
+          "Describe request, response, and error schemas in one versioned contract.",
+          "Validate inputs before business logic and validate untrusted responses before use.",
+          "Test provider and consumer expectations in CI before incompatible changes deploy."
+        ],
+        "commonMistakes": [
+          "Treating shared TypeScript interfaces as a runtime contract.",
+          "Returning a different error shape from each endpoint.",
+          "Validating only successful responses and ignoring error payloads."
+        ],
+        "keyTerms": [
+          {
+            "term": "schema",
+            "definition": "A machine-readable description of allowed data shapes and values."
+          },
+          {
+            "term": "contract test",
+            "definition": "A test that checks whether a provider and consumer still agree on their interaction."
+          },
+          {
+            "term": "boundary validation",
+            "definition": "Validating data where it enters a trusted part of the application."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "API-szerződések és validáció",
+          "description": "A verziózott sémák, a futásidejű validáció és a contract testek kompatibilisen tartják az egymástól függetlenül telepített frontend- és backendrendszereket.",
+          "studyContent": {
+            "mentalModel": "Az API-szerződés meghatározza a kérések és válaszok jelentését, a validáció pedig futásidőben kikényszeríti ezt a hálózati határ mindkét oldalán.",
+            "problem": "A frontend és backend TypeScript-típusai a forráskódban egyezhetnek, miközben a telepített verziók vagy külső hívók inkompatibilis adatot küldenek. Validáció és contract test nélkül a hiba csak éles forgalomnál derül ki.",
+            "example": "Egy quote endpoint célállomást, súlyt és pénznemet fogad. A szerver validálja a requestet, a kliens a response-t, egy contract test pedig ellenőrzi, hogy a dokumentált séma továbbra is megfelel a futó szolgáltatónak.",
+            "howItWorks": [
+              "A request-, response- és hibasémákat egy verziózott szerződésben írjuk le.",
+              "Az üzleti logika előtt validáljuk a bemenetet, a nem megbízható választ pedig felhasználás előtt ellenőrizzük.",
+              "CI-ban teszteljük a provider és consumer elvárásait, mielőtt inkompatibilis változás települne."
+            ],
+            "commonMistakes": [
+              "A közös TypeScript interface-eket futásidejű szerződésként kezelni.",
+              "Minden endpointból eltérő hibastruktúrát visszaadni.",
+              "Csak a sikeres választ validálni, a hibaválaszokat figyelmen kívül hagyni."
+            ],
+            "keyTerms": [
+              {
+                "term": "séma",
+                "definition": "Az engedélyezett adatstruktúrák és értékek géppel olvasható leírása."
+              },
+              {
+                "term": "contract test",
+                "definition": "Teszt, amely ellenőrzi, hogy egy provider és consumer továbbra is ugyanúgy értelmez egy interakciót."
+              },
+              {
+                "term": "határvalidáció",
+                "definition": "Adat ellenőrzése azon a ponton, ahol belép az alkalmazás megbízható részébe."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_fullstack_feature_design",
+      "name": "Full-Stack Feature Design",
+      "description": "Full-stack design begins with a business outcome and delivers a measurable vertical slice across UI, API, data, operations, and rollout.",
+      "category": "fullstack",
+      "relatedTopicIds": [
+        "redspher_rest_http_semantics",
+        "redspher_aws_web_architecture",
+        "redspher_ci_cd_safe_delivery"
+      ],
+      "studyContent": {
+        "mentalModel": "A full-stack feature turns a business outcome into a thin end-to-end path with clear ownership, contracts, failure behavior, and measurable success.",
+        "problem": "Starting from database tables or UI components can produce technically complete work that misses the real business rule. Large first releases also hide integration risks until late in development.",
+        "example": "For a new express-delivery quote, the team first defines who can request it, which inputs affect the price, the expected response time, and how failure is shown. It then ships one supported route end to end before adding advanced options.",
+        "howItWorks": [
+          "Clarify the user, business rule, constraints, and success measure.",
+          "Map the smallest vertical slice across UI, API, domain logic, data, and operations.",
+          "Make trade-offs explicit, release safely, and use feedback to extend the feature."
+        ],
+        "commonMistakes": [
+          "Treating a requested screen as the complete requirement.",
+          "Designing every future extension before validating the first useful workflow.",
+          "Leaving error states, permissions, monitoring, and rollout until the end."
+        ],
+        "keyTerms": [
+          {
+            "term": "vertical slice",
+            "definition": "A small but complete path through every layer needed to deliver one useful outcome."
+          },
+          {
+            "term": "acceptance criterion",
+            "definition": "A testable statement that describes when a business requirement is satisfied."
+          },
+          {
+            "term": "trade-off",
+            "definition": "A conscious choice that improves one quality while accepting a cost in another."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Full-stack funkciótervezés",
+          "description": "A full-stack tervezés üzleti eredményből indul, és mérhető vertical slice-ot szállít a UI-n, API-n, adaton, üzemeltetésen és bevezetésen keresztül.",
+          "studyContent": {
+            "mentalModel": "Egy full-stack funkció az üzleti eredményt vékony, végponttól végpontig tartó útvonallá alakítja, egyértelmű tulajdonlással, szerződésekkel, hibaviselkedéssel és mérhető sikerrel.",
+            "problem": "Ha adatbázistáblából vagy UI-komponensből indulunk, technikailag teljes megoldás készülhet, amely kihagyja a valódi üzleti szabályt. A nagy első kiadás az integrációs kockázatot is későig rejti.",
+            "example": "Egy új expressz kézbesítési ajánlatnál a csapat először meghatározza, ki kérheti, mely bemenetek befolyásolják az árat, milyen válaszidő kell és hogyan jelenik meg a hiba. Ezután egy támogatott útvonalat szállít végig.",
+            "howItWorks": [
+              "Tisztázzuk a felhasználót, az üzleti szabályt, a korlátokat és a siker mérőszámát.",
+              "Feltérképezzük a legkisebb vertical slice-ot a UI, API, domainlogika, adat és üzemeltetés rétegein.",
+              "Egyértelművé tesszük a kompromisszumokat, biztonságosan kiadunk, majd visszajelzés alapján bővítünk."
+            ],
+            "commonMistakes": [
+              "A kért képernyőt a teljes követelménynek tekinteni.",
+              "Minden jövőbeli bővítést megtervezni az első hasznos folyamat validálása előtt.",
+              "A hibastate-eket, jogosultságokat, monitoringot és rolloutot a végére hagyni."
+            ],
+            "keyTerms": [
+              {
+                "term": "vertical slice",
+                "definition": "Kis, de teljes útvonal minden szükséges rétegen keresztül egy hasznos eredmény szállításához."
+              },
+              {
+                "term": "elfogadási feltétel",
+                "definition": "Tesztelhető állítás arról, mikor teljesül egy üzleti követelmény."
+              },
+              {
+                "term": "kompromisszum",
+                "definition": "Tudatos döntés, amely egy minőséget javít, miközben egy másik területen költséget vállal."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_testing_strategy",
+      "name": "Full-Stack Testing Strategy",
+      "description": "A strong test portfolio proves business behavior and integration risks at the lowest reliable level while keeping feedback fast.",
+      "category": "fullstack",
+      "relatedTopicIds": [
+        "redspher_api_contract_validation",
+        "redspher_ci_cd_safe_delivery"
+      ],
+      "studyContent": {
+        "mentalModel": "A testing strategy combines fast focused tests with a smaller number of realistic integration and end-to-end checks, placing each risk at the cheapest reliable level.",
+        "problem": "Only unit tests can miss broken database, network, and browser integration. Only end-to-end tests are slow and fragile, making failures hard to diagnose and feedback too late.",
+        "example": "A pricing rule has unit tests for calculations, API integration tests for validation and persistence, a contract test for a partner service, and one browser flow that confirms a user can request and see a quote.",
+        "howItWorks": [
+          "List the important business and technical risks.",
+          "Choose the lowest test level that can prove each risk reliably.",
+          "Run fast tests early and keep a small production-like path for complete workflows."
+        ],
+        "commonMistakes": [
+          "Testing implementation details such as internal function calls instead of observable behavior.",
+          "Mocking every dependency so the test no longer resembles the real integration.",
+          "Building a large slow end-to-end suite that blocks delivery and fails unpredictably."
+        ],
+        "keyTerms": [
+          {
+            "term": "unit test",
+            "definition": "A fast test of a small behavior with controlled dependencies."
+          },
+          {
+            "term": "integration test",
+            "definition": "A test that verifies real collaboration between components such as an API and database."
+          },
+          {
+            "term": "contract test",
+            "definition": "A test that checks whether two independently deployed systems still agree on an interaction."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Full-stack tesztelési stratégia",
+          "description": "Az erős tesztportfólió az üzleti viselkedést és integrációs kockázatokat a legalacsonyabb megbízható szinten bizonyítja, miközben gyors visszajelzést ad.",
+          "studyContent": {
+            "mentalModel": "A tesztelési stratégia gyors, fókuszált teszteket kombinál kevesebb valószerű integrációs és end-to-end ellenőrzéssel, minden kockázatot a legolcsóbb megbízható szintre helyezve.",
+            "problem": "Csak unit tesztek mellett kimaradhat a hibás adatbázis-, hálózati vagy böngészőintegráció. Csak end-to-end tesztekkel a suite lassú és törékeny, a hibák nehezen diagnosztizálhatók, a visszajelzés pedig késői.",
+            "example": "Egy árazási szabályhoz unit tesztek ellenőrzik a számítást, API-integrációs tesztek a validációt és mentést, contract test a partnerszolgáltatást, egy böngészős flow pedig azt, hogy a felhasználó ajánlatot kérhet és láthat.",
+            "howItWorks": [
+              "Felsoroljuk a fontos üzleti és technikai kockázatokat.",
+              "Minden kockázathoz a legalacsonyabb olyan tesztszintet választjuk, amely megbízhatóan bizonyítja.",
+              "A gyors teszteket korán futtatjuk, és kevés, produkciószerű teljes folyamatot tartunk fenn."
+            ],
+            "commonMistakes": [
+              "Megfigyelhető viselkedés helyett belső függvényhívásokhoz hasonló implementációs részleteket tesztelni.",
+              "Minden függőséget mockolni, amíg a teszt már nem hasonlít a valódi integrációra.",
+              "Nagy, lassú end-to-end suite-ot építeni, amely blokkolja a szállítást és kiszámíthatatlanul hibázik."
+            ],
+            "keyTerms": [
+              {
+                "term": "unit teszt",
+                "definition": "Gyors teszt egy kis viselkedéshez kontrollált függőségekkel."
+              },
+              {
+                "term": "integrációs teszt",
+                "definition": "Teszt, amely komponensek, például API és adatbázis valódi együttműködését ellenőrzi."
+              },
+              {
+                "term": "contract test",
+                "definition": "Teszt, amely ellenőrzi, hogy két külön telepített rendszer továbbra is megegyezik egy interakcióban."
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "redspher_node_event_loop_001",
+      "title": "Node.js event loop basics",
+      "prompt": "How can Node.js handle many concurrent requests if JavaScript normally runs one callback at a time?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_node_event_loop"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain JavaScript execution, delegated waiting, and the impact of CPU-bound work.",
+      "expectedPoints": [
+        {
+          "id": "nel_loop",
+          "label": "Explains the event loop",
+          "description": "Explains that ready JavaScript callbacks run sequentially on the event loop.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "event loop",
+            "one callback",
+            "javascript thread",
+            "run to completion",
+            "ready callbacks"
+          ]
+        },
+        {
+          "id": "nel_io",
+          "label": "Explains delegated I/O",
+          "description": "Explains that network and filesystem operations can wait outside the JavaScript thread and notify it when ready.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "nonblocking io",
+            "delegated io",
+            "operating system",
+            "io completion",
+            "callback ready"
+          ]
+        },
+        {
+          "id": "nel_cpu",
+          "label": "Identifies the limit",
+          "description": "Explains that CPU-heavy or synchronous work blocks progress for other requests.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "cpu bound",
+            "blocks event loop",
+            "synchronous work",
+            "latency spike",
+            "worker thread"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_node_event_loop_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What is the difference between concurrency and parallelism in this context?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_node_event_loop_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where do promises and microtasks fit into the scheduling model?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "A Node.js event loop alapjai",
+          "prompt": "Hogyan képes a Node.js sok párhuzamosan folyamatban lévő kérést kezelni, ha a JavaScript általában egyszerre egy callbacket futtat?",
+          "answerStructureHint": "Magyarázd el a JavaScript végrehajtását, a delegált várakozást és a CPU-bound munka hatását.",
+          "expectedPoints": {
+            "nel_loop": {
+              "label": "Elmagyarázza az event loopot",
+              "description": "Elmondja, hogy a futásra kész JavaScript callbackek egymás után futnak az event loopon."
+            },
+            "nel_io": {
+              "label": "Elmagyarázza a delegált I/O-t",
+              "description": "Elmondja, hogy a hálózati és fájlműveletek a JavaScript-szálon kívül várhatnak, majd jeleznek, amikor elkészültek."
+            },
+            "nel_cpu": {
+              "label": "Azonosítja a korlátot",
+              "description": "Elmagyarázza, hogy a CPU-igényes vagy szinkron munka blokkolja a többi kérés előrehaladását."
+            }
+          },
+          "followUps": {
+            "redspher_node_event_loop_001_fu1": "Mi a különbség a concurrency és a parallelism között ebben a kontextusban?",
+            "redspher_node_event_loop_001_fu2": "Hol helyezkednek el a Promise-ok és microtaskok az ütemezési modellben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_node_event_loop_002",
+      "title": "Diagnosing event-loop blocking",
+      "prompt": "A Node.js API has low CPU most of the day, but p99 latency occasionally jumps for every endpoint. How would you investigate event-loop blocking?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "redspher_node_event_loop"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe measurements, likely blocking sources, and a fix that protects request latency.",
+      "expectedPoints": [
+        {
+          "id": "nel_measure",
+          "label": "Measures event-loop delay",
+          "description": "Uses event-loop lag, CPU profiles, flame graphs, or request traces around the incident.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "event loop lag",
+            "cpu profile",
+            "flame graph",
+            "request trace",
+            "p99 latency"
+          ]
+        },
+        {
+          "id": "nel_suspects",
+          "label": "Checks blocking operations",
+          "description": "Looks for synchronous APIs, large JSON processing, compression, crypto, image or document work, and unbounded loops.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "sync api",
+            "large json",
+            "compression work",
+            "cpu heavy",
+            "blocking loop"
+          ]
+        },
+        {
+          "id": "nel_fix",
+          "label": "Moves or limits heavy work",
+          "description": "Uses worker threads, a job queue, streaming, chunking, or another service and verifies latency afterward.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "worker threads",
+            "job queue",
+            "streaming",
+            "chunk work",
+            "verify latency"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_node_event_loop_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would adding more Node.js processes solve the root cause?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_node_event_loop_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How could backpressure matter when processing a large stream?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Event-loop-blokkolás diagnosztizálása",
+          "prompt": "Egy Node.js API CPU-terhelése általában alacsony, de néha minden endpoint p99 késleltetése megugrik. Hogyan vizsgálnád ki az event loop blokkolását?",
+          "answerStructureHint": "Írd le a méréseket, a valószínű blokkoló forrásokat és a request latencyt védő javítást.",
+          "expectedPoints": {
+            "nel_measure": {
+              "label": "Méri az event loop késését",
+              "description": "Event-loop lagot, CPU-profilt, flame graphet vagy request trace-t használ az incidens körül."
+            },
+            "nel_suspects": {
+              "label": "Ellenőrzi a blokkoló műveleteket",
+              "description": "Szinkron API-kat, nagy JSON-feldolgozást, tömörítést, kriptográfiát, kép- vagy dokumentummunkát és korlátlan ciklusokat keres."
+            },
+            "nel_fix": {
+              "label": "Áthelyezi vagy korlátozza a nehéz munkát",
+              "description": "Worker threadet, job queue-t, streaminget, darabolást vagy külön szolgáltatást használ, majd újraméri a késleltetést."
+            }
+          },
+          "followUps": {
+            "redspher_node_event_loop_002_fu1": "Több Node.js folyamat hozzáadása megoldaná a kiváltó okot?",
+            "redspher_node_event_loop_002_fu2": "Miért lehet fontos a backpressure nagy stream feldolgozásakor?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_node_event_loop_003",
+      "title": "Choosing workers, processes, or async I/O",
+      "prompt": "For a Node.js service, when would you choose ordinary async I/O, worker threads, multiple processes, or a separate background service?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_node_event_loop"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Map each option to I/O waiting, CPU work, isolation, and operational trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "nel_async",
+          "label": "Uses async I/O for waiting work",
+          "description": "Chooses normal asynchronous APIs for network, database, and filesystem waiting.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "async io",
+            "network waiting",
+            "database call",
+            "nonblocking api",
+            "io bound"
+          ]
+        },
+        {
+          "id": "nel_workers",
+          "label": "Uses workers for CPU work",
+          "description": "Chooses worker threads or a dedicated service for CPU-heavy tasks.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "worker thread",
+            "cpu intensive",
+            "separate service",
+            "parallel compute",
+            "offload work"
+          ]
+        },
+        {
+          "id": "nel_process",
+          "label": "Uses processes for isolation and scaling",
+          "description": "Uses multiple processes or containers for fault isolation, memory boundaries, and horizontal capacity.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "multiple processes",
+            "horizontal scaling",
+            "fault isolation",
+            "container replicas",
+            "separate memory"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_node_event_loop_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What data-transfer cost can worker threads introduce?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_node_event_loop_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you limit the number of concurrent background jobs?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Worker, process vagy async I/O választása",
+          "prompt": "Egy Node.js szolgáltatásban mikor választanál normál async I/O-t, worker threadet, több processt vagy külön háttérszolgáltatást?",
+          "answerStructureHint": "Rendeld az opciókat az I/O-várakozáshoz, CPU-munkához, izolációhoz és üzemeltetési kompromisszumokhoz.",
+          "expectedPoints": {
+            "nel_async": {
+              "label": "Async I/O-t használ várakozó munkához",
+              "description": "Normál aszinkron API-t választ hálózati, adatbázis- és fájlműveletek várakozásához."
+            },
+            "nel_workers": {
+              "label": "Workert használ CPU-munkához",
+              "description": "Worker threadet vagy külön szolgáltatást választ CPU-igényes feladatokhoz."
+            },
+            "nel_process": {
+              "label": "Processt használ izolációhoz és skálázáshoz",
+              "description": "Több processt vagy konténert használ hibaisolációhoz, memóriahatárokhoz és horizontális kapacitáshoz."
+            }
+          },
+          "followUps": {
+            "redspher_node_event_loop_003_fu1": "Milyen adatátviteli költséget okozhatnak a worker threadek?",
+            "redspher_node_event_loop_003_fu2": "Hogyan korlátoznád az egyszerre futó háttérfeladatok számát?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_node_async_error_handling_001",
+      "title": "Async error handling in Node.js",
+      "prompt": "How would you structure error handling across a Node.js route, service layer, and external client?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_node_async_error_handling"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Trace a failure through layers and show where it is translated, logged, and returned.",
+      "expectedPoints": [
+        {
+          "id": "naeh_propagate",
+          "label": "Keeps failures connected",
+          "description": "Awaits or returns promises and avoids detached work unless it is deliberately supervised.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "await promise",
+            "return promise",
+            "no floating promise",
+            "propagate error",
+            "supervised task"
+          ]
+        },
+        {
+          "id": "naeh_translate",
+          "label": "Translates errors by layer",
+          "description": "Wraps low-level failures with meaningful typed causes without losing the original error.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "typed error",
+            "error cause",
+            "domain error",
+            "translate failure",
+            "preserve context"
+          ]
+        },
+        {
+          "id": "naeh_boundary",
+          "label": "Handles once at the boundary",
+          "description": "Uses centralized HTTP error mapping and structured logging rather than repeated catch-and-log blocks.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "central error handler",
+            "map status code",
+            "structured log",
+            "log once",
+            "http boundary"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_node_async_error_handling_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What should happen to an unknown programming error?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_node_async_error_handling_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you preserve the original stack and cause?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Aszinkron hibakezelés Node.js-ben",
+          "prompt": "Hogyan strukturálnád a hibakezelést egy Node.js route, service layer és külső kliens között?",
+          "answerStructureHint": "Kövess végig egy hibát a rétegeken, és mutasd meg, hol fordítod le, naplózod és adod vissza.",
+          "expectedPoints": {
+            "naeh_propagate": {
+              "label": "Kapcsolva tartja a hibát a folyamathoz",
+              "description": "Awaiteli vagy visszaadja a Promise-okat, és kerüli a leválasztott munkát, hacsak azt nem felügyeli tudatosan."
+            },
+            "naeh_translate": {
+              "label": "Rétegenként lefordítja a hibákat",
+              "description": "Az alacsony szintű hibát jelentéssel bíró, típusos okkal csomagolja, az eredeti hiba elvesztése nélkül."
+            },
+            "naeh_boundary": {
+              "label": "Egyszer kezeli a határon",
+              "description": "Központosított HTTP-hibaleképezést és strukturált naplózást használ ismételt catch-and-log blokkok helyett."
+            }
+          },
+          "followUps": {
+            "redspher_node_async_error_handling_001_fu1": "Mi történjen egy ismeretlen programozási hibával?",
+            "redspher_node_async_error_handling_001_fu2": "Hogyan őriznéd meg az eredeti stacket és cause-t?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_node_async_error_handling_002",
+      "title": "Timeout and cancellation propagation",
+      "prompt": "A client disconnects while a Node.js endpoint is waiting on several downstream calls. How would you avoid continuing expensive work unnecessarily?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_node_async_error_handling"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover request deadlines, propagated cancellation, cleanup, and unavoidable work.",
+      "expectedPoints": [
+        {
+          "id": "naeh_signal",
+          "label": "Propagates cancellation",
+          "description": "Creates or receives an AbortSignal and passes it to downstream clients that support cancellation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "abort signal",
+            "client disconnect",
+            "propagate cancellation",
+            "cancel fetch",
+            "stop downstream"
+          ]
+        },
+        {
+          "id": "naeh_deadline",
+          "label": "Uses a deadline or timeout",
+          "description": "Uses a request-level deadline and ensures child calls do not outlive it.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "request deadline",
+            "timeout budget",
+            "child timeout",
+            "remaining time",
+            "fail fast"
+          ]
+        },
+        {
+          "id": "naeh_cleanup",
+          "label": "Cleans up safely",
+          "description": "Releases resources and handles cancellation separately from an unexpected server failure.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "cleanup resources",
+            "close stream",
+            "cancellation error",
+            "do not log as crash",
+            "finally cleanup"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_node_async_error_handling_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What if a downstream system cannot cancel an operation after it starts?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_node_async_error_handling_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you make a database write safe if the client times out?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Timeout és megszakítás továbbadása",
+          "prompt": "A kliens megszakítja a kapcsolatot, miközben egy Node.js endpoint több downstream hívásra vár. Hogyan kerülnéd el a felesleges drága munka folytatását?",
+          "answerStructureHint": "Térj ki a request deadline-ra, a továbbadott megszakításra, a cleanupra és az elkerülhetetlen munkára.",
+          "expectedPoints": {
+            "naeh_signal": {
+              "label": "Továbbadja a megszakítást",
+              "description": "AbortSignalt hoz létre vagy fogad, és továbbadja azoknak a downstream klienseknek, amelyek támogatják a megszakítást."
+            },
+            "naeh_deadline": {
+              "label": "Határidőt vagy timeoutot használ",
+              "description": "Requestszintű deadline-t használ, és biztosítja, hogy a gyermekhívások ne éljenek tovább nála."
+            },
+            "naeh_cleanup": {
+              "label": "Biztonságosan takarít",
+              "description": "Felszabadítja az erőforrásokat, és a megszakítást külön kezeli a váratlan szerverhibától."
+            }
+          },
+          "followUps": {
+            "redspher_node_async_error_handling_002_fu1": "Mi történjen, ha egy downstream rendszer az elindult műveletet már nem tudja megszakítani?",
+            "redspher_node_async_error_handling_002_fu2": "Hogyan tennéd biztonságossá az adatbázisírást, ha a kliens timeoutol?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_node_async_error_handling_003",
+      "title": "Retrying failed operations",
+      "prompt": "Which failures should a Node.js service retry, and what safeguards are needed before adding retries?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_node_async_error_handling"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Classify the failure, prove the operation is safe to repeat, and bound retry pressure.",
+      "expectedPoints": [
+        {
+          "id": "naeh_transient",
+          "label": "Retries only transient failures",
+          "description": "Retries timeouts, throttling, or temporary unavailability rather than validation and permanent business errors.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "transient failure",
+            "timeout retry",
+            "throttling",
+            "temporary unavailable",
+            "not validation"
+          ]
+        },
+        {
+          "id": "naeh_idempotent",
+          "label": "Protects side effects",
+          "description": "Requires idempotency or another duplicate-protection mechanism for operations with side effects.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "idempotent operation",
+            "idempotency key",
+            "duplicate protection",
+            "safe retry",
+            "side effects"
+          ]
+        },
+        {
+          "id": "naeh_backoff",
+          "label": "Limits retry pressure",
+          "description": "Uses bounded attempts, exponential backoff, jitter, deadlines, and observability.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "exponential backoff",
+            "jitter",
+            "max attempts",
+            "retry budget",
+            "monitor retries"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_node_async_error_handling_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can retries make an outage worse?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_node_async_error_handling_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where should retries live: client, service, queue, or infrastructure?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Sikertelen műveletek újrapróbálása",
+          "prompt": "Mely hibákat próbálja újra egy Node.js szolgáltatás, és milyen védelmek szükségesek a retry hozzáadása előtt?",
+          "answerStructureHint": "Osztályozd a hibát, bizonyítsd, hogy a művelet biztonságosan ismételhető, és korlátozd a retry-terhelést.",
+          "expectedPoints": {
+            "naeh_transient": {
+              "label": "Csak átmeneti hibákat próbál újra",
+              "description": "Timeoutot, throttlingot vagy ideiglenes elérhetetlenséget próbál újra, nem validációs és tartós üzleti hibákat."
+            },
+            "naeh_idempotent": {
+              "label": "Védi a mellékhatásokat",
+              "description": "Mellékhatásos művelethez idempotenciát vagy más duplikációvédelmet követel."
+            },
+            "naeh_backoff": {
+              "label": "Korlátozza a retry-terhelést",
+              "description": "Korlátozott próbálkozásszámot, exponenciális backoffot, jittert, deadline-t és megfigyelhetőséget használ."
+            }
+          },
+          "followUps": {
+            "redspher_node_async_error_handling_003_fu1": "Miért ronthatja a retry egy kiesés hatását?",
+            "redspher_node_async_error_handling_003_fu2": "Hol legyen a retry: a kliensben, szolgáltatásban, queue-ban vagy infrastruktúrában?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_rest_http_semantics_001",
+      "title": "REST and HTTP semantics",
+      "prompt": "What does it mean to design a REST-style API, and how do HTTP method semantics help clients?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_rest_http_semantics"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover resources, method semantics, and the wider HTTP contract.",
+      "expectedPoints": [
+        {
+          "id": "rhs_resources",
+          "label": "Models resources",
+          "description": "Uses stable business resources and representations rather than arbitrary RPC-like endpoint names for every action.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "business resource",
+            "resource representation",
+            "noun endpoint",
+            "stable uri",
+            "resource model"
+          ]
+        },
+        {
+          "id": "rhs_methods",
+          "label": "Uses method semantics",
+          "description": "Explains GET safety and the intended semantics of POST, PUT, PATCH, and DELETE.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "get is safe",
+            "put replacement",
+            "patch partial update",
+            "post create",
+            "delete resource"
+          ]
+        },
+        {
+          "id": "rhs_http",
+          "label": "Uses HTTP as a contract",
+          "description": "Uses status codes, headers, caching, content types, and conditional requests consistently.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "status codes",
+            "http headers",
+            "cache control",
+            "content type",
+            "etag"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_rest_http_semantics_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you represent a business action such as canceling a shipment?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_rest_http_semantics_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What is the difference between safe and idempotent methods?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "REST és HTTP-szemantika",
+          "prompt": "Mit jelent REST-stílusú API-t tervezni, és hogyan segíti a HTTP-metódusok szemantikája a klienseket?",
+          "answerStructureHint": "Térj ki az erőforrásokra, a metódusszemantikára és a tágabb HTTP-szerződésre.",
+          "expectedPoints": {
+            "rhs_resources": {
+              "label": "Erőforrásokat modellez",
+              "description": "Stabil üzleti erőforrásokat és reprezentációkat használ minden művelethez kitalált RPC-szerű endpointnevek helyett."
+            },
+            "rhs_methods": {
+              "label": "Metódusszemantikát használ",
+              "description": "Elmagyarázza a GET biztonságosságát, valamint a POST, PUT, PATCH és DELETE kívánt jelentését."
+            },
+            "rhs_http": {
+              "label": "Szerződésként használja a HTTP-t",
+              "description": "Következetesen használ státuszkódokat, headereket, cache-elést, content type-okat és feltételes kéréseket."
+            }
+          },
+          "followUps": {
+            "redspher_rest_http_semantics_001_fu1": "Hogyan ábrázolnál egy üzleti műveletet, például egy küldemény lemondását?",
+            "redspher_rest_http_semantics_001_fu2": "Mi a különbség a safe és az idempotens metódusok között?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_rest_http_semantics_002",
+      "title": "Designing shipment update endpoints",
+      "prompt": "Design the API behavior for creating a shipment, partially updating it, and cancelling it. Include success and error responses.",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "redspher_rest_http_semantics"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define paths and methods, error semantics, and safety under retries or concurrent updates.",
+      "expectedPoints": [
+        {
+          "id": "rhs_paths",
+          "label": "Chooses clear resources and methods",
+          "description": "Uses coherent paths and appropriate methods for creation, partial update, and cancellation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "post shipments",
+            "patch shipment",
+            "cancel action",
+            "subresource",
+            "resource state"
+          ]
+        },
+        {
+          "id": "rhs_status",
+          "label": "Uses meaningful status codes",
+          "description": "Uses responses such as 201, 200 or 204, 400 or 422, 404, 409, and 401 or 403 where appropriate.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "201 created",
+            "204 no content",
+            "404 not found",
+            "409 conflict",
+            "422 validation"
+          ]
+        },
+        {
+          "id": "rhs_concurrency",
+          "label": "Handles repeat and concurrent changes",
+          "description": "Discusses idempotency keys, version fields, ETags, or conflict responses for repeated or concurrent operations.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "idempotency key",
+            "etag",
+            "optimistic concurrency",
+            "version field",
+            "conflict response"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_rest_http_semantics_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you prevent two users from overwriting each other's update?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_rest_http_semantics_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would cancellation be DELETE, PATCH, or a command resource? Defend your choice.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Küldeményfrissítő endpointok tervezése",
+          "prompt": "Tervezd meg az API viselkedését küldemény létrehozásához, részleges frissítéséhez és lemondásához. Térj ki a sikeres és hibaválaszokra is.",
+          "answerStructureHint": "Határozd meg az útvonalakat és metódusokat, a hibaszemantikát, valamint a retry és konkurens frissítés alatti biztonságot.",
+          "expectedPoints": {
+            "rhs_paths": {
+              "label": "Világos erőforrásokat és metódusokat választ",
+              "description": "Koherens útvonalakat és megfelelő metódusokat használ a létrehozáshoz, részleges frissítéshez és lemondáshoz."
+            },
+            "rhs_status": {
+              "label": "Jelentéssel bíró státuszkódokat használ",
+              "description": "Helyzettől függően 201, 200 vagy 204, 400 vagy 422, 404, 409, illetve 401 vagy 403 válaszokat használ."
+            },
+            "rhs_concurrency": {
+              "label": "Kezeli az ismételt és konkurens változásokat",
+              "description": "Idempotenciakulcsról, verziómezőről, ETagről vagy konfliktusválaszról beszél ismételt vagy konkurens műveleteknél."
+            }
+          },
+          "followUps": {
+            "redspher_rest_http_semantics_002_fu1": "Hogyan akadályoznád meg, hogy két felhasználó felülírja egymás módosítását?",
+            "redspher_rest_http_semantics_002_fu2": "A lemondás DELETE, PATCH vagy parancserőforrás legyen? Védd meg a választásodat."
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_rest_http_semantics_003",
+      "title": "API versioning and compatibility",
+      "prompt": "How would you evolve a REST API used by independently deployed web and partner clients without breaking them?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_rest_http_semantics"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss compatibility first, then versioning, migration, and evidence for deprecation.",
+      "expectedPoints": [
+        {
+          "id": "rhs_compat",
+          "label": "Prefers additive compatible changes",
+          "description": "Adds optional fields or new endpoints and avoids changing existing meaning or removing values unexpectedly.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "additive change",
+            "backward compatible",
+            "optional field",
+            "preserve meaning",
+            "old clients"
+          ]
+        },
+        {
+          "id": "rhs_version",
+          "label": "Uses explicit versioning when needed",
+          "description": "Uses URL, header, or media-type versioning for real breaking changes and documents support periods.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "api version",
+            "version header",
+            "url version",
+            "breaking change",
+            "support window"
+          ]
+        },
+        {
+          "id": "rhs_rollout",
+          "label": "Plans migration and observation",
+          "description": "Uses contract tests, deprecation notices, telemetry, and a staged consumer migration.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "contract tests",
+            "deprecation notice",
+            "usage telemetry",
+            "staged migration",
+            "consumer rollout"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_rest_http_semantics_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Can adding a new enum value be a breaking change?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_rest_http_semantics_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you know when an old version can be removed?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "API-verziózás és kompatibilitás",
+          "prompt": "Hogyan fejlesztenél tovább egy egymástól függetlenül telepített webes és partnerkliensek által használt REST API-t anélkül, hogy eltörnéd őket?",
+          "answerStructureHint": "Először a kompatibilitásról, majd a verziózásról, migrációról és a kivezetés bizonyítékairól beszélj.",
+          "expectedPoints": {
+            "rhs_compat": {
+              "label": "Az additív, kompatibilis változásokat részesíti előnyben",
+              "description": "Opcionális mezőt vagy új endpointot ad hozzá, és kerüli a meglévő jelentés megváltoztatását vagy értékek váratlan eltávolítását."
+            },
+            "rhs_version": {
+              "label": "Szükség esetén explicit verziózást használ",
+              "description": "Valódi breaking change esetén URL-, header- vagy media-type-verziózást alkalmaz, dokumentált támogatási időszakkal."
+            },
+            "rhs_rollout": {
+              "label": "Migrációt és megfigyelést tervez",
+              "description": "Contract testet, deprecation értesítést, telemetriát és fokozatos consumermigrációt használ."
+            }
+          },
+          "followUps": {
+            "redspher_rest_http_semantics_003_fu1": "Lehet breaking change egy új enumérték hozzáadása?",
+            "redspher_rest_http_semantics_003_fu2": "Honnan tudnád, mikor távolítható el egy régi verzió?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_api_contract_validation_001",
+      "title": "What belongs in an API contract",
+      "prompt": "What should a production API contract describe beyond the successful response body?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_api_contract_validation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover data shapes, error behavior, and operational rules that clients need.",
+      "expectedPoints": [
+        {
+          "id": "acv_shapes",
+          "label": "Covers request and response shapes",
+          "description": "Includes parameters, body schemas, required fields, formats, and success responses.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "request schema",
+            "response schema",
+            "required fields",
+            "data format",
+            "query parameters"
+          ]
+        },
+        {
+          "id": "acv_errors",
+          "label": "Defines errors and semantics",
+          "description": "Includes validation errors, authorization, not-found, conflicts, rate limits, and stable error identifiers.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "error schema",
+            "validation error",
+            "error code",
+            "rate limit",
+            "conflict response"
+          ]
+        },
+        {
+          "id": "acv_behavior",
+          "label": "Defines operational behavior",
+          "description": "Includes idempotency, pagination, ordering, versioning, and relevant caching or timeout expectations.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "idempotency",
+            "pagination",
+            "versioning",
+            "ordering",
+            "cache behavior"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_api_contract_validation_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What makes an error code stable enough for a client to depend on?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_api_contract_validation_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you document nullable versus optional fields?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mi tartozik egy API-szerződésbe?",
+          "prompt": "Mit kell leírnia egy éles API-szerződésnek a sikeres response bodyn túl?",
+          "answerStructureHint": "Térj ki az adatstruktúrákra, a hibaviselkedésre és a kliensek számára fontos üzemeltetési szabályokra.",
+          "expectedPoints": {
+            "acv_shapes": {
+              "label": "Lefedi a request- és response-struktúrát",
+              "description": "Tartalmazza a paramétereket, body sémákat, kötelező mezőket, formátumokat és sikeres válaszokat."
+            },
+            "acv_errors": {
+              "label": "Definiálja a hibákat és szemantikát",
+              "description": "Tartalmazza a validációs, jogosultsági, not-found és konfliktushibákat, rate limiteket és stabil hibaazonosítókat."
+            },
+            "acv_behavior": {
+              "label": "Definiálja az üzemeltetési viselkedést",
+              "description": "Tartalmazza az idempotenciát, lapozást, rendezést, verziózást és a releváns cache- vagy timeoutelvárásokat."
+            }
+          },
+          "followUps": {
+            "redspher_api_contract_validation_001_fu1": "Mitől elég stabil egy hibakód ahhoz, hogy a kliens támaszkodhasson rá?",
+            "redspher_api_contract_validation_001_fu2": "Hogyan dokumentálnád a nullable és optional mezők különbségét?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_api_contract_validation_002",
+      "title": "Preventing frontend-backend contract drift",
+      "prompt": "A frontend deploy works against staging but fails after the backend deploys a changed response. What practices would prevent this?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_api_contract_validation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain the contract source, runtime enforcement, and CI compatibility protection.",
+      "expectedPoints": [
+        {
+          "id": "acv_schema_source",
+          "label": "Uses a versioned contract source",
+          "description": "Uses OpenAPI, JSON Schema, or another versioned schema as the integration reference.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "openapi",
+            "json schema",
+            "versioned contract",
+            "generated client",
+            "schema source"
+          ]
+        },
+        {
+          "id": "acv_runtime",
+          "label": "Validates runtime data",
+          "description": "Validates requests and responses and reports mismatches with useful context.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "runtime validation",
+            "validate response",
+            "validate request",
+            "contract mismatch",
+            "schema parser"
+          ]
+        },
+        {
+          "id": "acv_ci",
+          "label": "Tests compatibility in CI",
+          "description": "Uses consumer/provider contract tests, generated-client checks, or compatibility gates before deployment.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "contract test",
+            "ci gate",
+            "compatibility check",
+            "provider test",
+            "consumer test"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_api_contract_validation_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would a monorepo remove the need for contract tests?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_api_contract_validation_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you deploy a schema change that requires coordinated migration?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Frontend–backend szerződéseltérés megelőzése",
+          "prompt": "Egy frontend-deploy működik stagingen, de elromlik, miután a backend megváltoztatott response-t telepít. Milyen gyakorlatok előznék meg ezt?",
+          "answerStructureHint": "Magyarázd el a szerződés forrását, a futásidejű kikényszerítést és a CI-kompatibilitás védelmét.",
+          "expectedPoints": {
+            "acv_schema_source": {
+              "label": "Verziózott szerződésforrást használ",
+              "description": "OpenAPI-t, JSON Schema-t vagy más verziózott sémát használ integrációs referenciaként."
+            },
+            "acv_runtime": {
+              "label": "Futásidőben validálja az adatot",
+              "description": "Validálja a kéréseket és válaszokat, az eltéréseket pedig hasznos kontextussal jelzi."
+            },
+            "acv_ci": {
+              "label": "CI-ban teszteli a kompatibilitást",
+              "description": "Consumer/provider contract testet, generált kliens ellenőrzését vagy kompatibilitási gate-et használ telepítés előtt."
+            }
+          },
+          "followUps": {
+            "redspher_api_contract_validation_002_fu1": "Egy monorepo megszüntetné a contract testek szükségességét?",
+            "redspher_api_contract_validation_002_fu2": "Hogyan telepítenél koordinált migrációt igénylő sémaváltozást?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_api_contract_validation_003",
+      "title": "Choosing contract tooling",
+      "prompt": "Compare sharing TypeScript types, generating clients from OpenAPI, and consumer-driven contract tests. When would you use each?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_api_contract_validation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare scope, coupling, runtime safety, and team boundaries for all three approaches.",
+      "expectedPoints": [
+        {
+          "id": "acv_shared",
+          "label": "Positions shared types correctly",
+          "description": "Recognizes convenience in one codebase but also coupling and lack of runtime validation.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "shared types",
+            "compile time only",
+            "monorepo convenience",
+            "deployment coupling",
+            "no runtime check"
+          ]
+        },
+        {
+          "id": "acv_openapi",
+          "label": "Explains generated contracts",
+          "description": "Uses OpenAPI or schemas for documentation, generation, validation, and language-independent consumers.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "generated client",
+            "openapi spec",
+            "language independent",
+            "schema validation",
+            "api documentation"
+          ]
+        },
+        {
+          "id": "acv_consumer",
+          "label": "Explains consumer contracts",
+          "description": "Uses consumer-driven tests when independent teams need to verify the specific interactions consumers rely on.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "consumer driven",
+            "provider verification",
+            "independent teams",
+            "interaction contract",
+            "compatibility"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_api_contract_validation_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What failure mode remains even with a generated client?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Contract tooling kiválasztása",
+          "prompt": "Hasonlítsd össze a TypeScript-típusok megosztását, az OpenAPI-ból generált klienseket és a consumer-driven contract testeket. Mikor melyiket használnád?",
+          "answerStructureHint": "Mindhárom megközelítésnél hasonlítsd össze a hatókört, csatolást, futásidejű biztonságot és csapathatárokat.",
+          "expectedPoints": {
+            "acv_shared": {
+              "label": "Helyesen pozicionálja a közös típusokat",
+              "description": "Felismeri az egy kódbázisban nyújtott kényelmet, de a csatolást és a futásidejű validáció hiányát is."
+            },
+            "acv_openapi": {
+              "label": "Elmagyarázza a generált szerződéseket",
+              "description": "OpenAPI-t vagy sémát használ dokumentációhoz, generáláshoz, validációhoz és nyelvfüggetlen consumerekhez."
+            },
+            "acv_consumer": {
+              "label": "Elmagyarázza a consumer contractokat",
+              "description": "Consumer-driven tesztet használ, ha független csapatoknak a fogyasztók konkrét interakcióit kell ellenőrizniük."
+            }
+          },
+          "followUps": {
+            "redspher_api_contract_validation_003_fu1": "Milyen hibamód marad meg generált kliens mellett is?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_fullstack_feature_design_001",
+      "title": "From business need to technical design",
+      "prompt": "A product stakeholder asks for real-time shipment tracking. What questions would you ask before choosing the technical solution?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_fullstack_feature_design"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Ask about outcome, freshness, scale, constraints, failure behavior, and the first useful scope.",
+      "expectedPoints": [
+        {
+          "id": "ffd_outcome",
+          "label": "Clarifies the business outcome",
+          "description": "Asks who needs the information, what decision it supports, and how fresh it must be.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "business outcome",
+            "who needs it",
+            "data freshness",
+            "user decision",
+            "success measure"
+          ]
+        },
+        {
+          "id": "ffd_constraints",
+          "label": "Clarifies scale and constraints",
+          "description": "Asks about update rate, users, source systems, security, reliability, cost, and regulatory constraints.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "update frequency",
+            "expected scale",
+            "source system",
+            "security needs",
+            "cost constraint"
+          ]
+        },
+        {
+          "id": "ffd_scope",
+          "label": "Defines the first slice",
+          "description": "Separates must-have behavior from later enhancements and defines acceptance criteria.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "minimum slice",
+            "acceptance criteria",
+            "must have",
+            "later phase",
+            "edge cases"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_fullstack_feature_design_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which answers would make polling preferable to WebSockets?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_fullstack_feature_design_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you measure whether the feature is successful after release?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Üzleti igénytől a technikai tervig",
+          "prompt": "Egy product stakeholder valós idejű küldeménykövetést kér. Milyen kérdéseket tennél fel a technikai megoldás kiválasztása előtt?",
+          "answerStructureHint": "Kérdezz az eredményről, frissességről, skáláról, korlátokról, hibaviselkedésről és az első hasznos terjedelemről.",
+          "expectedPoints": {
+            "ffd_outcome": {
+              "label": "Tisztázza az üzleti eredményt",
+              "description": "Rákérdez, kinek kell az információ, milyen döntést támogat, és milyen frissnek kell lennie."
+            },
+            "ffd_constraints": {
+              "label": "Tisztázza a skálát és korlátokat",
+              "description": "Rákérdez a frissítési gyakoriságra, felhasználókra, forrásrendszerekre, biztonságra, megbízhatóságra, költségre és szabályozásra."
+            },
+            "ffd_scope": {
+              "label": "Meghatározza az első slice-ot",
+              "description": "Elválasztja a kötelező viselkedést a későbbi bővítésektől, és acceptance criteria-t határoz meg."
+            }
+          },
+          "followUps": {
+            "redspher_fullstack_feature_design_001_fu1": "Milyen válaszok esetén lenne a polling jobb a WebSocketnél?",
+            "redspher_fullstack_feature_design_001_fu2": "Hogyan mérnéd a funkció sikerét kiadás után?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_fullstack_feature_design_002",
+      "title": "Designing a vertical slice",
+      "prompt": "Describe how you would implement and release the first end-to-end slice of a new pricing rule across React, Node.js, and AWS.",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "redspher_fullstack_feature_design"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Walk from business rule through every layer and finish with a safe release plan.",
+      "expectedPoints": [
+        {
+          "id": "ffd_contract",
+          "label": "Defines the contract and rule",
+          "description": "Starts with examples, acceptance criteria, permissions, and a versioned API contract.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "acceptance criteria",
+            "business examples",
+            "api contract",
+            "authorization rule",
+            "validation rules"
+          ]
+        },
+        {
+          "id": "ffd_layers",
+          "label": "Maps the end-to-end path",
+          "description": "Covers UI states, API validation, domain logic, persistence or integration, and observability.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "ui states",
+            "api validation",
+            "domain logic",
+            "data layer",
+            "observability"
+          ]
+        },
+        {
+          "id": "ffd_release",
+          "label": "Plans safe delivery",
+          "description": "Uses tests, feature flags or limited rollout, migration sequencing, monitoring, and rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "feature flag",
+            "staged rollout",
+            "migration order",
+            "monitor release",
+            "rollback plan"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_fullstack_feature_design_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where would you place the pricing rule so it is not duplicated between frontend and backend?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_fullstack_feature_design_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you test at each layer?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Vertical slice tervezése",
+          "prompt": "Írd le, hogyan valósítanád meg és adnád ki egy új árazási szabály első end-to-end slice-át React, Node.js és AWS környezetben.",
+          "answerStructureHint": "Haladj végig az üzleti szabálytól minden rétegen át, és biztonságos release tervvel zárj.",
+          "expectedPoints": {
+            "ffd_contract": {
+              "label": "Meghatározza a szerződést és szabályt",
+              "description": "Példákkal, acceptance criteria-val, jogosultságokkal és verziózott API-szerződéssel kezd."
+            },
+            "ffd_layers": {
+              "label": "Feltérképezi az end-to-end útvonalat",
+              "description": "Lefedi a UI-state-eket, API-validációt, domainlogikát, perzisztenciát vagy integrációt és observabilityt."
+            },
+            "ffd_release": {
+              "label": "Biztonságos szállítást tervez",
+              "description": "Teszteket, feature flaget vagy korlátozott rolloutot, migrációs sorrendet, monitoringot és rollbacket használ."
+            }
+          },
+          "followUps": {
+            "redspher_fullstack_feature_design_002_fu1": "Hova helyeznéd az árazási szabályt, hogy ne duplikálódjon a frontend és backend között?",
+            "redspher_fullstack_feature_design_002_fu2": "Mit tesztelnél az egyes rétegeken?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_fullstack_feature_design_003",
+      "title": "Pragmatic architecture decisions",
+      "prompt": "How do you decide whether a new feature deserves a new service, belongs in the existing application, or should begin as a prototype?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_fullstack_feature_design"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare domain boundaries, operational cost, uncertainty, and a reversible first step.",
+      "expectedPoints": [
+        {
+          "id": "ffd_boundaries",
+          "label": "Uses domain and ownership boundaries",
+          "description": "Looks for independent ownership, data, scaling, security, and release needs rather than using service count as a goal.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "domain boundary",
+            "team ownership",
+            "independent scaling",
+            "data ownership",
+            "release independence"
+          ]
+        },
+        {
+          "id": "ffd_cost",
+          "label": "Includes operational cost",
+          "description": "Considers deployment, monitoring, failure modes, testing, and coordination introduced by another service.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "operational overhead",
+            "distributed failure",
+            "deployment cost",
+            "monitoring burden",
+            "coordination cost"
+          ]
+        },
+        {
+          "id": "ffd_prototype",
+          "label": "Uses prototypes to reduce uncertainty",
+          "description": "Builds a time-boxed prototype when the largest risk is technical or product uncertainty, without treating it as production code automatically.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "time boxed prototype",
+            "reduce uncertainty",
+            "technical spike",
+            "throwaway code",
+            "validation goal"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_fullstack_feature_design_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What signals would tell you it is time to extract a service later?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_fullstack_feature_design_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you keep a prototype from silently becoming production architecture?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Pragmatikus architektúradöntések",
+          "prompt": "Hogyan döntöd el, hogy egy új funkció külön szolgáltatást érdemel, a meglévő alkalmazásba tartozik, vagy prototípusként induljon?",
+          "answerStructureHint": "Hasonlítsd össze a domainhatárokat, üzemeltetési költséget, bizonytalanságot és a visszafordítható első lépést.",
+          "expectedPoints": {
+            "ffd_boundaries": {
+              "label": "Domain- és tulajdonosi határokat használ",
+              "description": "Független tulajdonlást, adatot, skálázást, biztonságot és release-igényt keres, nem a szolgáltatások számát tekinti célnak."
+            },
+            "ffd_cost": {
+              "label": "Számol az üzemeltetési költséggel",
+              "description": "Figyelembe veszi a telepítést, monitoringot, hibamódokat, tesztelést és koordinációt, amelyet egy új szolgáltatás hoz."
+            },
+            "ffd_prototype": {
+              "label": "Prototípussal csökkenti a bizonytalanságot",
+              "description": "Időkeretes prototípust készít, ha a legnagyobb kockázat technikai vagy termékbizonytalanság, de azt nem tekinti automatikusan production kódnak."
+            }
+          },
+          "followUps": {
+            "redspher_fullstack_feature_design_003_fu1": "Milyen jelek mutatnák, hogy később ideje szolgáltatást leválasztani?",
+            "redspher_fullstack_feature_design_003_fu2": "Hogyan akadályoznád meg, hogy egy prototípus észrevétlenül production architektúrává váljon?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_testing_strategy_001",
+      "title": "Testing a full-stack feature",
+      "prompt": "How would you divide tests for a React and Node.js feature among unit, integration, contract, and end-to-end levels?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_testing_strategy"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Map each important risk to the cheapest test level that proves it reliably.",
+      "expectedPoints": [
+        {
+          "id": "tst_risk",
+          "label": "Maps tests to risks",
+          "description": "Starts from business rules, component behavior, data integration, external contracts, and critical user journeys.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "business risk",
+            "user journey",
+            "integration risk",
+            "contract risk",
+            "test behavior"
+          ]
+        },
+        {
+          "id": "tst_levels",
+          "label": "Uses levels deliberately",
+          "description": "Places calculations and component behavior low, real infrastructure at integration level, and only key workflows end to end.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "unit tests",
+            "integration tests",
+            "contract tests",
+            "end to end",
+            "lowest reliable level"
+          ]
+        },
+        {
+          "id": "tst_feedback",
+          "label": "Balances confidence and feedback",
+          "description": "Explains speed, isolation, realism, maintenance, and diagnostic trade-offs.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "fast feedback",
+            "production realism",
+            "test isolation",
+            "maintenance cost",
+            "diagnose failure"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_testing_strategy_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you never mock in an API integration test?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_testing_strategy_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How many end-to-end tests are enough?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Full-stack funkció tesztelése",
+          "prompt": "Hogyan osztanád el egy React- és Node.js-funkció tesztjeit unit, integration, contract és end-to-end szintek között?",
+          "answerStructureHint": "Minden fontos kockázatot rendelj a legolcsóbb olyan tesztszinthez, amely megbízhatóan bizonyítja.",
+          "expectedPoints": {
+            "tst_risk": {
+              "label": "Kockázatokhoz rendeli a teszteket",
+              "description": "Az üzleti szabályokból, komponensviselkedésből, adatintegrációból, külső szerződésekből és kritikus user journeykből indul ki."
+            },
+            "tst_levels": {
+              "label": "Tudatosan használja a szinteket",
+              "description": "A számítást és komponensviselkedést alacsony szintre, a valódi infrastruktúrát integrációs szintre, csak a kulcsfolyamatokat end-to-end szintre teszi."
+            },
+            "tst_feedback": {
+              "label": "Egyensúlyt tart a bizalom és visszajelzés között",
+              "description": "Elmagyarázza a sebesség, izoláció, valószerűség, karbantartás és diagnosztika kompromisszumait."
+            }
+          },
+          "followUps": {
+            "redspher_testing_strategy_001_fu1": "Mit nem mockolnál soha egy API-integrációs tesztben?",
+            "redspher_testing_strategy_001_fu2": "Hány end-to-end teszt elegendő?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_testing_strategy_002",
+      "title": "Testing React behavior without implementation details",
+      "prompt": "A React test breaks after a harmless refactor because it asserts internal state and child component calls. How would you rewrite it?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "redspher_testing_strategy"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Rewrite the test around user-visible behavior, realistic boundaries, and proper async waiting.",
+      "expectedPoints": [
+        {
+          "id": "tst_user",
+          "label": "Tests observable behavior",
+          "description": "Interacts through accessible UI and asserts what a user can see or do.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "user behavior",
+            "accessible query",
+            "visible result",
+            "click and type",
+            "observable output"
+          ]
+        },
+        {
+          "id": "tst_boundaries",
+          "label": "Mocks at real boundaries",
+          "description": "Mocks network or browser boundaries when necessary rather than internal component implementation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "mock network",
+            "service worker",
+            "public api",
+            "real component tree",
+            "boundary mock"
+          ]
+        },
+        {
+          "id": "tst_async",
+          "label": "Handles asynchronous behavior correctly",
+          "description": "Waits for visible state changes and avoids fixed sleeps or manual internal state updates.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "wait for ui",
+            "async query",
+            "no fixed sleep",
+            "loading state",
+            "eventually visible"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_testing_strategy_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would a component unit test still be useful?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_testing_strategy_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you test an error and retry state?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "React-viselkedés tesztelése implementációs részletek nélkül",
+          "prompt": "Egy React-teszt ártalmatlan refaktor után elromlik, mert belső state-et és gyermekkomponens-hívásokat ellenőriz. Hogyan írnád át?",
+          "answerStructureHint": "A tesztet felhasználó által látható viselkedésre, valószerű határokra és helyes async várakozásra építsd.",
+          "expectedPoints": {
+            "tst_user": {
+              "label": "Megfigyelhető viselkedést tesztel",
+              "description": "Akadálymentesen elérhető UI-n keresztül interaktál, és azt ellenőrzi, amit a felhasználó láthat vagy tehet."
+            },
+            "tst_boundaries": {
+              "label": "Valódi határokon mockol",
+              "description": "Szükség esetén hálózati vagy böngészőhatárt mockol, nem a komponens belső megvalósítását."
+            },
+            "tst_async": {
+              "label": "Helyesen kezeli az aszinkron viselkedést",
+              "description": "Látható state-változásra vár, és kerüli a fix sleepet vagy a belső state kézi módosítását."
+            }
+          },
+          "followUps": {
+            "redspher_testing_strategy_002_fu1": "Mikor lehet továbbra is hasznos egy komponens-unit teszt?",
+            "redspher_testing_strategy_002_fu2": "Hogyan tesztelnél egy error és retry state-et?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_testing_strategy_003",
+      "title": "Keeping CI tests useful",
+      "prompt": "Your CI suite is slow and flaky, so developers rerun failed jobs until they pass. How would you improve it?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_testing_strategy"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Measure the problem, remove nondeterminism, and restructure the pipeline for fast trustworthy feedback.",
+      "expectedPoints": [
+        {
+          "id": "tst_measure",
+          "label": "Classifies failures and duration",
+          "description": "Collects timing and flake data by test and separates product failures from environment instability.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "flake rate",
+            "test duration",
+            "failure classification",
+            "ci metrics",
+            "quarantine evidence"
+          ]
+        },
+        {
+          "id": "tst_fix",
+          "label": "Fixes root causes",
+          "description": "Removes shared state, nondeterministic timing, uncontrolled external services, and poor test data isolation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "test isolation",
+            "deterministic time",
+            "controlled dependency",
+            "unique test data",
+            "remove race"
+          ]
+        },
+        {
+          "id": "tst_pipeline",
+          "label": "Reshapes the pipeline",
+          "description": "Runs fast deterministic gates first, parallelizes safely, and keeps flaky tests visible rather than silently retrying forever.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "fast gate",
+            "parallel tests",
+            "limited retry",
+            "quarantine with owner",
+            "block on critical"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_testing_strategy_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is an automatic retry acceptable?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_testing_strategy_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you stop quarantined tests from being forgotten?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hasznos CI-tesztek fenntartása",
+          "prompt": "A CI suite lassú és flaky, ezért a fejlesztők addig indítják újra a sikertelen jobokat, amíg át nem mennek. Hogyan javítanád?",
+          "answerStructureHint": "Mérd fel a problémát, szüntesd meg a nem determinisztikus okokat, és szervezd át a pipeline-t gyors, megbízható visszajelzésre.",
+          "expectedPoints": {
+            "tst_measure": {
+              "label": "Osztályozza a hibákat és futási időt",
+              "description": "Tesztenként időzítési és flake adatot gyűjt, és elkülöníti a termékhibát a környezeti instabilitástól."
+            },
+            "tst_fix": {
+              "label": "A kiváltó okokat javítja",
+              "description": "Megszünteti a megosztott state-et, nem determinisztikus időzítést, kontrollálatlan külső szolgáltatásokat és rossz tesztadat-isolációt."
+            },
+            "tst_pipeline": {
+              "label": "Átalakítja a pipeline-t",
+              "description": "Először gyors determinisztikus gate-eket futtat, biztonságosan párhuzamosít, és a flaky teszteket láthatóan kezeli a végtelen néma retry helyett."
+            }
+          },
+          "followUps": {
+            "redspher_testing_strategy_003_fu1": "Mikor elfogadható az automatikus retry?",
+            "redspher_testing_strategy_003_fu2": "Hogyan akadályoznád meg, hogy a karanténba tett teszteket elfelejtsék?"
+          }
+        }
+      }
+    }
+  ]
+}

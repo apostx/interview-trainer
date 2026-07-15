@@ -1,0 +1,2399 @@
+{
+  "id": "redspher_frontend_core",
+  "name": "Redspher - TypeScript and React",
+  "description": "TypeScript and React topics most likely to appear in the Redspher Full Stack Developer interview.",
+  "sources": [
+    "redspher/full_stack_developer_job_description"
+  ],
+  "topics": [
+    {
+      "id": "redspher_ts_runtime_boundaries",
+      "name": "TypeScript Runtime Boundaries",
+      "description": "TypeScript improves development-time safety, but values from APIs and other external sources still need runtime validation before they are trusted.",
+      "category": "fullstack",
+      "relatedTopicIds": [
+        "redspher_api_contract_validation"
+      ],
+      "studyContent": {
+        "mentalModel": "TypeScript checks code before it runs, but external data is still unknown at runtime and must be validated before the program trusts it.",
+        "problem": "A value from an API, form, file, or environment variable can differ from its TypeScript annotation. Treating it as a trusted type can move a simple input problem deep into the application, where it becomes harder to diagnose.",
+        "example": "An endpoint claims to return a Shipment, but one record has a missing status. The client validates the response at the API boundary and reports a clear contract error instead of rendering an invalid state.",
+        "howItWorks": [
+          "Represent uncertain input as unknown rather than forcing it into an application type.",
+          "Validate the required shape and values at the boundary.",
+          "Use narrowing or a validated result before passing the value into business logic."
+        ],
+        "commonMistakes": [
+          "Using any, which disables the checks that TypeScript was meant to provide.",
+          "Using a type assertion as if it changed or validated the runtime value.",
+          "Validating only in the frontend and assuming every other caller is safe."
+        ],
+        "keyTerms": [
+          {
+            "term": "unknown",
+            "definition": "A TypeScript type that requires checking before the value can be used as a more specific type."
+          },
+          {
+            "term": "type guard",
+            "definition": "A runtime check that lets TypeScript narrow a value to a safer, more specific type."
+          },
+          {
+            "term": "runtime validation",
+            "definition": "Checking actual data while the program runs, especially where untrusted data enters the system."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "TypeScript és a futásidejű határok",
+          "description": "A TypeScript fejlesztési időben növeli a biztonságot, de az API-kból és más külső forrásokból érkező értékeket futásidőben is ellenőrizni kell, mielőtt megbíznánk bennük.",
+          "studyContent": {
+            "mentalModel": "A TypeScript a program futása előtt ellenőrzi a kódot, de a külső adat futásidőben továbbra is ismeretlen, ezért használat előtt validálni kell.",
+            "problem": "Egy API-ból, űrlapból, fájlból vagy környezeti változóból érkező érték eltérhet a TypeScript-típustól. Ha mégis megbízhatónak tekintjük, egy egyszerű bemeneti hiba mélyre kerülhet az alkalmazásban, ahol nehezebb megtalálni.",
+            "example": "Egy endpoint Shipment objektumot ígér, de az egyik rekordból hiányzik a status. A kliens az API-határon ellenőrzi a választ, és egyértelmű szerződéshibát jelez ahelyett, hogy érvénytelen állapotot jelenítene meg.",
+            "howItWorks": [
+              "A bizonytalan bemenetet unknown típusként kezeljük, nem erőltetjük rögtön alkalmazástípusba.",
+              "A rendszer határán ellenőrizzük a szükséges struktúrát és értékeket.",
+              "Type narrowing vagy validált eredmény után adjuk tovább az értéket az üzleti logikának."
+            ],
+            "commonMistakes": [
+              "Az any használata, amely kikapcsolja azokat az ellenőrzéseket, amelyekért a TypeScriptet használjuk.",
+              "A type assertiont úgy kezelni, mintha megváltoztatná vagy ellenőrizné a futásidejű értéket.",
+              "Csak a frontendben validálni, és feltételezni, hogy minden más hívó biztonságos."
+            ],
+            "keyTerms": [
+              {
+                "term": "unknown",
+                "definition": "TypeScript-típus, amely használat előtt ellenőrzést követel, mielőtt konkrétabb típusként kezelnénk az értéket."
+              },
+              {
+                "term": "type guard",
+                "definition": "Futásidejű ellenőrzés, amely lehetővé teszi, hogy a TypeScript biztonságosabb, konkrétabb típusra szűkítse az értéket."
+              },
+              {
+                "term": "futásidejű validáció",
+                "definition": "A tényleges adat ellenőrzése a program futása közben, különösen ott, ahol nem megbízható adat lép be a rendszerbe."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_ts_generics_contracts",
+      "name": "TypeScript Generics and Contracts",
+      "description": "Generics make reusable TypeScript code preserve relationships between input and output types, especially in shared utilities and API contracts.",
+      "category": "fullstack",
+      "relatedTopicIds": [
+        "redspher_ts_runtime_boundaries",
+        "redspher_api_contract_validation"
+      ],
+      "studyContent": {
+        "mentalModel": "A TypeScript generic describes a relationship between types so reusable code can preserve useful information instead of replacing it with any.",
+        "problem": "Without generics, shared helpers often lose the exact type of their input or return value. The code may become repetitive, or it may use broad types that allow invalid combinations.",
+        "example": "A request function accepts a parser for Shipment and returns Promise<Shipment>. The same function can fetch PriceQuote with a different parser while keeping each result correctly typed.",
+        "howItWorks": [
+          "Declare a type parameter for the part of the contract that changes.",
+          "Constrain the parameter when the reusable code needs specific properties or behavior.",
+          "Return types that preserve the relationship between the caller's input and the produced value."
+        ],
+        "commonMistakes": [
+          "Adding a generic parameter that is used only once and communicates no relationship.",
+          "Using a generic to hide an overly complicated abstraction.",
+          "Assuming a generic validates runtime data."
+        ],
+        "keyTerms": [
+          {
+            "term": "generic",
+            "definition": "A type parameter that lets one reusable definition work with several concrete types."
+          },
+          {
+            "term": "constraint",
+            "definition": "A rule that limits which concrete types may be used for a generic parameter."
+          },
+          {
+            "term": "inference",
+            "definition": "The compiler's ability to determine a type argument from the values passed by the caller."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "TypeScript generikusok és szerződések",
+          "description": "A generikusok lehetővé teszik, hogy az újrahasznosítható TypeScript-kód megőrizze a bemeneti és kimeneti típusok közti kapcsolatot, különösen közös segédfüggvényeknél és API-szerződéseknél.",
+          "studyContent": {
+            "mentalModel": "A TypeScript-generikus típusok közti kapcsolatot ír le, így az újrahasznosítható kód nem veszíti el a hasznos típusinformációt és nem kényszerül any használatára.",
+            "problem": "Generikusok nélkül a közös segédfüggvények gyakran elveszítik a bemenet vagy a visszatérési érték pontos típusát. A kód ismétlődővé válhat, vagy túl tág típusokat használhat, amelyek érvénytelen kombinációkat is engednek.",
+            "example": "Egy request függvény Shipment-parsert kap, és Promise<Shipment> értéket ad vissza. Ugyanez a függvény másik parserrel PriceQuote adatot kérhet le úgy, hogy mindkét eredmény pontosan típusos marad.",
+            "howItWorks": [
+              "Típusparamétert adunk a szerződés változó részéhez.",
+              "Constraintet használunk, ha az újrahasznosítható kódnak meghatározott tulajdonságokra vagy viselkedésre van szüksége.",
+              "A visszatérési típus megőrzi a hívó bemenete és az előállított érték közti kapcsolatot."
+            ],
+            "commonMistakes": [
+              "Olyan generikus paramétert hozzáadni, amely csak egyszer szerepel, és nem fejez ki valódi kapcsolatot.",
+              "Generikussal elrejteni egy túl bonyolult absztrakciót.",
+              "Azt feltételezni, hogy a generikus futásidőben is validálja az adatot."
+            ],
+            "keyTerms": [
+              {
+                "term": "generikus",
+                "definition": "Típusparaméter, amely lehetővé teszi, hogy egy újrahasznosítható definíció több konkrét típussal működjön."
+              },
+              {
+                "term": "constraint",
+                "definition": "Szabály, amely korlátozza, milyen konkrét típus használható egy generikus paraméter helyén."
+              },
+              {
+                "term": "típuskövetkeztetés",
+                "definition": "A fordító képessége arra, hogy a hívó által átadott értékekből meghatározza a típusargumentumot."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_rendering_state",
+      "name": "React Rendering and State",
+      "description": "React recalculates the interface from props and state; immutable updates and stable identities make those recalculations predictable.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "redspher_react_effects_lifecycle",
+        "redspher_react_component_state_design"
+      ],
+      "studyContent": {
+        "mentalModel": "React renders a new UI description from the current props and state. State should be treated as immutable so React can reason about what changed.",
+        "problem": "Mutating state or storing duplicate values creates stale screens and confusing updates. A component can display one value while another copy of the same information has already changed.",
+        "example": "A shipment list receives a new status. Instead of changing one item inside the existing array, the update creates a new array with one replaced item, so React receives a clear new state value.",
+        "howItWorks": [
+          "A state update schedules another render with a new state snapshot.",
+          "React calls components to calculate the next UI tree.",
+          "React applies the necessary DOM changes after comparing the previous and next result."
+        ],
+        "commonMistakes": [
+          "Mutating an object or array that is already stored in state.",
+          "Copying a value into state when it can be calculated from props or other state.",
+          "Using an array index as a key for items that can be inserted, removed, or reordered."
+        ],
+        "keyTerms": [
+          {
+            "term": "render",
+            "definition": "Calling components to calculate what the UI should look like for the current inputs."
+          },
+          {
+            "term": "state snapshot",
+            "definition": "The state values visible to one particular render of a component."
+          },
+          {
+            "term": "key",
+            "definition": "A stable identity React uses to match list items between renders."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "React renderelés és állapot",
+          "description": "A React a props és a state alapján újraszámolja a felületet; az immutable frissítések és a stabil azonosítók kiszámíthatóvá teszik ezt a folyamatot.",
+          "studyContent": {
+            "mentalModel": "A React az aktuális props és state alapján új UI-leírást renderel. A state-et immutable értékként kell kezelni, hogy a React egyértelműen lássa, mi változott.",
+            "problem": "A state módosítása helyben vagy ugyanazon adat több példányban tárolása elavult képernyőt és zavaros frissítést okozhat. Egy komponens régi értéket mutathat, miközben ugyanannak az adatnak egy másik példánya már megváltozott.",
+            "example": "Egy küldeménylista új státuszt kap. A meglévő tömb egyik elemének közvetlen módosítása helyett új tömb készül a cserélt elemmel, így a React egyértelműen új state-értéket kap.",
+            "howItWorks": [
+              "A state-frissítés új renderelést ütemez egy új állapot-pillanatképpel.",
+              "A React meghívja a komponenseket a következő UI-fa kiszámításához.",
+              "Az előző és következő eredmény összehasonlítása után a React alkalmazza a szükséges DOM-módosításokat."
+            ],
+            "commonMistakes": [
+              "A state-ben már tárolt objektum vagy tömb közvetlen módosítása.",
+              "Olyan értéket state-ben tárolni, amely propsból vagy más state-ből kiszámítható.",
+              "Tömbindexet használni keyként olyan listában, amelybe elemek kerülhetnek, törlődhetnek vagy átrendeződhetnek."
+            ],
+            "keyTerms": [
+              {
+                "term": "render",
+                "definition": "A komponensek meghívása annak kiszámítására, hogyan nézzen ki a UI az aktuális bemenetek alapján."
+              },
+              {
+                "term": "state-pillanatkép",
+                "definition": "Azok a state-értékek, amelyeket egy komponens egy adott renderelése lát."
+              },
+              {
+                "term": "key",
+                "definition": "Stabil azonosító, amellyel a React a listaelemeket egymáshoz rendeli a renderelések között."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_effects_lifecycle",
+      "name": "React Effects and Lifecycle",
+      "description": "Effects should synchronize React with external systems, with complete dependencies and cleanup that prevents leaks and stale work.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "redspher_react_rendering_state",
+        "redspher_react_performance"
+      ],
+      "studyContent": {
+        "mentalModel": "A React Effect synchronizes a component with something outside React, such as a network connection, browser API, timer, or third-party widget.",
+        "problem": "Using Effects for normal calculations creates extra renders and hidden dependencies. Missing cleanup can leave old subscriptions, timers, or requests active after the component changes.",
+        "example": "A tracking screen opens a WebSocket for one shipment id. The Effect connects when the id is active and its cleanup closes the old socket before connecting for another id or unmounting.",
+        "howItWorks": [
+          "Render calculates the UI and declares which external synchronization is needed.",
+          "After commit, React runs the Effect when its dependencies have changed.",
+          "Before rerunning or unmounting, React runs the previous cleanup."
+        ],
+        "commonMistakes": [
+          "Using an Effect to calculate a value that could be derived during rendering.",
+          "Omitting dependencies to silence reruns instead of fixing unstable values or stale closures.",
+          "Starting asynchronous work without cleanup, cancellation, or protection against outdated results."
+        ],
+        "keyTerms": [
+          {
+            "term": "Effect",
+            "definition": "Code that runs after React commits UI and synchronizes with an external system."
+          },
+          {
+            "term": "dependency",
+            "definition": "A reactive value used by an Effect that can require the synchronization to run again."
+          },
+          {
+            "term": "cleanup",
+            "definition": "A function that undoes the previous synchronization before rerun or unmount."
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "React Effects és életciklus",
+          "description": "Az Effectek feladata a React külső rendszerekkel való szinkronizálása, teljes dependency-listával és olyan cleanuppal, amely megelőzi a szivárgást és az elavult munkát.",
+          "studyContent": {
+            "mentalModel": "A React Effect egy komponenst a Reacten kívüli rendszerrel szinkronizál, például hálózati kapcsolattal, böngésző-API-val, időzítővel vagy külső widgettel.",
+            "problem": "Ha normál számításokat Effectbe teszünk, extra renderelések és rejtett függőségek jönnek létre. Cleanup nélkül régi feliratkozások, időzítők vagy kérések maradhatnak aktívak a komponens változása után.",
+            "example": "Egy nyomkövető képernyő WebSocketet nyit egy shipment id-hoz. Az Effect az aktív id-val kapcsolódik, a cleanup pedig bezárja a régi socketet, mielőtt másik id-hoz csatlakozna vagy a komponens megszűnne.",
+            "howItWorks": [
+              "A render kiszámolja a UI-t, és meghatározza, milyen külső szinkronizáció szükséges.",
+              "A commit után a React lefuttatja az Effectet, ha a dependencyk megváltoztak.",
+              "Újrafuttatás vagy unmount előtt a React meghívja az előző cleanupot."
+            ],
+            "commonMistakes": [
+              "Effectet használni olyan érték kiszámítására, amely render közben közvetlenül származtatható.",
+              "Dependencyket elhagyni az újrafutás elkerülésére ahelyett, hogy az instabil értéket vagy stale closure-t javítanánk.",
+              "Aszinkron munkát cleanup, megszakítás vagy elavult eredmény elleni védelem nélkül indítani."
+            ],
+            "keyTerms": [
+              {
+                "term": "Effect",
+                "definition": "Kód, amely a React UI-commitja után fut, és egy külső rendszerrel szinkronizál."
+              },
+              {
+                "term": "dependency",
+                "definition": "Az Effect által használt reaktív érték, amelynek változása új szinkronizációt tehet szükségessé."
+              },
+              {
+                "term": "cleanup",
+                "definition": "Függvény, amely újrafutás vagy unmount előtt visszavonja az előző szinkronizációt."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_component_state_design",
+      "name": "React Component and State Design",
+      "description": "Good React design gives each state value one clear owner and gives each component a focused, typed responsibility.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "redspher_react_rendering_state",
+        "redspher_react_performance"
+      ],
+      "studyContent": {
+        "mentalModel": "React state should live in the lowest common owner that needs to control it, while component boundaries should follow clear responsibilities rather than arbitrary file size.",
+        "problem": "State placed too high causes broad rerenders and tight coupling. State duplicated in several components produces conflicting sources of truth and complex synchronization code.",
+        "example": "A shipment search form owns its draft fields locally. The page owns the submitted query because both the result list and URL need it, while server results stay in the data-fetching layer.",
+        "howItWorks": [
+          "Identify which components read or change each piece of state.",
+          "Choose one owner that can provide the value to all required consumers.",
+          "Separate local UI state, shared application state, URL state, and server data by their lifecycle."
+        ],
+        "commonMistakes": [
+          "Moving all state into a global store before there is a sharing problem.",
+          "Duplicating props into local state and trying to keep both copies synchronized.",
+          "Building very generic components that expose many flags instead of a small clear API."
+        ],
+        "keyTerms": [
+          {
+            "term": "state owner",
+            "definition": "The component or store that is the single authoritative source for a value."
+          },
+          {
+            "term": "lifting state",
+            "definition": "Moving state to a common parent so several descendants can share and update it."
+          },
+          {
+            "term": "server state",
+            "definition": "Remote data whose source of truth is the backend and usually needs caching and refetch rules."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "React komponens- és state-tervezés",
+          "description": "A jó React-tervezés minden state-értéknek egyértelmű tulajdonost, minden komponensnek pedig fókuszált és típusos felelősséget ad.",
+          "studyContent": {
+            "mentalModel": "A React state a legalacsonyabb olyan közös tulajdonosnál legyen, amelynek irányítania kell, a komponenshatárokat pedig világos felelősségek, ne tetszőleges fájlméret határozza meg.",
+            "problem": "A túl magasra helyezett state széles körű újrarenderelést és szoros csatolást okoz. A több komponensben megkettőzött state versengő igazságforrásokat és bonyolult szinkronizációt hoz létre.",
+            "example": "Egy küldeménykereső űrlap helyben kezeli a szerkesztett mezőket. A page kezeli az elküldött lekérdezést, mert az eredménylista és az URL is használja, a szervereredmény pedig az adatlekérő rétegben marad.",
+            "howItWorks": [
+              "Azonosítjuk, mely komponensek olvassák vagy módosítják az egyes state-részeket.",
+              "Egyetlen tulajdonost választunk, amely minden szükséges fogyasztónak át tudja adni az értéket.",
+              "Életciklusuk alapján különválasztjuk a helyi UI-state-et, a megosztott alkalmazásstate-et, az URL-state-et és a szerveradatot."
+            ],
+            "commonMistakes": [
+              "Minden state-et globális store-ba mozgatni, mielőtt valódi megosztási probléma lenne.",
+              "Propsot helyi state-be másolni, majd a két példányt folyamatosan szinkronizálni próbálni.",
+              "Sok kapcsolót kitevő, túl általános komponenseket építeni kis és világos API helyett."
+            ],
+            "keyTerms": [
+              {
+                "term": "state-tulajdonos",
+                "definition": "A komponens vagy store, amely egy érték egyetlen hiteles forrása."
+              },
+              {
+                "term": "state lifting",
+                "definition": "A state közös szülőbe mozgatása, hogy több leszármazott megoszthassa és módosíthassa."
+              },
+              {
+                "term": "server state",
+                "definition": "Távoli adat, amelynek hiteles forrása a backend, és általában cache- és újralekérési szabályokat igényel."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_performance",
+      "name": "React Performance",
+      "description": "React performance work should be driven by profiling and user impact, with structural fixes before selective memoization.",
+      "category": "frontend",
+      "relatedTopicIds": [
+        "redspher_react_component_state_design",
+        "redspher_observability"
+      ],
+      "studyContent": {
+        "mentalModel": "React performance work should begin with a measured user problem. Memoization helps only when it prevents meaningful repeated work or unnecessary child rendering.",
+        "problem": "Adding memoization everywhere increases complexity and can cost more than the work it saves. Meanwhile, the real issue may be a large list, excessive network requests, or state placed too high.",
+        "example": "A pricing table feels slow when filters change. Profiling shows thousands of rows rerendering, so the team moves filter state closer to the table and virtualizes the visible rows before adding selective memoization.",
+        "howItWorks": [
+          "Measure the slow interaction with browser and React profiling tools.",
+          "Find whether the cost comes from rendering, computation, network activity, or DOM size.",
+          "Fix the data flow or algorithm first, then memoize only stable expensive paths."
+        ],
+        "commonMistakes": [
+          "Using useMemo or useCallback without measuring a real problem.",
+          "Passing new object and function identities through a memoized component on every render.",
+          "Optimizing render time while ignoring a slow request or an excessive number of DOM nodes."
+        ],
+        "keyTerms": [
+          {
+            "term": "memoization",
+            "definition": "Reusing a previous result when the relevant inputs have not changed."
+          },
+          {
+            "term": "profiling",
+            "definition": "Measuring where time is spent during a real interaction."
+          },
+          {
+            "term": "virtualization",
+            "definition": "Rendering only the visible part of a large list or table."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "React teljesítmény",
+          "description": "A React teljesítményhangolását profilozásnak és felhasználói hatásnak kell vezérelnie, a strukturális javításokat pedig a szelektív memoizálás előtt kell elvégezni.",
+          "studyContent": {
+            "mentalModel": "A React teljesítményjavítása mért felhasználói problémából induljon. A memoizálás csak akkor segít, ha jelentős ismételt munkát vagy felesleges gyermekrenderelést előz meg.",
+            "problem": "A mindenhová hozzáadott memoizálás növeli a bonyolultságot, és többe kerülhet, mint amennyit megtakarít. Közben a valódi gond lehet nagy lista, túl sok hálózati kérés vagy túl magasra helyezett state.",
+            "example": "Egy árazási tábla lassú szűrőváltáskor. A profilozás szerint több ezer sor renderelődik újra, ezért a csapat közelebb viszi a szűrőstate-et a táblához, virtualizálja a látható sorokat, és csak ezután memoizál célzottan.",
+            "howItWorks": [
+              "Böngésző- és React-profilozó eszközökkel megmérjük a lassú interakciót.",
+              "Megállapítjuk, hogy a költség renderelésből, számításból, hálózatból vagy DOM-méretből ered-e.",
+              "Először az adatfolyamot vagy algoritmust javítjuk, és csak stabil, drága útvonalakat memoizálunk."
+            ],
+            "commonMistakes": [
+              "useMemo vagy useCallback használata valódi, mért probléma nélkül.",
+              "Minden rendernél új objektum- és függvényazonosságot átadni egy memoizált komponensnek.",
+              "A renderidőt optimalizálni, miközben a lassú kérés vagy a túl sok DOM-csomópont érintetlen marad."
+            ],
+            "keyTerms": [
+              {
+                "term": "memoizálás",
+                "definition": "Korábbi eredmény újrahasználata, ha a hozzá tartozó bemenetek nem változtak."
+              },
+              {
+                "term": "profilozás",
+                "definition": "Annak mérése, hol tölt időt a rendszer egy valódi interakció során."
+              },
+              {
+                "term": "virtualizáció",
+                "definition": "Egy nagy lista vagy tábla csak látható részének renderelése."
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "redspher_ts_runtime_boundaries_001",
+      "title": "TypeScript and runtime data",
+      "prompt": "What is the difference between TypeScript type checking and runtime validation, and where would you use each?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_ts_runtime_boundaries"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Contrast compile-time guarantees with runtime data, then give concrete boundaries and a safe handling approach.",
+      "expectedPoints": [
+        {
+          "id": "tsrb_static",
+          "label": "Explains static type checking",
+          "description": "Explains that TypeScript checks source code before runtime and does not validate network data by itself.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "compile time",
+            "before runtime",
+            "static checking",
+            "types are erased",
+            "no runtime validation"
+          ],
+          "weakSignals": [
+            "type safety"
+          ]
+        },
+        {
+          "id": "tsrb_boundary",
+          "label": "Identifies runtime boundaries",
+          "description": "Names API responses, user input, files, environment variables, or messages as places that require runtime validation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "api response",
+            "user input",
+            "external data",
+            "environment variables",
+            "message payload"
+          ]
+        },
+        {
+          "id": "tsrb_unknown",
+          "label": "Uses safe narrowing",
+          "description": "Prefers unknown plus validation or type guards over any or unchecked assertions.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "use unknown",
+            "type guard",
+            "schema validation",
+            "validate then narrow",
+            "avoid any"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_ts_runtime_boundaries_001_fu1",
+          "trigger": {
+            "type": "rubric_missing",
+            "rubricItemId": "tsrb_static"
+          },
+          "prompt": "Why is a type assertion not a validation step?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_ts_runtime_boundaries_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you report a contract mismatch without crashing the whole UI?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "TypeScript és futásidejű adatok",
+          "prompt": "Mi a különbség a TypeScript típusellenőrzése és a futásidejű validáció között, és hol használnád őket?",
+          "answerStructureHint": "Állítsd szembe a fordítási idejű garanciákat a futásidejű adatokkal, majd adj konkrét határokat és biztonságos kezelési módot.",
+          "expectedPoints": {
+            "tsrb_static": {
+              "label": "Elmagyarázza a statikus típusellenőrzést",
+              "description": "Elmondja, hogy a TypeScript futás előtt ellenőrzi a forráskódot, de önmagában nem validálja a hálózatról érkező adatot."
+            },
+            "tsrb_boundary": {
+              "label": "Azonosítja a futásidejű határokat",
+              "description": "Az API-válaszokat, felhasználói bemenetet, fájlokat, környezeti változókat vagy üzeneteket olyan helyekként nevezi meg, ahol validáció kell."
+            },
+            "tsrb_unknown": {
+              "label": "Biztonságos típusszűkítést használ",
+              "description": "Az any vagy ellenőrizetlen assertion helyett unknown típust és validációt vagy type guardot választ."
+            }
+          },
+          "followUps": {
+            "redspher_ts_runtime_boundaries_001_fu1": "Miért nem validációs lépés a type assertion?",
+            "redspher_ts_runtime_boundaries_001_fu2": "Hogyan jeleznél szerződéseltérést anélkül, hogy az egész UI összeomlana?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_ts_runtime_boundaries_002",
+      "title": "Handling an unsafe API response",
+      "prompt": "A React screen receives an API response that TypeScript describes as Shipment[], but production data sometimes contains invalid records. How would you make this path safe?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_ts_runtime_boundaries"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe boundary validation, failure behavior, and how you would reduce future contract drift.",
+      "expectedPoints": [
+        {
+          "id": "tsrb_validate",
+          "label": "Validates at the boundary",
+          "description": "Validates the response before business logic or rendering uses it.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "validate response",
+            "at the boundary",
+            "schema parser",
+            "safe parse",
+            "reject invalid data"
+          ]
+        },
+        {
+          "id": "tsrb_failure",
+          "label": "Handles validation failure explicitly",
+          "description": "Returns a typed error, logs useful context, and presents a controlled UI state.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "typed error",
+            "error state",
+            "log context",
+            "controlled failure",
+            "do not crash"
+          ]
+        },
+        {
+          "id": "tsrb_contract",
+          "label": "Improves the contract",
+          "description": "Mentions contract tests, shared schemas, or monitoring to prevent repeated mismatches.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "contract test",
+            "shared schema",
+            "api contract",
+            "monitor mismatch",
+            "producer fix"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_ts_runtime_boundaries_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you reject the entire array or keep valid records? What would drive that decision?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_ts_runtime_boundaries_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where should the validation schema live?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Nem biztonságos API-válasz kezelése",
+          "prompt": "Egy React-képernyő olyan API-választ kap, amelyet a TypeScript Shipment[]-ként ír le, de az éles adatban néha érvénytelen rekordok vannak. Hogyan tennéd biztonságossá ezt az útvonalat?",
+          "answerStructureHint": "Írd le a határvalidációt, a hibaviselkedést és azt, hogyan csökkentenéd a későbbi szerződéseltérést.",
+          "expectedPoints": {
+            "tsrb_validate": {
+              "label": "A rendszerhatáron validál",
+              "description": "A választ még azelőtt ellenőrzi, hogy az üzleti logika vagy a renderelés felhasználná."
+            },
+            "tsrb_failure": {
+              "label": "Egyértelműen kezeli a validációs hibát",
+              "description": "Típusos hibát ad vissza, hasznos kontextust naplóz, és kontrollált UI-állapotot jelenít meg."
+            },
+            "tsrb_contract": {
+              "label": "Javítja a szerződést",
+              "description": "Contract testet, közös sémát vagy monitoringot említ az ismétlődő eltérések megelőzésére."
+            }
+          },
+          "followUps": {
+            "redspher_ts_runtime_boundaries_002_fu1": "Az egész tömböt elutasítanád, vagy megtartanád az érvényes rekordokat? Mitől függ a döntés?",
+            "redspher_ts_runtime_boundaries_002_fu2": "Hol legyen a validációs séma?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_ts_runtime_boundaries_003",
+      "title": "Choosing any, unknown, or a type assertion",
+      "prompt": "When would you choose unknown, any, or a type assertion in TypeScript? Give an example where the wrong choice could hide a bug.",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_ts_runtime_boundaries"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare the safety of the three options and show one realistic failure mode.",
+      "expectedPoints": [
+        {
+          "id": "tsrb_unknown_choice",
+          "label": "Chooses unknown for uncertain values",
+          "description": "Explains that unknown preserves safety because the caller must narrow or validate it.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "unknown for input",
+            "must narrow",
+            "must validate",
+            "safe uncertainty",
+            "external value"
+          ]
+        },
+        {
+          "id": "tsrb_any_risk",
+          "label": "Explains the risk of any",
+          "description": "Explains that any removes checking and spreads unsafety through later code.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "disables checks",
+            "unsafe escape hatch",
+            "spreads any",
+            "hides errors",
+            "loss of safety"
+          ]
+        },
+        {
+          "id": "tsrb_assertion",
+          "label": "Limits assertions to proven cases",
+          "description": "Uses assertions only when runtime facts are already guaranteed by another mechanism or the compiler cannot infer them.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "compiler cannot infer",
+            "already validated",
+            "narrow assertion",
+            "last resort",
+            "document invariant"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_ts_runtime_boundaries_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What is a safer replacement for JSON.parse returning any?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "any, unknown vagy type assertion választása",
+          "prompt": "Mikor választanál unknown, any típust vagy type assertiont TypeScriptben? Mondj példát arra, amikor a rossz választás hibát rejthet el.",
+          "answerStructureHint": "Hasonlítsd össze a három lehetőség biztonságát, és mutass be egy valószerű hibamódot.",
+          "expectedPoints": {
+            "tsrb_unknown_choice": {
+              "label": "Bizonytalan értékhez unknownt választ",
+              "description": "Elmagyarázza, hogy az unknown megőrzi a biztonságot, mert a hívónak szűkítenie vagy validálnia kell az értéket."
+            },
+            "tsrb_any_risk": {
+              "label": "Elmagyarázza az any kockázatát",
+              "description": "Elmondja, hogy az any kikapcsolja az ellenőrzést, és a bizonytalanságot továbbterjeszti a későbbi kódba."
+            },
+            "tsrb_assertion": {
+              "label": "Bizonyított esetekre korlátozza az assertiont",
+              "description": "Csak akkor használ assertiont, ha a futásidejű tényt más mechanizmus már garantálja, vagy a fordító nem tudja kikövetkeztetni."
+            }
+          },
+          "followUps": {
+            "redspher_ts_runtime_boundaries_003_fu1": "Mi a JSON.parse any visszatérési értékének biztonságosabb alternatívája?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_ts_generics_contracts_001",
+      "title": "Useful TypeScript generics",
+      "prompt": "What problem do generics solve in TypeScript, and how do you know whether a generic is useful rather than unnecessary complexity?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_ts_generics_contracts"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain the relationship generics preserve, then discuss constraints, inference, and overuse.",
+      "expectedPoints": [
+        {
+          "id": "tsgc_relation",
+          "label": "Explains type relationships",
+          "description": "Explains that generics preserve a relationship between inputs and outputs or between multiple values.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "type relationship",
+            "preserve input type",
+            "typed output",
+            "reusable contract",
+            "same type parameter"
+          ]
+        },
+        {
+          "id": "tsgc_constraint",
+          "label": "Explains constraints and inference",
+          "description": "Mentions constraints when behavior requires properties and inference when callers should not need explicit type arguments.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "generic constraint",
+            "extends constraint",
+            "type inference",
+            "infer type",
+            "required property"
+          ]
+        },
+        {
+          "id": "tsgc_overuse",
+          "label": "Recognizes overuse",
+          "description": "Says a generic is weak when the parameter appears only once, adds no safety, or hides a simpler concrete design.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "used once",
+            "adds no safety",
+            "unnecessary abstraction",
+            "simpler concrete type",
+            "generic overuse"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_ts_generics_contracts_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Can you give an example of a generic that should be replaced with a normal type?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_ts_generics_contracts_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How is a generic different from using a union type?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hasznos TypeScript-generikusok",
+          "prompt": "Milyen problémát oldanak meg a generikusok TypeScriptben, és honnan tudod, hogy egy generikus hasznos, nem pedig felesleges bonyolultság?",
+          "answerStructureHint": "Magyarázd el a megőrzött típuskapcsolatot, majd térj ki a constraintekre, a következtetésre és a túlhasználatra.",
+          "expectedPoints": {
+            "tsgc_relation": {
+              "label": "Elmagyarázza a típuskapcsolatokat",
+              "description": "Elmondja, hogy a generikusok megőrzik a kapcsolatot a bemenet és kimenet, illetve több érték között."
+            },
+            "tsgc_constraint": {
+              "label": "Elmagyarázza a constrainteket és a típuskövetkeztetést",
+              "description": "Megemlíti a constraintet, amikor a működés tulajdonságokat igényel, és az inference-t, hogy a hívónak ne kelljen kézzel típust megadnia."
+            },
+            "tsgc_overuse": {
+              "label": "Felismeri a túlhasználatot",
+              "description": "Gyengének tekinti a generikust, ha a paraméter csak egyszer szerepel, nem ad biztonságot vagy egy egyszerűbb konkrét megoldást rejt el."
+            }
+          },
+          "followUps": {
+            "redspher_ts_generics_contracts_001_fu1": "Mondanál példát olyan generikusra, amelyet normál típussal kellene helyettesíteni?",
+            "redspher_ts_generics_contracts_001_fu2": "Miben különbözik a generikus egy union típustól?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_ts_generics_contracts_002",
+      "title": "Designing a typed API client",
+      "prompt": "You need one reusable TypeScript API client for several endpoints with different response shapes. How would you design it without pretending that network data is already safe?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_ts_generics_contracts"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover the generic contract, runtime validation, and explicit failure modeling.",
+      "expectedPoints": [
+        {
+          "id": "tsgc_generic_client",
+          "label": "Preserves endpoint result types",
+          "description": "Uses a generic result type or endpoint definition so each call returns the correct application type.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "generic result",
+            "typed endpoint",
+            "response type",
+            "preserve result type",
+            "endpoint definition"
+          ]
+        },
+        {
+          "id": "tsgc_parser",
+          "label": "Combines generics with validation",
+          "description": "Requires a parser or schema so the generic type is backed by runtime validation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "pass parser",
+            "runtime schema",
+            "validate response",
+            "safe parse",
+            "decoder function"
+          ]
+        },
+        {
+          "id": "tsgc_errors",
+          "label": "Models failure separately",
+          "description": "Keeps transport, HTTP, validation, and domain errors explicit rather than throwing an untyped value everywhere.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "typed error",
+            "http error",
+            "validation error",
+            "result type",
+            "error union"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_ts_generics_contracts_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you return exceptions or a Result-like value? What are the trade-offs?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_ts_generics_contracts_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you type query parameters and request bodies?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Típusos API-kliens tervezése",
+          "prompt": "Egy újrahasznosítható TypeScript API-klienst kell készítened több, eltérő válaszstruktúrájú endpointhoz. Hogyan terveznéd meg anélkül, hogy a hálózati adatot eleve biztonságosnak tekintenéd?",
+          "answerStructureHint": "Térj ki a generikus szerződésre, a futásidejű validációra és a hibák egyértelmű modellezésére.",
+          "expectedPoints": {
+            "tsgc_generic_client": {
+              "label": "Megőrzi az endpoint eredménytípusát",
+              "description": "Generikus eredménytípust vagy endpoint-definíciót használ, hogy minden hívás a megfelelő alkalmazástípust adja vissza."
+            },
+            "tsgc_parser": {
+              "label": "A generikusokat validációval kombinálja",
+              "description": "Parsert vagy sémát követel, hogy a generikus típus mögött valódi futásidejű ellenőrzés álljon."
+            },
+            "tsgc_errors": {
+              "label": "Külön modellezi a hibákat",
+              "description": "A transport-, HTTP-, validációs és domainhibákat egyértelműen külön kezeli, nem mindenhol típus nélküli értéket dob."
+            }
+          },
+          "followUps": {
+            "redspher_ts_generics_contracts_002_fu1": "Exceptiont vagy Result-szerű értéket adnál vissza? Mik a kompromisszumok?",
+            "redspher_ts_generics_contracts_002_fu2": "Hogyan típusoznád a query paramétereket és a request bodykat?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_ts_generics_contracts_003",
+      "title": "Shared frontend and backend types",
+      "prompt": "Should a React frontend and Node.js backend share TypeScript types directly? Discuss the benefits, risks, and a practical compromise.",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_ts_generics_contracts"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Give the productivity benefit, the coupling risk, and a versioned validation-based approach.",
+      "expectedPoints": [
+        {
+          "id": "tsgc_shared_benefit",
+          "label": "Explains the benefit",
+          "description": "Mentions reduced duplication and faster detection of contract changes.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "reduce duplication",
+            "shared contract",
+            "catch changes",
+            "consistent types",
+            "single definition"
+          ]
+        },
+        {
+          "id": "tsgc_coupling",
+          "label": "Explains coupling and false safety",
+          "description": "Recognizes deployment independence, versioning, and the fact that shared compile-time types do not validate network traffic.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "tight coupling",
+            "independent deployment",
+            "version mismatch",
+            "no runtime guarantee",
+            "contract versioning"
+          ]
+        },
+        {
+          "id": "tsgc_compromise",
+          "label": "Proposes a safe compromise",
+          "description": "Suggests shared schemas or generated clients from an API specification plus runtime validation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "shared schema",
+            "generated client",
+            "openapi generation",
+            "runtime validation",
+            "versioned package"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_ts_generics_contracts_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you roll out a breaking contract change when frontend and backend deploy separately?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Közös frontend- és backendtípusok",
+          "prompt": "Közvetlenül megossza-e egymással a React frontend és a Node.js backend a TypeScript-típusokat? Beszélj az előnyökről, kockázatokról és egy gyakorlati kompromisszumról.",
+          "answerStructureHint": "Mutasd be a produktivitási előnyt, a csatolási kockázatot és a verziózott, validációalapú megközelítést.",
+          "expectedPoints": {
+            "tsgc_shared_benefit": {
+              "label": "Elmagyarázza az előnyt",
+              "description": "Megemlíti a kisebb duplikációt és a szerződésváltozások gyorsabb észlelését."
+            },
+            "tsgc_coupling": {
+              "label": "Elmagyarázza a csatolást és a hamis biztonságot",
+              "description": "Felismeri a külön telepítést, a verziózást és azt, hogy a közös fordítási idejű típus nem validálja a hálózati adatot."
+            },
+            "tsgc_compromise": {
+              "label": "Biztonságos kompromisszumot javasol",
+              "description": "Közös sémákat vagy API-specifikációból generált klienst és futásidejű validációt javasol."
+            }
+          },
+          "followUps": {
+            "redspher_ts_generics_contracts_003_fu1": "Hogyan vezetnél be breaking contract change-et, ha a frontend és a backend külön települ?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_rendering_state_001",
+      "title": "React rendering and immutable state",
+      "prompt": "How does a React state update lead to a UI change, and why should state objects and arrays be treated as immutable?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_react_rendering_state"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Follow one update from the setter to render and commit, then connect immutability to predictable snapshots.",
+      "expectedPoints": [
+        {
+          "id": "rrs_schedule",
+          "label": "Describes render scheduling",
+          "description": "Explains that setting state schedules a render and each render sees a snapshot of state.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "schedules render",
+            "state snapshot",
+            "next render",
+            "component recalculates",
+            "render cycle"
+          ]
+        },
+        {
+          "id": "rrs_immutable",
+          "label": "Explains immutable updates",
+          "description": "Explains that new references make changes explicit and avoid modifying state used by previous renders.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "new object",
+            "new array",
+            "do not mutate",
+            "previous snapshot",
+            "reference change"
+          ]
+        },
+        {
+          "id": "rrs_commit",
+          "label": "Separates render and DOM commit",
+          "description": "Recognizes that rendering calculates UI and React then commits necessary DOM changes.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "render then commit",
+            "calculate ui",
+            "dom update",
+            "reconciliation",
+            "commit phase"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_react_rendering_state_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can logging state immediately after calling a setter show the old value?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_react_rendering_state_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What does React batch during an event?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "React renderelés és immutable state",
+          "prompt": "Hogyan vezet egy React state-frissítés UI-változáshoz, és miért kell a state-ben lévő objektumokat és tömböket immutable módon kezelni?",
+          "answerStructureHint": "Kövesd végig a frissítést a settertől a renderen át a commitig, majd kapcsold az immutabilitást a kiszámítható pillanatképekhez.",
+          "expectedPoints": {
+            "rrs_schedule": {
+              "label": "Leírja a render ütemezését",
+              "description": "Elmagyarázza, hogy a state beállítása renderelést ütemez, és minden render egy state-pillanatképet lát."
+            },
+            "rrs_immutable": {
+              "label": "Elmagyarázza az immutable frissítést",
+              "description": "Elmondja, hogy az új referenciák egyértelművé teszik a változást, és nem módosítják a korábbi renderek által használt state-et."
+            },
+            "rrs_commit": {
+              "label": "Elválasztja a rendert és a DOM-commitot",
+              "description": "Felismeri, hogy a render kiszámolja a UI-t, a React pedig ezután commitolja a szükséges DOM-változásokat."
+            }
+          },
+          "followUps": {
+            "redspher_react_rendering_state_001_fu1": "Miért mutathat régi értéket a state naplózása közvetlenül a setter meghívása után?",
+            "redspher_react_rendering_state_001_fu2": "Mit batch-el a React egy esemény során?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_rendering_state_002",
+      "title": "Fixing a stale shipment list",
+      "prompt": "A shipment table sometimes fails to update after a nested property is changed directly. How would you diagnose and fix it?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "redspher_react_rendering_state"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Diagnose identity and mutation first, then describe the corrected update and any state-model improvement.",
+      "expectedPoints": [
+        {
+          "id": "rrs_find_mutation",
+          "label": "Identifies mutation",
+          "description": "Looks for direct writes to an object or array already held in state or a store.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "direct mutation",
+            "same reference",
+            "nested mutation",
+            "state object changed",
+            "array mutated"
+          ]
+        },
+        {
+          "id": "rrs_update_path",
+          "label": "Creates a new update path",
+          "description": "Creates new references for every changed level or uses an immutable update helper.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "copy changed levels",
+            "map replace item",
+            "new references",
+            "immutable update",
+            "functional setter"
+          ]
+        },
+        {
+          "id": "rrs_data_model",
+          "label": "Checks state design",
+          "description": "Considers normalized data, derived values, and whether the affected data should be local or shared.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "normalize data",
+            "derived value",
+            "state ownership",
+            "single source",
+            "avoid duplicate state"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_react_rendering_state_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would React DevTools help you confirm the cause?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_react_rendering_state_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would a reducer make this update easier to reason about?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Elavult küldeménylista javítása",
+          "prompt": "Egy küldeménytábla néha nem frissül, miután közvetlenül módosítanak egy beágyazott tulajdonságot. Hogyan diagnosztizálnád és javítanád?",
+          "answerStructureHint": "Először az azonosságot és a mutációt vizsgáld, majd írd le a helyes frissítést és az esetleges state-modell-javítást.",
+          "expectedPoints": {
+            "rrs_find_mutation": {
+              "label": "Azonosítja a mutációt",
+              "description": "Közvetlen írást keres a state-ben vagy store-ban már tárolt objektumon vagy tömbön."
+            },
+            "rrs_update_path": {
+              "label": "Új frissítési útvonalat hoz létre",
+              "description": "Minden módosított szinten új referenciát hoz létre, vagy immutable frissítést segítő eszközt használ."
+            },
+            "rrs_data_model": {
+              "label": "Ellenőrzi a state-modellt",
+              "description": "Megvizsgálja a normalizált adatot, a származtatott értékeket és azt, hogy az adat helyi vagy megosztott legyen-e."
+            }
+          },
+          "followUps": {
+            "redspher_react_rendering_state_002_fu1": "Hogyan segítene a React DevTools az ok megerősítésében?",
+            "redspher_react_rendering_state_002_fu2": "Mikor tenné egy reducer átláthatóbbá ezt a frissítést?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_rendering_state_003",
+      "title": "Choosing list keys",
+      "prompt": "What makes a good React list key, and what bugs can appear when an array index is used for a list that can be reordered?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_react_rendering_state"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define stable identity, explain the reorder failure, and note the limited cases where an index is safe.",
+      "expectedPoints": [
+        {
+          "id": "rrs_stable_key",
+          "label": "Defines a stable key",
+          "description": "Uses an identifier that is stable and unique among siblings for the same logical item.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "stable id",
+            "unique among siblings",
+            "item identity",
+            "database id",
+            "same logical item"
+          ]
+        },
+        {
+          "id": "rrs_index_bug",
+          "label": "Explains index-key bugs",
+          "description": "Explains that component state or DOM identity may move to the wrong item after insertions, deletions, or reordering.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "state moves",
+            "wrong item",
+            "reorder bug",
+            "input value shifts",
+            "identity mismatch"
+          ]
+        },
+        {
+          "id": "rrs_key_scope",
+          "label": "Understands key scope",
+          "description": "Notes that keys are for React's sibling matching and are not passed as a normal prop.",
+          "importance": "nice_to_have",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "sibling scope",
+            "not a prop",
+            "reconciliation identity",
+            "local uniqueness"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_react_rendering_state_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is an array index an acceptable key?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Lista keyk kiválasztása",
+          "prompt": "Mitől jó egy React lista key, és milyen hibák jelenhetnek meg, ha átrendezhető listában tömbindexet használunk?",
+          "answerStructureHint": "Határozd meg a stabil azonosságot, magyarázd el az átrendezési hibát, és említsd meg, mikor biztonságos korlátozottan az index.",
+          "expectedPoints": {
+            "rrs_stable_key": {
+              "label": "Stabil keyt határoz meg",
+              "description": "Olyan azonosítót használ, amely ugyanahhoz a logikai elemhez stabil, és a testvérek között egyedi."
+            },
+            "rrs_index_bug": {
+              "label": "Elmagyarázza az index-key hibáit",
+              "description": "Elmondja, hogy beszúrás, törlés vagy átrendezés után a komponensstate vagy DOM-azonosság rossz elemhez kerülhet."
+            },
+            "rrs_key_scope": {
+              "label": "Érti a key hatókörét",
+              "description": "Megjegyzi, hogy a key a React testvérelemek párosítására szolgál, és nem normál propként kerül átadásra."
+            }
+          },
+          "followUps": {
+            "redspher_react_rendering_state_003_fu1": "Mikor elfogadható egy tömbindex keyként?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_effects_lifecycle_001",
+      "title": "When to use a React Effect",
+      "prompt": "What is a React Effect for, and what kinds of logic should usually not be placed in an Effect?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_react_effects_lifecycle"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define synchronization, then contrast it with render calculations and event-driven logic.",
+      "expectedPoints": [
+        {
+          "id": "rel_external",
+          "label": "Defines external synchronization",
+          "description": "Explains that Effects synchronize with systems outside React after a commit.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "external system",
+            "after commit",
+            "synchronize outside react",
+            "browser api",
+            "subscription"
+          ]
+        },
+        {
+          "id": "rel_not_derived",
+          "label": "Avoids derived-state Effects",
+          "description": "Says calculations from props or state should usually happen during render, not through an Effect and another state update.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "derive during render",
+            "avoid extra state",
+            "no effect needed",
+            "calculated value",
+            "extra render"
+          ]
+        },
+        {
+          "id": "rel_event_logic",
+          "label": "Separates event logic",
+          "description": "Places user-triggered actions in event handlers when they are caused by a specific interaction.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "event handler",
+            "user action",
+            "button click",
+            "not render driven",
+            "interaction logic"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_react_effects_lifecycle_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would data fetching always require an Effect? Discuss framework and client-library alternatives.",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_react_effects_lifecycle_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can an Effect that sets derived state cause unnecessary work?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mikor használjunk React Effectet?",
+          "prompt": "Mire való a React Effect, és milyen logikát nem célszerű általában Effectbe tenni?",
+          "answerStructureHint": "Határozd meg a szinkronizációt, majd állítsd szembe a render közbeni számításokkal és az eseményvezérelt logikával.",
+          "expectedPoints": {
+            "rel_external": {
+              "label": "Meghatározza a külső szinkronizációt",
+              "description": "Elmagyarázza, hogy az Effectek commit után a Reacten kívüli rendszerekkel szinkronizálnak."
+            },
+            "rel_not_derived": {
+              "label": "Kerüli a származtatott state-et létrehozó Effecteket",
+              "description": "Elmondja, hogy a propsból vagy state-ből számítható érték általában render közben készüljön, ne Effecttel és újabb state-frissítéssel."
+            },
+            "rel_event_logic": {
+              "label": "Elválasztja az eseménylogikát",
+              "description": "A konkrét felhasználói interakció által kiváltott műveleteket event handlerbe helyezi."
+            }
+          },
+          "followUps": {
+            "redspher_react_effects_lifecycle_001_fu1": "Mindig Effect kell az adatlekéréshez? Beszélj a framework- és klienskönyvtári alternatívákról.",
+            "redspher_react_effects_lifecycle_001_fu2": "Miért okozhat felesleges munkát egy származtatott state-et beállító Effect?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_effects_lifecycle_002",
+      "title": "Stale request results in React",
+      "prompt": "A user changes filters quickly. An older API request finishes last and overwrites the newer result. How would you prevent this?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "redspher_react_effects_lifecycle"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain the ordering race, then cover cancellation or stale-result protection and consistent state.",
+      "expectedPoints": [
+        {
+          "id": "rel_race",
+          "label": "Recognizes the race",
+          "description": "Explains that completion order can differ from request order and an old closure may commit stale data.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "race condition",
+            "out of order",
+            "stale result",
+            "older request",
+            "completion order"
+          ]
+        },
+        {
+          "id": "rel_cancel",
+          "label": "Cancels or ignores obsolete work",
+          "description": "Uses AbortController, request identifiers, or cleanup that marks old work as obsolete.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "abort controller",
+            "cancel request",
+            "request id",
+            "ignore stale",
+            "effect cleanup"
+          ]
+        },
+        {
+          "id": "rel_state",
+          "label": "Keeps loading and errors consistent",
+          "description": "Models pending, success, error, and cancellation so old requests cannot corrupt the current state.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "loading state",
+            "error state",
+            "current request",
+            "cancelled request",
+            "state machine"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_react_effects_lifecycle_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What should happen if the backend cannot actually cancel the work?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_react_effects_lifecycle_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would a data-fetching library help?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Elavult kérési eredmények Reactben",
+          "prompt": "A felhasználó gyorsan váltogatja a szűrőket. Egy régebbi API-kérés fejeződik be utoljára, és felülírja az újabb eredményt. Hogyan előznéd meg?",
+          "answerStructureHint": "Magyarázd el a sorrendiségi versenyhelyzetet, majd térj ki a megszakításra vagy az elavult eredmény figyelmen kívül hagyására és a konzisztens state-re.",
+          "expectedPoints": {
+            "rel_race": {
+              "label": "Felismeri a versenyhelyzetet",
+              "description": "Elmagyarázza, hogy a befejezési sorrend eltérhet a kérési sorrendtől, és egy régi closure elavult adatot commitolhat."
+            },
+            "rel_cancel": {
+              "label": "Megszakítja vagy figyelmen kívül hagyja az elavult munkát",
+              "description": "AbortControllert, kérésazonosítót vagy cleanupot használ, amely a régi munkát elavultnak jelöli."
+            },
+            "rel_state": {
+              "label": "Konzisztensen kezeli a betöltést és hibákat",
+              "description": "A pending, success, error és cancellation állapotokat úgy modellezi, hogy régi kérés ne ronthassa el az aktuális state-et."
+            }
+          },
+          "followUps": {
+            "redspher_react_effects_lifecycle_002_fu1": "Mi történjen, ha a backend a munkát valójában nem tudja megszakítani?",
+            "redspher_react_effects_lifecycle_002_fu2": "Hogyan segítene egy adatlekérő könyvtár?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_effects_lifecycle_003",
+      "title": "Effect dependencies and stale closures",
+      "prompt": "Why can removing a value from a React Effect dependency list create a stale-closure bug, and how would you fix the design without disabling the lint rule?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_react_effects_lifecycle"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Connect closures to render snapshots, then show a structural fix rather than a lint suppression.",
+      "expectedPoints": [
+        {
+          "id": "rel_closure",
+          "label": "Explains stale closures",
+          "description": "Explains that the Effect keeps values from the render in which it was created.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "stale closure",
+            "captured value",
+            "render snapshot",
+            "old state",
+            "old prop"
+          ]
+        },
+        {
+          "id": "rel_dependency",
+          "label": "Respects reactive dependencies",
+          "description": "Includes reactive values used by the Effect or restructures the code so they are no longer dependencies.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "include dependency",
+            "reactive value",
+            "dependency list",
+            "restructure effect",
+            "split effect"
+          ]
+        },
+        {
+          "id": "rel_stability",
+          "label": "Stabilizes only when needed",
+          "description": "Moves nonreactive logic out, uses functional updates, or stabilizes callbacks and objects when identity is genuinely the problem.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "functional update",
+            "move outside",
+            "use callback",
+            "stable identity",
+            "split logic"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_react_effects_lifecycle_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When can a functional state update remove a dependency safely?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Effect dependencyk és stale closure-ök",
+          "prompt": "Miért okozhat stale closure hibát, ha egy értéket eltávolítunk a React Effect dependency-listájából, és hogyan javítanád a tervezést a lint szabály kikapcsolása nélkül?",
+          "answerStructureHint": "Kapcsold össze a closure-öket a render-pillanatképekkel, majd lint suppression helyett strukturális javítást mutass.",
+          "expectedPoints": {
+            "rel_closure": {
+              "label": "Elmagyarázza a stale closure-t",
+              "description": "Elmondja, hogy az Effect annak a rendernek az értékeit tartja meg, amelyben létrejött."
+            },
+            "rel_dependency": {
+              "label": "Figyelembe veszi a reaktív dependencyket",
+              "description": "Beveszi az Effect által használt reaktív értékeket, vagy úgy alakítja át a kódot, hogy már ne legyenek dependencyk."
+            },
+            "rel_stability": {
+              "label": "Csak szükség esetén stabilizál",
+              "description": "Kiemeli a nem reaktív logikát, funkcionális frissítést használ, vagy csak valódi azonossági probléma esetén stabilizál callbacket és objektumot."
+            }
+          },
+          "followUps": {
+            "redspher_react_effects_lifecycle_003_fu1": "Mikor távolíthat el biztonságosan egy dependencyt a funkcionális state-frissítés?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_component_state_design_001",
+      "title": "Choosing where React state belongs",
+      "prompt": "How do you decide whether state should be local, lifted to a parent, stored in the URL, or placed in a shared store?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_react_component_state_design"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use consumers, lifecycle, navigation, and source-of-truth requirements to justify the location.",
+      "expectedPoints": [
+        {
+          "id": "rcsd_consumers",
+          "label": "Starts from ownership and consumers",
+          "description": "Identifies who reads and writes the value and chooses the lowest owner that serves them.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "who needs it",
+            "single owner",
+            "lowest common parent",
+            "read and write",
+            "source of truth"
+          ]
+        },
+        {
+          "id": "rcsd_lifecycle",
+          "label": "Uses lifecycle and persistence",
+          "description": "Distinguishes temporary UI state, navigable URL state, shared application state, and remote server state.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "local ui state",
+            "url state",
+            "shared state",
+            "server state",
+            "lifecycle"
+          ]
+        },
+        {
+          "id": "rcsd_avoid_global",
+          "label": "Avoids premature global state",
+          "description": "Keeps state local until sharing, persistence, or coordination justifies a broader owner.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "keep local",
+            "avoid global store",
+            "only when shared",
+            "reduce coupling",
+            "narrow scope"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_react_component_state_design_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where would you keep table filters that users should be able to bookmark?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_react_component_state_design_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How is cached server state different from client-owned state?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "A React state helyének kiválasztása",
+          "prompt": "Hogyan döntöd el, hogy egy state helyi legyen, szülőbe kerüljön, az URL-ben legyen vagy közös store-ba kerüljön?",
+          "answerStructureHint": "A fogyasztók, az életciklus, a navigáció és az igazságforrás igénye alapján indokold a helyet.",
+          "expectedPoints": {
+            "rcsd_consumers": {
+              "label": "A tulajdonból és fogyasztókból indul ki",
+              "description": "Azonosítja, ki olvassa és írja az értéket, majd a legalacsonyabb megfelelő tulajdonost választja."
+            },
+            "rcsd_lifecycle": {
+              "label": "Figyelembe veszi az életciklust és a tartósságot",
+              "description": "Megkülönbözteti az ideiglenes UI-state-et, a navigálható URL-state-et, a megosztott alkalmazásstate-et és a távoli server state-et."
+            },
+            "rcsd_avoid_global": {
+              "label": "Kerüli a túl korai globális state-et",
+              "description": "Helyben tartja a state-et, amíg a megosztás, tartósság vagy koordináció nem indokol tágabb tulajdonost."
+            }
+          },
+          "followUps": {
+            "redspher_react_component_state_design_001_fu1": "Hol tárolnád azokat a táblaszűrőket, amelyeket a felhasználók könyvjelzőzni szeretnének?",
+            "redspher_react_component_state_design_001_fu2": "Miben különbözik a cache-elt server state a kliens tulajdonában lévő state-től?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_component_state_design_002",
+      "title": "Designing a reusable business component",
+      "prompt": "You need a reusable shipment status component used in a table, a details page, and an edit form. How would you design its API without making it overly generic?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_react_component_state_design"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define the responsibility, propose a typed API, and explain how composition keeps variants manageable.",
+      "expectedPoints": [
+        {
+          "id": "rcsd_responsibility",
+          "label": "Defines a focused responsibility",
+          "description": "Separates status display from status editing and keeps business meaning explicit.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "focused component",
+            "display versus edit",
+            "single responsibility",
+            "business meaning",
+            "clear purpose"
+          ]
+        },
+        {
+          "id": "rcsd_api",
+          "label": "Designs a small typed API",
+          "description": "Uses typed props, controlled values when editing, and composition instead of many boolean flags.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "typed props",
+            "controlled component",
+            "composition",
+            "small api",
+            "avoid boolean flags"
+          ]
+        },
+        {
+          "id": "rcsd_accessibility",
+          "label": "Preserves usability",
+          "description": "Mentions semantic markup, loading or error states where relevant, and accessibility for interactive variants.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "semantic html",
+            "accessible label",
+            "keyboard support",
+            "loading state",
+            "error state"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_react_component_state_design_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would you use children composition?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_react_component_state_design_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you prevent domain logic from leaking into a design-system component?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Újrahasznosítható üzleti komponens tervezése",
+          "prompt": "Újrahasznosítható shipment status komponens kell táblához, részletező oldalhoz és szerkesztőűrlaphoz. Hogyan terveznéd meg az API-ját anélkül, hogy túl általánossá válna?",
+          "answerStructureHint": "Határozd meg a felelősséget, javasolj típusos API-t, és magyarázd el, hogyan tartja kezelhetően a variációkat a kompozíció.",
+          "expectedPoints": {
+            "rcsd_responsibility": {
+              "label": "Fókuszált felelősséget határoz meg",
+              "description": "Elválasztja a státusz megjelenítését a szerkesztésétől, és egyértelműen megtartja az üzleti jelentést."
+            },
+            "rcsd_api": {
+              "label": "Kis, típusos API-t tervez",
+              "description": "Típusos propsot, szerkesztésnél kontrollált értéket és sok boolean flag helyett kompozíciót használ."
+            },
+            "rcsd_accessibility": {
+              "label": "Megőrzi a használhatóságot",
+              "description": "Megemlíti a szemantikus markupot, szükség esetén a loading- és error state-et, valamint az interaktív változatok akadálymentességét."
+            }
+          },
+          "followUps": {
+            "redspher_react_component_state_design_002_fu1": "Mikor használnál children alapú kompozíciót?",
+            "redspher_react_component_state_design_002_fu2": "Hogyan akadályoznád meg, hogy domainlogika szivárogjon egy design-system komponensbe?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_component_state_design_003",
+      "title": "Duplicate state between form and API data",
+      "prompt": "A form copies an API object into local state. When the API refetches, the form sometimes overwrites user edits. How would you redesign the data flow?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "redspher_react_component_state_design"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate the editable draft from remote state and define refresh, conflict, and submission behavior.",
+      "expectedPoints": [
+        {
+          "id": "rcsd_draft",
+          "label": "Separates draft from server data",
+          "description": "Treats the form as an explicit draft with an initialization point rather than continuously mirroring props.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "form draft",
+            "initialize once",
+            "server data",
+            "do not mirror props",
+            "edit buffer"
+          ]
+        },
+        {
+          "id": "rcsd_conflict",
+          "label": "Defines refresh and conflict behavior",
+          "description": "Decides what happens when remote data changes while the user has unsaved edits.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "dirty state",
+            "conflict handling",
+            "do not overwrite",
+            "refresh policy",
+            "version check"
+          ]
+        },
+        {
+          "id": "rcsd_submit",
+          "label": "Makes submission explicit",
+          "description": "Builds a request from the draft, validates it, then updates or invalidates cached server data after success.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "submit draft",
+            "validate form",
+            "invalidate cache",
+            "optimistic update",
+            "save result"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_react_component_state_design_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you use optimistic updates here? What could go wrong?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Duplikált state az űrlap és az API-adat között",
+          "prompt": "Egy űrlap API-objektumot másol helyi state-be. Amikor az API újralekér, az űrlap néha felülírja a felhasználó módosításait. Hogyan terveznéd újra az adatfolyamot?",
+          "answerStructureHint": "Válaszd külön a szerkeszthető draftot a távoli state-től, és határozd meg a frissítés, konfliktus és elküldés viselkedését.",
+          "expectedPoints": {
+            "rcsd_draft": {
+              "label": "Elválasztja a draftot a szerveradattól",
+              "description": "Az űrlapot egyértelmű inicializálási ponttal rendelkező draftként kezeli ahelyett, hogy folyamatosan tükrözné a propsot."
+            },
+            "rcsd_conflict": {
+              "label": "Meghatározza a frissítési és konfliktusviselkedést",
+              "description": "Eldönti, mi történjen, ha a távoli adat megváltozik, miközben a felhasználónak mentetlen módosítása van."
+            },
+            "rcsd_submit": {
+              "label": "Egyértelművé teszi az elküldést",
+              "description": "A draftból requestet épít, validálja, majd siker után frissíti vagy invalidálja a cache-elt szerveradatot."
+            }
+          },
+          "followUps": {
+            "redspher_react_component_state_design_003_fu1": "Használnál itt optimistic update-et? Mi romolhat el?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_performance_001",
+      "title": "Using React memoization well",
+      "prompt": "When do React.memo, useMemo, and useCallback help, and when can they make the code worse?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_react_performance"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain the specific job of each tool, the evidence required, and the maintenance cost.",
+      "expectedPoints": [
+        {
+          "id": "rp_measure",
+          "label": "Starts with measurement",
+          "description": "Requires a measured expensive render, calculation, or identity-sensitive child before adding memoization.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "measure first",
+            "react profiler",
+            "expensive render",
+            "real bottleneck",
+            "user interaction"
+          ]
+        },
+        {
+          "id": "rp_purpose",
+          "label": "Distinguishes the tools",
+          "description": "Explains memoizing a component result, a computed value, or a function identity for a concrete consumer.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "memoized component",
+            "computed value",
+            "function identity",
+            "stable callback",
+            "prop equality"
+          ]
+        },
+        {
+          "id": "rp_cost",
+          "label": "Explains costs and limits",
+          "description": "Mentions comparison overhead, dependency complexity, stale values, and the fact that memoization does not fix poor state placement.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "comparison cost",
+            "dependency complexity",
+            "stale value",
+            "not always faster",
+            "state placement"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_react_performance_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why is useCallback useless when no consumer relies on stable function identity?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_react_performance_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you inspect before memoizing a slow table row?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "A React memoizálás helyes használata",
+          "prompt": "Mikor segít a React.memo, a useMemo és a useCallback, és mikor ronthatják a kódot?",
+          "answerStructureHint": "Magyarázd el mindegyik eszköz konkrét feladatát, a szükséges bizonyítékot és a karbantartási költséget.",
+          "expectedPoints": {
+            "rp_measure": {
+              "label": "Méréssel kezd",
+              "description": "Memoizálás előtt mért drága renderelést, számítást vagy azonosságérzékeny gyermeket követel."
+            },
+            "rp_purpose": {
+              "label": "Megkülönbözteti az eszközöket",
+              "description": "Elmagyarázza egy komponenseredmény, kiszámított érték vagy függvényazonosság memoizálását egy konkrét fogyasztó számára."
+            },
+            "rp_cost": {
+              "label": "Elmagyarázza a költségeket és korlátokat",
+              "description": "Megemlíti az összehasonlítás költségét, a dependencyk bonyolultságát, a stale értékeket és azt, hogy a memoizálás nem javítja a rossz state-elhelyezést."
+            }
+          },
+          "followUps": {
+            "redspher_react_performance_001_fu1": "Miért haszontalan a useCallback, ha egyetlen fogyasztó sem támaszkodik stabil függvényazonosságra?",
+            "redspher_react_performance_001_fu2": "Mit vizsgálnál meg, mielőtt memoizálnál egy lassú táblasort?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_performance_002",
+      "title": "Investigating a slow logistics dashboard",
+      "prompt": "A logistics dashboard becomes sluggish when users update one filter. Walk through how you would investigate the problem before changing code.",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "redspher_react_performance"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Reproduce, measure across browser and network layers, fix the dominant cost, and verify.",
+      "expectedPoints": [
+        {
+          "id": "rp_reproduce",
+          "label": "Defines and reproduces the slow interaction",
+          "description": "Uses a realistic dataset and identifies the user-visible latency or frame problem.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "reproduce issue",
+            "realistic data",
+            "slow interaction",
+            "user timing",
+            "baseline measurement"
+          ]
+        },
+        {
+          "id": "rp_profile",
+          "label": "Profiles across layers",
+          "description": "Checks React renders, browser main-thread work, network requests, and DOM size rather than assuming the cause.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "react profiler",
+            "performance panel",
+            "network waterfall",
+            "dom size",
+            "render count"
+          ]
+        },
+        {
+          "id": "rp_prioritize",
+          "label": "Chooses the largest fix",
+          "description": "Considers state scope, request deduplication, list virtualization, algorithm changes, and only then selective memoization.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "move state",
+            "virtualize list",
+            "deduplicate requests",
+            "algorithm change",
+            "selective memoization"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_react_performance_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you verify that the change actually improved the user experience?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_react_performance_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What performance metric would be useful for this interaction?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Lassú logisztikai dashboard vizsgálata",
+          "prompt": "Egy logisztikai dashboard belassul, amikor a felhasználók egy szűrőt módosítanak. Mutasd be, hogyan vizsgálnád ki a problémát kódmódosítás előtt.",
+          "answerStructureHint": "Reprodukálj, mérj a böngésző- és hálózati rétegen, javítsd a domináns költséget, majd ellenőrizd az eredményt.",
+          "expectedPoints": {
+            "rp_reproduce": {
+              "label": "Meghatározza és reprodukálja a lassú interakciót",
+              "description": "Valószerű adatkészletet használ, és azonosítja a felhasználó által érzékelt késleltetést vagy frame-problémát."
+            },
+            "rp_profile": {
+              "label": "Több rétegen profiloz",
+              "description": "A feltételezés helyett ellenőrzi a React-rendereket, a böngésző main thread munkáját, a hálózati kéréseket és a DOM-méretet."
+            },
+            "rp_prioritize": {
+              "label": "A legnagyobb javítást választja",
+              "description": "Megvizsgálja a state hatókörét, a request deduplikációt, a listavirtualizációt és az algoritmust, és csak ezután a célzott memoizálást."
+            }
+          },
+          "followUps": {
+            "redspher_react_performance_002_fu1": "Hogyan ellenőriznéd, hogy a változtatás valóban javította a felhasználói élményt?",
+            "redspher_react_performance_002_fu2": "Milyen teljesítménymetrika lenne hasznos ennél az interakciónál?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_react_performance_003",
+      "title": "Optimizing a large table",
+      "prompt": "A table may display 50,000 shipment rows with live updates. What frontend techniques would you consider, and what trade-offs do they introduce?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "redspher_react_performance"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover DOM size, update scope, data access, and the UX or accessibility trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "rp_virtualize",
+          "label": "Uses windowing or pagination",
+          "description": "Avoids rendering every row at once through virtualization, pagination, or server-side querying.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "virtualized list",
+            "windowing",
+            "pagination",
+            "server side filtering",
+            "visible rows"
+          ]
+        },
+        {
+          "id": "rp_updates",
+          "label": "Controls update frequency and scope",
+          "description": "Batches or throttles updates, normalizes data, and rerenders only affected rows.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "batch updates",
+            "throttle updates",
+            "normalized data",
+            "row level update",
+            "stable keys"
+          ]
+        },
+        {
+          "id": "rp_tradeoffs",
+          "label": "Discusses trade-offs",
+          "description": "Mentions accessibility, variable row heights, scroll behavior, memory, and freshness requirements.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "accessibility tradeoff",
+            "row height",
+            "scroll position",
+            "data freshness",
+            "memory use"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_react_performance_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you preserve keyboard navigation in a virtualized table?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_react_performance_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you process live updates in the main thread?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Nagy tábla optimalizálása",
+          "prompt": "Egy tábla akár 50 000, élőben frissülő küldeménysort jeleníthet meg. Milyen frontendtechnikákat mérlegelnél, és milyen kompromisszumokat hoznak?",
+          "answerStructureHint": "Térj ki a DOM-méretre, a frissítési hatókörre, az adatelérésre és a UX- vagy akadálymentességi kompromisszumokra.",
+          "expectedPoints": {
+            "rp_virtualize": {
+              "label": "Windowingot vagy lapozást használ",
+              "description": "Virtualizációval, lapozással vagy szerveroldali lekérdezéssel elkerüli az összes sor egyidejű renderelését."
+            },
+            "rp_updates": {
+              "label": "Szabályozza a frissítés gyakoriságát és hatókörét",
+              "description": "Batch-eli vagy throttlingolja a frissítéseket, normalizálja az adatot, és csak az érintett sorokat rendereli újra."
+            },
+            "rp_tradeoffs": {
+              "label": "Beszél a kompromisszumokról",
+              "description": "Megemlíti az akadálymentességet, a változó sormagasságot, a görgetési viselkedést, a memóriát és a frissességi igényt."
+            }
+          },
+          "followUps": {
+            "redspher_react_performance_003_fu1": "Hogyan őriznéd meg a billentyűzetes navigációt virtualizált táblában?",
+            "redspher_react_performance_003_fu2": "A main threaden dolgoznád fel az élő frissítéseket?"
+          }
+        }
+      }
+    }
+  ]
+}

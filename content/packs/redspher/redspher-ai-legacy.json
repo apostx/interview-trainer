@@ -1,0 +1,2040 @@
+{
+  "id": "redspher_ai_legacy",
+  "name": "Redspher - AI, MCP, Agents, and Legacy Modernization",
+  "description": "AI agents, MCP, orchestration, LLM reliability, and PHP legacy-modernization topics from the Redspher job description.",
+  "sources": [
+    "redspher/full_stack_developer_job_description"
+  ],
+  "topics": [
+    {
+      "id": "redspher_ai_agent_tool_use",
+      "name": "AI Agents and Tool Use",
+      "description": "AI agents combine model decisions with constrained tool calls, while application code keeps authority over validation, permissions, budgets, and sensitive actions.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "redspher_mcp_architecture",
+        "redspher_agent_orchestration",
+        "redspher_llm_reliability_security"
+      ],
+      "studyContent": {
+        "mentalModel": "An AI agent is a model-driven workflow that can choose actions, call approved tools, inspect results, and continue until it reaches a stopping condition.",
+        "problem": "A language model can produce convincing text without actually reading current business data or performing an action. Giving it unrestricted tools can also turn a wrong guess or malicious instruction into a real side effect.",
+        "example": "A logistics assistant can look up a shipment and draft a customer update. It may call a read-only shipment tool automatically, but sending the message requires a validated draft and human approval.",
+        "howItWorks": [
+          "The application gives the model a goal, context, and a limited list of tool schemas.",
+          "The model selects a tool and supplies arguments; application code validates and executes the call.",
+          "The result returns to the model, which continues, asks for clarification, or stops."
+        ],
+        "commonMistakes": [
+          "Calling any chat interface an agent even when it cannot choose or perform actions.",
+          "Letting the model call internal functions without validation, authorization, or limits.",
+          "Allowing an agent to keep looping without a step, time, or cost budget."
+        ],
+        "keyTerms": [
+          {
+            "term": "tool call",
+            "definition": "A model request for application code to execute a named operation with structured arguments."
+          },
+          {
+            "term": "agent loop",
+            "definition": "The repeated cycle of model decision, tool execution, observation, and next decision."
+          },
+          {
+            "term": "human approval",
+            "definition": "A required person decision before a sensitive or irreversible action is executed."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "AI-ágensek és eszközhasználat",
+          "description": "Az AI-ágensek a modell döntéseit korlátozott eszközhívásokkal kapcsolják össze, miközben az alkalmazáskód felel az ellenőrzésért, a jogosultságokért, a költségkeretekért és az érzékeny műveletekért.",
+          "studyContent": {
+            "mentalModel": "Az AI-ágens olyan modellvezérelt munkafolyamat, amely műveleteket választhat, engedélyezett eszközöket hívhat meg, kiértékelheti az eredményt, majd egy leállási feltételig folytathatja a munkát.",
+            "problem": "Egy nyelvi modell meggyőző szöveget adhat anélkül, hogy aktuális üzleti adatot olvasna vagy valódi műveletet hajtana végre. Korlátlan eszközhozzáféréssel egy téves következtetés vagy rosszindulatú utasítás valódi mellékhatást okozhat.",
+            "example": "Egy logisztikai asszisztens lekérdezheti egy küldemény adatait és megfogalmazhat egy ügyfélnek szánt tájékoztatást. Az írásvédett lekérdezést automatikusan elvégezheti, de az üzenet elküldéséhez ellenőrzött piszkozat és emberi jóváhagyás kell.",
+            "howItWorks": [
+              "Az alkalmazás célt, kontextust és korlátozott eszközsémákat ad a modellnek.",
+              "A modell kiválaszt egy eszközt és argumentumokat ad; az alkalmazáskód ellenőrzi és végrehajtja a hívást.",
+              "Az eredmény visszakerül a modellhez, amely folytatja a munkát, pontosítást kér vagy leáll."
+            ],
+            "commonMistakes": [
+              "Minden chatfelületet ágensnek nevezni akkor is, ha nem választhat és nem hajthat végre műveleteket.",
+              "Belső függvényeket ellenőrzés, jogosultságvizsgálat vagy korlátok nélkül elérhetővé tenni a modellnek.",
+              "Lépés-, idő- vagy költségkeret nélkül hagyni, hogy az ágens korlátlanul ismételje a ciklust."
+            ],
+            "keyTerms": [
+              {
+                "term": "eszközhívás",
+                "definition": "A modell kérése arra, hogy az alkalmazáskód egy megnevezett műveletet strukturált argumentumokkal végrehajtson."
+              },
+              {
+                "term": "ágensciklus",
+                "definition": "A modelldöntés, az eszközvégrehajtás, az eredmény megfigyelése és a következő döntés ismétlődő folyamata."
+              },
+              {
+                "term": "emberi jóváhagyás",
+                "definition": "Kötelező emberi döntés egy érzékeny vagy visszafordíthatatlan művelet végrehajtása előtt."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_mcp_architecture",
+      "name": "Model Context Protocol Architecture",
+      "description": "MCP standardizes how AI hosts connect to servers that expose tools, resources, and prompts, while the host remains responsible for policy and user control.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "redspher_ai_agent_tool_use",
+        "redspher_llm_reliability_security"
+      ],
+      "studyContent": {
+        "mentalModel": "Model Context Protocol is a standard way for an AI application to connect to servers that expose tools, resources, and reusable prompts through a defined client-server interface.",
+        "problem": "Without a common protocol, every AI application needs a custom integration for each data source or action. That duplicates authentication, discovery, schemas, transport handling, and lifecycle code.",
+        "example": "A desktop AI host connects through an MCP client to a logistics MCP server. The server exposes a shipment resource and a read-only tracking tool, while the host decides what the model may see and which tool call may run.",
+        "howItWorks": [
+          "An MCP host creates a client connection to one or more MCP servers.",
+          "Servers advertise capabilities such as tools, resources, and prompts.",
+          "The host mediates model access, user consent, security policy, and the returned context."
+        ],
+        "commonMistakes": [
+          "Treating MCP as the model itself or as an autonomous agent framework.",
+          "Assuming a published tool schema removes the need for authorization and validation.",
+          "Exposing one server with broad internal access instead of narrow capabilities."
+        ],
+        "keyTerms": [
+          {
+            "term": "host",
+            "definition": "The AI application that manages user interaction, model use, permissions, and MCP client connections."
+          },
+          {
+            "term": "MCP server",
+            "definition": "A program that exposes selected tools, resources, or prompts through the protocol."
+          },
+          {
+            "term": "resource",
+            "definition": "Contextual data that a client can read, such as a document, record, or generated view."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "A Model Context Protocol architektúrája",
+          "description": "Az MCP szabványosítja, hogyan kapcsolódnak az AI-hosztok az eszközöket, erőforrásokat és promptokat biztosító szerverekhez, miközben a szabályokért és a felhasználói kontrollért továbbra is a hoszt felel.",
+          "studyContent": {
+            "mentalModel": "A Model Context Protocol szabványos kliens–szerver felületet ad ahhoz, hogy egy AI-alkalmazás eszközöket, erőforrásokat és újrahasznosítható promptokat biztosító szerverekhez kapcsolódjon.",
+            "problem": "Közös protokoll nélkül minden AI-alkalmazáshoz egyedi integráció kell minden adatforráshoz és művelethez. Ez megismétli a hitelesítési, felderítési, séma-, kommunikációs és életciklus-kezelési kódot.",
+            "example": "Egy asztali AI-hoszt MCP-kliensen keresztül kapcsolódik egy logisztikai MCP-szerverhez. A szerver küldemény-erőforrást és írásvédett nyomkövetési eszközt ad, a hoszt pedig eldönti, mit láthat a modell és melyik hívás futhat le.",
+            "howItWorks": [
+              "Az MCP-hoszt klienskapcsolatot hoz létre egy vagy több MCP-szerverrel.",
+              "A szerverek meghirdetik képességeiket, például az eszközöket, erőforrásokat és promptokat.",
+              "A hoszt közvetíti a modellhozzáférést, a felhasználói beleegyezést, a biztonsági szabályokat és a visszakapott kontextust."
+            ],
+            "commonMistakes": [
+              "Az MCP-t magával a modellel vagy önálló ágenskeretrendszerrel összekeverni.",
+              "Azt feltételezni, hogy egy publikált eszközséma kiváltja a jogosultságvizsgálatot és az adatellenőrzést.",
+              "Egy széles belső hozzáférésű szervert kitenni több szűk, célhoz kötött képesség helyett."
+            ],
+            "keyTerms": [
+              {
+                "term": "hoszt",
+                "definition": "Az AI-alkalmazás, amely a felhasználói kapcsolatot, a modellhasználatot, a jogosultságokat és az MCP-klienskapcsolatokat kezeli."
+              },
+              {
+                "term": "MCP-szerver",
+                "definition": "Program, amely kiválasztott eszközöket, erőforrásokat vagy promptokat tesz elérhetővé a protokollon keresztül."
+              },
+              {
+                "term": "erőforrás",
+                "definition": "A kliens által olvasható kontextusadat, például dokumentum, rekord vagy generált nézet."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_agent_orchestration",
+      "name": "Agent Orchestration",
+      "description": "Agent orchestration keeps workflow state, deterministic policy, budgets, approvals, and recovery outside the model so AI-assisted processes remain operable.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "redspher_ai_agent_tool_use",
+        "redspher_resilient_integrations"
+      ],
+      "studyContent": {
+        "mentalModel": "Agent orchestration coordinates steps, tools, state, retries, and approvals around one or more model calls so the overall workflow is predictable enough to operate.",
+        "problem": "A free-running loop can repeat actions, lose context, spend unlimited tokens, or fail halfway through a business process. Multiple agents can add even more messages without adding useful capability.",
+        "example": "A claim-investigation workflow uses deterministic steps for loading data and checking permissions, one model step to summarize evidence, a rule-based approval gate, and a final tool call that records the approved result.",
+        "howItWorks": [
+          "Represent workflow state and allowed transitions explicitly.",
+          "Use deterministic code for rules and models only where interpretation is useful.",
+          "Set budgets, persist progress, handle retries, and require approval at sensitive transitions."
+        ],
+        "commonMistakes": [
+          "Using several agents when one model call plus normal code would be clearer.",
+          "Letting the model decide security policy or transaction boundaries.",
+          "Retrying an entire workflow after a partial side effect without idempotency."
+        ],
+        "keyTerms": [
+          {
+            "term": "orchestration",
+            "definition": "Coordinating steps, state, tools, and control rules across a workflow."
+          },
+          {
+            "term": "checkpoint",
+            "definition": "A saved workflow state that allows safe resume or review after interruption."
+          },
+          {
+            "term": "compensation",
+            "definition": "A deliberate action that reduces or reverses the effect of a completed step when later work fails."
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": "Ágensorchesztráció",
+          "description": "Az ágensorchesztráció a munkafolyamat állapotát, a determinisztikus szabályokat, a költségkereteket, a jóváhagyásokat és a helyreállítást a modellen kívül tartja, hogy az AI-val támogatott folyamat működtethető maradjon.",
+          "studyContent": {
+            "mentalModel": "Az ágensorchesztráció a modellhívások körül összehangolja a lépéseket, eszközöket, állapotot, újrapróbálkozást és jóváhagyást, hogy a teljes munkafolyamat kellően kiszámítható legyen.",
+            "problem": "Egy szabadon futó ciklus megismételhet műveleteket, elveszítheti a kontextust, korlátlan tokent használhat vagy félúton hibázhat. Több ágens még több üzenetet hozhat létre valódi többletérték nélkül.",
+            "example": "Egy kárvizsgálati folyamat determinisztikus lépésekben tölti be az adatokat és ellenőrzi a jogosultságot. A modell összefoglalja a bizonyítékokat, egy szabályalapú kapu jóváhagyást kér, majd egy eszköz rögzíti az elfogadott eredményt.",
+            "howItWorks": [
+              "A munkafolyamat állapotát és a megengedett átmeneteket egyértelműen ábrázoljuk.",
+              "A szabályokat determinisztikus kód kezeli, a modellt pedig csak ott használjuk, ahol értelmezésre van szükség.",
+              "Kereteket állítunk be, mentjük az előrehaladást, kezeljük az újrapróbálkozást, és érzékeny átmeneteknél jóváhagyást kérünk."
+            ],
+            "commonMistakes": [
+              "Több ágenst használni ott, ahol egy modellhívás és hagyományos kód átláthatóbb lenne.",
+              "A biztonsági szabályokat vagy a tranzakciós határokat a modellel eldöntetni.",
+              "Részben végrehajtott mellékhatás után idempotencia nélkül az egész munkafolyamatot újrapróbálni."
+            ],
+            "keyTerms": [
+              {
+                "term": "orchesztráció",
+                "definition": "Lépések, állapot, eszközök és vezérlési szabályok összehangolása egy munkafolyamatban."
+              },
+              {
+                "term": "ellenőrzőpont",
+                "definition": "Elmentett munkafolyamat-állapot, amely megszakítás után biztonságos folytatást vagy felülvizsgálatot tesz lehetővé."
+              },
+              {
+                "term": "kompenzáció",
+                "definition": "Szándékos művelet, amely csökkenti vagy visszafordítja egy korábbi lépés hatását, ha a későbbi munka meghiúsul."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_llm_reliability_security",
+      "name": "LLM Reliability and Security",
+      "description": "LLM features need grounding, structured validation, least-privilege tools, adversarial evaluation, and risk-based human control.",
+      "category": "security",
+      "relatedTopicIds": [
+        "redspher_ai_agent_tool_use",
+        "redspher_mcp_architecture",
+        "redspher_observability"
+      ],
+      "studyContent": {
+        "mentalModel": "An LLM is an untrusted probabilistic component: its output must be constrained, verified, and observed before it can affect business data or users.",
+        "problem": "A model can invent facts, follow malicious instructions found in retrieved content, leak sensitive context, or produce a structurally valid but unsafe action. Prompt wording alone cannot enforce security.",
+        "example": "A support assistant receives shipment notes that contain an instruction to export customer data. The application treats the notes as data, limits available tools, validates every tool argument, and requires approval for any external message.",
+        "howItWorks": [
+          "Minimize and label the context, and keep secrets out of prompts unless strictly required.",
+          "Use structured output, validation, grounded sources, and deterministic checks.",
+          "Constrain tools and permissions, evaluate known failure cases, and monitor production behavior."
+        ],
+        "commonMistakes": [
+          "Trusting a confident answer because it sounds detailed.",
+          "Treating a system prompt as a security boundary.",
+          "Logging complete prompts and responses that contain personal or confidential data."
+        ],
+        "keyTerms": [
+          {
+            "term": "hallucination",
+            "definition": "A plausible-looking model statement that is unsupported or false."
+          },
+          {
+            "term": "prompt injection",
+            "definition": "Untrusted content that attempts to make the model ignore the application's intended instructions."
+          },
+          {
+            "term": "grounding",
+            "definition": "Basing an answer on identified source data that can be checked."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "LLM-megbízhatóság és -biztonság",
+          "description": "Az LLM-funkciókhoz forrásokra támaszkodó válaszadás, strukturált ellenőrzés, legkisebb jogosultságú eszközök, támadó jellegű tesztelés és kockázatalapú emberi kontroll szükséges.",
+          "studyContent": {
+            "mentalModel": "Az LLM nem megbízható, valószínűségi komponens: a kimenetét korlátozni, ellenőrizni és megfigyelni kell, mielőtt üzleti adatra vagy felhasználóra hatna.",
+            "problem": "A modell kitalálhat tényeket, követhet visszakeresett tartalomba rejtett rosszindulatú utasítást, kiszivárogtathat érzékeny kontextust vagy formailag helyes, de veszélyes műveletet készíthet. A prompt önmagában nem biztonsági határ.",
+            "example": "Egy ügyfélszolgálati asszisztens olyan küldeményjegyzetet kap, amely ügyféladatok exportálására utasítja. Az alkalmazás adatként kezeli a jegyzetet, korlátozza az eszközöket, ellenőrzi az argumentumokat és jóváhagyást kér a külső üzenethez.",
+            "howItWorks": [
+              "Minimalizáljuk és megjelöljük a kontextust, a titkokat pedig csak feltétlenül szükséges esetben tesszük a promptba.",
+              "Strukturált kimenetet, sémaellenőrzést, megbízható forrásokat és determinisztikus szabályokat használunk.",
+              "Korlátozzuk az eszközöket és jogosultságokat, ismert hibákra tesztelünk, és figyeljük az éles működést."
+            ],
+            "commonMistakes": [
+              "A magabiztos, részletes választ automatikusan igaznak tekinteni.",
+              "A rendszerpromptot biztonsági határként kezelni.",
+              "Személyes vagy bizalmas adatot tartalmazó teljes promptokat és válaszokat naplózni."
+            ],
+            "keyTerms": [
+              {
+                "term": "hallucináció",
+                "definition": "Hihetőnek tűnő, de nem alátámasztott vagy hamis modellállítás."
+              },
+              {
+                "term": "prompt injection",
+                "definition": "Nem megbízható tartalom, amely az alkalmazás szándékolt utasításainak figyelmen kívül hagyására próbálja rávenni a modellt."
+              },
+              {
+                "term": "grounding",
+                "definition": "A válasz ellenőrizhető, azonosított forrásadatokra építése."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_legacy_php_modernization",
+      "name": "Legacy PHP Modernization",
+      "description": "Legacy PHP systems are safest to modernize through stable boundaries, explicit data ownership, and incremental capability migration.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "redspher_fullstack_feature_design",
+        "redspher_api_contract_validation",
+        "redspher_ci_cd_safe_delivery"
+      ],
+      "studyContent": {
+        "mentalModel": "Legacy modernization reduces risk by placing a stable boundary around the old system and moving one business capability at a time instead of rewriting everything at once.",
+        "problem": "A big-bang rewrite must reproduce years of hidden behavior before it delivers value. During the long transition, requirements continue to change and the old system still needs fixes.",
+        "example": "A PHP application remains the system of record for shipments. A new Node.js service first takes ownership of quote creation behind the same API gateway, while events or explicit APIs keep the two systems synchronized.",
+        "howItWorks": [
+          "Map business capabilities, dependencies, data ownership, and current pain points.",
+          "Create a stable interface around the legacy application.",
+          "Move one capability, route traffic gradually, compare results, and retire the old path."
+        ],
+        "commonMistakes": [
+          "Starting with a rewrite before understanding real behavior and operational dependencies.",
+          "Letting both systems update the same data without clear ownership.",
+          "Adding a new service but keeping all business logic duplicated in both systems."
+        ],
+        "keyTerms": [
+          {
+            "term": "strangler pattern",
+            "definition": "Replacing a legacy system gradually by routing selected capabilities to new components."
+          },
+          {
+            "term": "anti-corruption layer",
+            "definition": "A boundary that translates an old model or protocol into the new system's concepts."
+          },
+          {
+            "term": "data ownership",
+            "definition": "A clear rule about which system is authoritative for creating and changing a piece of data."
+          }
+        ]
+      },
+      "importance": 2,
+      "i18n": {
+        "hu": {
+          "name": "Legacy PHP-rendszer modernizálása",
+          "description": "A legacy PHP-rendszerek stabil határokkal, egyértelmű adattulajdonlással és üzleti képességenkénti fokozatos migrációval modernizálhatók a legbiztonságosabban.",
+          "studyContent": {
+            "mentalModel": "A legacy modernizáció kockázatát az csökkenti, ha stabil határt építünk a régi rendszer köré, és egyszerre egy üzleti képességet költöztetünk át a teljes újraírás helyett.",
+            "problem": "Egy teljes újraírásnak éveken át kialakult, rejtett működést kell reprodukálnia, mielőtt értéket adna. A hosszú átmenet alatt az igények tovább változnak, a régi rendszert pedig még mindig javítani kell.",
+            "example": "Egy PHP-alkalmazás marad a küldemények hiteles adatforrása. Egy új Node.js szolgáltatás először az árajánlat-készítést veszi át ugyanazon API gateway mögött, a rendszereket pedig események vagy egyértelmű API-k tartják szinkronban.",
+            "howItWorks": [
+              "Feltérképezzük az üzleti képességeket, függőségeket, adattulajdonlást és a jelenlegi problémákat.",
+              "Stabil interfészt építünk a legacy alkalmazás köré.",
+              "Egy képességet átköltöztetünk, fokozatosan tereljük a forgalmat, összehasonlítjuk az eredményeket, majd kivezetjük a régi útvonalat."
+            ],
+            "commonMistakes": [
+              "Újraírást kezdeni a tényleges működés és az üzemeltetési függőségek megértése előtt.",
+              "Mindkét rendszernek engedni ugyanazon adat módosítását egyértelmű tulajdonos nélkül.",
+              "Új szolgáltatást létrehozni úgy, hogy az üzleti logika mindkét rendszerben megmarad és duplikálódik."
+            ],
+            "keyTerms": [
+              {
+                "term": "strangler pattern",
+                "definition": "Legacy rendszer fokozatos kiváltása úgy, hogy kiválasztott képességeket új komponensekhez irányítunk."
+              },
+              {
+                "term": "anti-corruption layer",
+                "definition": "Határréteg, amely a régi modell vagy protokoll fogalmait az új rendszer fogalmaira fordítja."
+              },
+              {
+                "term": "adattulajdonlás",
+                "definition": "Egyértelmű szabály arról, melyik rendszer jogosult egy adott adat létrehozására és módosítására."
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "redspher_ai_agent_tool_use_001",
+      "title": "What makes an AI workflow an agent",
+      "prompt": "What is an AI agent, and how is it different from a single prompt-and-response LLM call?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_ai_agent_tool_use"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define the loop, explain tools, and show where deterministic application control remains essential.",
+      "expectedPoints": [
+        {
+          "id": "aatu_loop",
+          "label": "Defines the agent loop",
+          "description": "Explains repeated model decisions, tool calls, observations, and stopping conditions.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "agent loop",
+            "tool call",
+            "observe result",
+            "multiple steps",
+            "stopping condition"
+          ]
+        },
+        {
+          "id": "aatu_tools",
+          "label": "Explains tools and external state",
+          "description": "Explains that tools let the workflow read current data or perform approved actions outside the model.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "external tools",
+            "current data",
+            "perform action",
+            "structured arguments",
+            "application executes"
+          ]
+        },
+        {
+          "id": "aatu_control",
+          "label": "Includes application control",
+          "description": "Mentions validation, authorization, budgets, approval, and deterministic code around the model.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "validate arguments",
+            "authorization",
+            "step limit",
+            "human approval",
+            "application controls"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_ai_agent_tool_use_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is a deterministic workflow better than an agent?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_ai_agent_tool_use_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Who actually executes a tool call: the model or the application?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mitől ágens egy AI-munkafolyamat?",
+          "prompt": "Mi az AI-ágens, és miben különbözik egy egyszeri prompt–válasz LLM-hívástól?",
+          "answerStructureHint": "Határozd meg a ciklust, magyarázd el az eszközöket, és mutasd meg, hol marad nélkülözhetetlen a determinisztikus alkalmazásvezérlés.",
+          "expectedPoints": {
+            "aatu_loop": {
+              "label": "Meghatározza az ágensciklust",
+              "description": "Elmagyarázza a modell döntéseinek, eszközhívásainak, megfigyeléseinek és leállási feltételeinek ismétlődő folyamatát."
+            },
+            "aatu_tools": {
+              "label": "Elmagyarázza az eszközöket és a külső állapotot",
+              "description": "Elmondja, hogy az eszközök segítségével a munkafolyamat aktuális adatot olvashat vagy engedélyezett műveletet hajthat végre a modellen kívül."
+            },
+            "aatu_control": {
+              "label": "Kitér az alkalmazásvezérlésre",
+              "description": "Megemlíti a validációt, jogosultságvizsgálatot, kereteket, jóváhagyást és a modellt körülvevő determinisztikus kódot."
+            }
+          },
+          "followUps": {
+            "redspher_ai_agent_tool_use_001_fu1": "Mikor jobb egy determinisztikus munkafolyamat egy ágensnél?",
+            "redspher_ai_agent_tool_use_001_fu2": "Ki hajtja végre ténylegesen az eszközhívást: a modell vagy az alkalmazás?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_ai_agent_tool_use_002",
+      "title": "Designing a shipment-support agent",
+      "prompt": "Design an agent that helps an operator investigate a delayed shipment and prepare a customer response.",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "redspher_ai_agent_tool_use"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover goal, tools, permissions, data handling, stopping rules, and measurable success.",
+      "expectedPoints": [
+        {
+          "id": "aatu_scope",
+          "label": "Defines a narrow goal and tools",
+          "description": "Uses read-only tools for shipment data, events, policies, and partner status, with clear schemas.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "narrow goal",
+            "read only tools",
+            "shipment lookup",
+            "tool schema",
+            "policy lookup"
+          ]
+        },
+        {
+          "id": "aatu_guard",
+          "label": "Protects sensitive actions",
+          "description": "Validates inputs, authorizes the operator, redacts sensitive data, and requires approval before sending or changing records.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "authorize operator",
+            "validate tool args",
+            "redact pii",
+            "approval before send",
+            "audit action"
+          ]
+        },
+        {
+          "id": "aatu_eval",
+          "label": "Defines completion and evaluation",
+          "description": "Uses step and time budgets, cites tool results, detects missing data, and measures factuality and task success.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "step limit",
+            "source citation",
+            "ask clarification",
+            "task success",
+            "evaluation set"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_ai_agent_tool_use_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What should the agent do when two source systems disagree?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_ai_agent_tool_use_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you test that it does not invent shipment facts?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Küldeménytámogató ágens tervezése",
+          "prompt": "Tervezz egy ágenst, amely segít az operátornak kivizsgálni egy késő küldeményt és előkészíteni az ügyfélnek szánt választ.",
+          "answerStructureHint": "Térj ki a célra, az eszközökre, a jogosultságokra, az adatkezelésre, a leállási szabályokra és a mérhető sikerre.",
+          "expectedPoints": {
+            "aatu_scope": {
+              "label": "Szűk célt és eszközkészletet határoz meg",
+              "description": "Írásvédett, egyértelmű sémájú eszközöket használ a küldeményadatokhoz, eseményekhez, szabályzatokhoz és partnerállapothoz."
+            },
+            "aatu_guard": {
+              "label": "Védi az érzékeny műveleteket",
+              "description": "Ellenőrzi a bemenetet és az operátor jogosultságát, kitakarja az érzékeny adatokat, és küldés vagy rekordmódosítás előtt jóváhagyást kér."
+            },
+            "aatu_eval": {
+              "label": "Meghatározza a befejezést és az értékelést",
+              "description": "Lépés- és időkeretet használ, hivatkozik az eszközeredményekre, felismeri a hiányzó adatot, és méri a tényszerűséget és a feladat sikerét."
+            }
+          },
+          "followUps": {
+            "redspher_ai_agent_tool_use_002_fu1": "Mit tegyen az ágens, ha két forrásrendszer adatai ellentmondanak egymásnak?",
+            "redspher_ai_agent_tool_use_002_fu2": "Hogyan tesztelnéd, hogy ne találjon ki küldeményadatokat?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_ai_agent_tool_use_003",
+      "title": "Choosing autonomy for AI actions",
+      "prompt": "Which agent actions could run automatically, which need confirmation, and which should never be exposed as tools?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_ai_agent_tool_use"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Classify risk, define autonomy levels, and add enforcement and audit controls.",
+      "expectedPoints": [
+        {
+          "id": "aatu_risk",
+          "label": "Classifies action risk",
+          "description": "Uses reversibility, financial impact, privacy, external communication, and permission scope to classify actions.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "reversible action",
+            "financial impact",
+            "privacy risk",
+            "external message",
+            "permission scope"
+          ]
+        },
+        {
+          "id": "aatu_tiers",
+          "label": "Defines autonomy tiers",
+          "description": "Allows low-risk reads automatically, requires confirmation for consequential writes, and excludes dangerous broad administration.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "automatic read",
+            "confirm write",
+            "human approval",
+            "deny dangerous tool",
+            "least privilege"
+          ]
+        },
+        {
+          "id": "aatu_controls",
+          "label": "Adds technical controls",
+          "description": "Uses narrow schemas, allowlists, idempotency, rate limits, audit logs, and post-action verification.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "allowlist",
+            "idempotency",
+            "rate limit",
+            "audit log",
+            "verify result"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_ai_agent_tool_use_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would sending a draft email and sending the final email have the same risk level?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_ai_agent_tool_use_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How could you make an approved write action safely retryable?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Az AI-műveletek autonómiaszintjének kiválasztása",
+          "prompt": "Mely ágensműveletek futhatnak automatikusan, melyekhez kell megerősítés, és melyeket nem szabad eszközként elérhetővé tenni?",
+          "answerStructureHint": "Osztályozd a kockázatot, határozz meg autonómiaszinteket, majd adj technikai kikényszerítést és auditálást.",
+          "expectedPoints": {
+            "aatu_risk": {
+              "label": "Osztályozza a műveleti kockázatot",
+              "description": "A visszafordíthatóság, pénzügyi hatás, adatvédelem, külső kommunikáció és jogosultsági kör alapján sorolja be a műveleteket."
+            },
+            "aatu_tiers": {
+              "label": "Autonómiaszinteket határoz meg",
+              "description": "Az alacsony kockázatú olvasást automatikusan engedi, a jelentős íráshoz megerősítést kér, a veszélyes széles adminisztrációt pedig kizárja."
+            },
+            "aatu_controls": {
+              "label": "Technikai kontrollokat ad",
+              "description": "Szűk sémákat, engedélylistát, idempotenciát, rate limitet, auditnaplót és művelet utáni ellenőrzést használ."
+            }
+          },
+          "followUps": {
+            "redspher_ai_agent_tool_use_003_fu1": "Ugyanakkora kockázatú egy e-mail-piszkozat elkészítése és a végleges e-mail elküldése?",
+            "redspher_ai_agent_tool_use_003_fu2": "Hogyan tennél biztonságosan újrapróbálhatóvá egy jóváhagyott írási műveletet?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_mcp_architecture_001",
+      "title": "MCP architecture",
+      "prompt": "What problem does Model Context Protocol solve, and what are the responsibilities of the host, client, and server?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_mcp_architecture"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain the integration problem, the three roles, and the main capability types.",
+      "expectedPoints": [
+        {
+          "id": "mcp_problem",
+          "label": "Explains interoperability",
+          "description": "Explains that MCP standardizes discovery and access to context and tools across AI applications and integrations.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "standard protocol",
+            "interoperability",
+            "common integration",
+            "tool discovery",
+            "context access"
+          ]
+        },
+        {
+          "id": "mcp_roles",
+          "label": "Separates the roles",
+          "description": "Explains that the host controls the AI experience, a client maintains a server connection, and the server exposes capabilities.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "host application",
+            "client connection",
+            "mcp server",
+            "exposes capabilities",
+            "one server connection"
+          ]
+        },
+        {
+          "id": "mcp_caps",
+          "label": "Names core capabilities",
+          "description": "Distinguishes tools for actions, resources for context, and prompts for reusable interaction templates.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "tools",
+            "resources",
+            "prompts",
+            "server capabilities",
+            "structured schema"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_mcp_architecture_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Is MCP an agent framework? Why or why not?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_mcp_architecture_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where should user consent and policy enforcement live?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "MCP-architektúra",
+          "prompt": "Milyen problémát old meg a Model Context Protocol, és mi a hoszt, a kliens és a szerver felelőssége?",
+          "answerStructureHint": "Magyarázd el az integrációs problémát, a három szerepet és a fő képességtípusokat.",
+          "expectedPoints": {
+            "mcp_problem": {
+              "label": "Elmagyarázza az együttműködési előnyt",
+              "description": "Elmondja, hogy az MCP szabványosítja a kontextus és az eszközök felderítését és elérését AI-alkalmazások és integrációk között."
+            },
+            "mcp_roles": {
+              "label": "Elkülöníti a szerepeket",
+              "description": "Elmagyarázza, hogy a hoszt irányítja az AI-élményt, a kliens fenntartja a szerverkapcsolatot, a szerver pedig képességeket tesz elérhetővé."
+            },
+            "mcp_caps": {
+              "label": "Megnevezi az alapvető képességeket",
+              "description": "Megkülönbözteti a műveletekre szolgáló eszközöket, a kontextust adó erőforrásokat és az újrahasznosítható interakciós sablonokat adó promptokat."
+            }
+          },
+          "followUps": {
+            "redspher_mcp_architecture_001_fu1": "Ágenskeretrendszer az MCP? Miért igen vagy miért nem?",
+            "redspher_mcp_architecture_001_fu2": "Hol kell megvalósítani a felhasználói beleegyezést és a szabályok kikényszerítését?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_mcp_architecture_002",
+      "title": "Designing a logistics MCP server",
+      "prompt": "You need an MCP server for shipment information. What would you expose as resources and tools, and how would you keep it safe?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "redspher_mcp_architecture"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate readable context from actions, then cover authorization, data minimization, and operations.",
+      "expectedPoints": [
+        {
+          "id": "mcp_capability",
+          "label": "Designs narrow capabilities",
+          "description": "Uses resources for readable shipment context and small purpose-specific tools for queries or actions.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "shipment resource",
+            "narrow tool",
+            "read only lookup",
+            "purpose specific",
+            "structured input"
+          ]
+        },
+        {
+          "id": "mcp_security",
+          "label": "Enforces identity and authorization",
+          "description": "Authenticates the caller, applies user and tenant permissions, validates arguments, and limits data returned.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "authenticate client",
+            "authorize user",
+            "tenant isolation",
+            "validate arguments",
+            "data minimization"
+          ]
+        },
+        {
+          "id": "mcp_ops",
+          "label": "Adds operational controls",
+          "description": "Includes audit logs, rate limits, timeouts, versioned schemas, error handling, and safe transport configuration.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "audit log",
+            "rate limit",
+            "timeout",
+            "versioned schema",
+            "structured error"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_mcp_architecture_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you expose a generic SQL tool? Why is that risky?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_mcp_architecture_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you represent a shipment that contains sensitive customer information?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Logisztikai MCP-szerver tervezése",
+          "prompt": "MCP-szervert kell készítened küldeményinformációkhoz. Mit tennél elérhetővé erőforrásként és eszközként, és hogyan tartanád biztonságosan?",
+          "answerStructureHint": "Válaszd külön az olvasható kontextust a műveletektől, majd térj ki a jogosultságokra, az adatminimalizálásra és az üzemeltetésre.",
+          "expectedPoints": {
+            "mcp_capability": {
+              "label": "Szűk képességeket tervez",
+              "description": "Erőforrásokat használ az olvasható küldeménykontextushoz, és kis, célhoz kötött eszközöket a lekérdezésekhez vagy műveletekhez."
+            },
+            "mcp_security": {
+              "label": "Kikényszeríti az azonosítást és jogosultságot",
+              "description": "Hitelesíti a hívót, alkalmazza a felhasználói és tenantjogokat, ellenőrzi az argumentumokat, és korlátozza a visszaadott adatot."
+            },
+            "mcp_ops": {
+              "label": "Üzemeltetési kontrollokat ad",
+              "description": "Auditnaplót, rate limitet, timeoutot, verziózott sémát, hibakezelést és biztonságos kommunikációs beállításokat alkalmaz."
+            }
+          },
+          "followUps": {
+            "redspher_mcp_architecture_002_fu1": "Elérhetővé tennél egy általános SQL-eszközt? Miért kockázatos?",
+            "redspher_mcp_architecture_002_fu2": "Hogyan ábrázolnál egy érzékeny ügyféladatot tartalmazó küldeményt?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_mcp_architecture_003",
+      "title": "MCP versus a direct REST integration",
+      "prompt": "When would MCP be a better integration boundary than calling a REST API directly from one AI application, and when would it be unnecessary?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_mcp_architecture"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare interoperability value with integration and operational cost.",
+      "expectedPoints": [
+        {
+          "id": "mcp_reuse",
+          "label": "Explains MCP reuse",
+          "description": "Uses MCP when several AI hosts need discoverable model-oriented tools and context through a common interface.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "multiple ai hosts",
+            "discoverable tools",
+            "reusable integration",
+            "common protocol",
+            "model oriented"
+          ]
+        },
+        {
+          "id": "mcp_direct",
+          "label": "Explains direct API simplicity",
+          "description": "Prefers a direct SDK or REST client when one controlled application has a small stable integration and no interoperability need.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "single application",
+            "direct api",
+            "simpler integration",
+            "small scope",
+            "no protocol need"
+          ]
+        },
+        {
+          "id": "mcp_cost",
+          "label": "Includes added responsibilities",
+          "description": "Mentions another protocol layer, server lifecycle, capability governance, authentication, and observability.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "extra layer",
+            "server lifecycle",
+            "capability governance",
+            "authentication",
+            "operational overhead"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_mcp_architecture_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Could an MCP server wrap an existing REST API?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_mcp_architecture_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would versioning work when a tool schema changes?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "MCP vagy közvetlen REST-integráció",
+          "prompt": "Mikor jobb integrációs határ az MCP, mint ha egy AI-alkalmazás közvetlenül hív egy REST API-t, és mikor felesleges?",
+          "answerStructureHint": "Hasonlítsd össze az interoperabilitás értékét az integrációs és üzemeltetési költséggel.",
+          "expectedPoints": {
+            "mcp_reuse": {
+              "label": "Elmagyarázza az MCP újrahasznosíthatóságát",
+              "description": "Akkor használ MCP-t, ha több AI-hosztnak kell közös felületen felderíthető, modellközpontú eszköz és kontextus."
+            },
+            "mcp_direct": {
+              "label": "Elmagyarázza a közvetlen API egyszerűségét",
+              "description": "Közvetlen SDK-t vagy REST-klienst választ, ha egy kontrollált alkalmazás kis, stabil integrációt használ interoperabilitási igény nélkül."
+            },
+            "mcp_cost": {
+              "label": "Számol a többletfelelősségekkel",
+              "description": "Megemlíti az új protokollréteget, a szerver életciklusát, a képességek irányítását, a hitelesítést és a megfigyelhetőséget."
+            }
+          },
+          "followUps": {
+            "redspher_mcp_architecture_003_fu1": "Becsomagolhat egy MCP-szerver egy meglévő REST API-t?",
+            "redspher_mcp_architecture_003_fu2": "Hogyan kezelnéd a verziózást egy eszközséma megváltozásakor?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_agent_orchestration_001",
+      "title": "Orchestrating an AI workflow",
+      "prompt": "What responsibilities belong in agent orchestration rather than in the prompt itself?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_agent_orchestration"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate model reasoning from deterministic workflow state, policy, and recovery.",
+      "expectedPoints": [
+        {
+          "id": "ao_state",
+          "label": "Manages explicit state and transitions",
+          "description": "Keeps workflow state, step order, stopping conditions, and checkpoints in application code.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "workflow state",
+            "step transition",
+            "stopping condition",
+            "checkpoint",
+            "application code"
+          ]
+        },
+        {
+          "id": "ao_policy",
+          "label": "Keeps policy deterministic",
+          "description": "Handles authorization, budgets, validation, approvals, and transaction boundaries outside the model.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "authorization policy",
+            "step budget",
+            "validate output",
+            "approval gate",
+            "transaction boundary"
+          ]
+        },
+        {
+          "id": "ao_recovery",
+          "label": "Handles recovery",
+          "description": "Defines retries, idempotency, timeout, partial failure, compensation, and resume behavior.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "idempotent step",
+            "retry policy",
+            "resume workflow",
+            "partial failure",
+            "compensating action"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_agent_orchestration_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What information would you save in a checkpoint?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_agent_orchestration_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which decisions are unsafe to delegate entirely to a model?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "AI-munkafolyamat orchestrálása",
+          "prompt": "Mely felelősségek tartoznak az ágensorchesztrációba ahelyett, hogy magába a promptba kerülnének?",
+          "answerStructureHint": "Válaszd külön a modell következtetését a determinisztikus munkafolyamat-állapottól, szabályoktól és helyreállítástól.",
+          "expectedPoints": {
+            "ao_state": {
+              "label": "Egyértelmű állapotot és átmeneteket kezel",
+              "description": "Az alkalmazáskódban tartja a munkafolyamat állapotát, a lépéssorrendet, a leállási feltételeket és az ellenőrzőpontokat."
+            },
+            "ao_policy": {
+              "label": "Determinisztikusan kezeli a szabályokat",
+              "description": "A modellen kívül kezeli a jogosultságot, kereteket, ellenőrzést, jóváhagyást és tranzakciós határokat."
+            },
+            "ao_recovery": {
+              "label": "Kezeli a helyreállítást",
+              "description": "Meghatározza az újrapróbálkozás, idempotencia, timeout, részleges hiba, kompenzáció és folytatás viselkedését."
+            }
+          },
+          "followUps": {
+            "redspher_agent_orchestration_001_fu1": "Milyen információt mentenél egy ellenőrzőpontba?",
+            "redspher_agent_orchestration_001_fu2": "Mely döntéseket veszélyes teljesen a modellre bízni?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_agent_orchestration_002",
+      "title": "Single agent or multiple agents",
+      "prompt": "A team proposes separate planner, researcher, reviewer, and writer agents for a logistics workflow. How would you decide whether that complexity is justified?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_agent_orchestration"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare against a simple baseline, justify boundaries, and require measurable benefit.",
+      "expectedPoints": [
+        {
+          "id": "ao_baseline",
+          "label": "Starts with a simple baseline",
+          "description": "Compares against one model call, one agent with tools, or a deterministic workflow before adding agents.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "simple baseline",
+            "single agent",
+            "deterministic workflow",
+            "prove need",
+            "incremental design"
+          ]
+        },
+        {
+          "id": "ao_boundary",
+          "label": "Requires real specialization or isolation",
+          "description": "Uses multiple agents only for distinct context, permissions, models, ownership, or parallelizable work.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "separate permissions",
+            "specialized model",
+            "context isolation",
+            "parallel work",
+            "distinct responsibility"
+          ]
+        },
+        {
+          "id": "ao_eval",
+          "label": "Demands measurable improvement",
+          "description": "Measures quality, latency, cost, reliability, and debuggability against the simpler design.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "quality metric",
+            "latency cost",
+            "token cost",
+            "failure rate",
+            "debug complexity"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_agent_orchestration_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What new failure modes appear when agents communicate with each other?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_agent_orchestration_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you stop agents from endlessly reviewing each other?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy ágens vagy több ágens?",
+          "prompt": "A csapat külön tervező, kutató, ellenőrző és szövegíró ágenst javasol egy logisztikai folyamathoz. Hogyan döntenéd el, indokolt-e ez a komplexitás?",
+          "answerStructureHint": "Hasonlítsd össze egy egyszerű alappal, indokold a határokat, és követelj mérhető előnyt.",
+          "expectedPoints": {
+            "ao_baseline": {
+              "label": "Egyszerű alapmegoldásból indul ki",
+              "description": "Az ágensek hozzáadása előtt összehasonlít egyetlen modellhívással, eszközöket használó egy ágenssel vagy determinisztikus folyamattal."
+            },
+            "ao_boundary": {
+              "label": "Valódi specializációt vagy elkülönítést követel",
+              "description": "Csak eltérő kontextus, jogosultság, modell, tulajdonosi kör vagy párhuzamosítható munka esetén használ több ágenst."
+            },
+            "ao_eval": {
+              "label": "Mérhető javulást követel",
+              "description": "A minőséget, késleltetést, költséget, megbízhatóságot és hibakereshetőséget az egyszerűbb megoldáshoz méri."
+            }
+          },
+          "followUps": {
+            "redspher_agent_orchestration_002_fu1": "Milyen új hibamódok jelennek meg, amikor az ágensek egymással kommunikálnak?",
+            "redspher_agent_orchestration_002_fu2": "Hogyan akadályoznád meg, hogy az ágensek végtelenül egymást ellenőrizzék?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_agent_orchestration_003",
+      "title": "Recovering from partial AI workflow failure",
+      "prompt": "An agent creates a booking in an external system, then fails before saving the booking id locally. How would you make the workflow recover safely?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_agent_orchestration"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover idempotency, persisted workflow state, reconciliation, and manual or compensating recovery.",
+      "expectedPoints": [
+        {
+          "id": "ao_idempotency",
+          "label": "Uses idempotent external operations",
+          "description": "Uses an idempotency key or external reference so retrying can find the existing booking instead of creating another.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "idempotency key",
+            "external reference",
+            "safe retry",
+            "deduplicate booking",
+            "lookup existing"
+          ]
+        },
+        {
+          "id": "ao_checkpoint",
+          "label": "Persists step state",
+          "description": "Saves intent and progress before side effects and records results immediately after each completed step.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "persist intent",
+            "workflow checkpoint",
+            "step status",
+            "save result",
+            "outbox pattern"
+          ]
+        },
+        {
+          "id": "ao_reconcile",
+          "label": "Adds reconciliation and compensation",
+          "description": "Uses reconciliation to repair missing state and a defined compensation or manual review path when automatic recovery is unsafe.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "reconciliation job",
+            "compensating action",
+            "manual review",
+            "repair state",
+            "partial failure"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_agent_orchestration_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would a database transaction solve this across the external system?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_agent_orchestration_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you expose the workflow status to an operator?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Helyreállítás részleges AI-munkafolyamat-hibából",
+          "prompt": "Egy ágens foglalást hoz létre egy külső rendszerben, majd hibázik, mielőtt helyben elmentené a foglalási azonosítót. Hogyan állítanád helyre biztonságosan a folyamatot?",
+          "answerStructureHint": "Térj ki az idempotenciára, a tartós munkafolyamat-állapotra, az egyeztetésre és a kézi vagy kompenzáló helyreállításra.",
+          "expectedPoints": {
+            "ao_idempotency": {
+              "label": "Idempotens külső műveleteket használ",
+              "description": "Idempotenciakulcsot vagy külső hivatkozást használ, hogy az újrapróbálkozás megtalálja a meglévő foglalást új létrehozása helyett."
+            },
+            "ao_checkpoint": {
+              "label": "Tartósan menti a lépések állapotát",
+              "description": "A mellékhatás előtt elmenti a szándékot és az előrehaladást, majd minden befejezett lépés után azonnal rögzíti az eredményt."
+            },
+            "ao_reconcile": {
+              "label": "Egyeztetést és kompenzációt ad",
+              "description": "Egyeztetéssel javítja a hiányzó állapotot, és meghatároz kompenzációs vagy kézi felülvizsgálati utat, ha az automatikus helyreállítás nem biztonságos."
+            }
+          },
+          "followUps": {
+            "redspher_agent_orchestration_003_fu1": "Megoldaná ezt egy adatbázis-tranzakció a külső rendszerrel együtt?",
+            "redspher_agent_orchestration_003_fu2": "Hogyan mutatnád meg a munkafolyamat állapotát egy operátornak?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_llm_reliability_security_001",
+      "title": "Making LLM output trustworthy",
+      "prompt": "What controls would you add before using an LLM response in a business workflow?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_llm_reliability_security"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover grounding, structured validation, deterministic rules, and risk-based approval.",
+      "expectedPoints": [
+        {
+          "id": "lrs_ground",
+          "label": "Grounds factual output",
+          "description": "Uses trusted retrieved data, source references, and an explicit response when evidence is missing.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "trusted source",
+            "source citation",
+            "grounded answer",
+            "insufficient evidence",
+            "do not guess"
+          ]
+        },
+        {
+          "id": "lrs_validate",
+          "label": "Validates structure and rules",
+          "description": "Uses structured output schemas, range and business-rule checks, and deterministic calculation where possible.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "structured output",
+            "schema validation",
+            "business rule check",
+            "deterministic code",
+            "reject invalid"
+          ]
+        },
+        {
+          "id": "lrs_human",
+          "label": "Matches control to risk",
+          "description": "Requires human approval or narrow automation for consequential, external, financial, or irreversible actions.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "human approval",
+            "risk based",
+            "consequential action",
+            "narrow automation",
+            "manual review"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_llm_reliability_security_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you do when the model cannot cite a reliable source?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_llm_reliability_security_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which parts of a pricing workflow should never depend on free-form model output?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Az LLM-kimenet megbízhatóvá tétele",
+          "prompt": "Milyen kontrollokat tennél egy LLM-válasz elé, mielőtt üzleti munkafolyamatban használnád?",
+          "answerStructureHint": "Térj ki a forrásalapú válaszadásra, a strukturált ellenőrzésre, a determinisztikus szabályokra és a kockázatalapú jóváhagyásra.",
+          "expectedPoints": {
+            "lrs_ground": {
+              "label": "Megbízható forrásokra alapozza a tényeket",
+              "description": "Megbízható visszakeresett adatot és forráshivatkozást használ, és egyértelműen jelzi, ha nincs elegendő bizonyíték."
+            },
+            "lrs_validate": {
+              "label": "Ellenőrzi a struktúrát és a szabályokat",
+              "description": "Strukturált kimeneti sémát, tartomány- és üzletiszabály-ellenőrzést, valamint lehetőség szerint determinisztikus számítást használ."
+            },
+            "lrs_human": {
+              "label": "A kontrollt a kockázathoz igazítja",
+              "description": "Emberi jóváhagyást vagy szűk automatizálást követel a jelentős, külső, pénzügyi vagy visszafordíthatatlan műveletekhez."
+            }
+          },
+          "followUps": {
+            "redspher_llm_reliability_security_001_fu1": "Mit tennél, ha a modell nem tud megbízható forrást idézni?",
+            "redspher_llm_reliability_security_001_fu2": "Egy árazási folyamat mely részei nem függhetnek szabad szöveges modellkimenettől?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_llm_reliability_security_002",
+      "title": "Prompt injection through retrieved data",
+      "prompt": "An agent reads customer documents that may contain malicious instructions. How would you reduce prompt-injection risk?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_llm_reliability_security"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Treat content as hostile data, constrain authority, validate actions, and evaluate attack cases.",
+      "expectedPoints": [
+        {
+          "id": "lrs_data",
+          "label": "Treats retrieved content as untrusted data",
+          "description": "Separates instructions from data, labels sources, and never grants authority based on text inside a document.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "untrusted content",
+            "data not instruction",
+            "separate channels",
+            "source labeling",
+            "ignore document commands"
+          ]
+        },
+        {
+          "id": "lrs_tools",
+          "label": "Constrains capabilities",
+          "description": "Uses least-privilege tools, allowlists, argument validation, authorization, and approval for sensitive actions.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "least privilege tools",
+            "tool allowlist",
+            "validate arguments",
+            "authorization check",
+            "approval gate"
+          ]
+        },
+        {
+          "id": "lrs_output",
+          "label": "Checks and monitors outcomes",
+          "description": "Scans outputs, prevents secret exposure, logs safe audit events, and tests known attack cases.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "output filter",
+            "secret redaction",
+            "audit event",
+            "adversarial test",
+            "monitor tool calls"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_llm_reliability_security_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Can prompt injection be solved only by a stronger system prompt?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_llm_reliability_security_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you safely display retrieved text back to the user?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Prompt injection visszakeresett adaton keresztül",
+          "prompt": "Egy ágens olyan ügyféldokumentumokat olvas, amelyek rosszindulatú utasításokat tartalmazhatnak. Hogyan csökkentenéd a prompt injection kockázatát?",
+          "answerStructureHint": "Kezeld a tartalmat ellenséges adatként, korlátozd a jogosultságot, ellenőrizd a műveleteket, és tesztelj támadási eseteket.",
+          "expectedPoints": {
+            "lrs_data": {
+              "label": "Nem megbízható adatként kezeli a visszakeresett tartalmat",
+              "description": "Elválasztja az utasításokat az adatoktól, megjelöli a forrásokat, és nem ad jogosultságot egy dokumentumba írt szöveg alapján."
+            },
+            "lrs_tools": {
+              "label": "Korlátozza a képességeket",
+              "description": "Legkisebb jogosultságú eszközöket, engedélylistát, argumentum-ellenőrzést, jogosultságvizsgálatot és érzékeny műveleteknél jóváhagyást használ."
+            },
+            "lrs_output": {
+              "label": "Ellenőrzi és figyeli az eredményeket",
+              "description": "Átvizsgálja a kimenetet, megelőzi a titkok kiszivárgását, biztonságos audit eseményeket naplóz, és ismert támadási esetekkel tesztel."
+            }
+          },
+          "followUps": {
+            "redspher_llm_reliability_security_002_fu1": "Megoldható a prompt injection kizárólag erősebb rendszerprompttal?",
+            "redspher_llm_reliability_security_002_fu2": "Hogyan jelenítenéd meg biztonságosan a visszakeresett szöveget a felhasználónak?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_llm_reliability_security_003",
+      "title": "Evaluating an AI feature",
+      "prompt": "How would you decide whether an AI-assisted logistics feature is good enough to release?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_llm_reliability_security"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define representative cases, multi-dimensional metrics, release gates, and production monitoring.",
+      "expectedPoints": [
+        {
+          "id": "lrs_dataset",
+          "label": "Builds a representative evaluation set",
+          "description": "Uses realistic normal, edge, ambiguous, and adversarial cases with expected outcomes.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "evaluation set",
+            "real cases",
+            "edge cases",
+            "adversarial cases",
+            "expected outcome"
+          ]
+        },
+        {
+          "id": "lrs_metrics",
+          "label": "Measures task and safety outcomes",
+          "description": "Measures factual accuracy, completion, refusal quality, latency, cost, and unsafe-action rate.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "factual accuracy",
+            "task success",
+            "unsafe action rate",
+            "latency",
+            "cost per task"
+          ]
+        },
+        {
+          "id": "lrs_release",
+          "label": "Uses staged release and monitoring",
+          "description": "Uses offline evaluation, shadow or limited rollout, human review, feedback capture, and rollback or disable controls.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "offline eval",
+            "limited rollout",
+            "human review",
+            "production monitoring",
+            "kill switch"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_llm_reliability_security_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why is one average quality score not enough?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_llm_reliability_security_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you detect that a model update changed behavior?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Egy AI-funkció értékelése",
+          "prompt": "Hogyan döntenéd el, hogy egy AI-val támogatott logisztikai funkció elég jó-e a kiadáshoz?",
+          "answerStructureHint": "Határozz meg reprezentatív eseteket, többdimenziós metrikákat, kiadási kapukat és éles megfigyelést.",
+          "expectedPoints": {
+            "lrs_dataset": {
+              "label": "Reprezentatív értékelési készletet épít",
+              "description": "Valós normál, szélső, kétértelmű és támadó eseteket használ meghatározott elvárt eredményekkel."
+            },
+            "lrs_metrics": {
+              "label": "Méri a feladat- és biztonsági eredményeket",
+              "description": "Méri a tényszerű pontosságot, a feladatteljesítést, az elutasítás minőségét, a késleltetést, a költséget és a veszélyes műveletek arányát."
+            },
+            "lrs_release": {
+              "label": "Fokozatos kiadást és megfigyelést használ",
+              "description": "Offline értékelést, shadow vagy korlátozott bevezetést, emberi felülvizsgálatot, visszajelzésgyűjtést és visszaállítási vagy letiltási lehetőséget használ."
+            }
+          },
+          "followUps": {
+            "redspher_llm_reliability_security_003_fu1": "Miért nem elég egyetlen átlagos minőségi pontszám?",
+            "redspher_llm_reliability_security_003_fu2": "Hogyan észlelnéd, hogy egy modellfrissítés megváltoztatta a viselkedést?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_legacy_php_modernization_001",
+      "title": "Modernizing a PHP legacy system",
+      "prompt": "How would you integrate or gradually replace a legacy PHP application with new Node.js services?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "redspher_legacy_php_modernization"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover discovery, a stable boundary, incremental ownership transfer, and safe routing.",
+      "expectedPoints": [
+        {
+          "id": "lpm_discover",
+          "label": "Starts with discovery",
+          "description": "Maps business capabilities, dependencies, data flows, operational constraints, and tests current behavior.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "capability map",
+            "dependency map",
+            "data flow",
+            "current behavior",
+            "operational constraint"
+          ]
+        },
+        {
+          "id": "lpm_boundary",
+          "label": "Creates a stable boundary",
+          "description": "Uses an API, adapter, gateway, or anti-corruption layer rather than letting new code depend directly on legacy internals.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "stable api",
+            "adapter layer",
+            "anti corruption layer",
+            "gateway route",
+            "hide internals"
+          ]
+        },
+        {
+          "id": "lpm_increment",
+          "label": "Migrates incrementally",
+          "description": "Moves one capability with explicit data ownership, gradual traffic, comparison, and rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "strangler pattern",
+            "one capability",
+            "data ownership",
+            "gradual traffic",
+            "rollback"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_legacy_php_modernization_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you choose the first capability to extract?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_legacy_php_modernization_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you test that old and new implementations behave the same?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Legacy PHP-rendszer modernizálása",
+          "prompt": "Hogyan integrálnál vagy váltanál ki fokozatosan egy legacy PHP-alkalmazást új Node.js szolgáltatásokkal?",
+          "answerStructureHint": "Térj ki a feltárásra, a stabil határra, a tulajdon fokozatos átadására és a biztonságos forgalomterelésre.",
+          "expectedPoints": {
+            "lpm_discover": {
+              "label": "Feltárással kezd",
+              "description": "Feltérképezi az üzleti képességeket, függőségeket, adatfolyamokat és üzemeltetési korlátokat, és tesztekkel rögzíti a jelenlegi viselkedést."
+            },
+            "lpm_boundary": {
+              "label": "Stabil határt hoz létre",
+              "description": "API-t, adaptert, gatewayt vagy anti-corruption layert használ, nem engedi, hogy az új kód közvetlenül a legacy belső részleteitől függjön."
+            },
+            "lpm_increment": {
+              "label": "Fokozatosan migrál",
+              "description": "Egyszerre egy képességet költöztet, egyértelmű adattulajdonlással, fokozatos forgalommal, összehasonlítással és visszaállíthatósággal."
+            }
+          },
+          "followUps": {
+            "redspher_legacy_php_modernization_001_fu1": "Hogyan választanád ki az elsőként leválasztandó képességet?",
+            "redspher_legacy_php_modernization_001_fu2": "Hogyan tesztelnéd, hogy a régi és az új megvalósítás ugyanúgy viselkedik?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_legacy_php_modernization_002",
+      "title": "Sharing data during migration",
+      "prompt": "The PHP system and a new Node.js service both need shipment data during a multi-month migration. How would you avoid inconsistent writes?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_legacy_php_modernization"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define authority first, then synchronization, consistency, and reconciliation.",
+      "expectedPoints": [
+        {
+          "id": "lpm_owner",
+          "label": "Defines one write owner",
+          "description": "Assigns authoritative ownership for each field or capability and avoids uncontrolled dual writes.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "single write owner",
+            "system of record",
+            "data ownership",
+            "avoid dual writes",
+            "authoritative source"
+          ]
+        },
+        {
+          "id": "lpm_sync",
+          "label": "Chooses an explicit synchronization method",
+          "description": "Uses APIs, events, change capture, or replicated read models with clear consistency expectations.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "event synchronization",
+            "api call",
+            "change data capture",
+            "read model",
+            "eventual consistency"
+          ]
+        },
+        {
+          "id": "lpm_reconcile",
+          "label": "Plans reconciliation",
+          "description": "Uses identifiers, idempotency, audit trails, comparison jobs, and a repair process for drift.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "reconciliation",
+            "idempotent event",
+            "audit trail",
+            "compare records",
+            "repair drift"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_legacy_php_modernization_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is a shared database acceptable during a transition?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_legacy_php_modernization_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you handle an event that arrives twice or out of order?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Adatmegosztás a migráció alatt",
+          "prompt": "A PHP-rendszernek és egy új Node.js szolgáltatásnak is szüksége van küldeményadatokra egy több hónapos migráció során. Hogyan kerülnéd el az inkonzisztens írásokat?",
+          "answerStructureHint": "Először határozd meg a hiteles tulajdonost, majd a szinkronizációt, a konzisztenciát és az egyeztetést.",
+          "expectedPoints": {
+            "lpm_owner": {
+              "label": "Egyetlen írási tulajdonost határoz meg",
+              "description": "Minden mezőhöz vagy képességhez kijelöli a hiteles tulajdonost, és elkerüli a kontrollálatlan kettős írást."
+            },
+            "lpm_sync": {
+              "label": "Egyértelmű szinkronizációs módszert választ",
+              "description": "API-t, eseményt, change data capture-t vagy replikált olvasási modellt használ, világos konzisztenciaelvárásokkal."
+            },
+            "lpm_reconcile": {
+              "label": "Egyeztetést tervez",
+              "description": "Azonosítókat, idempotenciát, auditnyomot, összehasonlító feladatokat és javítási folyamatot használ az eltérések kezelésére."
+            }
+          },
+          "followUps": {
+            "redspher_legacy_php_modernization_002_fu1": "Mikor elfogadható átmenetileg a közös adatbázis?",
+            "redspher_legacy_php_modernization_002_fu2": "Hogyan kezelnél egy kétszer vagy nem sorrendben érkező eseményt?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_legacy_php_modernization_003",
+      "title": "Rewrite or incremental modernization",
+      "prompt": "What evidence would make you choose a complete rewrite instead of incremental modernization, and what risks would you still plan for?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_legacy_php_modernization"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the exceptional evidence for a rewrite, then cover hidden behavior, migration, and staged risk control.",
+      "expectedPoints": [
+        {
+          "id": "lpm_case",
+          "label": "Builds a rewrite case from constraints",
+          "description": "Requires evidence such as an unusable platform, impossible deployment, severe security limits, or a small well-understood scope.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "unsupported platform",
+            "security limitation",
+            "small scope",
+            "cannot change safely",
+            "clear business case"
+          ]
+        },
+        {
+          "id": "lpm_risk",
+          "label": "Names rewrite risks",
+          "description": "Covers hidden behavior, long delivery, changing requirements, data migration, cutover, and loss of operational knowledge.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "hidden behavior",
+            "long rewrite",
+            "data migration",
+            "cutover risk",
+            "lost knowledge"
+          ]
+        },
+        {
+          "id": "lpm_control",
+          "label": "Reduces the risk",
+          "description": "Uses behavior characterization, staged migration, parallel run, feature flags, checkpoints, and rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "characterization tests",
+            "parallel run",
+            "staged cutover",
+            "feature flag",
+            "rollback plan"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_legacy_php_modernization_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you stop a rewrite from becoming an endless platform project?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_legacy_php_modernization_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What operational knowledge is often missed by a rewrite team?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Teljes újraírás vagy fokozatos modernizáció",
+          "prompt": "Milyen bizonyíték alapján választanál teljes újraírást a fokozatos modernizáció helyett, és milyen kockázatokkal számolnál továbbra is?",
+          "answerStructureHint": "Mutasd be a teljes újraírást indokló kivételes bizonyítékot, majd térj ki a rejtett működésre, a migrációra és a fokozatos kockázatkezelésre.",
+          "expectedPoints": {
+            "lpm_case": {
+              "label": "Korlátokból építi fel az újraírás indoklását",
+              "description": "Olyan bizonyítékot vár, mint a használhatatlan platform, lehetetlen telepítés, súlyos biztonsági korlát vagy kis és jól megértett terjedelem."
+            },
+            "lpm_risk": {
+              "label": "Megnevezi az újraírás kockázatait",
+              "description": "Kitér a rejtett működésre, hosszú szállításra, változó igényekre, adatmigrációra, átállásra és az üzemeltetési tudás elvesztésére."
+            },
+            "lpm_control": {
+              "label": "Csökkenti a kockázatot",
+              "description": "Viselkedésrögzítést, fokozatos migrációt, párhuzamos futást, feature flaget, ellenőrzőpontokat és visszaállítást használ."
+            }
+          },
+          "followUps": {
+            "redspher_legacy_php_modernization_003_fu1": "Hogyan akadályoznád meg, hogy az újraírás végtelen platformprojektté váljon?",
+            "redspher_legacy_php_modernization_003_fu2": "Milyen üzemeltetési tudást hagy gyakran figyelmen kívül egy újraíró csapat?"
+          }
+        }
+      }
+    }
+  ]
+}

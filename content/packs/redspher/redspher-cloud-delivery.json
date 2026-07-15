@@ -1,0 +1,2041 @@
+{
+  "id": "redspher_cloud_delivery",
+  "name": "Redspher - AWS and Delivery",
+  "description": "AWS architecture, security, observability, CI/CD, and resilience topics for the Redspher Full Stack Developer interview.",
+  "sources": [
+    "redspher/full_stack_developer_job_description"
+  ],
+  "topics": [
+    {
+      "id": "redspher_aws_web_architecture",
+      "name": "AWS Web Application Architecture",
+      "description": "An AWS full-stack architecture should separate delivery, compute, data, and background work while keeping instances replaceable and operations visible.",
+      "category": "cloud",
+      "relatedTopicIds": [
+        "redspher_aws_security_least_privilege",
+        "redspher_observability",
+        "redspher_resilient_integrations"
+      ],
+      "studyContent": {
+        "mentalModel": "An AWS web architecture assigns each responsibility to a managed component while keeping application servers stateless and making data, security, scaling, and failure boundaries explicit.",
+        "problem": "Putting every responsibility into one server creates a single scaling and failure unit. Storing sessions or files on local disk also breaks when traffic moves between instances or an instance is replaced.",
+        "example": "A React build is served through object storage and a CDN. An API enters through a managed endpoint or load balancer, runs on stateless compute, stores durable data in a database, and sends slow work to a queue.",
+        "howItWorks": [
+          "Separate static delivery, request handling, durable data, and background work.",
+          "Choose managed services based on traffic shape, latency, control, and team skills.",
+          "Add identity, monitoring, backups, scaling limits, and failure handling from the start."
+        ],
+        "commonMistakes": [
+          "Choosing services by popularity without describing the workload.",
+          "Keeping user sessions or generated files only on one application instance.",
+          "Calling an architecture highly available without checking every dependency and availability-zone boundary."
+        ],
+        "keyTerms": [
+          {
+            "term": "stateless service",
+            "definition": "A service whose request handling does not depend on data stored only in one running instance."
+          },
+          {
+            "term": "managed service",
+            "definition": "A cloud component where AWS operates much of the underlying infrastructure."
+          },
+          {
+            "term": "availability zone",
+            "definition": "A physically separated location within an AWS Region used to reduce shared failure risk."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "AWS webalkalmazás-architektúra",
+          "description": "Egy AWS full-stack architektúrának külön kell választania a kiszolgálást, számítási réteget, adatot és háttérmunkát, miközben az instance-ok cserélhetők és az üzemeltetés megfigyelhető marad.",
+          "studyContent": {
+            "mentalModel": "Egy AWS webarchitektúra minden felelősséget megfelelő managed komponenshez rendel, az alkalmazásszervereket statelessként tartja, és egyértelművé teszi az adat-, biztonsági, skálázási és hibahatárokat.",
+            "problem": "Ha minden felelősség egy szerveren van, az egyetlen skálázási és hibaponttá válik. A lokális lemezen tárolt session vagy fájl pedig elveszik vagy elérhetetlenné válik, amikor a forgalom másik instance-ra kerül.",
+            "example": "A React build object storage-ból és CDN-en keresztül szolgálódik ki. Az API managed endpointon vagy load balanceren érkezik, stateless compute-on fut, tartós adatbázisba ír, a lassú munkát pedig queue-ba küldi.",
+            "howItWorks": [
+              "Különválasztjuk a statikus kiszolgálást, requestkezelést, tartós adatot és háttérmunkát.",
+              "A forgalom jellege, késleltetés, kontroll és csapattudás alapján választunk managed szolgáltatást.",
+              "A kezdetektől hozzáadjuk az identitást, monitoringot, backupot, skálázási korlátokat és hibakezelést."
+            ],
+            "commonMistakes": [
+              "Szolgáltatást népszerűség alapján választani a workload leírása nélkül.",
+              "Felhasználói sessiont vagy generált fájlt kizárólag egy alkalmazásinstance-on tartani.",
+              "Highly available-nek nevezni az architektúrát anélkül, hogy minden függőséget és availability zone határt ellenőriznénk."
+            ],
+            "keyTerms": [
+              {
+                "term": "stateless szolgáltatás",
+                "definition": "Olyan szolgáltatás, amelynek requestkezelése nem függ kizárólag egy futó instance-ban tárolt adattól."
+              },
+              {
+                "term": "managed szolgáltatás",
+                "definition": "Felhőkomponens, amelynek mögöttes infrastruktúráját nagyrészt az AWS üzemelteti."
+              },
+              {
+                "term": "availability zone",
+                "definition": "Egy AWS Region fizikailag elkülönített helyszíne, amely csökkenti a közös meghibásodás kockázatát."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_aws_security_least_privilege",
+      "name": "AWS Security and Least Privilege",
+      "description": "AWS security should use temporary identities, narrowly scoped permissions, managed secrets, and server-side authorization at every trust boundary.",
+      "category": "security",
+      "relatedTopicIds": [
+        "redspher_aws_web_architecture",
+        "redspher_llm_reliability_security"
+      ],
+      "studyContent": {
+        "mentalModel": "Least privilege gives each human and workload only the actions and resources required for its current job, for only as long as needed.",
+        "problem": "Broad credentials turn one bug or leak into access across the whole cloud account. Long-lived secrets copied into code, CI, or developer machines are difficult to rotate and easy to misuse.",
+        "example": "A quote service receives an IAM role that can read one configuration secret and send messages to one queue. It cannot list every secret, access unrelated buckets, or administer IAM.",
+        "howItWorks": [
+          "Give workloads roles with short-lived credentials instead of embedded access keys.",
+          "Limit actions and resources, then add conditions such as environment, network, or tag where useful.",
+          "Monitor denied and allowed access, and tighten permissions using real usage."
+        ],
+        "commonMistakes": [
+          "Giving an application administrator access because it is faster during development.",
+          "Storing cloud keys in environment files that are copied between machines.",
+          "Using network isolation as a replacement for authorization."
+        ],
+        "keyTerms": [
+          {
+            "term": "IAM role",
+            "definition": "An AWS identity that workloads or users can assume to receive temporary permissions."
+          },
+          {
+            "term": "policy",
+            "definition": "A document that allows or denies specific actions on specific resources under optional conditions."
+          },
+          {
+            "term": "secret rotation",
+            "definition": "Replacing a credential regularly or after exposure without breaking the application."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "AWS-biztonság és least privilege",
+          "description": "Az AWS-biztonság ideiglenes identitásokat, szűk jogosultságokat, managed secretkezelést és szerveroldali autorizációt használ minden bizalmi határon.",
+          "studyContent": {
+            "mentalModel": "A least privilege minden embernek és workloadnak csak a jelenlegi feladatához szükséges műveleteket és erőforrásokat adja, csak a szükséges időre.",
+            "problem": "A széles jogosultság egyetlen hibát vagy credential-szivárgást az egész cloud accountra kiterjedő hozzáféréssé változtathat. A kódba, CI-ba vagy fejlesztői gépre másolt tartós titkok nehezen forgathatók és könnyen visszaélhetnek velük.",
+            "example": "Egy quote szolgáltatás olyan IAM role-t kap, amely egyetlen konfigurációs secretet olvashat és egyetlen queue-ba küldhet üzenetet. Nem listázhat minden secretet, nem fér hozzá más bucketekhez és nem adminisztrálhat IAM-et.",
+            "howItWorks": [
+              "A workloadoknak beágyazott access key helyett rövid életű credentialt adó role-t adunk.",
+              "Korlátozzuk a műveleteket és erőforrásokat, majd szükség esetén environment-, hálózati vagy tagfeltételeket adunk.",
+              "Figyeljük az engedélyezett és tiltott hozzáférést, majd a valós használat alapján szűkítjük a policyt."
+            ],
+            "commonMistakes": [
+              "Fejlesztés közben gyorsaságból adminisztrátori jogot adni az alkalmazásnak.",
+              "Cloud keyket gépek között másolt environment fájlokban tárolni.",
+              "A hálózati izolációt az autorizáció helyettesítőjeként használni."
+            ],
+            "keyTerms": [
+              {
+                "term": "IAM role",
+                "definition": "AWS-identitás, amelyet workload vagy felhasználó ideiglenes jogosultságok megszerzéséhez felvehet."
+              },
+              {
+                "term": "policy",
+                "definition": "Dokumentum, amely opcionális feltételek mellett konkrét erőforrásokon konkrét műveleteket engedélyez vagy tilt."
+              },
+              {
+                "term": "secret rotation",
+                "definition": "Credential rendszeres vagy incidens utáni cseréje az alkalmazás működésének megszakítása nélkül."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_observability",
+      "name": "Observability and Troubleshooting",
+      "description": "Observability connects logs, metrics, traces, and business context so teams can explain production behavior and respond to user impact.",
+      "category": "observability",
+      "relatedTopicIds": [
+        "redspher_node_async_error_handling",
+        "redspher_ci_cd_safe_delivery",
+        "redspher_llm_reliability_security"
+      ],
+      "studyContent": {
+        "mentalModel": "Observability means collecting enough signals and context to understand what a production system is doing and why a user request succeeded, slowed down, or failed.",
+        "problem": "A single error log or CPU graph cannot show where a distributed request spent time. Without correlation and business context, teams guess, reproduce slowly, and cannot tell whether a release improved the system.",
+        "example": "A quote request carries one correlation id through the React client, API, pricing service, and partner call. Traces show the slow dependency, metrics show its error rate, and structured logs show the affected route and customer tier.",
+        "howItWorks": [
+          "Define service-level and business outcomes worth measuring.",
+          "Collect structured logs, metrics, and traces with consistent request context.",
+          "Use dashboards and alerts that point to user impact and support drill-down."
+        ],
+        "commonMistakes": [
+          "Logging large unstructured text without request or business context.",
+          "Alerting on every technical spike instead of sustained user impact.",
+          "Collecting sensitive payloads that should never appear in logs."
+        ],
+        "keyTerms": [
+          {
+            "term": "structured log",
+            "definition": "A log event with named fields that can be searched and aggregated reliably."
+          },
+          {
+            "term": "metric",
+            "definition": "A numeric time series used to measure rates, counts, latency, or resource levels."
+          },
+          {
+            "term": "trace",
+            "definition": "A connected view of one request as it passes through several operations or services."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Observability és hibakeresés",
+          "description": "Az observability összekapcsolja a logokat, metrikákat, trace-eket és üzleti kontextust, hogy a csapat megmagyarázhassa az éles viselkedést és reagálhasson a felhasználói hatásra.",
+          "studyContent": {
+            "mentalModel": "Az observability azt jelenti, hogy elegendő jelet és kontextust gyűjtünk annak megértéséhez, mit csinál az éles rendszer, és miért sikerült, lassult vagy hibázott egy felhasználói kérés.",
+            "problem": "Egyetlen error log vagy CPU-grafikon nem mutatja meg, hol töltött időt egy elosztott request. Korreláció és üzleti kontextus nélkül a csapat találgat, lassan reprodukál, és nem tudja, javított-e a release.",
+            "example": "Egy quote request ugyanazt a correlation id-t viszi a React kliensen, API-n, pricing service-en és partnerhíváson át. A trace megmutatja a lassú függőséget, a metric a hibaarányt, a strukturált log pedig az útvonalat és ügyfélszintet.",
+            "howItWorks": [
+              "Meghatározzuk a mérendő service-level és üzleti eredményeket.",
+              "Következetes requestkontextussal strukturált logokat, metrikákat és trace-eket gyűjtünk.",
+              "Olyan dashboardokat és alertokat használunk, amelyek felhasználói hatásra mutatnak és támogatják a részletes vizsgálatot."
+            ],
+            "commonMistakes": [
+              "Nagy, strukturálatlan szöveget logolni request- vagy üzleti kontextus nélkül.",
+              "Minden technikai kiugrásra alertet adni a tartós felhasználói hatás helyett.",
+              "Olyan érzékeny payloadot gyűjteni, amelynek soha nem szabad logba kerülnie."
+            ],
+            "keyTerms": [
+              {
+                "term": "strukturált log",
+                "definition": "Megnevezett mezőket tartalmazó logesemény, amely megbízhatóan kereshető és aggregálható."
+              },
+              {
+                "term": "metrika",
+                "definition": "Numerikus idősor ráta, darabszám, késleltetés vagy erőforrásszint mérésére."
+              },
+              {
+                "term": "trace",
+                "definition": "Egy request összekapcsolt nézete, ahogy több műveleten vagy szolgáltatáson áthalad."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_ci_cd_safe_delivery",
+      "name": "CI/CD and Safe Delivery",
+      "description": "Safe delivery builds one repeatable artifact, checks integration risks, handles schema changes compatibly, and releases gradually with observation and recovery.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "redspher_testing_strategy",
+        "redspher_observability",
+        "redspher_fullstack_feature_design"
+      ],
+      "studyContent": {
+        "mentalModel": "A CI/CD pipeline turns every change into a repeatable, testable artifact and promotes it through controlled checks so releases are small, observable, and reversible.",
+        "problem": "Manual builds and environment-specific steps create releases that cannot be reproduced. Deploying a large change to everyone at once makes it hard to separate a code defect from a configuration, migration, or infrastructure problem.",
+        "example": "A commit produces one versioned application image. CI checks types, tests, contracts, and vulnerabilities. Deployment first updates a small production slice, verifies health and business metrics, then continues or rolls back.",
+        "howItWorks": [
+          "Build and test one immutable version from source control.",
+          "Promote the same artifact with environment-specific configuration and protected secrets.",
+          "Release gradually, observe health, and keep rollback or roll-forward procedures ready."
+        ],
+        "commonMistakes": [
+          "Building a different artifact for each environment.",
+          "Treating a successful deployment command as proof that the release is healthy.",
+          "Running a destructive database migration before compatible application code is available."
+        ],
+        "keyTerms": [
+          {
+            "term": "immutable artifact",
+            "definition": "A built package or image that is not changed as it moves between environments."
+          },
+          {
+            "term": "quality gate",
+            "definition": "An automated condition that must pass before a change can progress."
+          },
+          {
+            "term": "canary release",
+            "definition": "Sending a small share of real traffic to a new version before wider rollout."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "CI/CD és biztonságos szállítás",
+          "description": "A biztonságos szállítás egyetlen reprodukálható artifactot épít, ellenőrzi az integrációs kockázatokat, kompatibilisen kezeli a sémaváltozásokat, és fokozatosan, megfigyeléssel és helyreállítással ad ki.",
+          "studyContent": {
+            "mentalModel": "A CI/CD pipeline minden változásból reprodukálható, tesztelhető artifactot készít, és kontrollált ellenőrzéseken viszi át, hogy a release kicsi, megfigyelhető és visszafordítható legyen.",
+            "problem": "A kézi build és környezetspecifikus lépések nem reprodukálható release-t hoznak létre. Egy nagy változás egyszerre mindenkihez telepítve megnehezíti a kód-, konfigurációs, migrációs és infrastruktúrahiba elkülönítését.",
+            "example": "Egy commit egy verziózott alkalmazásimage-et készít. A CI ellenőrzi a típusokat, teszteket, contractokat és sérülékenységeket. A deploy először kis production szeletet frissít, majd health- és üzleti metrikák alapján folytat vagy rollbackel.",
+            "howItWorks": [
+              "Forráskódból egyetlen immutable verziót építünk és tesztelünk.",
+              "Ugyanazt az artifactot visszük tovább környezetspecifikus konfigurációval és védett secretekkel.",
+              "Fokozatosan adunk ki, figyeljük az egészséget, és készen tartjuk a rollback vagy roll-forward eljárást."
+            ],
+            "commonMistakes": [
+              "Minden környezethez eltérő artifactot építeni.",
+              "A sikeres deployparancsot bizonyítéknak tekinteni arra, hogy a release egészséges.",
+              "Romboló adatbázis-migrációt futtatni a kompatibilis alkalmazáskód telepítése előtt."
+            ],
+            "keyTerms": [
+              {
+                "term": "immutable artifact",
+                "definition": "Buildelt csomag vagy image, amelyet nem módosítanak, miközben környezetek között halad."
+              },
+              {
+                "term": "quality gate",
+                "definition": "Automatikus feltétel, amelynek teljesülnie kell, mielőtt a változás továbbhaladhat."
+              },
+              {
+                "term": "canary release",
+                "definition": "A valós forgalom kis részének új verzióra küldése a szélesebb rollout előtt."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_resilient_integrations",
+      "name": "Resilient External Integrations",
+      "description": "Resilient integrations use deadlines, safe retries, isolation, and asynchronous workflows so dependency failures do not spread through the system.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "redspher_node_async_error_handling",
+        "redspher_rest_http_semantics",
+        "redspher_aws_web_architecture"
+      ],
+      "studyContent": {
+        "mentalModel": "A resilient integration assumes networks and dependencies can be slow, unavailable, or duplicated, and it limits the effect on the rest of the system.",
+        "problem": "Waiting indefinitely or retrying without limits consumes connections and threads while the dependency is already failing. One partner outage can then spread through the application and block unrelated work.",
+        "example": "A pricing provider call has a short timeout, bounded retries for transient failures, a circuit breaker after repeated failures, and a cached or clearly degraded response when live pricing is unavailable.",
+        "howItWorks": [
+          "Set a deadline and classify which failures are temporary.",
+          "Retry only safe operations with bounded backoff and jitter.",
+          "Limit concurrency, isolate the dependency, and provide a fallback or clear failure state."
+        ],
+        "commonMistakes": [
+          "Giving every downstream call the same timeout as the whole user request.",
+          "Combining several retry layers so one request multiplies into many attempts.",
+          "Using a fallback that returns stale or incomplete data without telling the caller."
+        ],
+        "keyTerms": [
+          {
+            "term": "circuit breaker",
+            "definition": "A guard that temporarily stops calls to a repeatedly failing dependency so it can recover."
+          },
+          {
+            "term": "bulkhead",
+            "definition": "A limit that prevents one dependency or workload from consuming all shared capacity."
+          },
+          {
+            "term": "backoff",
+            "definition": "Increasing the wait between retry attempts to reduce pressure during failure."
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Rezilient külső integrációk",
+          "description": "A reziliens integrációk deadline-t, biztonságos retryt, izolációt és aszinkron munkafolyamatot használnak, hogy egy függőség hibája ne terjedjen át a teljes rendszerre.",
+          "studyContent": {
+            "mentalModel": "A reziliens integráció abból indul ki, hogy a hálózat és a függőségek lehetnek lassúak, elérhetetlenek vagy duplikáltak, ezért korlátozza a hiba hatását a rendszer többi részére.",
+            "problem": "A korlátlan várakozás vagy retry kapcsolatokat és kapacitást fogyaszt, miközben a függőség már hibázik. Egyetlen partnerkiesés így átterjedhet az alkalmazásra és blokkolhat független munkát is.",
+            "example": "Egy pricing provider hívása rövid timeoutot, átmeneti hibákra korlátozott retryt és ismételt hibák után circuit breakert használ. Élő ár hiányában cache-elt vagy egyértelműen degraded választ ad.",
+            "howItWorks": [
+              "Deadline-t állítunk, és osztályozzuk, mely hibák átmenetiek.",
+              "Csak biztonságos műveleteket próbálunk újra korlátozott backoffal és jitterrel.",
+              "Korlátozzuk a konkurenciát, izoláljuk a függőséget, és fallbacket vagy világos hibastate-et adunk."
+            ],
+            "commonMistakes": [
+              "Minden downstream hívásnak ugyanakkora timeoutot adni, mint a teljes felhasználói requestnek.",
+              "Több retryréteget összekapcsolni, így egy request sok próbálkozássá szorzódik.",
+              "Olyan fallbacket használni, amely elavult vagy hiányos adatot ad a hívó tájékoztatása nélkül."
+            ],
+            "keyTerms": [
+              {
+                "term": "circuit breaker",
+                "definition": "Védelem, amely ideiglenesen leállítja a hívásokat egy ismételten hibázó függőség felé, hogy az helyreállhasson."
+              },
+              {
+                "term": "bulkhead",
+                "definition": "Korlát, amely megakadályozza, hogy egy függőség vagy workload minden megosztott kapacitást elfogyasszon."
+              },
+              {
+                "term": "backoff",
+                "definition": "A retryk közti várakozás növelése a hibás időszak terhelésének csökkentésére."
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "redspher_aws_web_architecture_001",
+      "title": "AWS architecture for a full-stack application",
+      "prompt": "Sketch a sensible AWS architecture for a React frontend and Node.js API used by an international logistics team.",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "redspher_aws_web_architecture"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe responsibilities first, then service choices, data flow, security, and operations.",
+      "expectedPoints": [
+        {
+          "id": "awa_layers",
+          "label": "Separates application responsibilities",
+          "description": "Separates static frontend delivery, API entry, stateless compute, durable data, and background processing.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "cloudfront",
+            "object storage",
+            "api gateway",
+            "load balancer",
+            "stateless compute"
+          ]
+        },
+        {
+          "id": "awa_data",
+          "label": "Chooses data and async paths deliberately",
+          "description": "Discusses database choice, caching when justified, and queues for slow or bursty work.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "relational database",
+            "nosql database",
+            "message queue",
+            "background worker",
+            "cache"
+          ]
+        },
+        {
+          "id": "awa_ops",
+          "label": "Includes production concerns",
+          "description": "Covers identity, least privilege, availability zones, monitoring, backups, cost, and deployment.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "least privilege",
+            "multi az",
+            "monitoring",
+            "backup plan",
+            "cost control"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_aws_web_architecture_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would make you choose Lambda instead of containers for the API?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_aws_web_architecture_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Where would you store user-uploaded documents?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "AWS-architektúra full-stack alkalmazáshoz",
+          "prompt": "Vázolj fel egy ésszerű AWS-architektúrát egy nemzetközi logisztikai csapat által használt React frontendhez és Node.js API-hoz.",
+          "answerStructureHint": "Először a felelősségeket, majd a szolgáltatásválasztást, adatfolyamot, biztonságot és üzemeltetést írd le.",
+          "expectedPoints": {
+            "awa_layers": {
+              "label": "Elkülöníti az alkalmazás felelősségeit",
+              "description": "Különválasztja a statikus frontendkiszolgálást, API-belépést, stateless compute-ot, tartós adatot és háttérfeldolgozást."
+            },
+            "awa_data": {
+              "label": "Tudatosan választ adat- és async útvonalat",
+              "description": "Beszél az adatbázisválasztásról, indokolt cache-elésről és a lassú vagy burstös munkához használt queue-ról."
+            },
+            "awa_ops": {
+              "label": "Kitér a production szempontokra",
+              "description": "Lefedi az identitást, least privilege-et, availability zone-okat, monitoringot, backupot, költséget és telepítést."
+            }
+          },
+          "followUps": {
+            "redspher_aws_web_architecture_001_fu1": "Mi alapján választanál Lambdát konténerek helyett az API-hoz?",
+            "redspher_aws_web_architecture_001_fu2": "Hol tárolnád a felhasználók által feltöltött dokumentumokat?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_aws_web_architecture_002",
+      "title": "Lambda versus containers",
+      "prompt": "Compare AWS Lambda with container-based compute for a Node.js backend. Which workload characteristics drive the choice?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_aws_web_architecture"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare operational model and constraints, then tie the decision to the workload.",
+      "expectedPoints": [
+        {
+          "id": "awa_lambda",
+          "label": "Explains Lambda strengths and limits",
+          "description": "Mentions event-driven scaling and low operational work, balanced against duration, startup, concurrency, and runtime constraints.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "event driven",
+            "automatic scaling",
+            "cold start",
+            "execution limit",
+            "concurrency limit"
+          ]
+        },
+        {
+          "id": "awa_container",
+          "label": "Explains container strengths and costs",
+          "description": "Mentions long-running processes, predictable resources, control, and suitability for steady traffic, with more operational responsibility.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "long running",
+            "predictable capacity",
+            "runtime control",
+            "steady traffic",
+            "container operations"
+          ]
+        },
+        {
+          "id": "awa_workload",
+          "label": "Uses workload evidence",
+          "description": "Bases the choice on traffic shape, latency, connection model, background work, cost, and team capability.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "traffic pattern",
+            "latency requirement",
+            "websocket connection",
+            "cost model",
+            "team skills"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_aws_web_architecture_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Could one system use both? Give a concrete split.",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_aws_web_architecture_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would database connections affect a Lambda design?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Lambda vagy konténerek",
+          "prompt": "Hasonlítsd össze az AWS Lambdát és a konténeralapú compute-ot Node.js backendhez. Milyen workloadjellemzők döntik el a választást?",
+          "answerStructureHint": "Hasonlítsd össze az üzemeltetési modellt és korlátokat, majd kösd a döntést a workloadhoz.",
+          "expectedPoints": {
+            "awa_lambda": {
+              "label": "Elmagyarázza a Lambda előnyeit és korlátait",
+              "description": "Megemlíti az eseményvezérelt skálázást és kisebb üzemeltetési terhet, valamint a futási idő, startup, concurrency és runtime korlátait."
+            },
+            "awa_container": {
+              "label": "Elmagyarázza a konténerek előnyeit és költségeit",
+              "description": "Megemlíti a hosszú futású processeket, kiszámítható erőforrást, kontrollt és állandó forgalomhoz való alkalmasságot, nagyobb üzemeltetési felelősséggel."
+            },
+            "awa_workload": {
+              "label": "Workloadbizonyíték alapján dönt",
+              "description": "A forgalom jellege, latency, kapcsolatmodell, háttérmunka, költség és csapatképesség alapján választ."
+            }
+          },
+          "followUps": {
+            "redspher_aws_web_architecture_002_fu1": "Használhatná ugyanaz a rendszer mindkettőt? Adj konkrét felosztást.",
+            "redspher_aws_web_architecture_002_fu2": "Hogyan befolyásolnák az adatbázis-kapcsolatok a Lambda-tervet?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_aws_web_architecture_003",
+      "title": "Making application instances replaceable",
+      "prompt": "Why should web application instances be stateless in a horizontally scaled AWS environment, and where should state go instead?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_aws_web_architecture"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain replacement and scaling, then map each kind of state to an appropriate shared store.",
+      "expectedPoints": [
+        {
+          "id": "awa_replace",
+          "label": "Explains replaceability",
+          "description": "Explains that any instance can handle a request and instances can scale or fail without losing unique state.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "any instance",
+            "horizontal scaling",
+            "replace instance",
+            "no local dependency",
+            "load balancing"
+          ]
+        },
+        {
+          "id": "awa_state",
+          "label": "Places state in durable shared systems",
+          "description": "Uses databases, object storage, caches, or external session stores according to durability needs.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "database state",
+            "object storage",
+            "shared cache",
+            "session store",
+            "durable storage"
+          ]
+        },
+        {
+          "id": "awa_tradeoff",
+          "label": "Recognizes local caching limits",
+          "description": "Allows local ephemeral cache only when loss and inconsistency are acceptable and correctness does not depend on it.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "ephemeral cache",
+            "cache miss safe",
+            "not source of truth",
+            "instance local",
+            "acceptable loss"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_aws_web_architecture_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would a JWT make the whole system stateless?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_aws_web_architecture_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you handle sticky sessions if a legacy component requires them?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Cserélhető alkalmazásinstance-ok",
+          "prompt": "Miért legyenek statelessek a webalkalmazás-instance-ok horizontálisan skálázott AWS-környezetben, és hova kerüljön helyettük az állapot?",
+          "answerStructureHint": "Magyarázd el a cserélhetőséget és skálázást, majd rendeld az egyes state-típusokat megfelelő megosztott tárolóhoz.",
+          "expectedPoints": {
+            "awa_replace": {
+              "label": "Elmagyarázza a cserélhetőséget",
+              "description": "Elmondja, hogy bármely instance kezelhet requestet, és az instance-ok egyedi state elvesztése nélkül skálázhatók vagy hibázhatnak."
+            },
+            "awa_state": {
+              "label": "Tartós megosztott rendszerekbe helyezi a state-et",
+              "description": "Tartóssági igény szerint adatbázist, object storage-ot, cache-t vagy külső session store-t használ."
+            },
+            "awa_tradeoff": {
+              "label": "Felismeri a lokális cache korlátait",
+              "description": "Csak akkor enged lokális, ideiglenes cache-t, ha az elvesztés és inkonzisztencia elfogadható, és a helyesség nem függ tőle."
+            }
+          },
+          "followUps": {
+            "redspher_aws_web_architecture_003_fu1": "Egy JWT az egész rendszert statelessé teszi?",
+            "redspher_aws_web_architecture_003_fu2": "Hogyan kezelnél sticky sessiont, ha egy legacy komponens megköveteli?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_aws_security_least_privilege_001",
+      "title": "Applying least privilege in AWS",
+      "prompt": "How would you apply least privilege to a Node.js service running in AWS?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_aws_security_least_privilege"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover workload identity, precise policy scope, and ongoing review.",
+      "expectedPoints": [
+        {
+          "id": "asl_role",
+          "label": "Uses workload roles",
+          "description": "Uses an execution role or task role with temporary credentials instead of hard-coded access keys.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "iam role",
+            "temporary credentials",
+            "task role",
+            "execution role",
+            "no access key"
+          ]
+        },
+        {
+          "id": "asl_scope",
+          "label": "Scopes actions and resources",
+          "description": "Allows only required API actions on named resources and uses conditions where practical.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "specific actions",
+            "specific resources",
+            "policy condition",
+            "resource arn",
+            "deny by default"
+          ]
+        },
+        {
+          "id": "asl_review",
+          "label": "Reviews actual use",
+          "description": "Uses logs, access analysis, and separate environments to refine permissions and detect misuse.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "cloudtrail",
+            "access analyzer",
+            "permission review",
+            "separate accounts",
+            "monitor access"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_aws_security_least_privilege_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you do when an AWS service does not support resource-level permissions for an action?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_aws_security_least_privilege_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How should developers get temporary access for debugging?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Least privilege alkalmazása AWS-ben",
+          "prompt": "Hogyan alkalmaznád a least privilege elvet egy AWS-ben futó Node.js szolgáltatásra?",
+          "answerStructureHint": "Térj ki a workload-identitásra, a pontos policy scope-ra és a folyamatos felülvizsgálatra.",
+          "expectedPoints": {
+            "asl_role": {
+              "label": "Workload role-t használ",
+              "description": "Execution vagy task role-t és ideiglenes credentialt használ hard-coded access key helyett."
+            },
+            "asl_scope": {
+              "label": "Szűkíti a műveleteket és erőforrásokat",
+              "description": "Csak a szükséges API-műveleteket engedi megnevezett erőforrásokon, és ahol lehet, feltételeket használ."
+            },
+            "asl_review": {
+              "label": "Felülvizsgálja a tényleges használatot",
+              "description": "Logokat, access analysist és elkülönített környezeteket használ a jogosultságok finomítására és visszaélés észlelésére."
+            }
+          },
+          "followUps": {
+            "redspher_aws_security_least_privilege_001_fu1": "Mit tennél, ha egy AWS-szolgáltatás egy művelethez nem támogat resource-level permissiont?",
+            "redspher_aws_security_least_privilege_001_fu2": "Hogyan kapjanak a fejlesztők ideiglenes hozzáférést hibakereséshez?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_aws_security_least_privilege_002",
+      "title": "Handling application secrets",
+      "prompt": "A service needs database credentials and a third-party API key. How would you store, deliver, rotate, and audit them in AWS?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_aws_security_least_privilege"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain secure storage, runtime delivery, narrow access, rotation, and audit.",
+      "expectedPoints": [
+        {
+          "id": "asl_store",
+          "label": "Uses a managed secret store",
+          "description": "Stores secrets in Secrets Manager or Parameter Store with encryption rather than code, images, or plain CI variables.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "secrets manager",
+            "parameter store",
+            "encrypted secret",
+            "not in code",
+            "not in image"
+          ]
+        },
+        {
+          "id": "asl_access",
+          "label": "Restricts retrieval",
+          "description": "Allows only the workload role to read the specific secret and avoids exposing it in logs or frontend bundles.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "specific secret",
+            "workload role",
+            "no logging",
+            "server side only",
+            "least privilege"
+          ]
+        },
+        {
+          "id": "asl_rotate",
+          "label": "Plans rotation and audit",
+          "description": "Uses versioned rotation, application refresh behavior, CloudTrail, and incident revocation.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "secret rotation",
+            "version stage",
+            "cloudtrail audit",
+            "revoke secret",
+            "refresh credential"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_aws_security_least_privilege_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you rotate a database password without downtime?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_aws_security_least_privilege_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why is an encrypted environment variable still not enough by itself?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Alkalmazássecretek kezelése",
+          "prompt": "Egy szolgáltatásnak adatbázis-credentialre és külső API-kulcsra van szüksége. Hogyan tárolnád, adnád át, forgatnád és auditálnád ezeket AWS-ben?",
+          "answerStructureHint": "Magyarázd el a biztonságos tárolást, futásidejű átadást, szűk hozzáférést, rotationt és auditot.",
+          "expectedPoints": {
+            "asl_store": {
+              "label": "Managed secret store-t használ",
+              "description": "Secrets Managerben vagy titkosított Parameter Store-ban tárol, nem kódban, image-ben vagy egyszerű CI-változóban."
+            },
+            "asl_access": {
+              "label": "Korlátozza a lekérést",
+              "description": "Csak a workload role olvashatja az adott secretet, és elkerüli a logba vagy frontend bundle-be kerülést."
+            },
+            "asl_rotate": {
+              "label": "Rotationt és auditot tervez",
+              "description": "Verziózott rotationt, alkalmazásoldali frissítési viselkedést, CloudTrailt és incidens esetén visszavonást használ."
+            }
+          },
+          "followUps": {
+            "redspher_aws_security_least_privilege_002_fu1": "Hogyan forgatnál adatbázisjelszót downtime nélkül?",
+            "redspher_aws_security_least_privilege_002_fu2": "Miért nem elég önmagában egy titkosított environment variable?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_aws_security_least_privilege_003",
+      "title": "Frontend and backend authorization",
+      "prompt": "Where should authentication and authorization be enforced in a React and Node.js application, and what checks belong in AWS infrastructure?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_aws_security_least_privilege"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate UI behavior, identity, business authorization, workload permissions, and network exposure.",
+      "expectedPoints": [
+        {
+          "id": "asl_server",
+          "label": "Enforces authorization on the server",
+          "description": "Treats frontend checks as user experience only and verifies identity and permissions for every protected backend action.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "server authorization",
+            "frontend is not security",
+            "verify token",
+            "permission check",
+            "protected action"
+          ]
+        },
+        {
+          "id": "asl_layers",
+          "label": "Uses layered controls",
+          "description": "Uses API authentication, application authorization, IAM for workload access, and network controls for exposure reduction.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "defense in depth",
+            "api authentication",
+            "application authorization",
+            "iam permissions",
+            "network controls"
+          ]
+        },
+        {
+          "id": "asl_context",
+          "label": "Keeps business rules explicit",
+          "description": "Separates infrastructure access from business permissions such as which tenant or shipment a user may access.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "business authorization",
+            "tenant check",
+            "resource ownership",
+            "domain permission",
+            "not only iam"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_aws_security_least_privilege_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What is the difference between a valid token and permission to perform an action?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_aws_security_least_privilege_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you prevent one customer from reading another customer's shipment?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Frontend- és backendautorizáció",
+          "prompt": "Hol kell kikényszeríteni az authenticationt és authorizationt egy React- és Node.js-alkalmazásban, és milyen ellenőrzések tartoznak az AWS-infrastruktúrába?",
+          "answerStructureHint": "Válaszd külön a UI-viselkedést, identitást, üzleti autorizációt, workloadjogokat és hálózati kitettséget.",
+          "expectedPoints": {
+            "asl_server": {
+              "label": "A szerveren kényszeríti ki az autorizációt",
+              "description": "A frontendellenőrzést csak UX-nek tekinti, és minden védett backendműveletnél ellenőrzi az identitást és jogosultságot."
+            },
+            "asl_layers": {
+              "label": "Réteges kontrollokat használ",
+              "description": "API-authenticationt, alkalmazásautorizációt, workloadhozzáféréshez IAM-et és kitettségcsökkentéshez hálózati kontrollokat használ."
+            },
+            "asl_context": {
+              "label": "Egyértelműen tartja az üzleti szabályokat",
+              "description": "Elválasztja az infrastruktúrahozzáférést az olyan üzleti jogoktól, mint mely tenant vagy shipment érhető el a felhasználónak."
+            }
+          },
+          "followUps": {
+            "redspher_aws_security_least_privilege_003_fu1": "Mi a különbség egy érvényes token és egy művelet végrehajtási jogosultsága között?",
+            "redspher_aws_security_least_privilege_003_fu2": "Hogyan akadályoznád meg, hogy egyik ügyfél elolvassa a másik küldeményét?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_observability_001",
+      "title": "Logs, metrics, and traces",
+      "prompt": "What different questions do logs, metrics, and distributed traces answer in a production full-stack system?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_observability"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define the purpose of each signal and how correlation connects them.",
+      "expectedPoints": [
+        {
+          "id": "obs_logs",
+          "label": "Explains logs",
+          "description": "Uses logs for detailed discrete events and context around a specific operation or failure.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "structured logs",
+            "event detail",
+            "error context",
+            "request fields",
+            "specific failure"
+          ]
+        },
+        {
+          "id": "obs_metrics",
+          "label": "Explains metrics",
+          "description": "Uses metrics for trends, rates, percentiles, saturation, and alerting over time.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "latency percentile",
+            "error rate",
+            "request rate",
+            "time series",
+            "alert threshold"
+          ]
+        },
+        {
+          "id": "obs_traces",
+          "label": "Explains traces",
+          "description": "Uses traces to follow one request across components and locate latency or failure boundaries.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "distributed trace",
+            "request path",
+            "span timing",
+            "service boundary",
+            "correlation id"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_observability_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What should be shared across all three signal types?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_observability_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which signal would you check first for a sudden p99 latency increase?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Logok, metrikák és trace-ek",
+          "prompt": "Milyen különböző kérdésekre válaszolnak a logok, metrikák és distributed trace-ek egy éles full-stack rendszerben?",
+          "answerStructureHint": "Határozd meg minden jel célját, és magyarázd el, hogyan kapcsolja össze őket a korreláció.",
+          "expectedPoints": {
+            "obs_logs": {
+              "label": "Elmagyarázza a logokat",
+              "description": "A logokat részletes, diszkrét eseményekhez és konkrét művelet vagy hiba körüli kontextushoz használja."
+            },
+            "obs_metrics": {
+              "label": "Elmagyarázza a metrikákat",
+              "description": "A metrikákat trendekhez, rátákhoz, percentilisekhez, telítettséghez és időbeli alerteléshez használja."
+            },
+            "obs_traces": {
+              "label": "Elmagyarázza a trace-eket",
+              "description": "A trace-ekkel egy requestet követ komponenseken át, és megtalálja a latency- vagy hibahatárt."
+            }
+          },
+          "followUps": {
+            "redspher_observability_001_fu1": "Milyen információ legyen közös mindhárom jeltípusban?",
+            "redspher_observability_001_fu2": "Melyik jelet néznéd meg először hirtelen p99 latencyemelkedésnél?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_observability_002",
+      "title": "Troubleshooting a slow quote request",
+      "prompt": "Users report that some price quotes take ten seconds, but average latency looks normal. How would you investigate?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "redspher_observability"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Focus on tail latency, segmentation, request traces, and correlated system changes.",
+      "expectedPoints": [
+        {
+          "id": "obs_percentile",
+          "label": "Uses percentiles and segmentation",
+          "description": "Looks at p95 or p99 and segments by route, customer, region, dependency, and release version.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "p99 latency",
+            "segment traffic",
+            "by region",
+            "by dependency",
+            "release version"
+          ]
+        },
+        {
+          "id": "obs_trace",
+          "label": "Follows affected requests",
+          "description": "Uses trace exemplars or correlation ids to identify where the slow tail spends time.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "trace slow request",
+            "correlation id",
+            "span duration",
+            "dependency call",
+            "queue wait"
+          ]
+        },
+        {
+          "id": "obs_compare",
+          "label": "Correlates with changes and capacity",
+          "description": "Checks deployments, errors, retries, saturation, and downstream service behavior during the same period.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "deployment change",
+            "retry spike",
+            "resource saturation",
+            "downstream latency",
+            "compare timeline"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_observability_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can average latency hide a serious problem?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_observability_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you turn the finding into a useful alert?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Lassú quote request hibakeresése",
+          "prompt": "A felhasználók szerint néhány árajánlat tíz másodpercig tart, miközben az átlagos latency normális. Hogyan vizsgálnád ki?",
+          "answerStructureHint": "Koncentrálj a tail latencyre, szegmentációra, request trace-ekre és korrelált rendszerváltozásokra.",
+          "expectedPoints": {
+            "obs_percentile": {
+              "label": "Percentilist és szegmentációt használ",
+              "description": "p95-öt vagy p99-et vizsgál, és útvonal, ügyfél, régió, függőség és release-verzió szerint szegmentál."
+            },
+            "obs_trace": {
+              "label": "Követi az érintett requesteket",
+              "description": "Trace exemplart vagy correlation id-t használ annak azonosítására, hol tölt időt a lassú tail."
+            },
+            "obs_compare": {
+              "label": "Összekapcsolja a változásokkal és kapacitással",
+              "description": "Ugyanabban az időszakban ellenőrzi a deployokat, hibákat, retrykat, telítettséget és downstream viselkedést."
+            }
+          },
+          "followUps": {
+            "redspher_observability_002_fu1": "Miért rejthet el komoly problémát az átlagos latency?",
+            "redspher_observability_002_fu2": "Hogyan alakítanád a megállapítást hasznos alertté?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_observability_003",
+      "title": "Designing useful alerts",
+      "prompt": "How would you design alerts for a business-critical logistics API without creating alert fatigue?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_observability"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Start from user impact, then define actionability, ownership, thresholds, and noise control.",
+      "expectedPoints": [
+        {
+          "id": "obs_user",
+          "label": "Alerts on user impact",
+          "description": "Uses availability, error rate, latency, freshness, or failed business operations rather than every resource fluctuation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "user impact",
+            "error rate",
+            "latency slo",
+            "failed operation",
+            "data freshness"
+          ]
+        },
+        {
+          "id": "obs_action",
+          "label": "Makes alerts actionable",
+          "description": "Includes ownership, runbook, context, severity, and a clear response expectation.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "clear owner",
+            "runbook",
+            "alert context",
+            "severity level",
+            "actionable alert"
+          ]
+        },
+        {
+          "id": "obs_noise",
+          "label": "Controls noise",
+          "description": "Uses sustained windows, deduplication, routing, and separate warning versus paging thresholds.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "sustained window",
+            "deduplicate alerts",
+            "warning threshold",
+            "page threshold",
+            "route by owner"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_observability_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When should an alert page someone immediately?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_observability_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you measure for an AI-assisted workflow?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hasznos alertok tervezése",
+          "prompt": "Hogyan terveznél alertokat egy üzletileg kritikus logisztikai API-hoz alert fatigue nélkül?",
+          "answerStructureHint": "Felhasználói hatásból indulj, majd definiáld az akcióképességet, tulajdonost, küszöböt és zajcsökkentést.",
+          "expectedPoints": {
+            "obs_user": {
+              "label": "Felhasználói hatásra alertel",
+              "description": "Elérhetőséget, hibaarányt, latencyt, adatfrissességet vagy sikertelen üzleti műveletet használ minden erőforrás-ingadozás helyett."
+            },
+            "obs_action": {
+              "label": "Akcióképes alertot készít",
+              "description": "Tulajdonost, runbookot, kontextust, severityt és világos reakcióelvárást ad."
+            },
+            "obs_noise": {
+              "label": "Szabályozza a zajt",
+              "description": "Tartós időablakot, deduplikációt, routingot és külön warning- és pagingküszöböt használ."
+            }
+          },
+          "followUps": {
+            "redspher_observability_003_fu1": "Mikor kell egy alertnek azonnal értesítenie valakit?",
+            "redspher_observability_003_fu2": "Mit mérnél egy AI-val támogatott munkafolyamatnál?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_ci_cd_safe_delivery_001",
+      "title": "A practical CI/CD pipeline",
+      "prompt": "What stages and quality gates would you put in a CI/CD pipeline for a React and Node.js application?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_ci_cd_safe_delivery"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Follow one change from source through artifact creation, integration checks, and safe promotion.",
+      "expectedPoints": [
+        {
+          "id": "cicd_build",
+          "label": "Builds once and validates code",
+          "description": "Includes formatting or linting, type checks, tests, dependency checks, and one versioned artifact.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "type check",
+            "unit tests",
+            "integration tests",
+            "dependency scan",
+            "build once"
+          ]
+        },
+        {
+          "id": "cicd_contract",
+          "label": "Checks integration and deployment",
+          "description": "Includes contract or migration checks, infrastructure validation, and environment smoke tests.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "contract test",
+            "migration check",
+            "infrastructure validation",
+            "smoke test",
+            "preview environment"
+          ]
+        },
+        {
+          "id": "cicd_release",
+          "label": "Promotes safely",
+          "description": "Uses protected approvals where justified, gradual rollout, health checks, monitoring, and rollback.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "canary deployment",
+            "health check",
+            "monitor release",
+            "rollback",
+            "protected environment"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_ci_cd_safe_delivery_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which checks should block every pull request and which can run later?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_ci_cd_safe_delivery_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you keep the pipeline fast enough that developers trust it?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Gyakorlati CI/CD pipeline",
+          "prompt": "Milyen szakaszokat és quality gate-eket tennél egy React- és Node.js-alkalmazás CI/CD pipeline-jába?",
+          "answerStructureHint": "Kövess végig egy változást a forrástól az artifactkészítésen és integrációs ellenőrzéseken át a biztonságos promotionig.",
+          "expectedPoints": {
+            "cicd_build": {
+              "label": "Egyszer buildel és validálja a kódot",
+              "description": "Formázást vagy lintet, típusellenőrzést, teszteket, dependencyellenőrzést és egy verziózott artifactot tartalmaz."
+            },
+            "cicd_contract": {
+              "label": "Ellenőrzi az integrációt és telepítést",
+              "description": "Contract- vagy migrációs ellenőrzést, infrastruktúra-validációt és környezeti smoke tesztet tartalmaz."
+            },
+            "cicd_release": {
+              "label": "Biztonságosan promotál",
+              "description": "Indokolt esetben védett jóváhagyást, fokozatos rolloutot, health checket, monitoringot és rollbacket használ."
+            }
+          },
+          "followUps": {
+            "redspher_ci_cd_safe_delivery_001_fu1": "Mely ellenőrzések blokkoljanak minden pull requestet, és melyek futhatnak később?",
+            "redspher_ci_cd_safe_delivery_001_fu2": "Hogyan tartanád elég gyorsan a pipeline-t ahhoz, hogy a fejlesztők megbízzanak benne?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_ci_cd_safe_delivery_002",
+      "title": "Zero-downtime database changes",
+      "prompt": "A release changes a database column used by the current API. How would you deploy it without requiring frontend and backend downtime?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "redspher_ci_cd_safe_delivery"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe a backward-compatible sequence, coexistence, data migration, and health verification.",
+      "expectedPoints": [
+        {
+          "id": "cicd_expand",
+          "label": "Uses expand-and-contract",
+          "description": "Adds backward-compatible schema first, deploys code that supports old and new forms, migrates data, then removes the old form later.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "expand contract",
+            "backward compatible",
+            "add new column",
+            "dual read",
+            "remove later"
+          ]
+        },
+        {
+          "id": "cicd_sequence",
+          "label": "Sequences independent deployments",
+          "description": "Ensures old and new application versions can coexist during rollout and rollback.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "version coexistence",
+            "deployment order",
+            "rollback compatible",
+            "old and new",
+            "independent deploy"
+          ]
+        },
+        {
+          "id": "cicd_verify",
+          "label": "Verifies migration and health",
+          "description": "Monitors data correctness, errors, latency, and migration progress with a clear stop plan.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "migration progress",
+            "data validation",
+            "monitor errors",
+            "stop plan",
+            "rollback decision"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_ci_cd_safe_delivery_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would a roll-forward be safer than a rollback?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_ci_cd_safe_delivery_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you handle a very large data backfill?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Zero-downtime adatbázis-változások",
+          "prompt": "Egy release megváltoztat egy, a jelenlegi API által használt adatbázisoszlopot. Hogyan telepítenéd frontend- és backend-downtime nélkül?",
+          "answerStructureHint": "Írj le backward-compatible sorrendet, együttélést, adatmigrációt és health-ellenőrzést.",
+          "expectedPoints": {
+            "cicd_expand": {
+              "label": "Expand-and-contract megközelítést használ",
+              "description": "Először kompatibilis sémát ad hozzá, régi és új formát támogató kódot telepít, adatot migrál, majd később eltávolítja a régi formát."
+            },
+            "cicd_sequence": {
+              "label": "Sorrendbe állítja a független deployokat",
+              "description": "Biztosítja, hogy rollout és rollback alatt a régi és új alkalmazásverziók együtt működhessenek."
+            },
+            "cicd_verify": {
+              "label": "Ellenőrzi a migrációt és egészséget",
+              "description": "Világos leállítási terv mellett figyeli az adathelyességet, hibákat, latencyt és migrációs előrehaladást."
+            }
+          },
+          "followUps": {
+            "redspher_ci_cd_safe_delivery_002_fu1": "Mikor biztonságosabb a roll-forward, mint a rollback?",
+            "redspher_ci_cd_safe_delivery_002_fu2": "Hogyan kezelnél nagyon nagy adat-backfillt?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_ci_cd_safe_delivery_003",
+      "title": "Feature flags versus deployment",
+      "prompt": "What problems do feature flags solve, and what risks do they add compared with simply deploying a new version?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_ci_cd_safe_delivery"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain release decoupling, operational risks, and a disciplined flag lifecycle.",
+      "expectedPoints": [
+        {
+          "id": "cicd_decouple",
+          "label": "Explains decoupled release",
+          "description": "Uses flags to separate code deployment from user exposure, support gradual rollout, and disable behavior quickly.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "decouple deploy",
+            "gradual rollout",
+            "kill switch",
+            "target users",
+            "dark launch"
+          ]
+        },
+        {
+          "id": "cicd_risk",
+          "label": "Explains flag debt and complexity",
+          "description": "Mentions multiplied code paths, inconsistent states, permission risk, testing burden, and stale flags.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "flag debt",
+            "multiple code paths",
+            "testing matrix",
+            "stale flag",
+            "configuration risk"
+          ]
+        },
+        {
+          "id": "cicd_manage",
+          "label": "Manages lifecycle",
+          "description": "Requires ownership, expiry, audit, safe defaults, and cleanup after rollout.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "flag owner",
+            "expiry date",
+            "audit changes",
+            "safe default",
+            "remove flag"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_ci_cd_safe_delivery_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which flags should be evaluated on the server rather than only in React?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_ci_cd_safe_delivery_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Can a feature flag replace a rollback plan?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Feature flag vagy deployment",
+          "prompt": "Milyen problémákat oldanak meg a feature flagek, és milyen kockázatot adnak ahhoz képest, hogy egyszerűen új verziót telepítünk?",
+          "answerStructureHint": "Magyarázd el a release és deploy szétválasztását, az üzemeltetési kockázatokat és a fegyelmezett flag-életciklust.",
+          "expectedPoints": {
+            "cicd_decouple": {
+              "label": "Elmagyarázza a szétválasztott release-t",
+              "description": "Flaggel szétválasztja a kód telepítését a felhasználói kitettségtől, fokozatos rolloutot támogat és gyorsan letilt viselkedést."
+            },
+            "cicd_risk": {
+              "label": "Elmagyarázza a flag debtet és komplexitást",
+              "description": "Megemlíti a megsokszorozódó kódutakat, inkonzisztens state-eket, jogosultsági kockázatot, tesztterhet és stale flageket."
+            },
+            "cicd_manage": {
+              "label": "Kezeli az életciklust",
+              "description": "Tulajdonost, lejáratot, auditot, biztonságos defaultot és rollout utáni eltávolítást követel."
+            }
+          },
+          "followUps": {
+            "redspher_ci_cd_safe_delivery_003_fu1": "Mely flageket kell a szerveren kiértékelni, nem csak Reactben?",
+            "redspher_ci_cd_safe_delivery_003_fu2": "Helyettesítheti a feature flag a rollbacktervet?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_resilient_integrations_001",
+      "title": "Protecting against a failing dependency",
+      "prompt": "What patterns would you use when a Node.js service depends on an unreliable external pricing API?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "redspher_resilient_integrations"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover deadlines, safe retries, isolation, fallback, and user-visible behavior.",
+      "expectedPoints": [
+        {
+          "id": "ri_timeout",
+          "label": "Uses deadlines and timeouts",
+          "description": "Sets a request budget and shorter downstream timeout so the service can still respond or recover.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "request deadline",
+            "downstream timeout",
+            "time budget",
+            "fail fast",
+            "remaining time"
+          ]
+        },
+        {
+          "id": "ri_retry",
+          "label": "Retries safely and narrowly",
+          "description": "Retries transient failures only with bounded attempts, backoff, jitter, and idempotency.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "bounded retry",
+            "exponential backoff",
+            "jitter",
+            "transient errors",
+            "idempotent"
+          ]
+        },
+        {
+          "id": "ri_isolate",
+          "label": "Limits blast radius",
+          "description": "Uses circuit breaking, concurrency limits, queues, cache, or a clear degraded mode.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "circuit breaker",
+            "concurrency limit",
+            "bulkhead",
+            "cached fallback",
+            "degraded mode"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_resilient_integrations_001_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you choose a timeout value?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_resilient_integrations_001_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What should users see while the dependency is unavailable?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Védelem hibázó függőség ellen",
+          "prompt": "Milyen mintákat használnál, ha egy Node.js szolgáltatás megbízhatatlan külső pricing API-tól függ?",
+          "answerStructureHint": "Térj ki a deadline-ra, biztonságos retryra, izolációra, fallbackre és a felhasználó által látható viselkedésre.",
+          "expectedPoints": {
+            "ri_timeout": {
+              "label": "Deadline-t és timeoutot használ",
+              "description": "Requestbudgetet és rövidebb downstream timeoutot állít be, hogy a szolgáltatás még válaszolni vagy helyreállni tudjon."
+            },
+            "ri_retry": {
+              "label": "Biztonságosan és szűken retryol",
+              "description": "Csak átmeneti hibát próbál újra korlátozott próbálkozással, backoffal, jitterrel és idempotenciával."
+            },
+            "ri_isolate": {
+              "label": "Korlátozza a blast radiust",
+              "description": "Circuit breakert, concurrency limitet, queue-t, cache-t vagy világos degraded módot használ."
+            }
+          },
+          "followUps": {
+            "redspher_resilient_integrations_001_fu1": "Hogyan választanál timeoutértéket?",
+            "redspher_resilient_integrations_001_fu2": "Mit lássanak a felhasználók, amíg a függőség nem elérhető?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_resilient_integrations_002",
+      "title": "Retry storm during an outage",
+      "prompt": "During a partner outage, request volume to your service increases because clients and several internal layers all retry. How would you stop the retry storm?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "redspher_resilient_integrations"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Identify amplification, choose one retry policy, reduce pressure, and bound total work.",
+      "expectedPoints": [
+        {
+          "id": "ri_layers",
+          "label": "Finds multiplied retries",
+          "description": "Maps every retry layer and removes or coordinates overlapping attempts.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "retry layers",
+            "retry multiplication",
+            "single retry owner",
+            "client retry",
+            "internal retry"
+          ]
+        },
+        {
+          "id": "ri_pressure",
+          "label": "Reduces pressure",
+          "description": "Uses backoff, jitter, rate limits, circuit breaking, queues, and bounded concurrency.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "jitter",
+            "circuit breaker",
+            "rate limit",
+            "bounded concurrency",
+            "queue buffer"
+          ]
+        },
+        {
+          "id": "ri_budget",
+          "label": "Uses a total retry budget",
+          "description": "Limits attempts by deadline and fleet-wide or request-level budgets and monitors retry volume.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "retry budget",
+            "total deadline",
+            "max attempts",
+            "retry metric",
+            "load shedding"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_resilient_integrations_002_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can a queue help, and when can it only delay the failure?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_resilient_integrations_002_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What response code should your API return while overloaded?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Retry storm egy kiesés alatt",
+          "prompt": "Partnerkiesés alatt nő a szolgáltatásodra érkező requestmennyiség, mert a kliensek és több belső réteg is retryol. Hogyan állítanád meg a retry stormot?",
+          "answerStructureHint": "Azonosítsd az erősítést, válassz egy retry policyt, csökkentsd a nyomást, és korlátozd az összes munkát.",
+          "expectedPoints": {
+            "ri_layers": {
+              "label": "Megtalálja a megsokszorozódó retrykat",
+              "description": "Feltérképez minden retryréteget, majd eltávolítja vagy összehangolja az átfedő próbálkozásokat."
+            },
+            "ri_pressure": {
+              "label": "Csökkenti a nyomást",
+              "description": "Backoffot, jittert, rate limitet, circuit breakert, queue-t és bounded concurrencyt használ."
+            },
+            "ri_budget": {
+              "label": "Teljes retrybudgetet használ",
+              "description": "Deadline, fleetszintű vagy requestszintű budget alapján korlátozza a próbálkozásokat, és figyeli a retrymennyiséget."
+            }
+          },
+          "followUps": {
+            "redspher_resilient_integrations_002_fu1": "Miért segíthet egy queue, és mikor csak késlelteti a hibát?",
+            "redspher_resilient_integrations_002_fu2": "Milyen response code-ot adjon az API túlterhelés közben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "redspher_resilient_integrations_003",
+      "title": "Synchronous call or asynchronous workflow",
+      "prompt": "A new logistics workflow may take between two seconds and several minutes depending on partners. Should the API keep one request open or use an asynchronous job model?",
+      "roles": [
+        "fullstack_developer"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "redspher_resilient_integrations"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Base the decision on duration and failure shape, then design the async contract and lifecycle.",
+      "expectedPoints": [
+        {
+          "id": "ri_duration",
+          "label": "Uses duration and reliability",
+          "description": "Chooses asynchronous work when duration is long or unpredictable and a connection should not remain open.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "long running",
+            "unpredictable duration",
+            "async job",
+            "do not hold request",
+            "partner delay"
+          ]
+        },
+        {
+          "id": "ri_contract",
+          "label": "Designs the async contract",
+          "description": "Uses job creation, status polling or events, stable identifiers, idempotency, and terminal states.",
+          "importance": "critical",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "job id",
+            "202 accepted",
+            "status endpoint",
+            "idempotency key",
+            "terminal state"
+          ]
+        },
+        {
+          "id": "ri_user",
+          "label": "Handles user experience and operations",
+          "description": "Covers progress, cancellation, retry, dead-letter handling, retention, and notification.",
+          "importance": "important",
+          "roleWeight": {
+            "fullstack_developer": 5
+          },
+          "acceptedSignals": [
+            "progress state",
+            "cancel job",
+            "dead letter",
+            "notify user",
+            "job retention"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "redspher_resilient_integrations_003_fu1",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is a synchronous request still the simpler better choice?",
+          "expectedPoints": []
+        },
+        {
+          "id": "redspher_resilient_integrations_003_fu2",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you prevent the same job from being created twice?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Szinkron hívás vagy aszinkron munkafolyamat",
+          "prompt": "Egy új logisztikai munkafolyamat partnertől függően két másodperctől több percig tarthat. Az API tartson nyitva egy requestet, vagy használjon aszinkron job modellt?",
+          "answerStructureHint": "Az időtartam és hibajelleg alapján dönts, majd tervezd meg az async contractot és életciklust.",
+          "expectedPoints": {
+            "ri_duration": {
+              "label": "Az időtartam és megbízhatóság alapján dönt",
+              "description": "Aszinkron munkát választ, ha az időtartam hosszú vagy kiszámíthatatlan, és nem célszerű kapcsolatot nyitva tartani."
+            },
+            "ri_contract": {
+              "label": "Megtervezi az async contractot",
+              "description": "Joblétrehozást, status pollingot vagy eseményeket, stabil azonosítót, idempotenciát és terminális state-eket használ."
+            },
+            "ri_user": {
+              "label": "Kezeli a UX-et és üzemeltetést",
+              "description": "Kitér az előrehaladásra, megszakításra, retryra, dead-letter kezelésre, retentionre és értesítésre."
+            }
+          },
+          "followUps": {
+            "redspher_resilient_integrations_003_fu1": "Mikor egyszerűbb és jobb választás továbbra is egy szinkron request?",
+            "redspher_resilient_integrations_003_fu2": "Hogyan akadályoznád meg ugyanazon job kétszeri létrehozását?"
+          }
+        }
+      }
+    }
+  ]
+}
