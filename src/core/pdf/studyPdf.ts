@@ -30,7 +30,7 @@ import {
  * the same warm paper with highlighter marks the Study view uses.
  */
 
-export type StudyPdfFormat = "a4" | "phone" | "cards" | "qcards";
+export type StudyPdfFormat = "a4" | "phone" | "cards" | "qcards" | "flash";
 
 /** Visual variant of the flashcard deck (3 candidate designs to pick from). */
 export type CardStyle = 1 | 2 | 3;
@@ -992,6 +992,312 @@ export function buildQuestionFlashcardsDefinition(scope: StudyPdfScope = {}): an
   };
 }
 
+// ---------------------------------------------------------------------------
+// True flashcards ("flash"): every question is a front/back PAGE PAIR for
+// active recall — the front shows only the question, the back the answer
+// material. Consecutive pairs read naturally on a phone and print duplex
+// (one card per sheet). Both sides always fit one page: long content is
+// dropped in priority order, never shrunk into unreadability.
+// ---------------------------------------------------------------------------
+
+const FLASH_INSTRUCTION = "Answer the question aloud, then turn the page.";
+
+function estimateFlashBack(parts: {
+  question: string;
+  answer: string | null;
+  points: { label: string; description?: string }[];
+  showDesc: boolean;
+  mistake: string | null;
+  followUp: string | null;
+  hasBand: boolean;
+}): number {
+  // The banded style pushes content below the colored strip.
+  let h = parts.hasBand ? 50 : 22; // eyebrow + strip allowance
+  h += estLines(parts.question, 52) * 14 + 12; // small question recap
+  if (parts.answer) h += 28 + estLines(parts.answer, 46) * 18;
+  h += 28; // KEY POINTS label
+  for (const p of parts.points) {
+    h +=
+      estLines(
+        parts.showDesc && p.description ? `${p.label} — ${p.description}` : p.label,
+        46,
+      ) *
+        17 +
+      5;
+  }
+  if (parts.mistake) h += 28 + estLines(parts.mistake, 46) * 17;
+  if (parts.followUp) h += 28 + estLines(parts.followUp, 46) * 17;
+  return h;
+}
+
+export function buildTrueFlashcardsDefinition(scope: StudyPdfScope = {}): any {
+  const s = CARD_STYLES[scope.cardStyle ?? 1];
+  const lang = scope.lang ?? DEFAULT_LANG;
+  const bankTopics = scope.topics ?? allTopics;
+  const bankQuestions = scope.questions ?? allQuestions;
+  const topicsById = new Map(bankTopics.map((t) => [t.id, t]));
+
+  const cardIdSet = scope.cardIds ? new Set(scope.cardIds) : null;
+  const deckCards = (
+    cardIdSet ? bankQuestions.filter((q) => cardIdSet.has(q.id)) : bankQuestions
+  )
+    .map((card) => {
+      const topic = topicsById.get(card.topicIds[0]);
+      return {
+        card: localizeCard(card, lang),
+        topic,
+        loc: topic ? localizeTopic(topic, lang) : null,
+        topicName: topic ? localizeTopic(topic, lang).name : card.topicIds[0],
+        category: topic?.category,
+      };
+    })
+    .sort(
+      (a, b) =>
+        (a.category ?? "").localeCompare(b.category ?? "") ||
+        a.topicName.localeCompare(b.topicName),
+    );
+
+  const deckName = scope.name ?? null;
+  const hasBand = s.band?.type === "block";
+  const eyebrowColor = hasBand ? "#ffffff" : s.label;
+  const content: any[] = [
+    {
+      stack: [
+        {
+          text: "INTERVIEW TRAINER",
+          fontSize: 10,
+          bold: true,
+          characterSpacing: 1.2,
+          color: s.label,
+          margin: [0, hasBand ? 30 : 170, 0, 8],
+        },
+        {
+          text: s.titleBg
+            ? [{ text: ` ${deckName ?? "Flashcards"} `, background: s.titleBg, color: s.titleColor }]
+            : { text: deckName ?? "Flashcards", color: hasBand ? s.titleColor : s.ink },
+          fontSize: 24,
+          bold: true,
+          lineHeight: 1.2,
+        },
+        {
+          text: `${deckCards.length} card${deckCards.length === 1 ? "" : "s"} · front & back pages · ${new Date().toLocaleDateString("en-GB")}`,
+          fontSize: 11,
+          color: hasBand ? s.ink : s.soft,
+          margin: [0, hasBand ? 120 : 10, 0, 0],
+        },
+      ],
+    },
+  ];
+
+  for (const { card, topic, loc, topicName, category } of deckCards) {
+    const eyebrow = category
+      ? `${CATEGORY_LABELS[category].toUpperCase()}  ·  ${topicName.toUpperCase()}`
+      : topicName.toUpperCase();
+    const metaBits = [
+      MODE_LABELS[card.modes[0]]?.toUpperCase(),
+      topic?.importance !== undefined ? `★${topic.importance}` : null,
+    ].filter(Boolean);
+
+    // ---- Front: the question only (no answer material of any kind).
+    content.push({
+      pageBreak: "before",
+      stack: [
+        {
+          text: eyebrow,
+          fontSize: 9,
+          bold: true,
+          characterSpacing: 1.1,
+          color: eyebrowColor,
+          margin: [0, hasBand ? 6 : 0, 0, hasBand ? 30 : 6],
+        },
+        {
+          text: metaBits.join("  ·  "),
+          fontSize: 9,
+          bold: true,
+          characterSpacing: 1.1,
+          color: s.bodyLabel,
+          margin: [0, 0, 0, 40],
+        },
+        s.titleBg && !hasBand
+          ? {
+              text: [{ text: ` ${card.prompt} `, background: s.titleBg, color: s.titleColor }],
+              fontSize: 17,
+              bold: true,
+              lineHeight: 1.5,
+            }
+          : {
+              text: card.prompt,
+              fontSize: 17,
+              bold: true,
+              color: s.ink,
+              lineHeight: 1.35,
+            },
+        {
+          text: FLASH_INSTRUCTION,
+          fontSize: 10,
+          italics: true,
+          color: s.bodyLabel,
+          margin: [0, 46, 0, 0],
+        },
+      ],
+    });
+
+    // ---- Back: answer material, trimmed in priority order to fit one page.
+    const answer =
+      card.flashcard?.shortAnswer ??
+      (card.sampleStrongAnswer && card.sampleStrongAnswer.length <= 450
+        ? card.sampleStrongAnswer
+        : null);
+    const mistake =
+      card.flashcard?.commonMistake ??
+      loc?.studyContent?.commonMistakes[0] ??
+      null;
+    const points = card.expectedPoints.slice(0, 5);
+    let followUp: string | null = card.followUps[0]?.prompt ?? null;
+    let showDesc = true;
+    let questionRecap = card.prompt;
+
+    const est = () =>
+      estimateFlashBack({ question: questionRecap, answer, points, showDesc, mistake, followUp, hasBand });
+    if (est() > CARD_USABLE) followUp = null;
+    if (est() > CARD_USABLE) showDesc = false;
+    const tight = est() > CARD_USABLE;
+    if (tight && questionRecap.length > 90) {
+      questionRecap = `${questionRecap.slice(0, 88).trimEnd()}…`;
+    }
+
+    const backStack: any[] = [
+      {
+        text: `${eyebrow}  ·  BACK`,
+        fontSize: 9,
+        bold: true,
+        characterSpacing: 1.1,
+        color: eyebrowColor,
+        margin: [0, hasBand ? 6 : 0, 0, hasBand ? 26 : 8],
+      },
+      {
+        text: questionRecap,
+        fontSize: 10.5,
+        italics: true,
+        color: s.bodyLabel,
+        lineHeight: 1.3,
+        margin: [0, 0, 0, 12],
+      },
+    ];
+    if (answer) {
+      backStack.push(
+        {
+          text: "MODEL ANSWER",
+          fontSize: 9,
+          bold: true,
+          characterSpacing: 1.1,
+          color: s.bodyLabel,
+          margin: [0, 0, 0, 5],
+        },
+        {
+          text: s.titleBg
+            ? [{ text: ` ${answer} `, background: s.titleBg, color: s.titleColor }]
+            : answer,
+          fontSize: 13,
+          color: s.ink,
+          lineHeight: s.titleBg ? 1.5 : 1.4,
+          margin: [0, 0, 0, 12],
+        },
+      );
+    }
+    backStack.push({
+      text: "KEY POINTS",
+      fontSize: 9,
+      bold: true,
+      characterSpacing: 1.1,
+      color: s.bodyLabel,
+      margin: [0, 0, 0, 6],
+    });
+    for (const p of points) {
+      backStack.push({
+        text: [
+          { text: p.label, bold: true, color: s.ink },
+          ...(showDesc && p.description
+            ? [{ text: ` — ${p.description}`, color: s.soft }]
+            : []),
+        ],
+        fontSize: tight ? 11.5 : 12.5,
+        lineHeight: tight ? 1.3 : 1.4,
+        margin: [0, 0, 0, tight ? 3 : 5],
+      });
+    }
+    if (mistake) {
+      backStack.push(
+        {
+          text: "COMMON MISTAKE",
+          fontSize: 9,
+          bold: true,
+          characterSpacing: 1.1,
+          color: "#b3452e",
+          margin: [0, 10, 0, 5],
+        },
+        {
+          text: mistake,
+          fontSize: tight ? 11.5 : 12.5,
+          color: s.soft,
+          lineHeight: 1.4,
+        },
+      );
+    }
+    if (followUp) {
+      backStack.push(
+        {
+          text: "LIKELY FOLLOW-UP",
+          fontSize: 9,
+          bold: true,
+          characterSpacing: 1.1,
+          color: s.bodyLabel,
+          margin: [0, 10, 0, 5],
+        },
+        { text: followUp, fontSize: 12.5, color: s.soft, lineHeight: 1.4 },
+      );
+    }
+    content.push({ pageBreak: "before", stack: backStack });
+  }
+
+  return {
+    pageSize: CARD_PAGE,
+    pageMargins: CARD_MARGINS,
+    defaultStyle: { fontSize: 12.5, lineHeight: 1.35 },
+    background: (currentPage: number, pageSize: any) => ({
+      canvas: [
+        { type: "rect", x: 0, y: 0, w: pageSize.width, h: pageSize.height, color: s.bg },
+        ...(s.band?.type === "block"
+          ? [{ type: "rect", x: 0, y: 0, w: pageSize.width, h: QBAND_HEIGHT, color: s.band.color }]
+          : []),
+        ...(s.band?.type === "rule"
+          ? [
+              { type: "line", x1: 0, y1: 58, x2: pageSize.width, y2: 58, lineWidth: 2, lineColor: s.band.color },
+            ]
+          : []),
+      ],
+    }),
+    footer: (currentPage: number, pageCount: number) => {
+      if (currentPage === 1) return undefined;
+      const cardNo = Math.floor((currentPage - 2) / 2) + 1;
+      const side = (currentPage - 2) % 2 === 0 ? "Front" : "Back";
+      const total = Math.floor((pageCount - 1) / 2);
+      return {
+        text: `Card ${cardNo} / ${total} — ${side}`,
+        alignment: "center",
+        fontSize: 9,
+        color: s.bodyLabel,
+      };
+    },
+    info: {
+      title: deckName
+        ? `Interview Trainer — Flashcards — ${deckName}`
+        : "Interview Trainer — Flashcards",
+    },
+    content,
+  };
+}
+
 /** Generates and downloads the PDF in the browser (pdfmake loaded lazily). */
 export async function downloadStudyPdf(
   format: StudyPdfFormat,
@@ -1009,12 +1315,16 @@ export async function downloadStudyPdf(
       ? buildFlashcardsDefinition(scope)
       : format === "qcards"
         ? buildQuestionFlashcardsDefinition(scope)
-        : buildStudyPdfDefinition(format, scope);
+        : format === "flash"
+          ? buildTrueFlashcardsDefinition(scope)
+          : buildStudyPdfDefinition(format, scope);
   const name =
     format === "cards"
       ? `interview-trainer-cards-${slug}.pdf`
       : format === "qcards"
         ? `interview-trainer-question-cards-${slug}.pdf`
-        : `interview-trainer-study-${slug}-${format}.pdf`;
+        : format === "flash"
+          ? `interview-trainer-flashcards-${slug}.pdf`
+          : `interview-trainer-study-${slug}-${format}.pdf`;
   await (pdfMake as any).createPdf(definition).download(name);
 }

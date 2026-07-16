@@ -120,6 +120,13 @@ const topicI18nSchema = z.record(
   }),
 );
 
+// Flashcard back-side material: a short natural spoken answer and the most
+// common wrong/incomplete answer. Length limits keep the card on one page.
+export const questionFlashcardSchema = z.object({
+  shortAnswer: plainProse(450).optional(),
+  commonMistake: plainProse(300).optional(),
+});
+
 const cardI18nSchema = z.record(
   langCodeSchema,
   z.object({
@@ -136,6 +143,12 @@ const cardI18nSchema = z.record(
       )
       .optional(),
     followUps: z.record(z.string(), z.string()).optional(),
+    flashcard: z
+      .object({
+        shortAnswer: plainProse(580).optional(),
+        commonMistake: plainProse(390).optional(),
+      })
+      .optional(),
   }),
 );
 
@@ -169,6 +182,8 @@ export const packQuestionSchema = z.object({
   followUps: z.array(followUpSchema).default([]),
   sampleStrongAnswer: z.string().optional(),
   sampleWeakAnswer: z.string().optional(),
+  /** Optional flashcard back-side material (two-page flashcard PDF). */
+  flashcard: questionFlashcardSchema.optional(),
   /** Study-only translations of the displayed card text. */
   i18n: cardI18nSchema.optional(),
 });

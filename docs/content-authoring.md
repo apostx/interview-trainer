@@ -287,9 +287,25 @@ requires them or a deeper related topic covers them.
   "answerStructureHint": "Definition, use case, trade-off.",  // optional
   "expectedPoints": [ /* 2–5 rubric items, at least 1 required */ ],
   "followUps": [ /* optional */ ],
-  "sampleStrongAnswer": "optional"
+  "sampleStrongAnswer": "optional",
+  "flashcard": {                        // optional but recommended: powers the
+    "shortAnswer": "…",                 //   two-page flashcard PDF back side.
+    "commonMistake": "…"                //   Both fields optional; see below.
+  }
 }
 ```
+
+`flashcard` feeds the printable flashcard deck (question on the front page,
+answer on the back page):
+
+- `shortAnswer`: a concise 1–3 sentence model answer that sounds natural
+  when SPOKEN in an interview — a coherent reply, never a concatenation of
+  the expectedPoints (max 450 chars). Without it, the back side falls back
+  to a short `sampleStrongAnswer` or shows only the key points.
+- `commonMistake`: the most common incomplete or incorrect answer to THIS
+  question, one sentence (max 300 chars). Without it, the primary topic's
+  first `commonMistakes` entry is used.
+- Both are translatable via the card's `i18n[lang].flashcard`.
 
 ### Rubric item (`expectedPoints[]`)
 
@@ -451,7 +467,11 @@ The JSON must follow this exact structure (all ids snake_case):
       ],
       "followUps": [
         { "id": "...", "trigger": { "type": "always" }, "prompt": "...", "expectedPoints": [] }
-      ]
+      ],
+      "flashcard": {
+        "shortAnswer": "<1-3 natural spoken sentences answering the question; a coherent reply, NOT the expectedPoints glued together; max 450 chars>",
+        "commonMistake": "<the most common incomplete/incorrect answer to this question, one sentence; max 300 chars>"
+      }
     }
   ]
 }
@@ -490,6 +510,10 @@ Content rules:
     reading;
   - rewrite any sentence that depends on a concept you did not explain.
 - Every question needs 1-2 followUps that probe the most likely gap.
+- Every question includes "flashcard": shortAnswer must read as something a
+  candidate would actually SAY aloud (1-3 sentences, coherent, plain);
+  commonMistake names the typical wrong or incomplete answer. Do not repeat
+  the expectedPoints verbatim in either field.
 - Mix the modes: concept_check for definitions, tradeoff_decision for X-vs-Y,
   scenario_discussion / troubleshooting for practical situations,
   system_design for design tasks.

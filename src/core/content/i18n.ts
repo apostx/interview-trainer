@@ -139,5 +139,12 @@ export function localizeCard(card: QuestionCard, lang: LangCode): QuestionCard {
       const prompt = tr.followUps?.[f.id];
       return prompt ? { ...f, prompt } : f;
     }),
+    flashcard: card.flashcard
+      ? {
+          shortAnswer: tr.flashcard?.shortAnswer ?? card.flashcard.shortAnswer,
+          commonMistake:
+            tr.flashcard?.commonMistake ?? card.flashcard.commonMistake,
+        }
+      : card.flashcard,
   };
 }

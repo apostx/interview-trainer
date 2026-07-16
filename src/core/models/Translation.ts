@@ -37,6 +37,8 @@ export type CardTranslation = {
   expectedPoints?: Record<string, { label?: string; description?: string }>;
   /** Keyed by the follow-up's id → translated prompt. */
   followUps?: Record<string, string>;
+  /** Flashcard back-side texts; each field falls back to English. */
+  flashcard?: { shortAnswer?: string; commonMistake?: string };
 };
 
 export type TopicI18n = Record<LangCode, TopicTranslation>;

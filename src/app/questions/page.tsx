@@ -142,7 +142,7 @@ export default function QuestionsPage() {
   const [selectedImp, setImpState] = useState<string[]>([]);
   const [fullView, setFullViewState] = useState(false);
   const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
-  const [generating, setGenerating] = useState(false);
+  const [generating, setGenerating] = useState<"qcards" | "flash" | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
 
   const activeBank = useMemo(() => bankFor(selectedPacks), [selectedPacks]);
@@ -239,10 +239,11 @@ export default function QuestionsPage() {
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // Flashcard PDF: one question per phone-sized page, using exactly the
-  // questions currently shown (pack + importance filters).
-  async function generateCards() {
-    setGenerating(true);
+  // Card PDFs from exactly the questions currently shown (pack + importance
+  // filters): "qcards" is the one-page Q&A reference, "flash" the true
+  // two-page (front/back) flashcard deck for active recall.
+  async function generateCards(format: "qcards" | "flash") {
+    setGenerating(format);
     setPdfError(null);
     try {
       const style = Number(
@@ -254,7 +255,7 @@ export default function QuestionsPage() {
           : selectedPacks.length > 1
             ? `${selectedPacks.length} packs`
             : "All questions";
-      await downloadStudyPdf("qcards", {
+      await downloadStudyPdf(format, {
         cardIds: visibleQuestions.map((c) => c.id),
         name: scopeName,
         slug:
@@ -271,7 +272,7 @@ export default function QuestionsPage() {
         `PDF generation failed: ${e instanceof Error ? e.message : String(e)}`,
       );
     } finally {
-      setGenerating(false);
+      setGenerating(null);
     }
   }
 
@@ -288,17 +289,29 @@ export default function QuestionsPage() {
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <span className="text-xs text-muted">
-          {visibleQuestions.length} question card
-          {visibleQuestions.length === 1 ? "" : "s"} in the flashcard PDF
+          {visibleQuestions.length} card{visibleQuestions.length === 1 ? "" : "s"} in
+          the exported deck
         </span>
-        <button
-          type="button"
-          disabled={generating || visibleQuestions.length === 0}
-          onClick={generateCards}
-          className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50"
-        >
-          {generating ? "Generating…" : "PDF · flashcards"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={generating !== null || visibleQuestions.length === 0}
+            onClick={() => generateCards("flash")}
+            className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50"
+            title="True flashcards: question on the front page, answer on the back page"
+          >
+            {generating === "flash" ? "Generating…" : "PDF · flashcards"}
+          </button>
+          <button
+            type="button"
+            disabled={generating !== null || visibleQuestions.length === 0}
+            onClick={() => generateCards("qcards")}
+            className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm font-semibold hover:bg-background disabled:opacity-50"
+            title="Quick reference: question and answer on the same page"
+          >
+            {generating === "qcards" ? "Generating…" : "PDF · Q&A"}
+          </button>
+        </div>
       </div>
 
       {pdfError && (
