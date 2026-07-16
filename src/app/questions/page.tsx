@@ -5,11 +5,14 @@ import Link from "next/link";
 import { Card, ModeBadge, PageHeader } from "@/components/ui";
 import {
   CheckboxDropdown,
+  IMPORTANCE_LEVELS,
+  importanceSummary,
   LanguagePicker,
   packGroups,
   packSummary,
 } from "@/components/filters";
 import { bankFor } from "@/core/content/bank";
+import { topicIdsMatch, topicMetaMaps } from "@/core/content/topicFilters";
 import {
   availableLanguages,
   DEFAULT_LANG,
@@ -19,6 +22,7 @@ import {
 import type { LangCode, QuestionCard, Topic } from "@/core/models";
 import {
   loadFilterPrefs,
+  parseImpParam,
   parsePackParam,
   patchUrl,
   saveFilterPrefs,
@@ -131,10 +135,12 @@ function QuestionEntry({
 
 export default function QuestionsPage() {
   const [selectedPacks, setPacksState] = useState<string[]>([]);
+  const [selectedImp, setImpState] = useState<string[]>([]);
   const [fullView, setFullViewState] = useState(false);
   const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
 
   const activeBank = useMemo(() => bankFor(selectedPacks), [selectedPacks]);
+  const meta = useMemo(() => topicMetaMaps(activeBank), [activeBank]);
   const { topicsById, languages } = useMemo(
     () => ({
       topicsById: new Map(activeBank.topics.map((t) => [t.id, t])),
@@ -149,6 +155,7 @@ export default function QuestionsPage() {
     const syncUrl = () => {
       const p = new URLSearchParams(window.location.search);
       setPacksState(parsePackParam(p.get("pack")));
+      setImpState(parseImpParam(p.get("imp")));
       setFullViewState(p.get("view") === "full");
       const l = p.get("lang");
       if (l) setLangState(l);
@@ -159,6 +166,7 @@ export default function QuestionsPage() {
       const patch: Record<string, string | null> = {};
       if (!p.has("pack") && prefs.packs?.length)
         patch.pack = prefs.packs.join(",");
+      if (!p.has("imp") && prefs.imp?.length) patch.imp = prefs.imp.join(",");
       if (!p.has("view") && prefs.qview === "full") patch.view = "full";
       if (!p.has("lang") && prefs.lang && prefs.lang !== DEFAULT_LANG)
         patch.lang = prefs.lang;
@@ -175,6 +183,11 @@ export default function QuestionsPage() {
     patchUrl({ pack: packs.length > 0 ? packs.join(",") : null });
     saveFilterPrefs({ packs });
   };
+  const setSelectedImp = (levels: string[]) => {
+    setImpState(levels);
+    patchUrl({ imp: levels.length > 0 ? levels.join(",") : null });
+    saveFilterPrefs({ imp: levels });
+  };
   const setFullView = (full: boolean) => {
     setFullViewState(full);
     patchUrl({ view: full ? "full" : null });
@@ -188,15 +201,25 @@ export default function QuestionsPage() {
 
   const activeLang = languages.includes(lang) ? lang : DEFAULT_LANG;
 
+  // A question passes when ANY of its topics is at a selected importance
+  // level (same rule as the Practice filter); empty selection = everything.
+  const visibleQuestions = useMemo(
+    () =>
+      activeBank.questions.filter((c) =>
+        topicIdsMatch(c.topicIds, meta, "all", selectedImp),
+      ),
+    [activeBank, meta, selectedImp],
+  );
+
   // Group by primary topic (a question shows chips for ALL its topics).
   const groups = useMemo(() => {
     const byTopic = new Map<string, QuestionCard[]>();
-    for (const card of activeBank.questions) {
+    for (const card of visibleQuestions) {
       const primary = card.topicIds[0];
       byTopic.set(primary, [...(byTopic.get(primary) ?? []), card]);
     }
     return byTopic;
-  }, [activeBank]);
+  }, [visibleQuestions]);
 
   const sortedGroups = [...groups.entries()]
     .map(([topicId, cards]) => {
@@ -214,7 +237,11 @@ export default function QuestionsPage() {
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
       <PageHeader
         title="Questions"
-        subtitle={`${activeBank.questions.length} question${activeBank.questions.length === 1 ? "" : "s"} in the selected packs, grouped by topic.`}
+        subtitle={
+          visibleQuestions.length === activeBank.questions.length
+            ? `${activeBank.questions.length} question${activeBank.questions.length === 1 ? "" : "s"} in the selected packs, grouped by topic.`
+            : `${visibleQuestions.length} of ${activeBank.questions.length} questions (importance filter), grouped by topic.`
+        }
       />
 
       <div className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -229,6 +256,22 @@ export default function QuestionsPage() {
             onChange={setSelectedPacks}
           />
         </div>
+
+        {meta.hasImportance && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-secondary">
+              Importance
+            </span>
+            <CheckboxDropdown
+              ariaLabel="Importance filter"
+              allLabel="All topics"
+              summary={importanceSummary(selectedImp)}
+              groups={[["", IMPORTANCE_LEVELS]]}
+              selected={selectedImp}
+              onChange={setSelectedImp}
+            />
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2" role="group" aria-label="View mode">
           <button
@@ -267,7 +310,9 @@ export default function QuestionsPage() {
 
       {sortedGroups.length === 0 && (
         <p className="py-10 text-center text-sm text-secondary">
-          The selected data packs have no questions — pick another pack.
+          {selectedImp.length > 0
+            ? "No questions match the importance filter — clear it or pick another pack."
+            : "The selected data packs have no questions — pick another pack."}
         </p>
       )}
 
@@ -283,6 +328,18 @@ export default function QuestionsPage() {
               </Link>
             ) : (
               name
+            )}
+            {topic?.importance !== undefined && (
+              <span
+                title={`Interview importance ${topic.importance}/5`}
+                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                  topic.importance >= 4
+                    ? "bg-accent/15 text-accent"
+                    : "bg-background text-muted"
+                }`}
+              >
+                ★{topic.importance}
+              </span>
             )}
             <span className="text-xs font-medium text-muted">
               {cards.length} question{cards.length === 1 ? "" : "s"}
