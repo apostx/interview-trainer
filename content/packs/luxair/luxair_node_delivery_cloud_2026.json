@@ -1,0 +1,1849 @@
+{
+  "id": "luxair_node_delivery_cloud_2026",
+  "name": "Luxair Node.js, Delivery and Azure",
+  "description": "Interview preparation for the Node.js runtime, asynchronous errors, TypeScript boundaries, Docker, CI/CD, and Azure service choices.",
+  "sources": [
+    "luxair/software_developer_integration_job_description_and_interview_notes"
+  ],
+  "topics": [
+    {
+      "id": "luxair_int_node_event_loop",
+      "name": "Node.js Event Loop and Concurrency",
+      "description": "Node.js runs JavaScript on an event loop and handles many I/O operations without one thread per request. Its scalability depends on keeping the event-loop thread free from long blocking work.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "scalability"
+      ],
+      "studyContent": {
+        "mentalModel": "The Node.js event loop runs JavaScript callbacks one at a time while the runtime delegates many I/O operations to the operating system or a worker pool. Concurrency comes from overlapping waiting time, not from running all JavaScript in parallel.",
+        "problem": "A single CPU-heavy calculation, synchronous file operation, or very large JSON transformation can block the event loop. While it runs, unrelated requests cannot execute their JavaScript, so latency rises even when CPU or request averages initially look acceptable.",
+        "example": "An integration service receives many API calls and waits for PostgreSQL and third-party HTTP responses. This workload fits Node.js well because most time is spent waiting. A large report transformation is moved to a worker thread or separate job so it cannot pause normal request handling.",
+        "howItWorks": [
+          "A request callback starts on the event-loop thread.",
+          "Asynchronous I/O is registered and the event loop continues with other work.",
+          "When an operation completes, its callback or promise continuation becomes eligible to run.",
+          "CPU-heavy or synchronous work must be bounded, offloaded, streamed, or split into smaller units."
+        ],
+        "commonMistakes": [
+          "Saying Node.js is single-threaded and therefore handles only one request at a time.",
+          "Using async syntax around CPU-heavy work and assuming it becomes non-blocking.",
+          "Measuring only throughput while ignoring event-loop delay and tail latency."
+        ],
+        "keyTerms": [
+          {
+            "term": "event loop",
+            "definition": "the runtime loop that schedules JavaScript callbacks"
+          },
+          {
+            "term": "non-blocking I/O",
+            "definition": "starting an I/O operation without waiting on the JavaScript thread"
+          },
+          {
+            "term": "event-loop delay",
+            "definition": "the time a ready callback waits because the event loop is busy"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Node.js event loop és concurrency",
+          "description": "A Node.js event loopon futtatja a JavaScriptet, és sok I/O műveletet requestenkénti külön thread nélkül kezel. A skálázhatóság feltétele, hogy az event-loop threadet ne blokkolja hosszú munka.",
+          "studyContent": {
+            "mentalModel": "A Node.js event loop egyszerre egy JavaScript callbacket futtat, miközben sok I/O műveletet az operációs rendszerre vagy worker poolra bíz. A concurrency a várakozási idők átfedéséből származik, nem abból, hogy minden JavaScript párhuzamosan fut.",
+            "problem": "Egy CPU-heavy számítás, synchronous file operation vagy nagyon nagy JSON-transzformáció blokkolhatja az event loopot. Amíg fut, más requestek JavaScriptje sem kerül sorra, ezért nő a latency még akkor is, ha az átlagos CPU vagy request szám kezdetben elfogadhatónak látszik.",
+            "example": "Egy integration service sok API requestet fogad, majd PostgreSQL-re és third-party HTTP response-okra vár. Ez jó Node.js workload, mert az idő nagy része várakozás. Egy nagy report-transzformáció worker threadbe vagy külön jobba kerül, így nem állítja meg a normál requestkezelést.",
+            "howItWorks": [
+              "A request callback az event-loop threaden indul.",
+              "Az aszinkron I/O regisztrálódik, az event loop pedig más munkával folytatja.",
+              "Az operation befejezésekor a callback vagy Promise continuation futtathatóvá válik.",
+              "A CPU-heavy vagy synchronous munkát korlátozni, offloadolni, streamelni vagy kisebb részekre bontani kell."
+            ],
+            "commonMistakes": [
+              "Azt mondani, hogy a Node.js single-threaded, ezért egyszerre csak egy requestet kezel.",
+              "Async syntaxba csomagolni CPU-heavy munkát, és azt hinni, ettől non-blocking lesz.",
+              "Csak throughputot mérni, event-loop delay és tail latency nélkül."
+            ],
+            "keyTerms": [
+              {
+                "term": "event loop",
+                "definition": "a JavaScript callbackeket ütemező runtime loop"
+              },
+              {
+                "term": "non-blocking I/O",
+                "definition": "I/O elindítása a JavaScript thread blokkolása nélkül"
+              },
+              {
+                "term": "event-loop delay",
+                "definition": "az idő, amennyit egy futásra kész callback vár, mert az event loop foglalt"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_async_error_propagation",
+      "name": "Asynchronous Error Propagation in Node.js",
+      "description": "Asynchronous error propagation ensures that promise rejections, callback errors, stream failures, and background-task failures reach a deliberate handler instead of disappearing or crashing unpredictably.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "error_handling",
+        "observability"
+      ],
+      "studyContent": {
+        "mentalModel": "Asynchronous error handling means every asynchronous boundary has a defined path for success, failure, cancellation, and cleanup. In Node.js, errors can appear through rejected promises, callbacks, events, streams, or detached tasks.",
+        "problem": "A missing await, unhandled rejection, or forgotten stream error listener can make a request appear successful while work has failed. Catching every error at a low level is also harmful because it hides context and may continue with invalid state.",
+        "example": "An HTTP handler awaits a booking workflow. Domain errors become a 4xx response, dependency timeouts become a retryable 503, and unexpected errors reach one centralized boundary that logs the correlation ID and returns a safe generic response. Cleanup runs in finally.",
+        "howItWorks": [
+          "Classify expected domain and dependency failures close to where they are understood.",
+          "Attach context and propagate the error to the boundary responsible for the outcome.",
+          "At the request or message boundary, map the failure to a response, retry, rejection, or dead-letter action.",
+          "Use finally or cancellation-aware cleanup and make detached background work explicitly supervised."
+        ],
+        "commonMistakes": [
+          "Wrapping every function in try/catch and then logging and continuing.",
+          "Starting a promise without awaiting, returning, or supervising it.",
+          "Exposing raw stack traces or provider messages to API consumers."
+        ],
+        "keyTerms": [
+          {
+            "term": "promise rejection",
+            "definition": "the failure result of an asynchronous promise operation"
+          },
+          {
+            "term": "error boundary",
+            "definition": "the layer that turns an internal failure into an external outcome"
+          },
+          {
+            "term": "unhandled rejection",
+            "definition": "a rejected promise with no attached failure handler"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Aszinkron error propagation Node.js-ben",
+          "description": "Az aszinkron error propagation biztosítja, hogy a Promise rejectionök, callback errorok, stream failure-ök és background-task hibák szándékos handlerhez jussanak, ne tűnjenek el vagy okozzanak kiszámíthatatlan crasht.",
+          "studyContent": {
+            "mentalModel": "Az aszinkron error handling azt jelenti, hogy minden async boundaryhoz definiált success-, failure-, cancellation- és cleanup-út tartozik. Node.js-ben a hibák rejected Promise-on, callbacken, eventen, streamen vagy detached taskon keresztül jelenhetnek meg.",
+            "problem": "Egy hiányzó await, unhandled rejection vagy elfelejtett stream error listener miatt a request sikeresnek látszhat, miközben a munka meghiúsult. Az sem jó, ha minden alacsony szintű réteg elkap mindent, mert elveszik a context és a rendszer hibás state-tel folytathatja.",
+            "example": "Egy HTTP handler awaiteli a booking workflow-t. A domain error 4xx választ, a dependency timeout retryolható 503-at kap, az unexpected error pedig központi boundaryhoz jut, amely correlation ID-val logol és biztonságos generic választ ad. A cleanup finallyban fut.",
+            "howItWorks": [
+              "Az expected domain- és dependency failure-öket ott osztályozd, ahol jelentésük ismert.",
+              "Adj contextet a hibához, majd propagáld ahhoz a boundaryhoz, amely az outcome-ért felel.",
+              "A request vagy message boundaryn mapeld a hibát response-ra, retryra, rejectionre vagy dead-letter actionre.",
+              "Használj finallyt vagy cancellation-aware cleanupot, a detached background munkát pedig explicit supervisáld."
+            ],
+            "commonMistakes": [
+              "Minden functiont try/catch-be tenni, majd logolni és folytatni.",
+              "Promise-t indítani await, return vagy supervision nélkül.",
+              "Raw stack trace-t vagy provider üzenetet kitenni az API consumernek."
+            ],
+            "keyTerms": [
+              {
+                "term": "promise rejection",
+                "definition": "egy aszinkron Promise operation sikertelen eredménye"
+              },
+              {
+                "term": "error boundary",
+                "definition": "az a réteg, amely a belső failure-t külső outcome-má alakítja"
+              },
+              {
+                "term": "unhandled rejection",
+                "definition": "failure handler nélküli rejected Promise"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_typescript_runtime_validation",
+      "name": "TypeScript and Runtime Validation",
+      "description": "TypeScript checks code during development, but external data still needs runtime validation because types disappear when JavaScript executes. Integration boundaries must not trust network or database payloads.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "api_design",
+        "security"
+      ],
+      "studyContent": {
+        "mentalModel": "TypeScript types describe what the program expects at compile time. Runtime validation checks what the program actually received from an API, queue, configuration file, or database before using it.",
+        "problem": "A response can claim to be a Passenger object in TypeScript while containing a missing identifier or an unexpected date format. A type assertion only silences the compiler; it does not inspect or convert the data, so invalid input can travel deep into the application.",
+        "example": "A third-party API response is parsed as unknown. A schema validates required fields, accepted enum values, string formats, and nested objects. The adapter then maps the validated data into a smaller internal model, while invalid responses become a typed integration error with safe diagnostics.",
+        "howItWorks": [
+          "Treat data crossing an external boundary as unknown.",
+          "Validate its structure and business-relevant constraints at runtime.",
+          "Return a typed success value or a controlled validation error.",
+          "Map the validated external representation into an internal domain model."
+        ],
+        "commonMistakes": [
+          "Using `as SomeType` as if it validated the payload.",
+          "Validating only at the public API edge while trusting queue and provider data.",
+          "Letting generated provider types become the internal domain model."
+        ],
+        "keyTerms": [
+          {
+            "term": "type erasure",
+            "definition": "the fact that TypeScript type information is not present at JavaScript runtime"
+          },
+          {
+            "term": "runtime schema",
+            "definition": "executable rules that inspect actual input data"
+          },
+          {
+            "term": "type narrowing",
+            "definition": "proving enough about a value for TypeScript to treat it as a safer type"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "TypeScript és runtime validation",
+          "description": "A TypeScript fejlesztés közben ellenőrzi a kódot, de a külső adat runtime validationt igényel, mert a type-ok JavaScript futáskor eltűnnek. Az integration boundaryk nem bízhatnak vakon network- vagy database-payloadokban.",
+          "studyContent": {
+            "mentalModel": "A TypeScript type-ok compile time írják le, mit vár a program. A runtime validation azt ellenőrzi, mit kapott ténylegesen egy API-ból, queue-ból, config file-ból vagy adatbázisból, mielőtt felhasználná.",
+            "problem": "Egy response TypeScriptben Passengernek lehet castolva akkor is, ha hiányzik az ID vagy váratlan a date format. A type assertion csak elhallgattatja a compilert; nem ellenőrzi és nem konvertálja az adatot, ezért a hibás input mélyre juthat az alkalmazásban.",
+            "example": "A third-party API response unknownként kerül parse-olásra. Egy schema validálja a required mezőket, enum értékeket, string formátumokat és nested objecteket. Az adapter a valid adatot kisebb belső modellre mapeli, az invalid response pedig typed integration error lesz.",
+            "howItWorks": [
+              "Az external boundaryn átlépő adatot kezeld unknownként.",
+              "Runtime validáld a struktúrát és az üzletileg fontos constraint-eket.",
+              "Adj vissza typed success értéket vagy kontrollált validation errort.",
+              "A validált külső reprezentációt mapeld belső domain modellre."
+            ],
+            "commonMistakes": [
+              "Az `as SomeType` használatát validationnek tekinteni.",
+              "Csak a public API edge-en validálni, miközben a queue- és provider-adatban megbízni.",
+              "A generált provider type-okat belső domain modellként használni."
+            ],
+            "keyTerms": [
+              {
+                "term": "type erasure",
+                "definition": "az, hogy a TypeScript type-információ nincs jelen JavaScript runtime-ban"
+              },
+              {
+                "term": "runtime schema",
+                "definition": "futtatható szabályok, amelyek tényleges inputot ellenőriznek"
+              },
+              {
+                "term": "type narrowing",
+                "definition": "annak bizonyítása, hogy egy value biztonságosabb type-ként kezelhető"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_docker_service_packaging",
+      "name": "Docker Packaging for Node.js Services",
+      "description": "Docker packages a service with its runtime and dependencies into a repeatable image. A production-ready image must also be small, secure, observable, and easy to stop or replace.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "continuous_delivery"
+      ],
+      "studyContent": {
+        "mentalModel": "A Docker image is an immutable package used to run the same application build in different environments. The container is a running instance of that image with explicit configuration, network, storage, and resource boundaries.",
+        "problem": "A development-oriented image may contain compilers, test tools, source secrets, and run as root. Large or mutable images slow deployment, increase the attack surface, and make it difficult to know which code is actually running.",
+        "example": "A TypeScript service is compiled in a builder stage. The final image contains only production dependencies, compiled JavaScript, certificates, and a non-root user. Configuration and secrets are injected at runtime, the process handles SIGTERM, and an HTTP readiness endpoint reports whether dependencies are usable.",
+        "howItWorks": [
+          "Use a pinned, supported base image and a multi-stage build.",
+          "Install dependencies reproducibly and copy only runtime artifacts into the final image.",
+          "Run as a non-root user and keep configuration and secrets outside the image.",
+          "Expose health behavior, log to standard output, and handle graceful shutdown signals."
+        ],
+        "commonMistakes": [
+          "Using the `latest` tag as the only deployment identity.",
+          "Baking environment-specific secrets into image layers.",
+          "Treating a container as a virtual machine and changing it manually after deployment."
+        ],
+        "keyTerms": [
+          {
+            "term": "image",
+            "definition": "an immutable package containing the application and runtime files"
+          },
+          {
+            "term": "container",
+            "definition": "a running instance of an image"
+          },
+          {
+            "term": "multi-stage build",
+            "definition": "a Docker build that separates compilation tools from the final runtime image"
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": "Node.js service-ek Docker packagingje",
+          "description": "A Docker a service-t a runtime-mal és dependencykkel együtt repeatable image-be csomagolja. Egy production-ready image legyen kicsi, biztonságos, observable, valamint könnyen leállítható és cserélhető.",
+          "studyContent": {
+            "mentalModel": "A Docker image immutable csomag, amellyel ugyanaz az application build futtatható különböző environmentekben. A container az image futó példánya explicit config-, network-, storage- és resource-boundarykkel.",
+            "problem": "Egy development-orientált image tartalmazhat compilert, test toolokat és source secretet, valamint rootként futhat. A nagy vagy mutable image lassítja a deploymentet, növeli az attack surface-t, és bizonytalanná teszi, melyik kód fut valójában.",
+            "example": "A TypeScript service builder stage-ben compile-olódik. A final image csak production dependencyket, compiled JavaScriptet, certificate-eket és non-root usert tartalmaz. A config és secret runtime érkezik, a process kezeli a SIGTERM-et, readiness endpoint pedig jelzi a dependencyk használhatóságát.",
+            "howItWorks": [
+              "Pinned, támogatott base image-et és multi-stage buildet használj.",
+              "Reprodukálhatóan installáld a dependencyket, és csak runtime artifactokat másolj a final image-be.",
+              "Non-root userrel futtass, a configot és secretet tartsd az image-en kívül.",
+              "Adj health viselkedést, stdout loggingot és graceful shutdown signalkezelést."
+            ],
+            "commonMistakes": [
+              "A `latest` taget egyetlen deployment identityként használni.",
+              "Environment-specifikus secretet image layerbe sütni.",
+              "A containert virtual machine-ként kezelni és deployment után manuálisan módosítani."
+            ],
+            "keyTerms": [
+              {
+                "term": "image",
+                "definition": "az alkalmazást és runtime file-okat tartalmazó immutable csomag"
+              },
+              {
+                "term": "container",
+                "definition": "egy image futó példánya"
+              },
+              {
+                "term": "multi-stage build",
+                "definition": "olyan Docker build, amely elkülöníti a compilation toolokat a final runtime image-től"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_ci_cd_integration_services",
+      "name": "CI/CD for Integration Services",
+      "description": "CI/CD turns every change into a repeatable sequence of checks and controlled deployment steps. For integration services, the pipeline must protect contracts and cross-system behavior, not only compile the code.",
+      "category": "devops",
+      "relatedTopicIds": [
+        "continuous_integration",
+        "continuous_delivery",
+        "api_design"
+      ],
+      "studyContent": {
+        "mentalModel": "Continuous integration verifies each small change against the shared codebase. Continuous delivery keeps a validated build ready for release, while deployment automation promotes the exact same artifact through environments.",
+        "problem": "An integration service can pass unit tests and still break consumers through a contract change, bad configuration, missing certificate, database migration, or different provider behavior. Manual rebuilds between environments also make failures difficult to reproduce.",
+        "example": "A commit builds one versioned container image. The pipeline runs linting, unit tests, schema and contract checks, integration tests against controlled dependencies, security scanning, and migration checks. The same image is promoted to staging and then released by canary with automated health gates and rollback.",
+        "howItWorks": [
+          "Build one immutable, traceable artifact from a reviewed commit.",
+          "Run fast code checks first, then contract, integration, security, and migration checks.",
+          "Promote the same artifact with environment-specific configuration and secret references.",
+          "Deploy gradually, evaluate health signals, and stop or roll back automatically when gates fail."
+        ],
+        "commonMistakes": [
+          "Rebuilding the artifact separately for each environment.",
+          "Treating a successful deployment command as proof that the service is healthy.",
+          "Running provider-dependent tests against uncontrolled production endpoints in the normal pipeline."
+        ],
+        "keyTerms": [
+          {
+            "term": "artifact promotion",
+            "definition": "moving the same built artifact through environments without rebuilding it"
+          },
+          {
+            "term": "quality gate",
+            "definition": "an automated condition that must pass before promotion continues"
+          },
+          {
+            "term": "canary deployment",
+            "definition": "sending a small amount of traffic to a new version before wider rollout"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "CI/CD integration service-ekhez",
+          "description": "A CI/CD minden változtatást repeatable ellenőrzési és kontrollált deployment lépéssorrá alakít. Integration service-eknél a pipeline-nak nemcsak a buildet, hanem a contractokat és cross-system viselkedést is védenie kell.",
+          "studyContent": {
+            "mentalModel": "A continuous integration minden kis változtatást ellenőriz a közös codebase-szel szemben. A continuous delivery release-re kész állapotban tart egy validált buildet, a deployment automation pedig pontosan ugyanazt az artifactot viszi végig az environmenteken.",
+            "problem": "Egy integration service unit testjei átmehetnek, miközben contract change, hibás config, hiányzó certificate, database migration vagy eltérő provider-viselkedés elrontja a consumereket. Az environmentenkénti manuális rebuild a hibákat nehezen reprodukálhatóvá teszi.",
+            "example": "Egy commit egy versioned container image-et épít. A pipeline lintet, unit testet, schema- és contract checket, kontrollált dependencykkel integration testet, security scant és migration checket futtat. Ugyanaz az image stagingbe kerül, majd canaryval, health gate-ekkel és rollbackkel release-elődik.",
+            "howItWorks": [
+              "Egy reviewed commitból építs egy immutable, traceable artifactot.",
+              "Először gyors code checkeket, majd contract-, integration-, security- és migration checkeket futtass.",
+              "Ugyanazt az artifactot promotáld environment-specifikus configgal és secret reference-ekkel.",
+              "Fokozatosan deployolj, health signalok alapján gate-elj, failure esetén automatikusan állj meg vagy rollbackelj."
+            ],
+            "commonMistakes": [
+              "Environmentenként külön rebuildelni az artifactot.",
+              "A sikeres deployment commandot a service egészségének bizonyítékaként kezelni.",
+              "A normál pipeline-ban kontrollálatlan production provider endpoint ellen tesztelni."
+            ],
+            "keyTerms": [
+              {
+                "term": "artifact promotion",
+                "definition": "ugyanazon build artifact mozgatása environmentek között rebuild nélkül"
+              },
+              {
+                "term": "quality gate",
+                "definition": "automatizált feltétel, amelynek teljesülnie kell a promotion folytatásához"
+              },
+              {
+                "term": "canary deployment",
+                "definition": "kis traffic új verzióra irányítása a széles rollout előtt"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_azure_service_selection",
+      "name": "Azure Integration Service Selection",
+      "description": "Azure offers managed compute, messaging, workflow, API, and data services. Good selection begins with workload requirements and operational constraints rather than choosing the most feature-rich product.",
+      "category": "cloud",
+      "relatedTopicIds": [
+        "cloud_architecture",
+        "message_queue",
+        "api_design"
+      ],
+      "studyContent": {
+        "mentalModel": "Azure service selection means matching the workload’s execution model, traffic, latency, state, networking, reliability, and team skills to a managed service. The service name matters less than the requirement it satisfies.",
+        "problem": "Choosing a platform only because it is familiar or serverless can create hidden limits, high cost, difficult networking, or poor operational control. Integration workloads often combine synchronous APIs, asynchronous messages, scheduled workflows, and private connectivity, so one service rarely fits everything.",
+        "example": "A small event-driven transformation may run in Azure Functions. A long-lived containerized Node.js API may fit Azure Container Apps or App Service. Azure Service Bus can buffer reliable commands, while API Management can authenticate, rate-limit, version, and observe published APIs.",
+        "howItWorks": [
+          "Describe the workload: request or event driven, duration, state, protocol, and expected scale.",
+          "Define reliability, latency, security, networking, compliance, and operational requirements.",
+          "Compare candidate services by limits, scaling behavior, delivery semantics, cost, and team ownership.",
+          "Prototype the risky assumptions and design observability, failure handling, and exit strategy."
+        ],
+        "commonMistakes": [
+          "Calling every workload serverless without checking duration, concurrency, or cold-start constraints.",
+          "Using an orchestration tool as a place for complex business logic that cannot be tested normally.",
+          "Assuming a managed service removes the need for capacity, security, and failure design."
+        ],
+        "keyTerms": [
+          {
+            "term": "Azure Functions",
+            "definition": "event-driven managed compute for short or bounded executions"
+          },
+          {
+            "term": "Azure Service Bus",
+            "definition": "managed queues and topics for reliable asynchronous messaging"
+          },
+          {
+            "term": "API Management",
+            "definition": "a managed gateway for publishing, protecting, and observing APIs"
+          }
+        ]
+      },
+      "importance": 3,
+      "i18n": {
+        "hu": {
+          "name": "Azure integration service kiválasztása",
+          "description": "Az Azure managed compute-, messaging-, workflow-, API- és data service-eket kínál. A jó választás workload requirementekből és operational constraint-ekből indul ki, nem a legtöbb feature-rel rendelkező termékből.",
+          "studyContent": {
+            "mentalModel": "Az Azure service selection a workload execution modeljét, trafficjét, latencyjét, state-jét, networkingjét, reliabilityjét és a csapat tudását párosítja egy managed service-szel. A szolgáltatás neve kevésbé fontos, mint az a requirement, amelyet teljesít.",
+            "problem": "Ha csak ismertség vagy a serverless címke alapján választunk, hidden limit, magas költség, nehéz networking vagy gyenge operational control lehet az eredmény. Az integration workloadok gyakran synchronous API-t, async message-et, scheduled workflow-t és private connectivityt kombinálnak.",
+            "example": "Egy kis event-driven transzformáció Azure Functionben futhat. Egy hosszú életű containerized Node.js API-hoz Azure Container Apps vagy App Service illhet. Az Azure Service Bus reliable commandokat bufferelhet, az API Management pedig authenticationt, rate limitet, versioninget és observabilityt adhat.",
+            "howItWorks": [
+              "Írd le a workloadot: request- vagy event-driven, duration, state, protocol és várható scale.",
+              "Definiáld a reliability, latency, security, networking, compliance és operational requirementeket.",
+              "Hasonlítsd össze a szolgáltatásokat limit, scaling, delivery semantics, cost és ownership szerint.",
+              "Prototípussal ellenőrizd a kockázatos feltételezéseket, és tervezz observabilityt, failure handlingot és exit stratégiát."
+            ],
+            "commonMistakes": [
+              "Minden workloadot serverlessnek nevezni a duration, concurrency és cold-start constraint-ek ellenőrzése nélkül.",
+              "Orchestration toolba nehezen tesztelhető komplex business logicot tenni.",
+              "Azt feltételezni, hogy egy managed service feleslegessé teszi a capacity-, security- és failure-designt."
+            ],
+            "keyTerms": [
+              {
+                "term": "Azure Functions",
+                "definition": "event-driven managed compute rövid vagy korlátozott futásokhoz"
+              },
+              {
+                "term": "Azure Service Bus",
+                "definition": "managed queue-k és topicok reliable aszinkron messaginghez"
+              },
+              {
+                "term": "API Management",
+                "definition": "managed gateway API-k publikálásához, védelméhez és megfigyeléséhez"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "luxair_int_node_event_loop_001",
+      "title": "How Node.js handles concurrency",
+      "prompt": "Explain how Node.js can handle many concurrent requests despite JavaScript running primarily on one event-loop thread.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_node_event_loop"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain event loop, asynchronous I/O, worker pool, and blocking work.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_node_concurrency_model",
+          "label": "Explains the concurrency model",
+          "description": "States that JavaScript callbacks run serially on the event loop while I/O waits overlap through the OS or runtime.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "event loop",
+            "non blocking io",
+            "asynchronous io",
+            "callbacks run one",
+            "overlap waiting"
+          ]
+        },
+        {
+          "id": "luxair_int_node_worker_pool",
+          "label": "Mentions delegated work",
+          "description": "Recognizes that some filesystem, DNS, crypto, compression, or explicit worker-thread tasks use background threads.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "worker pool",
+            "libuv",
+            "worker threads",
+            "background threads",
+            "thread pool"
+          ]
+        },
+        {
+          "id": "luxair_int_node_blocking_risk",
+          "label": "Explains blocking risk",
+          "description": "Identifies synchronous calls and CPU-heavy JavaScript as causes of event-loop delay and high tail latency.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "blocking operation",
+            "cpu bound",
+            "synchronous call",
+            "event loop delay",
+            "tail latency"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_node_event_loop_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you detect event-loop blocking in production?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hogyan kezel concurrencyt a Node.js?",
+          "prompt": "Magyarázd el, hogyan tud a Node.js sok concurrent requestet kezelni annak ellenére, hogy a JavaScript főként egy event-loop threaden fut.",
+          "answerStructureHint": "Térj ki az event loopra, aszinkron I/O-ra, worker poolra és blocking munkára.",
+          "expectedPoints": {
+            "luxair_int_node_concurrency_model": {
+              "label": "Elmagyarázza a concurrency modellt",
+              "description": "Kimondja, hogy a JavaScript callbackek sorban futnak az event loopon, miközben az I/O várakozások az OS vagy runtime segítségével átfedik egymást."
+            },
+            "luxair_int_node_worker_pool": {
+              "label": "Megemlíti a delegált munkát",
+              "description": "Felismeri, hogy bizonyos filesystem, DNS, crypto, compression vagy explicit worker-thread feladatok háttér-threadeket használnak."
+            },
+            "luxair_int_node_blocking_risk": {
+              "label": "Elmagyarázza a blocking kockázatát",
+              "description": "A synchronous hívásokat és CPU-heavy JavaScriptet az event-loop delay és magas tail latency okaként azonosítja."
+            }
+          },
+          "followUps": {
+            "luxair_int_node_event_loop_followup": "Hogyan észlelnéd productionben az event-loop blockingot?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_node_event_loop_002",
+      "title": "Protecting a Node.js integration service",
+      "prompt": "A Node.js service receives large payloads, performs transformations, and calls several downstream APIs. How would you prevent it from becoming unresponsive?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_int_node_event_loop"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss limits, streaming, concurrency, offloading, timeouts, and measurement.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_node_work_limits",
+          "label": "Bounds expensive work",
+          "description": "Limits payload size, validation complexity, batch size, and concurrent downstream work instead of accepting unbounded input.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "payload limit",
+            "bounded concurrency",
+            "batch limit",
+            "request limit",
+            "backpressure"
+          ]
+        },
+        {
+          "id": "luxair_int_node_offload_stream",
+          "label": "Streams or offloads work",
+          "description": "Uses streams for large data and worker threads, queues, or separate services for CPU-heavy transformations.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "node streams",
+            "worker thread",
+            "job queue",
+            "separate worker",
+            "cpu heavy",
+            "stream processing"
+          ]
+        },
+        {
+          "id": "luxair_int_node_runtime_observe",
+          "label": "Measures runtime pressure",
+          "description": "Monitors event-loop delay, memory, GC, latency percentiles, active handles, and downstream saturation.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "event loop lag",
+            "memory usage",
+            "garbage collection",
+            "latency percentile",
+            "active handles",
+            "downstream saturation"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_node_service_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would you choose worker threads rather than a separate queue-based worker service?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Node.js integration service védelme",
+          "prompt": "Egy Node.js service nagy payloadokat fogad, transzformációkat végez és több downstream API-t hív. Hogyan akadályoznád meg, hogy unresponsive legyen?",
+          "answerStructureHint": "Beszélj limitekről, streamingről, concurrencyről, offloadingról, timeoutokról és mérésről.",
+          "expectedPoints": {
+            "luxair_int_node_work_limits": {
+              "label": "Korlátozza a drága munkát",
+              "description": "Korlátozza a payload méretét, validation complexityt, batch size-t és concurrent downstream munkát a korlátlan input elfogadása helyett."
+            },
+            "luxair_int_node_offload_stream": {
+              "label": "Streamel vagy offloadol",
+              "description": "Nagy adathoz streamet, CPU-heavy transzformációhoz worker threadet, queue-t vagy külön service-t használ."
+            },
+            "luxair_int_node_runtime_observe": {
+              "label": "Méri a runtime terhelését",
+              "description": "Event-loop delayt, memóriát, GC-t, latency percentile-t, active handle-öket és downstream saturationt monitoroz."
+            }
+          },
+          "followUps": {
+            "luxair_int_node_service_followup": "Mikor választanál worker threadet külön queue-alapú worker service helyett?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_async_error_propagation_001",
+      "title": "Error handling in an async Node.js API",
+      "prompt": "How would you structure error handling in a Node.js API built with async and await?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_async_error_propagation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain classification, propagation, boundary mapping, logging, and cleanup.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_async_error_classification",
+          "label": "Classifies errors by meaning",
+          "description": "Separates validation or domain errors, dependency failures, and unexpected programming or infrastructure errors.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "validation error",
+            "domain error",
+            "dependency error",
+            "unexpected error",
+            "error classification"
+          ]
+        },
+        {
+          "id": "luxair_int_async_error_boundary",
+          "label": "Uses centralized boundary handling",
+          "description": "Lets errors propagate with context and maps them once at the HTTP boundary instead of duplicating response logic everywhere.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "central error handler",
+            "error middleware",
+            "propagate error",
+            "http boundary",
+            "error mapping"
+          ]
+        },
+        {
+          "id": "luxair_int_async_error_safety",
+          "label": "Handles safety and cleanup",
+          "description": "Uses await or return consistently, finally for cleanup, safe client messages, correlation IDs, and no swallowed rejections.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "await promise",
+            "finally cleanup",
+            "correlation id",
+            "safe error response",
+            "no unhandled rejection",
+            "do not swallow"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_async_error_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What is wrong with catching an error, logging it, and returning undefined?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Error handling async Node.js API-ban",
+          "prompt": "Hogyan strukturálnád az error handlingot egy async/await alapú Node.js API-ban?",
+          "answerStructureHint": "Térj ki az osztályozásra, propagationre, boundary mappingre, loggingra és cleanupra.",
+          "expectedPoints": {
+            "luxair_int_async_error_classification": {
+              "label": "Jelentés szerint osztályozza a hibákat",
+              "description": "Elkülöníti a validation- vagy domain errorokat, dependency failure-öket és unexpected programming vagy infrastructure errorokat."
+            },
+            "luxair_int_async_error_boundary": {
+              "label": "Központi boundary-handlingot használ",
+              "description": "Contexttel propagálja a hibát, és egyszer, a HTTP boundaryn mapeli, nem duplikálja mindenhol a response logikát."
+            },
+            "luxair_int_async_error_safety": {
+              "label": "Biztonságot és cleanupot kezel",
+              "description": "Következetesen awaitel vagy returnöl, finallyt használ, biztonságos kliensüzenetet és correlation ID-t ad, és nem nyeli el a rejectiont."
+            }
+          },
+          "followUps": {
+            "luxair_int_async_error_followup": "Mi a probléma azzal, ha elkapod a hibát, logolod, majd undefined-ot adsz vissza?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_async_error_propagation_002",
+      "title": "Handling partial integration failure",
+      "prompt": "A request updates a local record and then calls two external systems. The second call fails. How would you handle the partial failure?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_int_async_error_propagation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss transaction limits, state, compensation, retries, idempotency, and visibility.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_partial_failure_no_global_tx",
+          "label": "Recognizes transaction boundaries",
+          "description": "Does not assume one database transaction can atomically include independent external services.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "distributed transaction",
+            "external side effect",
+            "transaction boundary",
+            "cannot rollback api",
+            "partial failure"
+          ]
+        },
+        {
+          "id": "luxair_int_partial_failure_workflow",
+          "label": "Models workflow state",
+          "description": "Uses a state machine, outbox, saga, or durable job to record progress and resume or compensate safely.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "state machine",
+            "outbox pattern",
+            "saga pattern",
+            "durable workflow",
+            "compensating action",
+            "record progress"
+          ]
+        },
+        {
+          "id": "luxair_int_partial_failure_recovery",
+          "label": "Defines recovery policy",
+          "description": "Makes operations idempotent, retries only transient failures, exposes incomplete state, alerts on exhaustion, and supports manual repair.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "idempotent operation",
+            "transient retry",
+            "manual recovery",
+            "dead letter",
+            "incomplete state",
+            "reconciliation"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_partial_failure_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would compensation be unsafe or impossible, and what would you do instead?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Partial integration failure kezelése",
+          "prompt": "Egy request módosít egy lokális rekordot, majd két külső rendszert hív. A második hívás sikertelen. Hogyan kezelnéd a partial failure-t?",
+          "answerStructureHint": "Térj ki a transaction limitre, state-re, compensationre, retryra, idempotencyre és láthatóságra.",
+          "expectedPoints": {
+            "luxair_int_partial_failure_no_global_tx": {
+              "label": "Felismeri a transaction boundaryket",
+              "description": "Nem feltételezi, hogy egy adatbázis-tranzakció atomikusan magába foglalhat független külső service-eket."
+            },
+            "luxair_int_partial_failure_workflow": {
+              "label": "Workflow state-et modellez",
+              "description": "State machine-t, outboxot, sagát vagy durable jobot használ a progress rögzítésére és biztonságos folytatásra vagy kompenzációra."
+            },
+            "luxair_int_partial_failure_recovery": {
+              "label": "Recovery policyt definiál",
+              "description": "Idempotens operationöket használ, csak transient hibát retryol, láthatóvá teszi az incomplete state-et, exhaustionnél riaszt, és támogat manual repairt."
+            }
+          },
+          "followUps": {
+            "luxair_int_partial_failure_followup": "Mikor lenne veszélyes vagy lehetetlen a compensation, és mit tennél helyette?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_typescript_runtime_validation_001",
+      "title": "Why TypeScript is not input validation",
+      "prompt": "Why is a TypeScript interface insufficient for validating a third-party API response, and what would you do instead?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_typescript_runtime_validation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain compile time versus runtime, unknown input, validation, and mapping.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_ts_erasure",
+          "label": "Explains type erasure",
+          "description": "States that interfaces and most types disappear at runtime and cannot inspect incoming JSON.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "compile time only",
+            "type erasure",
+            "types disappear",
+            "runtime data",
+            "interface no runtime"
+          ]
+        },
+        {
+          "id": "luxair_int_ts_schema_validation",
+          "label": "Uses runtime validation",
+          "description": "Treats input as unknown and validates with an explicit schema, parser, guards, or equivalent executable checks.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "unknown type",
+            "runtime validation",
+            "schema parser",
+            "type guard",
+            "validate payload",
+            "safe parse"
+          ]
+        },
+        {
+          "id": "luxair_int_ts_mapping",
+          "label": "Separates external and internal models",
+          "description": "Maps the validated provider representation into an internal type and returns controlled errors for invalid data.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "map to domain",
+            "internal model",
+            "adapter mapping",
+            "validation error",
+            "external dto"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_ts_validation_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you reject unknown extra fields, ignore them, or preserve them? What affects the decision?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Miért nem input validation a TypeScript?",
+          "prompt": "Miért nem elég egy TypeScript interface egy third-party API response validálására, és mit használnál helyette?",
+          "answerStructureHint": "Magyarázd el a compile time és runtime különbségét, az unknown inputot, validationt és mappinget.",
+          "expectedPoints": {
+            "luxair_int_ts_erasure": {
+              "label": "Elmagyarázza a type erasure-t",
+              "description": "Kimondja, hogy az interface-ek és a legtöbb type runtime-ban eltűnik, ezért nem ellenőrzi a bejövő JSON-t."
+            },
+            "luxair_int_ts_schema_validation": {
+              "label": "Runtime validationt használ",
+              "description": "Az inputot unknownként kezeli, és explicit schema-val, parserrel, guarddal vagy ekvivalens futtatható ellenőrzéssel validálja."
+            },
+            "luxair_int_ts_mapping": {
+              "label": "Elkülöníti a külső és belső modellt",
+              "description": "A validált provider-reprezentációt belső type-ra mapeli, invalid adatnál kontrollált errort ad."
+            }
+          },
+          "followUps": {
+            "luxair_int_ts_validation_followup": "Elutasítanád, figyelmen kívül hagynád vagy megőriznéd az ismeretlen extra mezőket? Mitől függ a döntés?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_typescript_runtime_validation_002",
+      "title": "Designing a safe integration boundary",
+      "prompt": "A provider changes a nullable field into several possible shapes without notice. How should a TypeScript integration react?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "luxair_int_typescript_runtime_validation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss validation failure, compatibility handling, telemetry, and controlled rollout.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_ts_fail_boundary",
+          "label": "Fails at the boundary",
+          "description": "Detects the mismatch before business logic and produces a typed, categorized integration error rather than undefined behavior.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "boundary validation",
+            "schema mismatch",
+            "typed error",
+            "fail fast",
+            "invalid payload"
+          ]
+        },
+        {
+          "id": "luxair_int_ts_compatibility_policy",
+          "label": "Uses an explicit compatibility policy",
+          "description": "Supports multiple known shapes through a versioned or union parser only when semantics are understood, without accepting arbitrary data.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "union schema",
+            "versioned parser",
+            "backward compatibility",
+            "known shapes",
+            "explicit mapping"
+          ]
+        },
+        {
+          "id": "luxair_int_ts_provider_visibility",
+          "label": "Makes provider drift visible",
+          "description": "Records safe samples or fingerprints, metrics and alerts by provider or schema version, and coordinates a contract fix.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "schema metric",
+            "provider alert",
+            "safe sample",
+            "contract drift",
+            "schema version",
+            "correlation id"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_ts_drift_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you test this compatibility logic without copying sensitive production payloads?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Biztonságos integration boundary tervezése",
+          "prompt": "Egy provider értesítés nélkül több lehetséges shape-re változtat egy nullable mezőt. Hogyan reagáljon a TypeScript integration?",
+          "answerStructureHint": "Térj ki a validation failure-re, compatibility handlingre, telemetryre és kontrollált rollout-ra.",
+          "expectedPoints": {
+            "luxair_int_ts_fail_boundary": {
+              "label": "A boundaryn hibázik",
+              "description": "A mismatch-et business logic előtt észleli, és undefined behavior helyett typed, kategorizált integration errort hoz létre."
+            },
+            "luxair_int_ts_compatibility_policy": {
+              "label": "Explicit compatibility policyt használ",
+              "description": "Több ismert shape-et versioned vagy union parserrel támogat csak akkor, ha a semantics ismert; nem fogad el tetszőleges adatot."
+            },
+            "luxair_int_ts_provider_visibility": {
+              "label": "Láthatóvá teszi a provider driftet",
+              "description": "Biztonságos mintát vagy fingerprintet, metricset és alertet rögzít provider vagy schema version szerint, és contract-fixet koordinál."
+            }
+          },
+          "followUps": {
+            "luxair_int_ts_drift_followup": "Hogyan tesztelnéd ezt a compatibility logikát sensitive production payloadok másolása nélkül?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_docker_service_packaging_001",
+      "title": "Production-ready Node.js Docker image",
+      "prompt": "What would you include in a production-ready Docker setup for a Node.js and TypeScript service?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_docker_service_packaging"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover reproducibility, image contents, security, configuration, signals, and health.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_docker_reproducible",
+          "label": "Builds a reproducible minimal image",
+          "description": "Uses pinned base images, lockfile-based installation, multi-stage builds, and only production runtime artifacts.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "pinned image",
+            "lockfile install",
+            "multi stage build",
+            "production dependencies",
+            "minimal image",
+            "immutable image"
+          ]
+        },
+        {
+          "id": "luxair_int_docker_security",
+          "label": "Applies container security basics",
+          "description": "Runs as non-root, avoids embedded secrets, scans dependencies or images, and reduces unnecessary packages and permissions.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "non root user",
+            "no baked secrets",
+            "image scanning",
+            "least privilege",
+            "small attack surface"
+          ]
+        },
+        {
+          "id": "luxair_int_docker_operations",
+          "label": "Supports lifecycle operations",
+          "description": "Handles SIGTERM, graceful shutdown, readiness or liveness behavior, stdout logs, and runtime configuration.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "graceful shutdown",
+            "sigterm",
+            "readiness probe",
+            "liveness probe",
+            "stdout logs",
+            "runtime configuration"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_docker_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can a health check that only returns 200 from the process be misleading?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Production-ready Node.js Docker image",
+          "prompt": "Mit tartalmazna szerinted egy production-ready Docker setup egy Node.js és TypeScript service-hez?",
+          "answerStructureHint": "Térj ki a reproducibilityre, image-tartalomra, securityre, configra, signalokra és healthre.",
+          "expectedPoints": {
+            "luxair_int_docker_reproducible": {
+              "label": "Reprodukálható, minimális image-et épít",
+              "description": "Pinned base image-et, lockfile-alapú installt, multi-stage buildet és csak production runtime artifactokat használ."
+            },
+            "luxair_int_docker_security": {
+              "label": "Alap container securityt alkalmaz",
+              "description": "Non-rootként fut, nem épít secretet az image-be, dependencyt vagy image-et scan-el, és csökkenti a felesleges package-eket és permissionöket."
+            },
+            "luxair_int_docker_operations": {
+              "label": "Támogatja az operational lifecycle-t",
+              "description": "Kezeli a SIGTERM-et és graceful shutdownt, readiness/liveness viselkedést, stdout logot és runtime configot."
+            }
+          },
+          "followUps": {
+            "luxair_int_docker_followup": "Miért lehet félrevezető egy health check, amely csak azt ellenőrzi, hogy a process 200-at tud visszaadni?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_docker_service_packaging_002",
+      "title": "Container shutdown during deployment",
+      "prompt": "During a rolling deployment, requests fail when old containers are terminated. How would you diagnose and fix the shutdown sequence?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "luxair_int_docker_service_packaging"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss traffic removal, signal handling, in-flight work, deadlines, and observability.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_docker_stop_traffic",
+          "label": "Stops new traffic first",
+          "description": "Marks the instance unready or removes it from routing before termination and allows propagation time.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "mark unready",
+            "remove from load balancer",
+            "stop new traffic",
+            "readiness change",
+            "drain connections"
+          ]
+        },
+        {
+          "id": "luxair_int_docker_drain",
+          "label": "Drains in-flight work",
+          "description": "Handles SIGTERM, stops accepting work, waits for active requests or messages within a deadline, and closes resources cleanly.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "sigterm handler",
+            "graceful shutdown",
+            "drain requests",
+            "shutdown deadline",
+            "close connections",
+            "stop consumer"
+          ]
+        },
+        {
+          "id": "luxair_int_docker_shutdown_evidence",
+          "label": "Uses shutdown evidence",
+          "description": "Adds logs and metrics for signals, active work, forced kills, termination duration, and failed retries.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "shutdown logs",
+            "active requests",
+            "forced kill",
+            "termination duration",
+            "deployment metrics"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_docker_shutdown_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How should a queue consumer behave differently from an HTTP server during shutdown?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Container shutdown deployment közben",
+          "prompt": "Rolling deployment során requestek hibáznak, amikor a régi containereket leállítják. Hogyan diagnosztizálnád és javítanád a shutdown sequence-et?",
+          "answerStructureHint": "Beszélj traffic removalról, signal handlingról, in-flight munkáról, deadline-ról és observabilityről.",
+          "expectedPoints": {
+            "luxair_int_docker_stop_traffic": {
+              "label": "Először az új trafficet állítja le",
+              "description": "Az instance-t unreadyvé teszi vagy kiveszi routingból termination előtt, és hagy időt a változás terjedésére."
+            },
+            "luxair_int_docker_drain": {
+              "label": "Leüríti az in-flight munkát",
+              "description": "Kezeli a SIGTERM-et, nem fogad új munkát, deadline-on belül megvárja az aktív requesteket vagy message-eket, majd tisztán zárja az erőforrásokat."
+            },
+            "luxair_int_docker_shutdown_evidence": {
+              "label": "Shutdown-bizonyítékot használ",
+              "description": "Logot és metricset ad a signalokról, aktív munkáról, forced killről, termination durationről és failed retrykról."
+            }
+          },
+          "followUps": {
+            "luxair_int_docker_shutdown_followup": "Miben viselkedjen másként egy queue consumer, mint egy HTTP server shutdown közben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_ci_cd_integration_services_001",
+      "title": "CI/CD pipeline for an integration service",
+      "prompt": "What stages would you include in a CI/CD pipeline for a Node.js integration service?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "luxair_int_ci_cd_integration_services"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover artifact creation, layered tests, contracts, security, promotion, rollout, and rollback.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_cicd_artifact",
+          "label": "Creates one traceable artifact",
+          "description": "Builds and versions one immutable image or package and promotes it without rebuilding.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "immutable artifact",
+            "same artifact",
+            "versioned image",
+            "commit sha",
+            "artifact promotion"
+          ]
+        },
+        {
+          "id": "luxair_int_cicd_checks",
+          "label": "Uses layered integration checks",
+          "description": "Includes unit and static checks plus contract, schema, integration, migration, and security validation.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "unit tests",
+            "contract tests",
+            "integration tests",
+            "schema validation",
+            "migration check",
+            "security scan"
+          ]
+        },
+        {
+          "id": "luxair_int_cicd_delivery",
+          "label": "Controls deployment risk",
+          "description": "Uses environment config, approvals where justified, canary or blue-green rollout, health gates, and rollback.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "canary deployment",
+            "health gate",
+            "rollback",
+            "blue green",
+            "runtime configuration",
+            "deployment approval"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_cicd_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which tests would you keep out of the commit pipeline, and where would you run them instead?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "CI/CD pipeline integration service-hez",
+          "prompt": "Milyen stage-eket tennél egy Node.js integration service CI/CD pipeline-jába?",
+          "answerStructureHint": "Térj ki az artifactkészítésre, rétegzett tesztekre, contractokra, securityre, promotionre, rollout-ra és rollbackre.",
+          "expectedPoints": {
+            "luxair_int_cicd_artifact": {
+              "label": "Egy traceable artifactot készít",
+              "description": "Egy immutable image-et vagy package-et buildel és verzióz, majd rebuild nélkül promotálja."
+            },
+            "luxair_int_cicd_checks": {
+              "label": "Rétegzett integration checkeket használ",
+              "description": "Unit és static checkek mellett contract-, schema-, integration-, migration- és security validationt is tartalmaz."
+            },
+            "luxair_int_cicd_delivery": {
+              "label": "Kontrollálja a deployment kockázatát",
+              "description": "Environment configot, indokolt approvalt, canary vagy blue-green rolloutot, health gate-et és rollbacket használ."
+            }
+          },
+          "followUps": {
+            "luxair_int_cicd_followup": "Mely teszteket hagynád ki a commit pipeline-ból, és hol futtatnád őket helyette?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_ci_cd_integration_services_002",
+      "title": "Deploying a breaking database change",
+      "prompt": "A new release requires a database schema change while old and new service versions may run together. How would you deploy it safely?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_int_ci_cd_integration_services"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use backward-compatible migration sequencing and explicit cleanup.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_cicd_expand_contract",
+          "label": "Uses expand-and-contract",
+          "description": "Adds compatible schema first, deploys code that can work during transition, migrates data, and removes old schema only later.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "expand contract",
+            "backward compatible migration",
+            "add then remove",
+            "dual read",
+            "dual write",
+            "transition period"
+          ]
+        },
+        {
+          "id": "luxair_int_cicd_migration_safety",
+          "label": "Controls migration execution",
+          "description": "Makes migrations versioned, observable, retry-safe where possible, tested on realistic volume, and separated from risky startup races.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "versioned migration",
+            "migration lock",
+            "retry safe",
+            "realistic data volume",
+            "migration metrics",
+            "separate migration job"
+          ]
+        },
+        {
+          "id": "luxair_int_cicd_rollback_limits",
+          "label": "Plans rollback and roll-forward",
+          "description": "Recognizes that destructive schema changes may block rollback and prepares backups, feature flags, or a roll-forward procedure.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "rollback compatibility",
+            "roll forward",
+            "backup restore",
+            "feature flag",
+            "destructive migration"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_cicd_db_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you handle a long-running data backfill without locking normal traffic?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Breaking database change deployolása",
+          "prompt": "Egy új release database schema change-et igényel, miközben a régi és új service-verziók párhuzamosan futhatnak. Hogyan deployolnád biztonságosan?",
+          "answerStructureHint": "Használj backward-compatible migration sequence-et és explicit cleanupot.",
+          "expectedPoints": {
+            "luxair_int_cicd_expand_contract": {
+              "label": "Expand-and-contractot használ",
+              "description": "Először kompatibilis schema-t ad hozzá, transition alatt működő kódot deployol, adatot migrál, és csak később távolítja el a régit."
+            },
+            "luxair_int_cicd_migration_safety": {
+              "label": "Kontrollálja a migration futását",
+              "description": "A migration versioned, observable, lehetőség szerint retry-safe, realisztikus volumenen tesztelt, és elkerüli a startup race-eket."
+            },
+            "luxair_int_cicd_rollback_limits": {
+              "label": "Rollbackkel és roll-forwarddal tervez",
+              "description": "Felismeri, hogy a destructive schema change akadályozhatja a rollbacket, ezért backupot, feature flaget vagy roll-forward eljárást készít."
+            }
+          },
+          "followUps": {
+            "luxair_int_cicd_db_followup": "Hogyan kezelnél egy hosszú data backfillt a normál traffic lockolása nélkül?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_azure_service_selection_001",
+      "title": "Choosing Azure services for an integration",
+      "prompt": "How would you choose between Azure Functions, a container platform, Service Bus, and API Management for an integration solution?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "luxair_int_azure_service_selection"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Map workload requirements to compute, messaging, and gateway responsibilities.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_azure_requirements",
+          "label": "Starts with workload requirements",
+          "description": "Considers trigger model, duration, protocol, state, latency, traffic shape, networking, and operational ownership.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "workload requirements",
+            "execution duration",
+            "traffic pattern",
+            "networking needs",
+            "stateful workload",
+            "operational ownership"
+          ]
+        },
+        {
+          "id": "luxair_int_azure_responsibilities",
+          "label": "Separates service responsibilities",
+          "description": "Uses compute for code execution, messaging for decoupling and buffering, and API Management for gateway concerns rather than treating them as substitutes.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "compute service",
+            "message broker",
+            "api gateway",
+            "decoupling",
+            "buffering",
+            "gateway policy"
+          ]
+        },
+        {
+          "id": "luxair_int_azure_tradeoffs",
+          "label": "Evaluates managed-service trade-offs",
+          "description": "Discusses scaling limits, cold starts, delivery semantics, cost, private networking, observability, and lock-in.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "cold start",
+            "scaling limits",
+            "delivery semantics",
+            "private network",
+            "managed service cost",
+            "vendor lock in"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_azure_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which part of the design would you prototype first, and what uncertainty would the prototype answer?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Azure service-ek kiválasztása integrationhöz",
+          "prompt": "Hogyan választanál Azure Functions, container platform, Service Bus és API Management között egy integration solutionben?",
+          "answerStructureHint": "Párosítsd a workload requirementeket a compute-, messaging- és gateway-felelősségekkel.",
+          "expectedPoints": {
+            "luxair_int_azure_requirements": {
+              "label": "Workload requirementekből indul ki",
+              "description": "Figyelembe veszi a trigger modelt, durationt, protocolt, state-et, latencyt, traffic shape-et, networkinget és operational ownershipet."
+            },
+            "luxair_int_azure_responsibilities": {
+              "label": "Elkülöníti a service-felelősségeket",
+              "description": "Compute-ot kódfuttatásra, messaginget decouplingra és bufferingre, API Managementet gateway concernökre használ, nem helyettesítőként kezeli őket."
+            },
+            "luxair_int_azure_tradeoffs": {
+              "label": "Értékeli a managed-service trade-offokat",
+              "description": "Tárgyalja a scaling limitet, cold startot, delivery semanticsot, costot, private networkinget, observabilityt és lock-int."
+            }
+          },
+          "followUps": {
+            "luxair_int_azure_followup": "A design melyik részét prototipizálnád először, és milyen bizonytalanságot válaszolna meg a prototype?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_azure_service_selection_002",
+      "title": "Designing a reliable Azure integration flow",
+      "prompt": "An incoming API request must validate data, trigger slow downstream processing, and let the caller check status. Sketch an Azure-oriented design.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "luxair_int_azure_service_selection"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate synchronous acceptance from asynchronous work and durable status.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_azure_async_acceptance",
+          "label": "Separates acceptance from processing",
+          "description": "Validates and accepts quickly, creates an operation ID, and queues durable work rather than holding the HTTP request open.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "202 accepted",
+            "operation id",
+            "queue message",
+            "asynchronous processing",
+            "quick validation"
+          ]
+        },
+        {
+          "id": "luxair_int_azure_components",
+          "label": "Maps components coherently",
+          "description": "Uses an API gateway or app endpoint, Service Bus queue or topic, worker compute, and a durable status store with clear responsibilities.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "api management",
+            "service bus",
+            "worker function",
+            "container worker",
+            "status store",
+            "clear responsibility"
+          ]
+        },
+        {
+          "id": "luxair_int_azure_reliability",
+          "label": "Includes reliability behavior",
+          "description": "Mentions idempotency, retries, dead-letter handling, timeout, correlation or tracing, and least-privilege identity.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "idempotency",
+            "dead letter queue",
+            "retry policy",
+            "correlation id",
+            "managed identity",
+            "least privilege"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_azure_design_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would the design change if the caller needs an immediate final answer within two seconds?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Reliable Azure integration flow tervezése",
+          "prompt": "Egy bejövő API requestnek adatot kell validálnia, lassú downstream processinget indítania, a hívónak pedig status-lekérdezést biztosítania. Vázolj Azure-orientált designt.",
+          "answerStructureHint": "Válaszd szét a synchronous acceptance-et, asynchronous worköt és durable statust.",
+          "expectedPoints": {
+            "luxair_int_azure_async_acceptance": {
+              "label": "Elválasztja az acceptance-et a feldolgozástól",
+              "description": "Gyorsan validál és elfogad, operation ID-t készít, majd durable worköt queue-z a HTTP request nyitva tartása helyett."
+            },
+            "luxair_int_azure_components": {
+              "label": "Koherensen párosít komponenseket",
+              "description": "API gatewayt vagy app endpointot, Service Bus queue-t vagy topicot, worker compute-ot és durable status store-t használ világos felelősségekkel."
+            },
+            "luxair_int_azure_reliability": {
+              "label": "Reliability viselkedést tartalmaz",
+              "description": "Megemlíti az idempotencyt, retryt, dead-letter kezelést, timeoutot, correlationt vagy tracinget és least-privilege identityt."
+            }
+          },
+          "followUps": {
+            "luxair_int_azure_design_followup": "Hogyan változna a design, ha a hívónak két másodpercen belül azonnali végleges válasz kellene?"
+          }
+        }
+      }
+    }
+  ]
+}

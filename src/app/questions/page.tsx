@@ -21,6 +21,10 @@ import {
 } from "@/core/content/i18n";
 import type { LangCode, QuestionCard, Topic } from "@/core/models";
 import {
+  downloadStudyPdf,
+  type CardStyle,
+} from "@/core/pdf/studyPdf";
+import {
   loadFilterPrefs,
   parseImpParam,
   parsePackParam,
@@ -138,6 +142,8 @@ export default function QuestionsPage() {
   const [selectedImp, setImpState] = useState<string[]>([]);
   const [fullView, setFullViewState] = useState(false);
   const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG);
+  const [generating, setGenerating] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   const activeBank = useMemo(() => bankFor(selectedPacks), [selectedPacks]);
   const meta = useMemo(() => topicMetaMaps(activeBank), [activeBank]);
@@ -233,6 +239,42 @@ export default function QuestionsPage() {
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  // Flashcard PDF: one question per phone-sized page, using exactly the
+  // questions currently shown (pack + importance filters).
+  async function generateCards() {
+    setGenerating(true);
+    setPdfError(null);
+    try {
+      const style = Number(
+        new URLSearchParams(window.location.search).get("cards"),
+      );
+      const scopeName =
+        selectedPacks.length === 1
+          ? selectedPacks[0]
+          : selectedPacks.length > 1
+            ? `${selectedPacks.length} packs`
+            : "All questions";
+      await downloadStudyPdf("qcards", {
+        cardIds: visibleQuestions.map((c) => c.id),
+        name: scopeName,
+        slug:
+          selectedPacks.length === 1
+            ? selectedPacks[0].replace(/[^a-zA-Z0-9_-]+/g, "-")
+            : "questions",
+        lang: activeLang,
+        topics: activeBank.topics,
+        questions: activeBank.questions,
+        cardStyle: (style >= 1 && style <= 3 ? style : 1) as CardStyle,
+      });
+    } catch (e) {
+      setPdfError(
+        `PDF generation failed: ${e instanceof Error ? e.message : String(e)}`,
+      );
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
       <PageHeader
@@ -243,6 +285,27 @@ export default function QuestionsPage() {
             : `${visibleQuestions.length} of ${activeBank.questions.length} questions (importance filter), grouped by topic.`
         }
       />
+
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <span className="text-xs text-muted">
+          {visibleQuestions.length} question card
+          {visibleQuestions.length === 1 ? "" : "s"} in the flashcard PDF
+        </span>
+        <button
+          type="button"
+          disabled={generating || visibleQuestions.length === 0}
+          onClick={generateCards}
+          className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-strong disabled:opacity-50"
+        >
+          {generating ? "Generating…" : "PDF · flashcards"}
+        </button>
+      </div>
+
+      {pdfError && (
+        <p role="alert" className="mb-4 text-sm font-medium text-critical">
+          {pdfError}
+        </p>
+      )}
 
       <div className="mb-6 flex flex-wrap items-center gap-x-5 gap-y-2">
         <div className="flex items-center gap-2">

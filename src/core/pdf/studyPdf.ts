@@ -30,7 +30,7 @@ import {
  * the same warm paper with highlighter marks the Study view uses.
  */
 
-export type StudyPdfFormat = "a4" | "phone" | "cards";
+export type StudyPdfFormat = "a4" | "phone" | "cards" | "qcards";
 
 /** Visual variant of the flashcard deck (3 candidate designs to pick from). */
 export type CardStyle = 1 | 2 | 3;
@@ -788,6 +788,210 @@ export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Question flashcard deck ("qcards"): one QUESTION per phone-sized page — the
+// question prompt as the card front, its expected answer points as the body.
+// Shares the CARD_STYLES palette and the phone page with the topic deck.
+// ---------------------------------------------------------------------------
+
+// A colored top strip for the question deck (shorter than the topic deck's
+// full band — the question sits BELOW it in dark ink, so a long prompt can
+// never end up as white text on the white lower half of the page).
+const QBAND_HEIGHT = 70;
+
+function estimateQuestionCard(
+  prompt: string,
+  points: { label: string; description?: string }[],
+  hasBand: boolean,
+): { withDesc: number; withoutDesc: number } {
+  let base = hasBand ? 44 : 22; // eyebrow (in the strip when banded)
+  base += estLines(prompt, 30) * 22 + 14; // question + gap
+  base += 30; // ANSWER label
+  let withDesc = base;
+  let withoutDesc = base;
+  for (const p of points) {
+    withDesc += estLines(`${p.label} — ${p.description ?? ""}`, 46) * 17 + 5;
+    withoutDesc += estLines(p.label, 40) * 17 + 5;
+  }
+  return { withDesc, withoutDesc };
+}
+
+export function buildQuestionFlashcardsDefinition(scope: StudyPdfScope = {}): any {
+  const s = CARD_STYLES[scope.cardStyle ?? 1];
+  const lang = scope.lang ?? DEFAULT_LANG;
+  const bankTopics = scope.topics ?? allTopics;
+  const bankQuestions = scope.questions ?? allQuestions;
+  const topicsById = new Map(bankTopics.map((t) => [t.id, t]));
+
+  const cardIdSet = scope.cardIds ? new Set(scope.cardIds) : null;
+  const deckCards = (
+    cardIdSet ? bankQuestions.filter((q) => cardIdSet.has(q.id)) : bankQuestions
+  )
+    .map((card) => {
+      const topic = topicsById.get(card.topicIds[0]);
+      return {
+        card: localizeCard(card, lang),
+        topic,
+        topicName: topic ? localizeTopic(topic, lang).name : card.topicIds[0],
+        category: topic?.category,
+      };
+    })
+    .sort(
+      (a, b) =>
+        (a.category ?? "").localeCompare(b.category ?? "") ||
+        a.topicName.localeCompare(b.topicName),
+    );
+
+  const deckName = scope.name ?? null;
+  const hasBand = s.band?.type === "block";
+  const content: any[] = [
+    {
+      stack: [
+        {
+          text: "INTERVIEW TRAINER",
+          fontSize: 10,
+          bold: true,
+          characterSpacing: 1.2,
+          color: s.label,
+          margin: [0, hasBand ? 30 : 170, 0, 8],
+        },
+        {
+          text: s.titleBg
+            ? [{ text: ` ${deckName ?? "Question cards"} `, background: s.titleBg, color: s.titleColor }]
+            : { text: deckName ?? "Question cards", color: hasBand ? s.titleColor : s.ink },
+          fontSize: 24,
+          bold: true,
+          lineHeight: 1.2,
+        },
+        {
+          text: `${deckCards.length} question card${deckCards.length === 1 ? "" : "s"} · ${new Date().toLocaleDateString("en-GB")}`,
+          fontSize: 11,
+          color: hasBand ? s.ink : s.soft,
+          margin: [0, hasBand ? 120 : 10, 0, 0],
+        },
+      ],
+    },
+  ];
+
+  for (const { card, topicName, category } of deckCards) {
+    const points = card.expectedPoints;
+    const est = estimateQuestionCard(card.prompt, points, hasBand);
+    const showDesc = est.withDesc <= CARD_USABLE;
+    const tight = est.withoutDesc > CARD_USABLE;
+    const ptSize = tight ? 11.5 : 12.5;
+    const ptGap = tight ? 3 : 5;
+
+    const eyebrow = category
+      ? `${CATEGORY_LABELS[category].toUpperCase()}  ·  ${topicName.toUpperCase()}`
+      : topicName.toUpperCase();
+    const stack: any[] = [
+      {
+        text: eyebrow,
+        fontSize: 9,
+        bold: true,
+        characterSpacing: 1.1,
+        // Banded style: eyebrow sits white inside the colored strip.
+        color: hasBand ? "#ffffff" : s.label,
+        margin: [0, hasBand ? 6 : 0, 0, hasBand ? 30 : 8],
+      },
+    ];
+    // The question is the card front. Highlighter styles mark it; the colored
+    // strip carries only the eyebrow, so the prompt is always dark-on-light.
+    if (hasBand) {
+      stack.push({
+        text: card.prompt,
+        fontSize: 15.5,
+        bold: true,
+        color: s.ink,
+        lineHeight: 1.35,
+        margin: [0, 0, 0, 14],
+      });
+    } else if (s.titleBg) {
+      stack.push({
+        text: [{ text: ` ${card.prompt} `, background: s.titleBg, color: s.titleColor }],
+        fontSize: 15.5,
+        bold: true,
+        lineHeight: 1.5,
+        margin: [0, 0, 0, 14],
+      });
+    } else {
+      stack.push({
+        text: card.prompt,
+        fontSize: 15.5,
+        bold: true,
+        color: s.ink,
+        lineHeight: 1.35,
+        margin: [0, 0, 0, 14],
+      });
+    }
+    stack.push({
+      text: "ANSWER",
+      fontSize: 9,
+      bold: true,
+      characterSpacing: 1.1,
+      color: s.bodyLabel,
+      margin: [0, 0, 0, 7],
+    });
+    for (const p of points) {
+      stack.push({
+        text: [
+          { text: p.label, bold: true, color: s.ink },
+          ...(showDesc && p.description
+            ? [{ text: ` — ${p.description}`, color: s.soft }]
+            : []),
+        ],
+        fontSize: ptSize,
+        lineHeight: tight ? 1.3 : 1.4,
+        margin: [0, 0, 0, ptGap],
+      });
+    }
+    content.push({ stack, pageBreak: "before" });
+  }
+
+  return {
+    pageSize: CARD_PAGE,
+    pageMargins: CARD_MARGINS,
+    defaultStyle: { fontSize: 12.5, lineHeight: 1.35 },
+    background: (currentPage: number, pageSize: any) => ({
+      canvas: [
+        { type: "rect", x: 0, y: 0, w: pageSize.width, h: pageSize.height, color: s.bg },
+        ...(s.band?.type === "block"
+          ? [{ type: "rect", x: 0, y: 0, w: pageSize.width, h: QBAND_HEIGHT, color: s.band.color }]
+          : []),
+        ...(s.band?.type === "rule"
+          ? [
+              { type: "line", x1: 0, y1: 58, x2: pageSize.width, y2: 58, lineWidth: 2, lineColor: s.band.color },
+              ...Array.from({ length: 12 }, (_, k) => ({
+                type: "line",
+                x1: 0,
+                y1: 100 + k * 40,
+                x2: pageSize.width,
+                y2: 100 + k * 40,
+                lineWidth: 0.5,
+                lineColor: "#dfe5ef",
+              })),
+            ]
+          : []),
+      ],
+    }),
+    footer: (currentPage: number, pageCount: number) =>
+      currentPage === 1
+        ? undefined
+        : {
+            text: `${currentPage - 1} / ${pageCount - 1}`,
+            alignment: "center",
+            fontSize: 9,
+            color: s.bodyLabel,
+          },
+    info: {
+      title: deckName
+        ? `Interview Trainer — Question cards — ${deckName}`
+        : "Interview Trainer — Question cards",
+    },
+    content,
+  };
+}
+
 /** Generates and downloads the PDF in the browser (pdfmake loaded lazily). */
 export async function downloadStudyPdf(
   format: StudyPdfFormat,
@@ -803,10 +1007,14 @@ export async function downloadStudyPdf(
   const definition =
     format === "cards"
       ? buildFlashcardsDefinition(scope)
-      : buildStudyPdfDefinition(format, scope);
+      : format === "qcards"
+        ? buildQuestionFlashcardsDefinition(scope)
+        : buildStudyPdfDefinition(format, scope);
   const name =
     format === "cards"
       ? `interview-trainer-cards-${slug}.pdf`
-      : `interview-trainer-study-${slug}-${format}.pdf`;
+      : format === "qcards"
+        ? `interview-trainer-question-cards-${slug}.pdf`
+        : `interview-trainer-study-${slug}-${format}.pdf`;
   await (pdfMake as any).createPdf(definition).download(name);
 }

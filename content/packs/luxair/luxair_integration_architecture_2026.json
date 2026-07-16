@@ -1,0 +1,1852 @@
+{
+  "id": "luxair_integration_architecture_2026",
+  "name": "Luxair Integration Architecture and APIs",
+  "description": "Interview preparation for service architecture, API contracts, third-party integrations, compatibility, idempotency, and the Mule-to-Node.js migration context.",
+  "sources": [
+    "luxair/software_developer_integration_job_description_and_interview_notes"
+  ],
+  "topics": [
+    {
+      "id": "luxair_int_soa_microservices_tradeoff",
+      "name": "SOA and Microservices Trade-offs",
+      "description": "SOA and microservices both split business capabilities into services, but they usually differ in service size, governance, deployment independence, and integration style.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "microservices",
+        "api_design"
+      ],
+      "studyContent": {
+        "mentalModel": "SOA and microservices are two ways to organize a system around services. The useful distinction is not the label, but how independently each service can change, deploy, and own its data.",
+        "problem": "Without clear boundaries, a service architecture can become a distributed monolith: many deployable units must still be released together, share one database, or depend on a central integration layer for every change.",
+        "example": "An airline booking capability may be one independently deployed service with its own data and API. In a more centralized SOA design, several applications may call shared enterprise services through an integration platform that applies common routing and transformation rules.",
+        "howItWorks": [
+          "Start from business capabilities and identify stable ownership boundaries.",
+          "Decide which contracts, data, and deployment lifecycle belong to each service.",
+          "Choose centralized or decentralized integration and governance deliberately.",
+          "Measure independence by whether one service can change without coordinating a large release."
+        ],
+        "commonMistakes": [
+          "Calling every small REST API a microservice even when all services deploy together.",
+          "Assuming microservices remove integration complexity; they move much of it into contracts, operations, and data consistency.",
+          "Splitting services by technical layer instead of business capability."
+        ],
+        "keyTerms": [
+          {
+            "term": "service boundary",
+            "definition": "the responsibility and data owned by one service"
+          },
+          {
+            "term": "distributed monolith",
+            "definition": "separate processes that remain tightly coupled and must change together"
+          },
+          {
+            "term": "governance",
+            "definition": "the rules used to keep contracts, security, and operations consistent"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "SOA és microservices trade-offok",
+          "description": "A SOA és a microservices is szolgáltatásokra bontja az üzleti képességeket, de általában eltér a szolgáltatások mérete, a governance, a deployment-függetlenség és az integráció módja.",
+          "studyContent": {
+            "mentalModel": "A SOA és a microservices két szolgáltatásalapú szervezési megközelítés. A lényeg nem az elnevezés, hanem hogy az egyes szolgáltatások mennyire tudnak önállóan változni, deployolni és adatot birtokolni.",
+            "problem": "Világos határok nélkül az architektúra distributed monolith lesz: sok külön futó komponens mégis közös release-t, közös adatbázist vagy minden változtatásnál központi integration layert igényel.",
+            "example": "Egy légitársasági foglalási képesség lehet saját adattal és API-val rendelkező, önállóan deployolható service. Centralizáltabb SOA esetén több alkalmazás közös enterprise service-eket hívhat egy routingot és transzformációt végző integration platformon keresztül.",
+            "howItWorks": [
+              "Az üzleti képességekből indulj ki, és keress stabil ownership-határokat.",
+              "Döntsd el, mely contract, adat és deployment lifecycle tartozik az adott service-hez.",
+              "Tudatosan válassz centralizált vagy decentralizált integrációt és governance-t.",
+              "Az önállóságot az mutatja, hogy egy service módosítható-e nagy, összehangolt release nélkül."
+            ],
+            "commonMistakes": [
+              "Minden kis REST API-t microservice-nek nevezni akkor is, ha együtt deployolnak.",
+              "Azt feltételezni, hogy a microservices megszünteti az integrációs komplexitást; valójában contract-, üzemeltetési és adatkonzisztencia-problémákká alakítja.",
+              "Technikai rétegek, nem pedig üzleti képességek alapján felosztani a service-eket."
+            ],
+            "keyTerms": [
+              {
+                "term": "service boundary",
+                "definition": "az egy service által birtokolt felelősség és adat határa"
+              },
+              {
+                "term": "distributed monolith",
+                "definition": "külön processzek, amelyek mégis szorosan csatoltak és együtt változnak"
+              },
+              {
+                "term": "governance",
+                "definition": "a contractok, security és működés következetességét biztosító szabályok"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_api_contract_design",
+      "name": "API Contract Design",
+      "description": "An API contract defines the operations, data shapes, status codes, and behavioral rules that clients can rely on. A stable contract lets teams evolve independently.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "api_design",
+        "api_versioning",
+        "idempotency"
+      ],
+      "studyContent": {
+        "mentalModel": "API contract design means making the client-visible behavior of an API explicit and predictable. The contract includes more than URLs: it also covers schemas, errors, authentication expectations, and compatibility rules.",
+        "problem": "An unclear contract makes every integration depend on hidden assumptions. Clients may parse an undocumented field, treat every non-200 response the same, or break when a nullable value suddenly becomes required.",
+        "example": "For POST /bookings, the contract defines the required passenger and flight fields, a 201 response with a booking identifier, a 409 response for a duplicate idempotency key, and a structured error body with a stable machine-readable code.",
+        "howItWorks": [
+          "Model the consumer task and the domain resource before choosing endpoints.",
+          "Define request and response schemas, validation rules, status codes, and error format.",
+          "Document authentication, idempotency, pagination, and rate-limit behavior where relevant.",
+          "Review changes for backward compatibility and test the published contract automatically."
+        ],
+        "commonMistakes": [
+          "Designing only the happy-path JSON and leaving errors undocumented.",
+          "Exposing internal database shapes directly as the public contract.",
+          "Using 200 for every outcome and putting success or failure only in a text message."
+        ],
+        "keyTerms": [
+          {
+            "term": "contract",
+            "definition": "the behavior and data shape that an API promises to clients"
+          },
+          {
+            "term": "schema",
+            "definition": "a machine-readable description of allowed data"
+          },
+          {
+            "term": "machine-readable error",
+            "definition": "a stable error code that software can handle without parsing prose"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "API contract design",
+          "description": "Az API contract meghatározza azokat az operationöket, adatstruktúrákat, status code-okat és viselkedési szabályokat, amelyekre a kliensek támaszkodhatnak. A stabil contract lehetővé teszi a csapatok önálló fejlődését.",
+          "studyContent": {
+            "mentalModel": "Az API contract design azt jelenti, hogy a kliens számára látható viselkedés egyértelmű és kiszámítható. A contract nem csak URL-ekből áll: schema-kat, hibákat, authentication elvárásokat és kompatibilitási szabályokat is tartalmaz.",
+            "problem": "Nem egyértelmű contract esetén minden integráció rejtett feltételezésekre épül. Egy kliens használhat dokumentálatlan mezőt, minden nem 200-as választ azonosnak vehet, vagy eltörhet, amikor egy nullable érték kötelezővé válik.",
+            "example": "A POST /bookings contractja előírja a passenger és flight mezőket, siker esetén 201 választ és booking ID-t ad, duplicate idempotency key esetén 409-et, a hibákhoz pedig stabil, géppel feldolgozható kódot tartalmazó body-t definiál.",
+            "howItWorks": [
+              "A consumer feladatát és a domain resource-t modellezd az endpointok kialakítása előtt.",
+              "Definiáld a request és response schema-kat, validation szabályokat, status code-okat és error formátumot.",
+              "Szükség esetén dokumentáld az authentication, idempotency, pagination és rate limit működését.",
+              "Minden módosításnál ellenőrizd a backward compatibilityt, és automatizáltan teszteld a publikált contractot."
+            ],
+            "commonMistakes": [
+              "Csak a happy path JSON-ját megtervezni, a hibákat pedig dokumentálatlanul hagyni.",
+              "A belső adatbázis-struktúrát közvetlenül public contractként kitenni.",
+              "Minden kimenetre 200-at használni, és a sikert vagy hibát csak szöveges üzenetben jelezni."
+            ],
+            "keyTerms": [
+              {
+                "term": "contract",
+                "definition": "az API által a klienseknek ígért viselkedés és adatstruktúra"
+              },
+              {
+                "term": "schema",
+                "definition": "az engedélyezett adatok géppel olvasható leírása"
+              },
+              {
+                "term": "machine-readable error",
+                "definition": "stabil hibakód, amelyet a szoftver szövegfeldolgozás nélkül kezelhet"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_third_party_integration",
+      "name": "Third-party Integration Design",
+      "description": "Third-party integration design isolates an external provider behind a clear internal boundary. This limits the effect of provider-specific formats, failures, and changes.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "api_design",
+        "resilience",
+        "observability"
+      ],
+      "studyContent": {
+        "mentalModel": "A third-party integration should be treated as an unreliable boundary, not as trusted internal code. An adapter converts the provider contract into the application’s own model and contains provider-specific behavior.",
+        "problem": "Directly spreading a vendor’s fields and error codes through the codebase creates lock-in and fragile coupling. A provider outage, slow response, certificate change, or schema update can then affect many unrelated parts of the system.",
+        "example": "A baggage-status provider returns vendor-specific XML and numeric error codes. A dedicated adapter validates the response, maps it to an internal BaggageStatus model, converts known errors into internal categories, and emits metrics for provider latency and failures.",
+        "howItWorks": [
+          "Define the business capability and internal contract that the application needs.",
+          "Create an adapter that handles authentication, mapping, validation, and provider errors.",
+          "Protect calls with timeouts, retry rules, concurrency limits, and fallback behavior.",
+          "Test against realistic stubs and monitor the provider separately from internal processing."
+        ],
+        "commonMistakes": [
+          "Using the provider DTO as the application’s domain model.",
+          "Retrying every provider error, including validation and authorization failures.",
+          "Logging credentials or personal data while troubleshooting the integration."
+        ],
+        "keyTerms": [
+          {
+            "term": "adapter",
+            "definition": "a component that translates between an external contract and an internal model"
+          },
+          {
+            "term": "anti-corruption layer",
+            "definition": "a boundary that prevents an external model from leaking into the domain"
+          },
+          {
+            "term": "provider SLA",
+            "definition": "the availability and performance commitment offered by the external service"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Third-party integráció tervezése",
+          "description": "A third-party integration design egy világos belső boundary mögé zárja a külső szolgáltatót. Így a provider-specifikus formátumok, hibák és változások hatása korlátozott marad.",
+          "studyContent": {
+            "mentalModel": "A third-party integrációt megbízhatatlan boundaryként kell kezelni, nem pedig belső, megbízható kódként. Egy adapter a provider contractját a saját alkalmazási modellre fordítja, és magában tartja a provider-specifikus viselkedést.",
+            "problem": "Ha a vendor mezői és hibakódjai közvetlenül szétterjednek a codebase-ben, lock-in és törékeny coupling alakul ki. Egy provider outage, lassulás, certificate-változás vagy schema-frissítés így sok, egymástól független részt érinthet.",
+            "example": "Egy baggage-status provider vendor-specifikus XML-t és numerikus hibakódokat ad. A dedikált adapter validálja a választ, belső BaggageStatus modellre mapeli, a hibákat belső kategóriákra fordítja, és metricset küld a provider latencyjéről és hibáiról.",
+            "howItWorks": [
+              "Definiáld az üzleti képességet és az alkalmazás számára szükséges belső contractot.",
+              "Készíts adaptert az authentication, mapping, validation és provider error kezelésére.",
+              "Védd a hívásokat timeouttal, retry szabályokkal, concurrency limittel és fallbackkel.",
+              "Valósághű stubokkal tesztelj, és a providert a belső feldolgozástól elkülönítve monitorozd."
+            ],
+            "commonMistakes": [
+              "A provider DTO-ját domain modellként használni.",
+              "Minden provider hibát retryolni, beleértve a validation és authorization hibákat is.",
+              "Credentialt vagy személyes adatot logolni troubleshooting közben."
+            ],
+            "keyTerms": [
+              {
+                "term": "adapter",
+                "definition": "a külső contract és a belső modell között fordító komponens"
+              },
+              {
+                "term": "anti-corruption layer",
+                "definition": "boundary, amely megakadályozza, hogy a külső modell beszivárogjon a domainbe"
+              },
+              {
+                "term": "provider SLA",
+                "definition": "a külső szolgáltató által vállalt availability és performance szint"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_api_versioning_compatibility",
+      "name": "API Versioning and Compatibility",
+      "description": "API versioning manages changes to a contract when old consumers cannot all upgrade at once. Good versioning begins with avoiding unnecessary breaking changes.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "api_design"
+      ],
+      "studyContent": {
+        "mentalModel": "API versioning is a compatibility strategy, not only a version number in a URL. It defines how old and new consumers continue to work while the provider evolves.",
+        "problem": "In an integration environment with many clients, a breaking change can stop systems that deploy on different schedules or are owned by third parties. Keeping every version forever, however, increases testing and support cost.",
+        "example": "A booking API adds an optional loyaltyNumber field without creating a new version. Later it must replace a string status with a new incompatible structure, so it introduces v2, runs v1 and v2 in parallel, publishes a migration guide, measures v1 usage, and retires v1 after an announced date.",
+        "howItWorks": [
+          "Classify a proposed change as backward compatible or breaking from the consumer’s perspective.",
+          "Prefer additive changes and tolerant readers when the meaning remains stable.",
+          "Introduce a new contract version only when incompatibility cannot be avoided.",
+          "Publish migration guidance, observe adoption, and deprecate the old version with a clear policy."
+        ],
+        "commonMistakes": [
+          "Creating a new version for every additive field.",
+          "Assuming an enum can gain a new value safely for every client.",
+          "Removing an old version without measuring real consumer usage."
+        ],
+        "keyTerms": [
+          {
+            "term": "breaking change",
+            "definition": "a change that can make an existing client fail or behave incorrectly"
+          },
+          {
+            "term": "deprecation",
+            "definition": "a period in which an old contract still works but is scheduled for removal"
+          },
+          {
+            "term": "tolerant reader",
+            "definition": "a client that ignores unknown fields and accepts compatible additions"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "API versioning és kompatibilitás",
+          "description": "Az API versioning kezeli a contract változásait, amikor a régi consumerek nem tudnak egyszerre frissíteni. A jó versioning az indokolatlan breaking change-ek elkerülésével kezdődik.",
+          "studyContent": {
+            "mentalModel": "Az API versioning kompatibilitási stratégia, nem csupán verziószám az URL-ben. Meghatározza, hogyan működhetnek tovább a régi és új consumerek, miközben a provider fejlődik.",
+            "problem": "Sok klienssel működő integration környezetben egy breaking change leállíthat eltérő ütemben deployoló vagy third-party által birtokolt rendszereket. Ugyanakkor minden verzió örökös fenntartása növeli a tesztelési és support költséget.",
+            "example": "A booking API új, opcionális loyaltyNumber mezőt kap új verzió nélkül. Később a string status helyett inkompatibilis struktúra szükséges, ezért v2 indul, v1 és v2 párhuzamosan fut, migration guide készül, mérik a v1 használatát, majd előre bejelentett időpontban kivezetik.",
+            "howItWorks": [
+              "Consumer-nézőpontból osztályozd a módosítást backward compatible vagy breaking változásként.",
+              "Stabil jelentés mellett részesítsd előnyben az additív változtatást és a tolerant readert.",
+              "Csak akkor vezess be új contract-verziót, ha az inkompatibilitás nem kerülhető el.",
+              "Adj migration útmutatót, figyeld az adoptiont, és egyértelmű policyval deprecáld a régi verziót."
+            ],
+            "commonMistakes": [
+              "Minden additív mezőhöz új verziót létrehozni.",
+              "Azt feltételezni, hogy egy enum új értéke minden kliens számára biztonságos.",
+              "Valós consumer-használat mérése nélkül eltávolítani a régi verziót."
+            ],
+            "keyTerms": [
+              {
+                "term": "breaking change",
+                "definition": "olyan változás, amelytől egy meglévő kliens elromolhat vagy hibásan működhet"
+              },
+              {
+                "term": "deprecation",
+                "definition": "időszak, amikor a régi contract még működik, de már tervezett a kivezetése"
+              },
+              {
+                "term": "tolerant reader",
+                "definition": "kliens, amely figyelmen kívül hagyja az ismeretlen mezőket és elfogadja a kompatibilis bővítéseket"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_idempotent_operations",
+      "name": "Idempotent Integration Operations",
+      "description": "An idempotent operation can be repeated without creating an additional business effect. It makes retries safer when a caller cannot tell whether the first attempt succeeded.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "api_design",
+        "message_queue",
+        "resilience"
+      ],
+      "studyContent": {
+        "mentalModel": "Idempotency means that repeating the same logical operation produces the same business outcome as processing it once. It is essential because networks can lose responses even after a server has completed the work.",
+        "problem": "Without idempotency, a timeout followed by a retry may create two bookings, charge twice, or publish duplicate downstream events. Simply using PUT or checking identical JSON is not enough if the operation has side effects.",
+        "example": "A client sends POST /payments with an idempotency key. The service stores the key, request fingerprint, status, and result in the same durable workflow as the payment. A retry with the same key returns the original result; a different request using that key is rejected.",
+        "howItWorks": [
+          "Choose the logical operation that must happen only once.",
+          "Require or derive a stable deduplication key for all attempts of that operation.",
+          "Store the key and outcome durably with concurrency protection.",
+          "Return the previous outcome for a valid duplicate and define key retention and conflict behavior."
+        ],
+        "commonMistakes": [
+          "Generating a new idempotency key for every retry.",
+          "Recording the key only after the side effect, leaving a crash window.",
+          "Assuming idempotency removes the need to handle duplicate messages downstream."
+        ],
+        "keyTerms": [
+          {
+            "term": "idempotency key",
+            "definition": "a stable identifier shared by every retry of one logical operation"
+          },
+          {
+            "term": "deduplication",
+            "definition": "detecting that an operation or message was already processed"
+          },
+          {
+            "term": "request fingerprint",
+            "definition": "a hash or comparison used to ensure the same key is not reused for different input"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Idempotens integration operationök",
+          "description": "Egy idempotens operation megismételhető anélkül, hogy újabb üzleti side effectet hozna létre. Biztonságosabbá teszi a retryt, amikor a hívó nem tudja, sikerült-e az első próbálkozás.",
+          "studyContent": {
+            "mentalModel": "Az idempotency azt jelenti, hogy ugyanazon logikai operation megismétlése ugyanazt az üzleti eredményt adja, mint az egyszeri feldolgozás. Erre azért van szükség, mert a network elveszítheti a választ akkor is, ha a szerver már elvégezte a műveletet.",
+            "problem": "Idempotency nélkül egy timeout utáni retry két bookingot, dupla terhelést vagy duplicate downstream eventet okozhat. A PUT használata vagy az azonos JSON ellenőrzése önmagában nem elég, ha a művelet side effecttel jár.",
+            "example": "A kliens idempotency key-jel küldi a POST /payments requestet. A service tartósan eltárolja a keyt, request fingerprintet, statust és eredményt a payment workflow részeként. Ugyanazzal a key-jel érkező retry az eredeti választ kapja, eltérő request pedig elutasításra kerül.",
+            "howItWorks": [
+              "Határozd meg azt a logikai operationt, amelynek csak egyszer szabad megtörténnie.",
+              "Minden próbálkozáshoz ugyanazt a stabil deduplication key-t követeld meg vagy állítsd elő.",
+              "A key-t és az eredményt concurrency-védelemmel, tartósan tárold.",
+              "Valid duplicate esetén add vissza a korábbi eredményt, és definiáld a retentiont és conflict viselkedést."
+            ],
+            "commonMistakes": [
+              "Minden retrynál új idempotency key-t generálni.",
+              "Csak a side effect után eltárolni a key-t, így crash window marad.",
+              "Azt gondolni, hogy az idempotency miatt downstream már nem kell duplicate message-ekkel számolni."
+            ],
+            "keyTerms": [
+              {
+                "term": "idempotency key",
+                "definition": "egy logikai operation minden retrya által közösen használt stabil azonosító"
+              },
+              {
+                "term": "deduplication",
+                "definition": "annak felismerése, hogy egy operation vagy message már feldolgozásra került"
+              },
+              {
+                "term": "request fingerprint",
+                "definition": "hash vagy összehasonlítás, amely megakadályozza ugyanazon key eltérő inputtal történő használatát"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_mule_to_node_migration",
+      "name": "Mule-to-Node.js Migration",
+      "description": "A Mule-to-Node.js migration replaces integration flows gradually while preserving contracts, data mapping, reliability, and operational visibility. It is a risk-managed modernization, not a line-by-line rewrite.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "microservices",
+        "api_design",
+        "strangler_pattern"
+      ],
+      "studyContent": {
+        "mentalModel": "A Mule-to-Node.js migration should move business capabilities behind stable boundaries in controlled slices. The goal is to preserve observable behavior while changing the implementation and, where useful, the architecture.",
+        "problem": "A big-bang rewrite hides undocumented mappings, retry behavior, schedules, and operational rules until cutover. Integration platforms often contain years of implicit knowledge, so reproducing only the visible happy path can cause data loss or duplicate processing.",
+        "example": "One passenger-notification flow is selected first. The team records its inputs, transformations, outputs, errors, and volume; builds a Node.js service behind the same contract; runs comparison traffic; then routes a small percentage to the new service with a quick rollback path.",
+        "howItWorks": [
+          "Inventory flows, consumers, contracts, transformations, schedules, and non-functional behavior.",
+          "Group flows by business capability and dependency risk, then choose a low-risk vertical slice.",
+          "Build contract tests, observability, replay or comparison tools, and reversible routing.",
+          "Migrate incrementally, verify production behavior, and retire the old flow only after evidence shows it is unused."
+        ],
+        "commonMistakes": [
+          "Translating each visual Mule component directly into a Node.js function.",
+          "Changing the external contract and the implementation at the same time without need.",
+          "Ignoring hidden operational features such as retries, redelivery, scheduling, and dead-letter handling."
+        ],
+        "keyTerms": [
+          {
+            "term": "strangler migration",
+            "definition": "replacing an old system one capability at a time while both versions coexist"
+          },
+          {
+            "term": "behavioral parity",
+            "definition": "matching the externally observable behavior of the old implementation"
+          },
+          {
+            "term": "shadow traffic",
+            "definition": "sending a copy of real traffic to a new system without using its result"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Mule-ról Node.js-ra migráció",
+          "description": "A Mule-ról Node.js-ra migráció fokozatosan cseréli le az integration flow-kat, miközben megőrzi a contractokat, mappinget, megbízhatóságot és operatív láthatóságot. Ez kockázatkezelt modernizáció, nem soronkénti újraírás.",
+          "studyContent": {
+            "mentalModel": "A Mule-ról Node.js-ra migráció során kontrollált slice-okban érdemes üzleti képességeket stabil boundary-k mögé vinni. A cél az observable viselkedés megőrzése, miközben az implementáció és szükség esetén az architektúra változik.",
+            "problem": "A big-bang rewrite a cutoverig elrejti a dokumentálatlan mappingeket, retry-viselkedést, schedule-öket és operational szabályokat. Az integration platformok gyakran évek implicit tudását tartalmazzák, ezért a happy path puszta reprodukálása data losst vagy duplicate processinget okozhat.",
+            "example": "Elsőként egy passenger-notification flow kerül kiválasztásra. A csapat rögzíti az inputokat, transzformációkat, outputokat, hibákat és volument; azonos contract mögött Node.js service-t épít; comparison trafficet futtat; majd kis forgalmat irányít át gyors rollback lehetőséggel.",
+            "howItWorks": [
+              "Készíts inventoryt a flow-król, consumerekről, contractokról, transzformációkról, schedule-ökről és non-functional viselkedésről.",
+              "Üzleti képesség és dependency-kockázat szerint csoportosíts, majd válassz alacsony kockázatú vertical slice-ot.",
+              "Építs contract testet, observabilityt, replay vagy comparison eszközt és visszafordítható routingot.",
+              "Fokozatosan migrálj, production evidence alapján ellenőrizz, és csak használaton kívül helyezés után kapcsold le a régi flow-t."
+            ],
+            "commonMistakes": [
+              "Minden vizuális Mule komponenst közvetlenül egy Node.js functionre lefordítani.",
+              "Szükségtelenül egyszerre módosítani a külső contractot és az implementációt.",
+              "Figyelmen kívül hagyni az implicit retryt, redeliveryt, schedulinget és dead-letter kezelést."
+            ],
+            "keyTerms": [
+              {
+                "term": "strangler migration",
+                "definition": "régi rendszer képességenkénti lecserélése, miközben ideiglenesen mindkét verzió működik"
+              },
+              {
+                "term": "behavioral parity",
+                "definition": "a régi implementáció kívülről megfigyelhető viselkedésének megtartása"
+              },
+              {
+                "term": "shadow traffic",
+                "definition": "valódi traffic másolatának az új rendszerre küldése anélkül, hogy annak eredményét használnánk"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "luxair_int_soa_microservices_tradeoff_001",
+      "title": "SOA versus microservices",
+      "prompt": "How would you explain the difference between SOA and microservices, and when might a more centralized SOA approach still be reasonable?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "luxair_int_soa_microservices_tradeoff"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare boundaries, governance, deployment, data ownership, and context.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_soa_microservices_boundaries",
+          "label": "Compares service independence",
+          "description": "Explains that microservices normally emphasize smaller business boundaries, independent deployment, and decentralized ownership.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "business capability",
+            "independent deployment",
+            "service boundary",
+            "decentralized ownership",
+            "own data"
+          ]
+        },
+        {
+          "id": "luxair_int_soa_microservices_centralization",
+          "label": "Explains centralized SOA characteristics",
+          "description": "Mentions shared enterprise services, stronger central governance, or an integration platform such as an ESB.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "central governance",
+            "shared services",
+            "integration platform",
+            "enterprise service bus",
+            "esb"
+          ]
+        },
+        {
+          "id": "luxair_int_soa_microservices_context",
+          "label": "Makes a contextual choice",
+          "description": "Avoids declaring one style universally better and connects the choice to organizational, operational, and legacy constraints.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "depends on context",
+            "legacy systems",
+            "operational maturity",
+            "organizational structure",
+            "trade off"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_soa_microservices_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What signs would tell you that a microservice system has become a distributed monolith?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "SOA vagy microservices",
+          "prompt": "Hogyan magyaráznád el a SOA és a microservices közötti különbséget, és mikor lehet még mindig indokolt egy centralizáltabb SOA megközelítés?",
+          "answerStructureHint": "Hasonlítsd össze a boundary-ket, governance-t, deploymentet, data ownershipet és a környezetet.",
+          "expectedPoints": {
+            "luxair_int_soa_microservices_boundaries": {
+              "label": "Összehasonlítja a service-ek önállóságát",
+              "description": "Elmagyarázza, hogy a microservices általában kisebb üzleti határokat, önálló deploymentet és decentralizált ownershipet hangsúlyoz."
+            },
+            "luxair_int_soa_microservices_centralization": {
+              "label": "Bemutatja a centralizált SOA jellemzőit",
+              "description": "Megemlíti a közös enterprise service-eket, az erősebb központi governance-t vagy egy ESB-szerű integration platformot."
+            },
+            "luxair_int_soa_microservices_context": {
+              "label": "Kontextus alapján választ",
+              "description": "Nem nevez meg univerzális győztest, hanem a döntést szervezeti, üzemeltetési és legacy korlátokhoz köti."
+            }
+          },
+          "followUps": {
+            "luxair_int_soa_microservices_followup": "Milyen jelekből látnád, hogy egy microservice rendszer distributed monolith lett?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_soa_microservices_tradeoff_002",
+      "title": "Designing service boundaries",
+      "prompt": "A new integration domain contains booking, payment, and customer-notification workflows. How would you decide the service boundaries?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "luxair_int_soa_microservices_tradeoff"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Start from business ownership, then discuss data, transactions, coupling, and change patterns.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_service_boundary_business",
+          "label": "Starts from business capabilities",
+          "description": "Uses business responsibilities and ownership rather than controllers, tables, or technical layers.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "business capability",
+            "domain boundary",
+            "team ownership",
+            "single responsibility",
+            "bounded context"
+          ]
+        },
+        {
+          "id": "luxair_int_service_boundary_data",
+          "label": "Considers data and consistency",
+          "description": "Discusses which service owns each data set and where strong transactions are truly required.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "data ownership",
+            "transaction boundary",
+            "consistency requirement",
+            "own database",
+            "source of truth"
+          ]
+        },
+        {
+          "id": "luxair_int_service_boundary_change",
+          "label": "Tests boundaries against change",
+          "description": "Uses coupling, deployment, failure isolation, and expected change patterns to validate the proposed split.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "independent change",
+            "failure isolation",
+            "deployment independence",
+            "coupling",
+            "change together"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_service_boundary_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When would you deliberately keep two capabilities in the same service?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Service boundary-k megtervezése",
+          "prompt": "Egy új integration domain booking, payment és customer-notification workflow-kat tartalmaz. Hogyan határoznád meg a service boundary-ket?",
+          "answerStructureHint": "Indulj az üzleti ownershipből, majd térj ki az adatra, tranzakciókra, couplingra és változási mintákra.",
+          "expectedPoints": {
+            "luxair_int_service_boundary_business": {
+              "label": "Üzleti képességekből indul ki",
+              "description": "Üzleti felelősséget és ownershipet használ controller-, tábla- vagy technikai réteg alapú bontás helyett."
+            },
+            "luxair_int_service_boundary_data": {
+              "label": "Figyelembe veszi az adatot és a konzisztenciát",
+              "description": "Átgondolja, melyik service mely adatot birtokolja, és hol szükséges valóban erős tranzakció."
+            },
+            "luxair_int_service_boundary_change": {
+              "label": "Változási mintákkal ellenőrzi a határokat",
+              "description": "Coupling, deployment, failure isolation és várható változások alapján validálja a felosztást."
+            }
+          },
+          "followUps": {
+            "luxair_int_service_boundary_followup": "Mikor tartanál szándékosan két képességet ugyanabban a service-ben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_api_contract_design_001",
+      "title": "Designing a reliable API contract",
+      "prompt": "What elements would you define before publishing an API that will be consumed by many internal and external systems?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_api_contract_design"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover resources, schemas, behavior, errors, security, and evolution.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_api_contract_operations",
+          "label": "Defines operations and schemas",
+          "description": "Includes resource semantics, request and response schemas, validation, and status codes.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "request schema",
+            "response schema",
+            "status codes",
+            "validation rules",
+            "resource semantics"
+          ]
+        },
+        {
+          "id": "luxair_int_api_contract_errors",
+          "label": "Defines predictable failures",
+          "description": "Uses structured error responses with stable codes and documents retryable versus non-retryable failures.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "structured errors",
+            "error code",
+            "retryable error",
+            "error response",
+            "problem details"
+          ]
+        },
+        {
+          "id": "luxair_int_api_contract_operational",
+          "label": "Includes operational behavior",
+          "description": "Mentions authentication, idempotency, pagination, rate limits, timeouts, or compatibility as applicable.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "authentication",
+            "idempotency",
+            "pagination",
+            "rate limit",
+            "backward compatibility",
+            "timeout"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_api_contract_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you make sure an implementation still conforms to the contract after changes?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Megbízható API contract tervezése",
+          "prompt": "Milyen elemeket definiálnál egy sok belső és külső rendszer által használt API publikálása előtt?",
+          "answerStructureHint": "Térj ki a resource-okra, schema-kra, viselkedésre, hibákra, securityre és evolúcióra.",
+          "expectedPoints": {
+            "luxair_int_api_contract_operations": {
+              "label": "Operationöket és schema-kat definiál",
+              "description": "Kitér a resource szemantikára, request és response schema-kra, validationre és status code-okra."
+            },
+            "luxair_int_api_contract_errors": {
+              "label": "Kiszámítható hibákat definiál",
+              "description": "Strukturált error response-okat és stabil kódokat használ, valamint dokumentálja a retryable és nem retryable hibákat."
+            },
+            "luxair_int_api_contract_operational": {
+              "label": "Üzemeltetési viselkedést is tartalmaz",
+              "description": "Szükség szerint megemlíti az authenticationt, idempotencyt, paginationt, rate limitet, timeoutot vagy kompatibilitást."
+            }
+          },
+          "followUps": {
+            "luxair_int_api_contract_followup": "Hogyan biztosítanád, hogy a megvalósítás változtatások után is megfeleljen a contractnak?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_api_contract_design_002",
+      "title": "API design under high traffic",
+      "prompt": "An API handles more than 100 million requests per month and integrates with several downstream systems. What design decisions would you review first?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "luxair_int_api_contract_design"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Discuss contract clarity, capacity, dependency protection, caching, observability, and failure behavior.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_api_scale_contract",
+          "label": "Keeps the contract efficient",
+          "description": "Considers payload size, pagination, filtering, validation cost, and avoiding chatty request patterns.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "payload size",
+            "pagination",
+            "filtering",
+            "batch endpoint",
+            "chatty api",
+            "validation cost"
+          ]
+        },
+        {
+          "id": "luxair_int_api_scale_dependencies",
+          "label": "Protects downstream dependencies",
+          "description": "Mentions timeouts, bounded concurrency, circuit breakers, rate limits, or asynchronous processing.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "timeouts",
+            "circuit breaker",
+            "bounded concurrency",
+            "rate limiting",
+            "asynchronous processing",
+            "bulkhead"
+          ]
+        },
+        {
+          "id": "luxair_int_api_scale_observability",
+          "label": "Plans for observability and capacity",
+          "description": "Uses latency percentiles, error rate, throughput, tracing, load tests, and capacity planning rather than only average response time.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "latency percentile",
+            "error rate",
+            "throughput",
+            "distributed tracing",
+            "load testing",
+            "capacity planning"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_api_scale_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which parts would you cache, and how would you prevent stale or incorrect data?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "API design nagy forgalomnál",
+          "prompt": "Egy API havonta több mint 100 millió requestet kezel, és több downstream rendszerrel integrálódik. Mely design döntéseket vizsgálnád felül először?",
+          "answerStructureHint": "Beszélj a contract tisztaságáról, kapacitásról, dependency-védelemről, cache-ről, observabilityről és hibaviselkedésről.",
+          "expectedPoints": {
+            "luxair_int_api_scale_contract": {
+              "label": "Hatékony contractot tart fenn",
+              "description": "Figyelembe veszi a payload méretét, paginationt, filteringet, validation költségét és a túl sok apró hívás elkerülését."
+            },
+            "luxair_int_api_scale_dependencies": {
+              "label": "Védi a downstream dependencyket",
+              "description": "Megemlíti a timeoutokat, bounded concurrencyt, circuit breakert, rate limitet vagy aszinkron feldolgozást."
+            },
+            "luxair_int_api_scale_observability": {
+              "label": "Observabilityvel és kapacitással tervez",
+              "description": "Latency percentile-okat, error rate-et, throughputot, tracinget, load testet és capacity planninget használ, nem csak átlagos response time-ot."
+            }
+          },
+          "followUps": {
+            "luxair_int_api_scale_followup": "Mit cache-elnél, és hogyan akadályoznád meg a stale vagy hibás adatok használatát?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_third_party_integration_001",
+      "title": "Designing a third-party adapter",
+      "prompt": "How would you integrate an external service whose API and availability you do not control?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_int_third_party_integration"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe the boundary, mapping, security, failure policy, testing, and monitoring.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_third_party_boundary",
+          "label": "Creates an isolation boundary",
+          "description": "Uses an adapter or anti-corruption layer so vendor models and behavior do not spread through the application.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "adapter pattern",
+            "anti corruption layer",
+            "internal model",
+            "isolation boundary",
+            "vendor abstraction"
+          ]
+        },
+        {
+          "id": "luxair_int_third_party_failure",
+          "label": "Defines failure behavior",
+          "description": "Uses explicit timeouts, selective retries, circuit breaking, fallback, and idempotency where appropriate.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "explicit timeout",
+            "selective retry",
+            "circuit breaker",
+            "fallback",
+            "idempotency",
+            "failure policy"
+          ]
+        },
+        {
+          "id": "luxair_int_third_party_operations",
+          "label": "Plans testing and observability",
+          "description": "Mentions contract tests or stubs, secure secret handling, provider-specific metrics, logging, and tracing.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "contract test",
+            "realistic stub",
+            "secret management",
+            "provider metrics",
+            "distributed tracing",
+            "correlation id"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_third_party_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you roll out a provider API version change without risking all traffic?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Third-party adapter tervezése",
+          "prompt": "Hogyan integrálnál egy olyan külső service-t, amelynek API-ját és availabilityjét nem te irányítod?",
+          "answerStructureHint": "Mutasd be a boundaryt, mappinget, securityt, failure policyt, tesztelést és monitoringot.",
+          "expectedPoints": {
+            "luxair_int_third_party_boundary": {
+              "label": "Izolációs boundaryt készít",
+              "description": "Adaptert vagy anti-corruption layert használ, hogy a vendor modellje és viselkedése ne terjedjen szét az alkalmazásban."
+            },
+            "luxair_int_third_party_failure": {
+              "label": "Definiálja a hibaviselkedést",
+              "description": "Explicit timeoutot, szelektív retryt, circuit breakert, fallbacket és szükség esetén idempotencyt alkalmaz."
+            },
+            "luxair_int_third_party_operations": {
+              "label": "Tesztelést és observabilityt tervez",
+              "description": "Megemlíti a contract testet vagy stubot, biztonságos secret kezelést, provider-specifikus metricset, loggingot és tracinget."
+            }
+          },
+          "followUps": {
+            "luxair_int_third_party_followup": "Hogyan vezetnél be egy provider API-verzióváltást úgy, hogy ne kockáztasd az összes forgalmat?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_third_party_integration_002",
+      "title": "Troubleshooting an unstable provider",
+      "prompt": "A third-party service has intermittent latency spikes and occasional malformed responses. How would you diagnose and contain the issue?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "luxair_int_third_party_integration"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate evidence gathering from mitigation, then discuss validation and recovery.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_provider_diagnosis",
+          "label": "Collects provider-specific evidence",
+          "description": "Uses dependency latency, status or error categories, traces, correlation IDs, and payload validation failures to isolate the external call.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "dependency latency",
+            "correlation id",
+            "trace span",
+            "error category",
+            "validation failure",
+            "provider metric"
+          ]
+        },
+        {
+          "id": "luxair_int_provider_containment",
+          "label": "Contains the blast radius",
+          "description": "Applies strict timeouts, bounded concurrency, circuit breaking, queueing, or degradation so the provider cannot exhaust the service.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "strict timeout",
+            "bounded concurrency",
+            "circuit breaker",
+            "graceful degradation",
+            "queueing",
+            "blast radius"
+          ]
+        },
+        {
+          "id": "luxair_int_provider_data_safety",
+          "label": "Handles malformed data safely",
+          "description": "Validates at the boundary, rejects or quarantines invalid payloads, and avoids silently accepting partial or corrupt data.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "schema validation",
+            "reject invalid",
+            "quarantine message",
+            "dead letter",
+            "fail closed",
+            "invalid payload"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_provider_diagnosis_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would make a retry safe or unsafe in this incident?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Instabil provider hibakeresése",
+          "prompt": "Egy third-party service időnként nagy latency spike-okat és néha malformed response-okat produkál. Hogyan diagnosztizálnád és korlátoznád a problémát?",
+          "answerStructureHint": "Válaszd szét az evidence gatheringet és a mitigationt, majd beszélj validationről és recoveryről.",
+          "expectedPoints": {
+            "luxair_int_provider_diagnosis": {
+              "label": "Provider-specifikus bizonyítékot gyűjt",
+              "description": "Dependency latencyt, status- vagy error-kategóriákat, trace-eket, correlation ID-kat és payload validation hibákat használ a külső hívás elkülönítésére."
+            },
+            "luxair_int_provider_containment": {
+              "label": "Korlátozza a blast radiust",
+              "description": "Szigorú timeoutot, bounded concurrencyt, circuit breakert, queueingot vagy degradationt alkalmaz, hogy a provider ne merítse ki a service erőforrásait."
+            },
+            "luxair_int_provider_data_safety": {
+              "label": "Biztonságosan kezeli a hibás adatot",
+              "description": "A boundaryn validál, elutasítja vagy karanténba teszi a hibás payloadot, és nem fogad el csendben részleges vagy sérült adatot."
+            }
+          },
+          "followUps": {
+            "luxair_int_provider_diagnosis_followup": "Mitől lenne biztonságos vagy veszélyes egy retry ebben az incidensben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_api_versioning_compatibility_001",
+      "title": "Breaking and non-breaking API changes",
+      "prompt": "Which API changes are usually backward compatible, which are breaking, and why can adding an enum value still be risky?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_api_versioning_compatibility"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Classify changes from the client perspective and explain enum handling.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_api_change_classification",
+          "label": "Classifies common changes",
+          "description": "Explains that additive optional fields are often compatible, while removing, renaming, changing types, or tightening requirements is usually breaking.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "optional field",
+            "remove field",
+            "rename field",
+            "change type",
+            "required field",
+            "client perspective"
+          ]
+        },
+        {
+          "id": "luxair_int_api_enum_risk",
+          "label": "Explains open versus closed enums",
+          "description": "Recognizes that clients may use exhaustive switches or generated closed enums and fail on an unknown value.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "unknown enum",
+            "exhaustive switch",
+            "generated client",
+            "default branch",
+            "forward compatibility"
+          ]
+        },
+        {
+          "id": "luxair_int_api_consumer_evidence",
+          "label": "Uses consumer evidence",
+          "description": "Considers documented guarantees, contract tests, telemetry, and known client behavior instead of relying only on HTTP theory.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "contract test",
+            "consumer telemetry",
+            "documented contract",
+            "client behavior",
+            "compatibility test"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_api_enum_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you design a client to remain safe when the server adds a new enum value?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Breaking és nem breaking API-változások",
+          "prompt": "Mely API-változások backward compatible-ek, melyek breakingek, és miért lehet kockázatos még egy enum új értékének hozzáadása is?",
+          "answerStructureHint": "Consumer-nézőpontból osztályozd a változásokat, és magyarázd el az enum kezelését.",
+          "expectedPoints": {
+            "luxair_int_api_change_classification": {
+              "label": "Osztályozza a gyakori változásokat",
+              "description": "Elmagyarázza, hogy az opcionális additív mező gyakran kompatibilis, míg az eltávolítás, átnevezés, type-váltás vagy szigorítás általában breaking."
+            },
+            "luxair_int_api_enum_risk": {
+              "label": "Elmagyarázza a nyitott és zárt enum kockázatát",
+              "description": "Felismeri, hogy a kliensek exhaustive switchet vagy generált closed enumot használhatnak, és ismeretlen értéknél elromolhatnak."
+            },
+            "luxair_int_api_consumer_evidence": {
+              "label": "Consumer-bizonyítékot használ",
+              "description": "Dokumentált garanciát, contract testet, telemetriát és ismert kliensviselkedést vesz figyelembe, nem csak elméleti HTTP-szabályokat."
+            }
+          },
+          "followUps": {
+            "luxair_int_api_enum_followup": "Hogyan terveznél olyan klienst, amely biztonságosan kezeli, ha a szerver új enum értéket ad hozzá?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_api_versioning_compatibility_002",
+      "title": "Planning an API migration",
+      "prompt": "Fifty integrations consume an API that needs a breaking contract change. How would you introduce and later retire the new version?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_int_api_versioning_compatibility"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain parallel versions, migration support, observability, and retirement criteria.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_api_parallel_versions",
+          "label": "Runs versions safely in parallel",
+          "description": "Introduces a new version without changing the existing contract and isolates routing or implementation where practical.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "parallel versions",
+            "new contract",
+            "versioned route",
+            "unchanged old version",
+            "compatibility layer"
+          ]
+        },
+        {
+          "id": "luxair_int_api_migration_support",
+          "label": "Supports consumer migration",
+          "description": "Provides documentation, examples, test environment, communication, deadlines, and support for consumers.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "migration guide",
+            "test environment",
+            "consumer communication",
+            "deprecation notice",
+            "migration deadline"
+          ]
+        },
+        {
+          "id": "luxair_int_api_retirement_evidence",
+          "label": "Retires using evidence",
+          "description": "Tracks traffic and errors by client or version, confirms critical consumers moved, and has a rollback or extension plan.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "version usage",
+            "client telemetry",
+            "zero traffic",
+            "rollback plan",
+            "critical consumers",
+            "retirement criteria"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_api_migration_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you implement v2 as separate code or translate v2 requests into the v1 model? What drives the choice?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "API-migráció megtervezése",
+          "prompt": "Ötven integráció használ egy API-t, amely breaking contract módosítást igényel. Hogyan vezetnéd be az új verziót, majd később hogyan vezetnéd ki a régit?",
+          "answerStructureHint": "Mutasd be a párhuzamos verziókat, migration supportot, observabilityt és kivezetési feltételeket.",
+          "expectedPoints": {
+            "luxair_int_api_parallel_versions": {
+              "label": "Biztonságosan futtat párhuzamos verziókat",
+              "description": "Új verziót vezet be a meglévő contract megváltoztatása nélkül, és lehetőség szerint elkülöníti a routingot vagy implementációt."
+            },
+            "luxair_int_api_migration_support": {
+              "label": "Támogatja a consumer-migrációt",
+              "description": "Dokumentációt, példákat, test environmentet, kommunikációt, határidőt és támogatást ad a consumereknek."
+            },
+            "luxair_int_api_retirement_evidence": {
+              "label": "Bizonyíték alapján vezeti ki a verziót",
+              "description": "Kliensenként vagy verziónként méri a trafficet és hibákat, ellenőrzi a kritikus consumerek migrációját, és rollback- vagy hosszabbítási tervvel rendelkezik."
+            }
+          },
+          "followUps": {
+            "luxair_int_api_migration_followup": "Külön kódként valósítanád meg a v2-t, vagy a v2 requesteket a v1 modellre fordítanád? Mitől függ a döntés?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_idempotent_operations_001",
+      "title": "Making a write API idempotent",
+      "prompt": "How would you make a booking or payment creation endpoint safe to retry after a timeout?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "luxair_int_idempotent_operations"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Describe the key, durable state, concurrency, response reuse, and edge cases.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_idempotency_key",
+          "label": "Uses a stable operation key",
+          "description": "Requires the same idempotency or business key on every retry and prevents reuse for a different request.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "idempotency key",
+            "same key",
+            "business key",
+            "request fingerprint",
+            "key conflict"
+          ]
+        },
+        {
+          "id": "luxair_int_idempotency_atomicity",
+          "label": "Stores state with concurrency safety",
+          "description": "Uses a unique constraint, conditional write, transaction, or state machine so concurrent attempts cannot both execute the side effect.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "unique constraint",
+            "conditional write",
+            "atomic insert",
+            "transaction",
+            "concurrency control",
+            "state machine"
+          ]
+        },
+        {
+          "id": "luxair_int_idempotency_result",
+          "label": "Defines duplicate behavior",
+          "description": "Returns the stored result or current status, defines in-progress behavior and retention, and distinguishes retriable failures.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "stored result",
+            "in progress",
+            "key retention",
+            "same response",
+            "retryable failure",
+            "operation status"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_idempotency_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What happens if the service crashes after charging the provider but before storing the success result?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Write API idempotenssé tétele",
+          "prompt": "Hogyan tennél egy booking- vagy payment-creation endpointot biztonságosan retryolhatóvá timeout után?",
+          "answerStructureHint": "Mutasd be a key-t, durable state-et, concurrencyt, response reuse-t és edge case-eket.",
+          "expectedPoints": {
+            "luxair_int_idempotency_key": {
+              "label": "Stabil operation key-t használ",
+              "description": "Ugyanazt az idempotency vagy business key-t követeli meg minden retrynál, és megakadályozza az eltérő requesthez történő újrahasználatot."
+            },
+            "luxair_int_idempotency_atomicity": {
+              "label": "Concurrency-safe módon tárol",
+              "description": "Unique constraintet, conditional write-ot, tranzakciót vagy state machine-t használ, hogy két párhuzamos attempt ne hajthassa végre mindkét side effectet."
+            },
+            "luxair_int_idempotency_result": {
+              "label": "Definiálja a duplicate viselkedést",
+              "description": "Visszaadja a tárolt eredményt vagy aktuális statust, meghatározza az in-progress és retention viselkedést, valamint megkülönbözteti a retriable hibákat."
+            }
+          },
+          "followUps": {
+            "luxair_int_idempotency_followup": "Mi történik, ha a service a provider terhelése után, de a sikeres eredmény eltárolása előtt összeomlik?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_idempotent_operations_002",
+      "title": "Idempotent message consumption",
+      "prompt": "A queue may deliver the same message more than once. How would you prevent duplicate business effects in the consumer?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_int_idempotent_operations"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover message identity, durable deduplication, transaction boundaries, and retention.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_consumer_dedup_key",
+          "label": "Identifies the logical message",
+          "description": "Uses a stable event or operation ID rather than transport delivery metadata that changes on redelivery.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "event id",
+            "operation id",
+            "stable identifier",
+            "message key",
+            "business identifier"
+          ]
+        },
+        {
+          "id": "luxair_int_consumer_atomic_processing",
+          "label": "Coordinates deduplication and side effects",
+          "description": "Records processed identity in the same transaction as the database change, or uses an inbox pattern with an equivalent guarantee.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "same transaction",
+            "inbox pattern",
+            "processed messages",
+            "atomic commit",
+            "unique constraint"
+          ]
+        },
+        {
+          "id": "luxair_int_consumer_retention",
+          "label": "Defines practical retention",
+          "description": "Chooses a deduplication retention window, handles poison messages, and keeps the operation itself safe when possible.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "retention window",
+            "poison message",
+            "dead letter",
+            "idempotent handler",
+            "deduplication store"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_consumer_dedup_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would your design change if the side effect is a call to a third-party API rather than a local database update?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Idempotens message consumer",
+          "prompt": "Egy queue ugyanazt a message-et többször is kézbesítheti. Hogyan akadályoznád meg a duplicate üzleti side effecteket a consumerben?",
+          "answerStructureHint": "Térj ki a message identityre, durable deduplicationre, transaction boundaryre és retentionre.",
+          "expectedPoints": {
+            "luxair_int_consumer_dedup_key": {
+              "label": "Azonosítja a logikai message-et",
+              "description": "Stabil event- vagy operation ID-t használ, nem pedig redeliverykor változó transport metadata-t."
+            },
+            "luxair_int_consumer_atomic_processing": {
+              "label": "Összehangolja a deduplicationt és a side effectet",
+              "description": "A processed azonosítót ugyanabban a tranzakcióban rögzíti, mint az adatbázis-változást, vagy ekvivalens inbox patternt használ."
+            },
+            "luxair_int_consumer_retention": {
+              "label": "Praktikus retentiont határoz meg",
+              "description": "Deduplication retention window-t választ, kezeli a poison message-eket, és ahol lehet, magát a handlert is idempotenssé teszi."
+            }
+          },
+          "followUps": {
+            "luxair_int_consumer_dedup_followup": "Hogyan változna a designed, ha a side effect nem lokális adatbázis-módosítás, hanem third-party API-hívás lenne?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_mule_to_node_migration_001",
+      "title": "Planning a Mule-to-Node.js migration",
+      "prompt": "How would you plan a migration from a Mule-based integration platform to Node.js services without disrupting existing consumers?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "luxair_int_mule_to_node_migration"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain discovery, slicing, parity, rollout, observability, and rollback.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_migration_discovery",
+          "label": "Discovers actual behavior",
+          "description": "Inventories contracts, transformations, dependencies, schedules, security, volumes, errors, retries, and consumers before rewriting.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "flow inventory",
+            "existing consumers",
+            "data mapping",
+            "retry behavior",
+            "traffic volume",
+            "dependency map"
+          ]
+        },
+        {
+          "id": "luxair_int_migration_incremental",
+          "label": "Uses incremental migration",
+          "description": "Chooses vertical slices and uses strangler routing, feature flags, canaries, or parallel running instead of a big-bang cutover.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "strangler pattern",
+            "vertical slice",
+            "canary rollout",
+            "parallel run",
+            "feature flag",
+            "no big bang"
+          ]
+        },
+        {
+          "id": "luxair_int_migration_verification",
+          "label": "Verifies parity and rollback",
+          "description": "Uses contract and regression tests, comparison or shadow traffic, metrics, reconciliation, and a tested rollback path.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "contract tests",
+            "shadow traffic",
+            "data reconciliation",
+            "rollback plan",
+            "behavioral parity",
+            "production metrics"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_migration_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you identify whether a Mule flow should become its own microservice or remain part of a larger service?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Mule-ról Node.js-ra migráció tervezése",
+          "prompt": "Hogyan terveznél Mule-alapú integration platformról Node.js service-ekre migrációt a meglévő consumerek megzavarása nélkül?",
+          "answerStructureHint": "Mutasd be a discoveryt, slicingot, parityt, rolloutot, observabilityt és rollbacket.",
+          "expectedPoints": {
+            "luxair_int_migration_discovery": {
+              "label": "Feltárja a tényleges viselkedést",
+              "description": "Újraírás előtt inventoryt készít a contractokról, transzformációkról, dependencykről, schedule-ökről, securityről, volumenről, hibákról, retryról és consumerekről."
+            },
+            "luxair_int_migration_incremental": {
+              "label": "Fokozatos migrációt használ",
+              "description": "Vertical slice-okat és strangler routingot, feature flaget, canaryt vagy parallel runt alkalmaz big-bang cutover helyett."
+            },
+            "luxair_int_migration_verification": {
+              "label": "Ellenőrzi a parityt és rollbacket",
+              "description": "Contract és regression testet, comparison vagy shadow trafficet, metricset, reconciliationt és tesztelt rollback utat használ."
+            }
+          },
+          "followUps": {
+            "luxair_int_migration_followup": "Hogyan döntenéd el, hogy egy Mule flow önálló microservice legyen-e, vagy egy nagyobb service része maradjon?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_mule_to_node_migration_002",
+      "title": "Validating migrated integration behavior",
+      "prompt": "A new Node.js implementation produces the same success responses as the Mule flow. What else must be validated before cutover?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_int_mule_to_node_migration"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Look beyond happy-path responses to operational and failure semantics.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_migration_error_semantics",
+          "label": "Checks failure semantics",
+          "description": "Compares validation, timeouts, retry and redelivery behavior, error mapping, partial failures, and dead-letter handling.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "error mapping",
+            "timeout behavior",
+            "retry policy",
+            "redelivery",
+            "dead letter",
+            "partial failure"
+          ]
+        },
+        {
+          "id": "luxair_int_migration_data_semantics",
+          "label": "Checks data semantics",
+          "description": "Verifies transformations, ordering, duplicates, time zones, null handling, encoding, and side effects, not only response shape.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "data transformation",
+            "message ordering",
+            "duplicate handling",
+            "time zone",
+            "null handling",
+            "side effects"
+          ]
+        },
+        {
+          "id": "luxair_int_migration_nonfunctional",
+          "label": "Checks non-functional behavior",
+          "description": "Validates throughput, latency, resource use, security controls, observability, deployment, and recovery under realistic load.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "throughput",
+            "latency",
+            "load test",
+            "security controls",
+            "observability",
+            "recovery test"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_migration_validation_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you compare outputs when the flow has irreversible side effects?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Migrált integration viselkedés validálása",
+          "prompt": "Az új Node.js implementáció ugyanazokat a sikeres response-okat adja, mint a Mule flow. Mit kell még ellenőrizni cutover előtt?",
+          "answerStructureHint": "Nézz túl a happy-path response-on, és térj ki az operational és failure semanticsra.",
+          "expectedPoints": {
+            "luxair_int_migration_error_semantics": {
+              "label": "Ellenőrzi a failure semanticsot",
+              "description": "Összehasonlítja a validationt, timeoutot, retry és redelivery viselkedést, error mappinget, partial failure-t és dead-letter kezelést."
+            },
+            "luxair_int_migration_data_semantics": {
+              "label": "Ellenőrzi a data semanticsot",
+              "description": "Nem csak a response shape-et, hanem a transzformációkat, orderinget, duplicate kezelést, time zone-t, nullokat, encodingot és side effecteket is validálja."
+            },
+            "luxair_int_migration_nonfunctional": {
+              "label": "Ellenőrzi a non-functional viselkedést",
+              "description": "Valós terhelés mellett validálja a throughputot, latencyt, erőforrást, security controlokat, observabilityt, deploymentet és recoveryt."
+            }
+          },
+          "followUps": {
+            "luxair_int_migration_validation_followup": "Hogyan hasonlítanád össze az outputokat, ha a flownak visszafordíthatatlan side effectjei vannak?"
+          }
+        }
+      }
+    }
+  ]
+}

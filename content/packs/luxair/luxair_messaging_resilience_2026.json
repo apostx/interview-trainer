@@ -1,0 +1,1891 @@
+{
+  "id": "luxair_messaging_resilience_2026",
+  "name": "Luxair Messaging, Resilience and Operations",
+  "description": "High-priority interview preparation for queues, publish-subscribe, RabbitMQ, delivery guarantees, retries, resilience, and production debugging.",
+  "sources": [
+    "luxair/software_developer_integration_job_description_and_interview_notes"
+  ],
+  "topics": [
+    {
+      "id": "luxair_int_queue_vs_pubsub",
+      "name": "Queue and Publish-Subscribe Semantics",
+      "description": "A queue normally distributes work so one competing consumer handles each delivery, while publish-subscribe gives each interested subscription its own copy of an event. The choice follows business delivery semantics.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "message_queue",
+        "event_driven"
+      ],
+      "studyContent": {
+        "mentalModel": "A queue represents work to be processed, while publish-subscribe represents information that several independent consumers may react to. Both are asynchronous, but they answer different questions about who should receive each message.",
+        "problem": "Using pub-sub for a single shared workload can duplicate work across subscriptions. Using one competing-consumer queue for independent business reactions can make consumers steal messages from each other, so some reactions never occur.",
+        "example": "A ticket-generation command is placed on one queue and several workers compete to process it once. A BookingConfirmed event is published to separate notification, analytics, and loyalty subscriptions; each subscription receives and tracks its own delivery independently.",
+        "howItWorks": [
+          "Decide whether the message is a command for one capability or an event about something that happened.",
+          "Identify whether consumers share one workload or each need an independent copy.",
+          "Define ordering, retry, retention, delivery, and failure isolation per queue or subscription.",
+          "Use message identity, schema ownership, observability, and idempotent processing."
+        ],
+        "commonMistakes": [
+          "Saying a queue guarantees exactly-once business processing.",
+          "Publishing commands to many subscribers when only one service should own the action.",
+          "Putting unrelated consumers on one queue and expecting each to see every message."
+        ],
+        "keyTerms": [
+          {
+            "term": "competing consumers",
+            "definition": "several workers reading one queue so each delivery goes to one worker"
+          },
+          {
+            "term": "subscription",
+            "definition": "an independent delivery stream for one pub-sub consumer group"
+          },
+          {
+            "term": "command",
+            "definition": "a request for one capability to perform an action"
+          },
+          {
+            "term": "event",
+            "definition": "a statement that a fact has already occurred"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Queue és publish-subscribe semantics",
+          "description": "A queue általában úgy osztja el a munkát, hogy egy competing consumer kezeljen egy deliveryt, míg publish-subscribe esetén minden érdekelt subscription saját eventpéldányt kap. A választást az üzleti delivery semantics vezérli.",
+          "studyContent": {
+            "mentalModel": "A queue feldolgozandó munkát, a publish-subscribe pedig olyan információt reprezentál, amelyre több független consumer reagálhat. Mindkettő aszinkron, de mást jelent abban, hogy ki kapja meg az egyes message-eket.",
+            "problem": "Ha egyetlen közös workloadhoz pub-subot használunk, a munka subscriptionönként duplikálódik. Ha független business reactionökhöz egy competing-consumer queue-t használunk, a consumerek elvehetik egymástól az üzeneteket, így bizonyos reakciók kimaradnak.",
+            "example": "A ticket-generation command egy queue-ra kerül, és több worker versenyez az egyszeri feldolgozásáért. A BookingConfirmed event külön notification-, analytics- és loyalty-subscriptionökre publisholódik; mindegyik külön kapja és követi a deliveryt.",
+            "howItWorks": [
+              "Döntsd el, hogy a message egy capabilitynek szóló command vagy egy megtörtént tényről szóló event.",
+              "Azonosítsd, hogy a consumerek egy workloadot osztanak, vagy mindegyiknek saját példány kell.",
+              "Queue-nként vagy subscriptionönként definiáld az orderinget, retryt, retentiont, deliveryt és failure isolationt.",
+              "Használj message identityt, schema ownershipet, observabilityt és idempotens processinget."
+            ],
+            "commonMistakes": [
+              "Azt mondani, hogy a queue exactly-once business processinget garantál.",
+              "Commandot több subscribernek publisholni, amikor csak egy service lehet az action owner-e.",
+              "Független consumereket egy queue-ra tenni, és azt várni, hogy mindenki minden message-et lásson."
+            ],
+            "keyTerms": [
+              {
+                "term": "competing consumers",
+                "definition": "több worker olvas egy queue-t, így egy delivery egy workerhez kerül"
+              },
+              {
+                "term": "subscription",
+                "definition": "egy pub-sub consumer group önálló delivery streamje"
+              },
+              {
+                "term": "command",
+                "definition": "kérés egy capability felé egy action végrehajtására"
+              },
+              {
+                "term": "event",
+                "definition": "állítás arról, hogy egy tény már megtörtént"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_rabbitmq_routing",
+      "name": "RabbitMQ Exchanges and Routing",
+      "description": "RabbitMQ producers publish to exchanges, and exchanges route messages to queues through bindings. Consumers read from queues, not directly from exchanges.",
+      "category": "backend",
+      "relatedTopicIds": [
+        "message_queue",
+        "publish_subscribe"
+      ],
+      "studyContent": {
+        "mentalModel": "In RabbitMQ, the exchange decides which bound queues receive a published message. The queue stores deliveries for consumers, while the binding expresses the routing relationship between an exchange and a queue.",
+        "problem": "Publishing directly with unclear routing keys or binding many unrelated patterns to one queue makes ownership difficult to understand. A missing binding can silently route a message nowhere, while a broad fanout can duplicate expensive work unexpectedly.",
+        "example": "Booking events are published to a topic exchange with keys such as booking.confirmed and booking.cancelled. A notification queue binds to booking.*, an accounting queue binds only to booking.cancelled, and each queue has its own consumers, retry policy, and dead-letter configuration.",
+        "howItWorks": [
+          "Choose an exchange type that matches the routing rule: direct, topic, fanout, or headers.",
+          "Define stable routing keys around business meaning rather than consumer names.",
+          "Bind durable queues for each independent workload or subscription.",
+          "Configure acknowledgements, prefetch, retry topology, dead-lettering, and observability per queue."
+        ],
+        "commonMistakes": [
+          "Thinking an exchange stores messages until consumers are ready.",
+          "Using one queue for several independent consumers that each need every event.",
+          "Acknowledging before the business effect is durably complete."
+        ],
+        "keyTerms": [
+          {
+            "term": "exchange",
+            "definition": "the RabbitMQ component that routes a published message"
+          },
+          {
+            "term": "binding",
+            "definition": "a rule connecting an exchange to a queue"
+          },
+          {
+            "term": "routing key",
+            "definition": "a producer-supplied value used by some exchanges to select queues"
+          },
+          {
+            "term": "prefetch",
+            "definition": "the maximum number of unacknowledged deliveries sent to a consumer"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "RabbitMQ exchange és routing",
+          "description": "RabbitMQ-ban a producer exchange-re publishol, az exchange pedig bindingok alapján queue-kra route-olja a message-et. A consumer queue-ból olvas, nem közvetlenül az exchange-ről.",
+          "studyContent": {
+            "mentalModel": "RabbitMQ-ban az exchange dönti el, mely bound queue-k kapják meg a published message-et. A queue tárolja a deliveryket a consumereknek, a binding pedig az exchange és queue közötti routing kapcsolatot fejezi ki.",
+            "problem": "Nem egyértelmű routing key vagy sok, egymástól független pattern egy queue-hoz kötése nehezen érthető ownershipet okoz. Hiányzó binding esetén a message csendben sehova sem kerülhet, túl széles fanout pedig váratlanul duplikálhat drága munkát.",
+            "example": "Booking eventek topic exchange-re érkeznek booking.confirmed és booking.cancelled key-jel. A notification queue booking.*-ra, az accounting queue csak booking.cancelledre bindol; mindegyik saját consumert, retry policyt és dead-letter configot kap.",
+            "howItWorks": [
+              "A routing szabályhoz illő exchange type-ot válassz: direct, topic, fanout vagy headers.",
+              "Stabil routing key-t definiálj üzleti jelentés, ne consumer-név alapján.",
+              "Minden independent workloadhoz vagy subscriptionhöz durable queue-t bindolj.",
+              "Queue-nként konfiguráld az acknowledgementet, prefetch-et, retry topologyt, dead-letteringet és observabilityt."
+            ],
+            "commonMistakes": [
+              "Azt gondolni, hogy az exchange tárolja a message-eket, amíg a consumer elkészül.",
+              "Egy queue-t használni több independent consumerhez, amelyek mindegyikének minden event kell.",
+              "A business effect durable befejezése előtt acknowledge-olni."
+            ],
+            "keyTerms": [
+              {
+                "term": "exchange",
+                "definition": "a published message-et route-oló RabbitMQ komponens"
+              },
+              {
+                "term": "binding",
+                "definition": "exchange-et queue-val összekötő szabály"
+              },
+              {
+                "term": "routing key",
+                "definition": "producer által adott érték, amellyel bizonyos exchange-ek queue-t választanak"
+              },
+              {
+                "term": "prefetch",
+                "definition": "egy consumernek elküldhető unacknowledged deliveryk maximális száma"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_message_delivery_guarantees",
+      "name": "Message Delivery Guarantees",
+      "description": "Message delivery guarantees describe what the broker and client protocol do when acknowledgements, processes, or networks fail. End-to-end business correctness still requires idempotency and durable state.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "message_queue",
+        "idempotency"
+      ],
+      "studyContent": {
+        "mentalModel": "At-most-once delivery may lose work but avoids redelivery. At-least-once delivery retries uncertain work and can create duplicates. Exactly-once is usually limited to a specific product boundary and does not automatically make external side effects happen once.",
+        "problem": "A broker may redeliver after a consumer completed a database update but crashed before acknowledging. A producer may also publish twice after losing confirmation. Without message identity and idempotent processing, these normal failure cases create duplicate business effects.",
+        "example": "A consumer updates a booking and records the event ID in the same database transaction. It acknowledges only after commit. If the message is redelivered, the unique event ID is already present, so the consumer returns success without applying the update again.",
+        "howItWorks": [
+          "Choose the acceptable loss and duplication semantics for the business operation.",
+          "Publish durably and use confirmation when losing a message is unacceptable.",
+          "Process and record message identity atomically with local side effects.",
+          "Acknowledge only after durable completion and handle redelivery, ordering, and poison messages explicitly."
+        ],
+        "commonMistakes": [
+          "Equating broker exactly-once terminology with exactly-once effects across databases and HTTP APIs.",
+          "Acknowledging a message before the transaction commits.",
+          "Using message delivery order as the only protection against stale updates."
+        ],
+        "keyTerms": [
+          {
+            "term": "at-most-once",
+            "definition": "a delivery model that avoids retries but can lose a message"
+          },
+          {
+            "term": "at-least-once",
+            "definition": "a delivery model that retries uncertainty and may deliver duplicates"
+          },
+          {
+            "term": "acknowledgement",
+            "definition": "a consumer signal that a delivery can be removed or advanced"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Message delivery guarantee-k",
+          "description": "A message delivery guarantee leírja, mit tesz a broker és client protocol acknowledgement-, process- vagy network failure esetén. Az end-to-end business correctnesshez továbbra is idempotency és durable state szükséges.",
+          "studyContent": {
+            "mentalModel": "Az at-most-once delivery elveszíthet munkát, de nem redeliverel. Az at-least-once bizonytalan munkát retryol, ezért duplicate-et okozhat. Az exactly-once általában egy product boundaryn belüli garancia, és nem teszi automatikusan egyszerivé a külső side effecteket.",
+            "problem": "A broker redeliverelhet, ha a consumer végrehajtotta a database update-et, de acknowledgement előtt crash-elt. A producer is kétszer publisholhat elveszett confirmation után. Message identity és idempotens processing nélkül ezek a normál failure case-ek duplicate üzleti hatást okoznak.",
+            "example": "A consumer ugyanabban a database transactionben update-eli a bookingot és rögzíti az event ID-t. Csak commit után acknowledge-ol. Redelivery esetén a unique event ID már létezik, ezért a consumer újabb update nélkül success-t ad.",
+            "howItWorks": [
+              "Válaszd ki az üzleti operation számára elfogadható loss- és duplication-semanticsot.",
+              "Durable módon publisholj és használj confirmationt, ha a message elvesztése elfogadhatatlan.",
+              "A message identityt és local side effectet atomikusan processzáld és rögzítsd.",
+              "Csak durable completion után acknowledge-olj, és explicit kezeld a redeliveryt, orderinget és poison message-et."
+            ],
+            "commonMistakes": [
+              "A broker exactly-once kifejezését azonosnak venni a database- és HTTP-side effectek exactly-once működésével.",
+              "Transaction commit előtt acknowledge-olni a message-et.",
+              "Csak a delivery orderre támaszkodni stale update ellen."
+            ],
+            "keyTerms": [
+              {
+                "term": "at-most-once",
+                "definition": "delivery model, amely nem retryol, de elveszíthet message-et"
+              },
+              {
+                "term": "at-least-once",
+                "definition": "delivery model, amely bizonytalanságnál retryol és duplicate-et adhat"
+              },
+              {
+                "term": "acknowledgement",
+                "definition": "consumer jelzés arról, hogy a delivery eltávolítható vagy az offset továbbléptethető"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_retry_dead_letter",
+      "name": "Retries and Dead-letter Handling",
+      "description": "A retry repeats work that may succeed later; a dead-letter path isolates work that cannot currently be processed safely. Effective policies classify errors and bound the time and load spent retrying.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "resilience",
+        "message_queue"
+      ],
+      "studyContent": {
+        "mentalModel": "Retries are useful for transient failures such as a short network interruption or temporary throttling. Permanent validation, authorization, and unsupported-data failures need correction, not repeated execution.",
+        "problem": "Immediate unlimited retries can create a retry storm that keeps a failing dependency overloaded. A single poison message can also block a partition or consume a worker repeatedly. Dead-lettering without ownership simply hides failed business work in another queue.",
+        "example": "A provider timeout is retried with exponential backoff and jitter up to a time budget. A malformed passenger record is sent directly to a dead-letter queue with error category, message ID, and safe context. An alert and replay tool let an operator correct the data and resubmit it idempotently.",
+        "howItWorks": [
+          "Classify failures as transient, permanent, rate-limited, conflict, or unknown.",
+          "Retry only safe operations with bounded attempts, backoff, jitter, and an overall deadline.",
+          "Move exhausted or non-retryable work to a recoverable dead-letter or quarantine path.",
+          "Alert an owner, preserve diagnostics, and provide controlled inspection, correction, and replay."
+        ],
+        "commonMistakes": [
+          "Retrying every exception with the same delay.",
+          "Using a dead-letter queue as permanent storage that nobody monitors.",
+          "Replaying failed messages without fixing the cause or preserving idempotency."
+        ],
+        "keyTerms": [
+          {
+            "term": "exponential backoff",
+            "definition": "increasing the wait between retries after repeated failure"
+          },
+          {
+            "term": "jitter",
+            "definition": "random variation added to retry delays so clients do not retry together"
+          },
+          {
+            "term": "dead-letter queue",
+            "definition": "a queue for deliveries that could not be processed under the normal policy"
+          },
+          {
+            "term": "poison message",
+            "definition": "input that repeatedly fails because its data or meaning is invalid"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Retry és dead-letter handling",
+          "description": "A retry megismétel olyan munkát, amely később sikerülhet; a dead-letter path izolálja azt, ami jelenleg nem dolgozható fel biztonságosan. Hatékony policy osztályozza a hibát és korlátozza a retryra fordított időt és loadot.",
+          "studyContent": {
+            "mentalModel": "A retry transient failure esetén hasznos, például rövid network interruption vagy átmeneti throttling mellett. Permanent validation-, authorization- és unsupported-data failure javítást igényel, nem ismételt végrehajtást.",
+            "problem": "Azonnali, korlátlan retry retry stormot hozhat létre, amely tovább terheli a hibás dependencyt. Egy poison message is blokkolhat partitiont vagy újra és újra lefoglalhat workert. Ownership nélküli dead-lettering csak egy másik queue-ba rejti a failed business worköt.",
+            "example": "Provider timeout exponential backoff és jitter mellett retryolódik egy time budgetig. Malformed passenger record közvetlenül dead-letter queue-ra kerül error categoryvel, message ID-val és safe contexttel. Alert és replay tool segíti a javítást és idempotens újraküldést.",
+            "howItWorks": [
+              "Osztályozd a failure-t transient, permanent, rate-limited, conflict vagy unknown kategóriába.",
+              "Csak safe operationt retryolj bounded attempttel, backoff-fal, jitterrel és overall deadline-nal.",
+              "Az exhausted vagy non-retryable munkát recoverable dead-letter vagy quarantine pathra mozgasd.",
+              "Riaszd az ownert, őrizd meg a diagnosztikát, és biztosíts kontrollált inspection, correction és replay folyamatot."
+            ],
+            "commonMistakes": [
+              "Minden exceptiont ugyanazzal a delayjel retryolni.",
+              "A dead-letter queue-t senki által nem monitorozott permanent storage-ként használni.",
+              "Failed message-et az ok javítása vagy idempotency nélkül replayelni."
+            ],
+            "keyTerms": [
+              {
+                "term": "exponential backoff",
+                "definition": "ismételt failure után növekvő retry várakozási idő"
+              },
+              {
+                "term": "jitter",
+                "definition": "véletlen eltérés a retry delayben, hogy a kliensek ne egyszerre próbálkozzanak"
+              },
+              {
+                "term": "dead-letter queue",
+                "definition": "normál policy mellett fel nem dolgozható deliveryk queue-ja"
+              },
+              {
+                "term": "poison message",
+                "definition": "olyan input, amely invalid adat vagy jelentés miatt ismételten hibázik"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_resilience_patterns",
+      "name": "Resilience Patterns",
+      "description": "Resilience is a system’s ability to continue providing an acceptable service when dependencies slow down, fail, or recover. It combines prevention of failure amplification with deliberate degradation and recovery.",
+      "category": "architecture",
+      "relatedTopicIds": [
+        "fault_tolerance",
+        "availability",
+        "observability"
+      ],
+      "studyContent": {
+        "mentalModel": "A resilient service assumes that networks, processes, databases, and providers will sometimes fail. It limits how far a failure spreads and defines what useful behavior remains during the problem.",
+        "problem": "Without timeouts and limits, requests can wait indefinitely, consume every connection, trigger retries, and cause a small dependency problem to become a system-wide outage. A fallback can also be harmful if it returns stale or misleading business data.",
+        "example": "When a flight-status provider becomes slow, the integration service uses a short timeout, bounded concurrency, and a circuit breaker. It returns a clearly marked cached status when policy permits, rejects excess work quickly, and probes recovery before gradually restoring live calls.",
+        "howItWorks": [
+          "Set deadlines and bounded concurrency so slow work cannot consume all resources.",
+          "Retry only transient and idempotent operations within a shared time budget.",
+          "Use circuit breakers, bulkheads, queues, rate limits, or load shedding to isolate pressure.",
+          "Define safe degraded behavior, health signals, recovery tests, and operational ownership."
+        ],
+        "commonMistakes": [
+          "Treating retries as the complete resilience strategy.",
+          "Using a circuit breaker without meaningful timeout and failure classification.",
+          "Returning stale fallback data without telling the caller or checking business safety."
+        ],
+        "keyTerms": [
+          {
+            "term": "circuit breaker",
+            "definition": "a control that temporarily stops calls to a repeatedly failing dependency"
+          },
+          {
+            "term": "bulkhead",
+            "definition": "separate resource limits that prevent one workload from consuming everything"
+          },
+          {
+            "term": "load shedding",
+            "definition": "rejecting excess work quickly to preserve service for accepted work"
+          },
+          {
+            "term": "graceful degradation",
+            "definition": "providing a reduced but honest service during failure"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Resilience patternök",
+          "description": "A resilience azt jelenti, hogy a rendszer dependency-lassulás, failure vagy recovery közben is elfogadható service-t nyújt. A failure amplification megelőzését, deliberate degradationt és recoveryt kombinálja.",
+          "studyContent": {
+            "mentalModel": "Egy resilient service abból indul ki, hogy network, process, database és provider időnként hibázik. Korlátozza a failure terjedését, és definiálja, milyen hasznos viselkedés marad a probléma alatt.",
+            "problem": "Timeout és limit nélkül a requestek korlátlanul várhatnak, minden connectiont elfogyaszthatnak, retryt indíthatnak, és egy kis dependency-problémából system-wide outage lehet. A fallback is káros lehet, ha stale vagy félrevezető üzleti adatot ad.",
+            "example": "Amikor a flight-status provider lassú, az integration service rövid timeoutot, bounded concurrencyt és circuit breakert használ. Policy szerint egyértelműen jelölt cached statust ad, gyorsan elutasítja az excess worköt, majd recovery probe után fokozatosan állítja vissza a live hívásokat.",
+            "howItWorks": [
+              "Deadline-t és bounded concurrencyt állíts, hogy a lassú munka ne fogyasszon el minden resource-t.",
+              "Csak transient és idempotens operationt retryolj közös time budgeten belül.",
+              "Circuit breakert, bulkheadet, queue-t, rate limitet vagy load sheddinget használj pressure isolationre.",
+              "Definiálj safe degraded behaviort, health signalokat, recovery testet és operational ownershipet."
+            ],
+            "commonMistakes": [
+              "A retryt teljes resilience stratégiának tekinteni.",
+              "Circuit breakert használni értelmes timeout és failure classification nélkül.",
+              "Stale fallback adatot adni a caller tájékoztatása és business-safety ellenőrzés nélkül."
+            ],
+            "keyTerms": [
+              {
+                "term": "circuit breaker",
+                "definition": "kontroll, amely ideiglenesen leállítja az ismételten hibázó dependency hívását"
+              },
+              {
+                "term": "bulkhead",
+                "definition": "külön resource limit, amely megakadályozza, hogy egy workload mindent elfogyasszon"
+              },
+              {
+                "term": "load shedding",
+                "definition": "excess work gyors elutasítása az elfogadott munka védelmében"
+              },
+              {
+                "term": "graceful degradation",
+                "definition": "csökkentett, de őszinte service nyújtása failure közben"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_production_debugging",
+      "name": "Production Debugging Across Services",
+      "description": "Production debugging across services reconstructs one failed request or message from observable evidence. The goal is to narrow the fault domain quickly without changing production blindly.",
+      "category": "observability",
+      "relatedTopicIds": [
+        "distributed_tracing",
+        "logging",
+        "metrics"
+      ],
+      "studyContent": {
+        "mentalModel": "Distributed debugging combines metrics, structured logs, traces, deployment history, and dependency evidence to answer where a request slowed or failed. A correlation or trace ID connects records across service boundaries.",
+        "problem": "Looking at isolated logs can confuse cause and symptom. Turning on verbose logging or making several fixes at once can add load, expose sensitive data, and destroy the evidence needed to identify the real failure.",
+        "example": "A booking API returns intermittent 502 responses. The on-call engineer confirms the start time and affected routes, follows trace IDs through the gateway and Node.js service, sees database latency is normal, and finds one provider span timing out only on the new deployment. Traffic is rolled back while evidence is preserved.",
+        "howItWorks": [
+          "Define the user-visible symptom, time window, scope, and recent changes.",
+          "Check service-level metrics and traces to identify the failing or slow boundary.",
+          "Use structured logs and safe identifiers to inspect representative requests, errors, and dependency responses.",
+          "Mitigate with the smallest reversible action, then verify recovery and complete root-cause and prevention work."
+        ],
+        "commonMistakes": [
+          "Searching logs without an exact time window, request identity, or hypothesis.",
+          "Assuming the last error in the chain is the root cause.",
+          "Changing timeouts, retries, and resources simultaneously before measuring which boundary failed."
+        ],
+        "keyTerms": [
+          {
+            "term": "correlation ID",
+            "definition": "an identifier copied across calls and messages to connect related records"
+          },
+          {
+            "term": "distributed trace",
+            "definition": "a timed tree of operations performed across services for one request"
+          },
+          {
+            "term": "fault domain",
+            "definition": "the component or boundary currently suspected of causing the failure"
+          },
+          {
+            "term": "mitigation",
+            "definition": "a reversible action that reduces user impact before the permanent fix"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Production debugging service-eken keresztül",
+          "description": "A service-eken átívelő production debugging observable evidence alapján rekonstruál egy failed requestet vagy message-et. A cél a fault domain gyors szűkítése, nem a production vak módosítása.",
+          "studyContent": {
+            "mentalModel": "A distributed debugging metricset, structured logot, trace-t, deployment historyt és dependency evidence-et kombinál annak megállapítására, hol lassult vagy hibázott a request. Correlation vagy trace ID köti össze a service boundarykon átmenő rekordokat.",
+            "problem": "Izolált logokból könnyű összekeverni az okot és a tünetet. Verbose logging bekapcsolása vagy több fix egyidejű végrehajtása plusz loadot, sensitive-data leaket és az evidence elvesztését okozhatja.",
+            "example": "Egy booking API időnként 502-t ad. Az on-call rögzíti a kezdőidőt és érintett route-okat, trace ID-val végigköveti a gatewayt és Node.js service-t, normális database latencyt lát, majd az új deploymentnél egy provider span timeoutját találja. Rollback történik, az evidence megmarad.",
+            "howItWorks": [
+              "Definiáld a user-visible symptomot, time window-t, scope-ot és recent change-eket.",
+              "Service-level metrics és trace alapján azonosítsd a failing vagy slow boundaryt.",
+              "Structured loggal és safe identifierrel vizsgáld a representative requesteket, errorokat és dependency response-okat.",
+              "A legkisebb reversible actionnel mitigálj, majd ellenőrizd a recoveryt, és végezz root-cause és prevention munkát."
+            ],
+            "commonMistakes": [
+              "Pontos time window, request identity vagy hypothesis nélkül logot keresni.",
+              "A chain utolsó errorját automatikusan root cause-nak tekinteni.",
+              "Timeoutot, retryt és resource-ot egyszerre módosítani annak mérése nélkül, mely boundary hibázott."
+            ],
+            "keyTerms": [
+              {
+                "term": "correlation ID",
+                "definition": "hívásokon és message-eken át másolt azonosító a kapcsolódó rekordok összekötésére"
+              },
+              {
+                "term": "distributed trace",
+                "definition": "egy request több service-en át végzett operationjeinek időzített fája"
+              },
+              {
+                "term": "fault domain",
+                "definition": "a failure lehetséges okaként éppen vizsgált komponens vagy boundary"
+              },
+              {
+                "term": "mitigation",
+                "definition": "user impactet csökkentő reversible action a permanent fix előtt"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "luxair_int_queue_vs_pubsub_001",
+      "title": "Queue versus publish-subscribe",
+      "prompt": "What is the practical difference between a work queue and publish-subscribe messaging, and give a suitable use case for each.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_queue_vs_pubsub"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain recipient semantics, ownership, and independent failure handling.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_messaging_recipient",
+          "label": "Explains recipient semantics",
+          "description": "States that competing consumers share one queue delivery, while each subscription receives its own event stream.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "competing consumers",
+            "one consumer",
+            "each subscription",
+            "independent copy",
+            "shared queue"
+          ]
+        },
+        {
+          "id": "luxair_int_messaging_command_event",
+          "label": "Connects command and event intent",
+          "description": "Uses queues naturally for owned work or commands and pub-sub for facts that several independent capabilities may react to.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "work command",
+            "one owner",
+            "domain event",
+            "multiple subscribers",
+            "independent reactions"
+          ]
+        },
+        {
+          "id": "luxair_int_messaging_failure_isolation",
+          "label": "Mentions independent operation",
+          "description": "Recognizes separate offsets, retries, scaling, and dead-letter handling per subscription or consumer group.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "independent retry",
+            "consumer group",
+            "separate scaling",
+            "dead letter",
+            "independent failure"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_queue_pubsub_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What goes wrong if email and analytics consumers compete on the same queue?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Queue vagy publish-subscribe",
+          "prompt": "Mi a gyakorlati különbség a work queue és a publish-subscribe messaging között? Mondj megfelelő use case-t mindkettőre.",
+          "answerStructureHint": "Magyarázd el a recipient semanticsot, ownershipet és independent failure handlingot.",
+          "expectedPoints": {
+            "luxair_int_messaging_recipient": {
+              "label": "Elmagyarázza a recipient semanticsot",
+              "description": "Kimondja, hogy a competing consumerek egy queue deliveryt osztanak, míg minden subscription saját event streamet kap."
+            },
+            "luxair_int_messaging_command_event": {
+              "label": "Összeköti a command és event szándékát",
+              "description": "A queue-t owned workhöz vagy commandhoz, a pub-subot több független capability által feldolgozható tényhez kapcsolja."
+            },
+            "luxair_int_messaging_failure_isolation": {
+              "label": "Megemlíti a független működést",
+              "description": "Felismeri a subscriptionönként vagy consumer grouponként külön offsetet, retryt, scalinget és dead-letter kezelést."
+            }
+          },
+          "followUps": {
+            "luxair_int_queue_pubsub_followup": "Mi történik rosszul, ha az email- és analytics-consumer ugyanazon a queue-n versenyez?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_queue_vs_pubsub_002",
+      "title": "Choosing a messaging model",
+      "prompt": "A booking update must trigger customer notification, loyalty points, audit storage, and one inventory recalculation. How would you model the messages?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "luxair_int_queue_vs_pubsub"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate event reactions from owned work and define message contracts.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_messaging_booking_event",
+          "label": "Publishes the business event",
+          "description": "Publishes a BookingUpdated or equivalent event so independent notification, loyalty, and audit subscriptions each receive it.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "booking updated event",
+            "publish event",
+            "separate subscriptions",
+            "notification subscriber",
+            "audit subscriber"
+          ]
+        },
+        {
+          "id": "luxair_int_messaging_inventory_owner",
+          "label": "Gives recalculation one owner",
+          "description": "Uses one command queue or one subscribed inventory capability so competing workers share the recalculation workload without duplicate ownership.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "inventory command",
+            "single owner",
+            "work queue",
+            "competing workers",
+            "recalculate inventory"
+          ]
+        },
+        {
+          "id": "luxair_int_messaging_contracts",
+          "label": "Defines reliable contracts",
+          "description": "Includes stable IDs, schema versioning, timestamps, correlation or causation IDs, idempotency, and independent retry policies.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "event id",
+            "schema version",
+            "correlation id",
+            "causation id",
+            "idempotent consumer",
+            "retry policy"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_messaging_model_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would inventory recalculation be a command or an event reaction? Defend one design.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Messaging model kiválasztása",
+          "prompt": "Egy booking update customer notificationt, loyalty pointot, audit storage-et és egy inventory recalculationt indít. Hogyan modelleznéd a message-eket?",
+          "answerStructureHint": "Válaszd szét az event reactionöket és az owned worköt, majd definiáld a message contractokat.",
+          "expectedPoints": {
+            "luxair_int_messaging_booking_event": {
+              "label": "Publikálja az üzleti eventet",
+              "description": "BookingUpdated vagy hasonló eventet publishol, hogy a független notification-, loyalty- és audit-subscription mind megkapja."
+            },
+            "luxair_int_messaging_inventory_owner": {
+              "label": "Egy ownert ad a recalculationnek",
+              "description": "Egy command queue-t vagy egy subscribed inventory capabilityt használ, így competing workerek osztják a munkát duplicate ownership nélkül."
+            },
+            "luxair_int_messaging_contracts": {
+              "label": "Reliable contractokat definiál",
+              "description": "Stabil ID-t, schema versioninget, timestampet, correlation/causation ID-t, idempotencyt és independent retry policyt tartalmaz."
+            }
+          },
+          "followUps": {
+            "luxair_int_messaging_model_followup": "Az inventory recalculation command vagy event reaction legyen? Védd meg az egyik designt."
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_rabbitmq_routing_001",
+      "title": "RabbitMQ routing model",
+      "prompt": "Explain the relationship between producers, exchanges, bindings, queues, and consumers in RabbitMQ.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_rabbitmq_routing"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Walk through a message from publish to acknowledgement.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_rabbit_publish_exchange",
+          "label": "Explains publish and routing",
+          "description": "States that producers publish to an exchange and the exchange evaluates type, routing key, and bindings.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "publish to exchange",
+            "routing key",
+            "exchange type",
+            "evaluate bindings",
+            "message routing"
+          ]
+        },
+        {
+          "id": "luxair_int_rabbit_queue_storage",
+          "label": "Explains queue and consumers",
+          "description": "States that routed messages enter queues and competing consumers receive deliveries from a queue.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "message enters queue",
+            "consumer reads queue",
+            "competing consumers",
+            "queue stores",
+            "delivery"
+          ]
+        },
+        {
+          "id": "luxair_int_rabbit_ack",
+          "label": "Explains acknowledgement",
+          "description": "Describes acknowledgement after successful durable processing and redelivery when a delivery is rejected or the consumer disappears.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "manual acknowledgement",
+            "ack after processing",
+            "redelivery",
+            "nack",
+            "consumer failure"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_rabbit_routing_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What happens when an exchange cannot route a published message to any queue?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "RabbitMQ routing model",
+          "prompt": "Magyarázd el a producer, exchange, binding, queue és consumer kapcsolatát RabbitMQ-ban.",
+          "answerStructureHint": "Kövesd végig a message útját a publishtól az acknowledgementig.",
+          "expectedPoints": {
+            "luxair_int_rabbit_publish_exchange": {
+              "label": "Elmagyarázza a publish és routing működését",
+              "description": "Kimondja, hogy a producer exchange-re publishol, az exchange pedig type, routing key és binding alapján dönt."
+            },
+            "luxair_int_rabbit_queue_storage": {
+              "label": "Elmagyarázza a queue és consumer szerepét",
+              "description": "Kimondja, hogy a routed message queue-ba kerül, és a competing consumerek onnan kapnak deliveryt."
+            },
+            "luxair_int_rabbit_ack": {
+              "label": "Elmagyarázza az acknowledgementet",
+              "description": "Leírja a sikeres durable processing utáni acknowledgementet és a redeliveryt rejection vagy consumer failure esetén."
+            }
+          },
+          "followUps": {
+            "luxair_int_rabbit_routing_followup": "Mi történik, ha egy exchange egy published message-et egyetlen queue-ra sem tud route-olni?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_rabbitmq_routing_002",
+      "title": "Designing RabbitMQ event routing",
+      "prompt": "Design RabbitMQ routing for several booking event types consumed independently by notifications, accounting, and analytics.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "luxair_int_rabbitmq_routing"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Choose exchange and routing keys, then isolate queues and operational policies.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_rabbit_topic_design",
+          "label": "Uses business routing keys",
+          "description": "Uses a topic or appropriate exchange and stable keys such as booking.confirmed or booking.cancelled.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "topic exchange",
+            "booking confirmed",
+            "routing key pattern",
+            "business event key",
+            "wildcard binding"
+          ]
+        },
+        {
+          "id": "luxair_int_rabbit_independent_queues",
+          "label": "Creates independent queues",
+          "description": "Gives notifications, accounting, and analytics separate queues so each receives, scales, retries, and fails independently.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "separate queues",
+            "independent consumers",
+            "independent retry",
+            "separate scaling",
+            "failure isolation"
+          ]
+        },
+        {
+          "id": "luxair_int_rabbit_operations",
+          "label": "Includes operational controls",
+          "description": "Defines durability, publisher confirmation, mandatory routing or alternate exchange, manual ack, prefetch, DLQ, and metrics as needed.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "publisher confirms",
+            "durable queue",
+            "mandatory flag",
+            "alternate exchange",
+            "manual ack",
+            "prefetch"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_rabbit_design_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you change the topology if analytics may be offline for several days?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "RabbitMQ event routing tervezése",
+          "prompt": "Tervezz RabbitMQ routingot több booking event type-hoz, amelyeket a notification, accounting és analytics egymástól függetlenül fogyaszt.",
+          "answerStructureHint": "Válassz exchange-et és routing key-t, majd izoláld a queue-kat és operational policykat.",
+          "expectedPoints": {
+            "luxair_int_rabbit_topic_design": {
+              "label": "Üzleti routing key-ket használ",
+              "description": "Topic vagy megfelelő exchange-et és stabil key-ket használ, például booking.confirmed vagy booking.cancelled."
+            },
+            "luxair_int_rabbit_independent_queues": {
+              "label": "Independent queue-kat készít",
+              "description": "A notification, accounting és analytics külön queue-t kap, így mindegyik függetlenül fogad, scale-el, retryol és hibázik."
+            },
+            "luxair_int_rabbit_operations": {
+              "label": "Operational controlokat tartalmaz",
+              "description": "Szükség szerint durabilityt, publisher confirmot, mandatory routingot vagy alternate exchange-et, manual ackot, prefetch-et, DLQ-t és metricset definiál."
+            }
+          },
+          "followUps": {
+            "luxair_int_rabbit_design_followup": "Hogyan változtatnád meg a topologyt, ha az analytics több napig offline lehet?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_message_delivery_guarantees_001",
+      "title": "At-most-once, at-least-once, and exactly-once",
+      "prompt": "Compare at-most-once, at-least-once, and exactly-once delivery. What can an application truly rely on?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "luxair_int_message_delivery_guarantees"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate broker delivery from end-to-end business effects.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_delivery_at_most",
+          "label": "Explains at-most-once",
+          "description": "States that processing is not retried after uncertainty, so duplicates are reduced but messages or work can be lost.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "at most once",
+            "possible message loss",
+            "no redelivery",
+            "ack before processing",
+            "loss over duplicates"
+          ]
+        },
+        {
+          "id": "luxair_int_delivery_at_least",
+          "label": "Explains at-least-once",
+          "description": "States that failed or uncertain deliveries are retried, so loss is reduced but duplicate delivery and processing must be expected.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "at least once",
+            "redelivery",
+            "duplicate message",
+            "retry delivery",
+            "idempotent consumer"
+          ]
+        },
+        {
+          "id": "luxair_int_delivery_exact_scope",
+          "label": "Scopes exactly-once correctly",
+          "description": "Explains that exactly-once guarantees are bounded to a broker or transaction model and do not automatically cover external systems.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "exactly once scope",
+            "broker boundary",
+            "transactional messaging",
+            "external side effect",
+            "end to end idempotency"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_delivery_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Give a concrete crash window that causes duplicate processing under at-least-once delivery.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "At-most-once, at-least-once és exactly-once",
+          "prompt": "Hasonlítsd össze az at-most-once, at-least-once és exactly-once deliveryt. Mire támaszkodhat ténylegesen az alkalmazás?",
+          "answerStructureHint": "Válaszd szét a broker deliveryt és az end-to-end business effectet.",
+          "expectedPoints": {
+            "luxair_int_delivery_at_most": {
+              "label": "Elmagyarázza az at-most-once modellt",
+              "description": "Kimondja, hogy bizonytalanság után nincs retry, ezért kevesebb duplicate mellett message vagy munka elveszhet."
+            },
+            "luxair_int_delivery_at_least": {
+              "label": "Elmagyarázza az at-least-once modellt",
+              "description": "Kimondja, hogy failed vagy uncertain delivery retryolódik, ezért kisebb loss mellett duplicate deliveryvel és processinggel számolni kell."
+            },
+            "luxair_int_delivery_exact_scope": {
+              "label": "Helyesen korlátozza az exactly-once scope-ját",
+              "description": "Elmagyarázza, hogy az exactly-once garancia broker- vagy transaction modellen belüli, és nem fedi automatikusan a külső rendszereket."
+            }
+          },
+          "followUps": {
+            "luxair_int_delivery_followup": "Mondj konkrét crash window-t, amely at-least-once delivery mellett duplicate processinget okoz."
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_message_delivery_guarantees_002",
+      "title": "Acknowledgement and transaction ordering",
+      "prompt": "When should a consumer acknowledge a message relative to its database transaction, and what failure cases remain?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_int_message_delivery_guarantees"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Explain commit-before-ack, duplicates, deduplication, and poison failures.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_ack_after_commit",
+          "label": "Acknowledges after durable commit",
+          "description": "Commits the required local side effect and processed-message record before acknowledging the delivery.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "commit before ack",
+            "ack after commit",
+            "durable side effect",
+            "processed message record",
+            "manual acknowledgement"
+          ]
+        },
+        {
+          "id": "luxair_int_ack_duplicate_window",
+          "label": "Recognizes the duplicate window",
+          "description": "Explains that a crash after commit but before acknowledgement leads to redelivery and therefore requires idempotency.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "crash after commit",
+            "before acknowledgement",
+            "message redelivery",
+            "duplicate window",
+            "idempotent processing"
+          ]
+        },
+        {
+          "id": "luxair_int_ack_failure_policy",
+          "label": "Handles other failures",
+          "description": "Defines retryable versus permanent errors, rollback, nack or reject behavior, maximum attempts, dead-lettering, and alerting.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "rollback transaction",
+            "nack message",
+            "permanent failure",
+            "maximum attempts",
+            "dead letter",
+            "alerting"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_ack_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What changes if the side effect is an email or external payment rather than a database transaction?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Acknowledgement és transaction sorrend",
+          "prompt": "Mikor acknowledge-oljon a consumer a database transactionhöz képest, és milyen failure case-ek maradnak?",
+          "answerStructureHint": "Magyarázd el a commit-before-ack sorrendet, duplicate-et, deduplicationt és poison failure-t.",
+          "expectedPoints": {
+            "luxair_int_ack_after_commit": {
+              "label": "Durable commit után acknowledge-ol",
+              "description": "A szükséges local side effectet és processed-message recordot commitolja az acknowledgement előtt."
+            },
+            "luxair_int_ack_duplicate_window": {
+              "label": "Felismeri a duplicate window-t",
+              "description": "Elmagyarázza, hogy commit utáni, de acknowledgement előtti crash redeliveryt okoz, ezért idempotency szükséges."
+            },
+            "luxair_int_ack_failure_policy": {
+              "label": "Más failure-öket is kezel",
+              "description": "Definiálja a retryable és permanent errort, rollbacket, nack/reject viselkedést, maximum attemptet, dead-letteringet és alertinget."
+            }
+          },
+          "followUps": {
+            "luxair_int_ack_followup": "Mi változik, ha a side effect nem database transaction, hanem email vagy external payment?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_retry_dead_letter_001",
+      "title": "Designing a retry policy",
+      "prompt": "How would you design a retry policy for calls to a slow or unstable downstream service?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_int_retry_dead_letter"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Classify errors, prove retry safety, bound attempts, and protect the dependency.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_retry_classification",
+          "label": "Classifies retryable failures",
+          "description": "Retries transient network, timeout, throttling, or selected 5xx failures and avoids retrying validation, authentication, and deterministic business errors.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "transient error",
+            "timeout retry",
+            "rate limit",
+            "selected 5xx",
+            "do not retry validation",
+            "authentication error"
+          ]
+        },
+        {
+          "id": "luxair_int_retry_safety_budget",
+          "label": "Ensures safety and bounded effort",
+          "description": "Requires idempotency, sets per-attempt timeouts, maximum attempts or deadline, exponential backoff, and jitter.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "idempotent operation",
+            "per attempt timeout",
+            "maximum attempts",
+            "retry deadline",
+            "exponential backoff",
+            "jitter"
+          ]
+        },
+        {
+          "id": "luxair_int_retry_dependency_protection",
+          "label": "Protects the dependency and caller",
+          "description": "Uses circuit breaking, concurrency or rate limits, cancellation, fallback, and metrics so retries do not amplify an outage.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "circuit breaker",
+            "concurrency limit",
+            "retry storm",
+            "fallback",
+            "cancellation",
+            "retry metrics"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_retry_policy_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How do you avoid multiplying retries across several service layers?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Retry policy tervezése",
+          "prompt": "Hogyan terveznél retry policyt egy lassú vagy instabil downstream service hívásaihoz?",
+          "answerStructureHint": "Osztályozd a hibát, bizonyítsd a retry biztonságát, korlátozd az attemptet, és védd a dependencyt.",
+          "expectedPoints": {
+            "luxair_int_retry_classification": {
+              "label": "Osztályozza a retryable failure-öket",
+              "description": "Transient network-, timeout-, throttling- vagy kiválasztott 5xx failure-t retryol, validation-, authentication- és deterministic business errort nem."
+            },
+            "luxair_int_retry_safety_budget": {
+              "label": "Biztonságos és bounded retryt használ",
+              "description": "Idempotencyt követel, per-attempt timeoutot, maximum attemptet vagy deadline-t, exponential backoffot és jittert állít."
+            },
+            "luxair_int_retry_dependency_protection": {
+              "label": "Védi a dependencyt és hívót",
+              "description": "Circuit breakert, concurrency/rate limitet, cancellationt, fallbacket és metricset használ, hogy a retry ne erősítse fel az outage-et."
+            }
+          },
+          "followUps": {
+            "luxair_int_retry_policy_followup": "Hogyan akadályozod meg a retryk megsokszorozódását több service-layeren keresztül?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_retry_dead_letter_002",
+      "title": "Operating a dead-letter queue",
+      "prompt": "What information and operational process should surround a dead-letter queue so failed messages are recoverable?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_int_retry_dead_letter"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Treat the DLQ as a repair workflow, not a dump.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_dlq_diagnostics",
+          "label": "Preserves useful diagnostics",
+          "description": "Keeps original message identity and payload reference plus error category, attempts, timestamps, source, schema version, and correlation context without leaking secrets.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "original message id",
+            "error category",
+            "attempt count",
+            "schema version",
+            "correlation id",
+            "safe diagnostics"
+          ]
+        },
+        {
+          "id": "luxair_int_dlq_ownership",
+          "label": "Defines ownership and alerting",
+          "description": "Assigns an owner, metrics, alert thresholds, age or backlog SLOs, dashboards, and a triage procedure.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "queue owner",
+            "dlq alert",
+            "message age",
+            "backlog metric",
+            "triage runbook",
+            "service level objective"
+          ]
+        },
+        {
+          "id": "luxair_int_dlq_replay",
+          "label": "Provides controlled replay",
+          "description": "Supports inspection, cause correction, filtering, dry run or staged replay, idempotency, authorization, and audit history.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "replay tool",
+            "fix root cause",
+            "staged replay",
+            "idempotent replay",
+            "access control",
+            "audit trail"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_dlq_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you replay ten thousand messages without causing a second outage?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Dead-letter queue üzemeltetése",
+          "prompt": "Milyen információ és operational process szükséges egy dead-letter queue köré, hogy a failed message-ek helyreállíthatók legyenek?",
+          "answerStructureHint": "A DLQ-t repair workflow-ként kezeld, ne szemétlerakóként.",
+          "expectedPoints": {
+            "luxair_int_dlq_diagnostics": {
+              "label": "Hasznos diagnosztikát őriz meg",
+              "description": "Secret leak nélkül megőrzi az original message identityt és payload reference-et, error categoryt, attempt countot, timestampet, source-ot, schema versiont és correlation contextet."
+            },
+            "luxair_int_dlq_ownership": {
+              "label": "Ownershipet és alertinget definiál",
+              "description": "Ownert, metricset, alert thresholdot, age/backlog SLO-t, dashboardot és triage procedure-t rendel hozzá."
+            },
+            "luxair_int_dlq_replay": {
+              "label": "Kontrollált replayt biztosít",
+              "description": "Inspectiont, root cause javítást, filteringet, dry runt vagy staged replayt, idempotencyt, authorizationt és audit historyt támogat."
+            }
+          },
+          "followUps": {
+            "luxair_int_dlq_followup": "Hogyan replayelnél tízezer message-et anélkül, hogy második outage-et okoznál?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_resilience_patterns_001",
+      "title": "Resilience for a failing dependency",
+      "prompt": "A critical third-party service becomes slow and intermittently unavailable. Which resilience techniques would you combine and why?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "system_design"
+      ],
+      "topicIds": [
+        "luxair_int_resilience_patterns"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Start with timeout and capacity limits, then retries, isolation, degradation, and recovery.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_resilience_deadlines",
+          "label": "Uses deadlines and bounded resources",
+          "description": "Sets connection and request timeouts, an overall deadline, bounded concurrency, and queue or pool limits.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "request timeout",
+            "overall deadline",
+            "bounded concurrency",
+            "connection limit",
+            "bounded queue",
+            "resource limit"
+          ]
+        },
+        {
+          "id": "luxair_int_resilience_amplification",
+          "label": "Prevents failure amplification",
+          "description": "Uses selective bounded retries with jitter, circuit breaking, bulkheads, rate limiting, or load shedding to avoid retry storms and exhaustion.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "selective retry",
+            "circuit breaker",
+            "bulkhead",
+            "load shedding",
+            "retry storm",
+            "rate limit"
+          ]
+        },
+        {
+          "id": "luxair_int_resilience_degradation_recovery",
+          "label": "Defines degradation and recovery",
+          "description": "Chooses business-safe fallback or explicit failure, communicates stale state, monitors dependency health, and restores traffic gradually.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "graceful degradation",
+            "cached fallback",
+            "explicit failure",
+            "stale indicator",
+            "health probe",
+            "gradual recovery"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_resilience_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How do you choose a timeout value instead of using a round number?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Resilience hibázó dependency mellett",
+          "prompt": "Egy kritikus third-party service lassúvá és időnként elérhetetlenné válik. Milyen resilience technikákat kombinálnál, és miért?",
+          "answerStructureHint": "Timeouttal és capacity limittel kezdj, majd térj ki retryra, isolationre, degradationre és recoveryre.",
+          "expectedPoints": {
+            "luxair_int_resilience_deadlines": {
+              "label": "Deadline-t és bounded resource-ot használ",
+              "description": "Connection- és request timeoutot, overall deadline-t, bounded concurrencyt és queue/pool limitet állít."
+            },
+            "luxair_int_resilience_amplification": {
+              "label": "Megakadályozza a failure amplificationt",
+              "description": "Szelektív bounded retryt jitterrel, circuit breakert, bulkheadet, rate limitet vagy load sheddinget használ retry storm és exhaustion ellen."
+            },
+            "luxair_int_resilience_degradation_recovery": {
+              "label": "Degradationt és recoveryt definiál",
+              "description": "Business-safe fallbacket vagy explicit failure-t választ, jelzi a stale state-et, monitorozza a dependency healtht és fokozatosan állítja vissza a trafficet."
+            }
+          },
+          "followUps": {
+            "luxair_int_resilience_followup": "Hogyan választasz timeoutértéket egy kerek szám önkényes használata helyett?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_resilience_patterns_002",
+      "title": "Circuit breaker behavior",
+      "prompt": "Explain how a circuit breaker works, what it protects, and what it does not solve by itself.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_resilience_patterns"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover states, threshold, probing, resource protection, and limitations.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_breaker_states",
+          "label": "Explains breaker states",
+          "description": "Describes closed calls, opening after classified failures, fast rejection while open, and limited probes in half-open state.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "closed state",
+            "open state",
+            "half open",
+            "failure threshold",
+            "fail fast",
+            "probe request"
+          ]
+        },
+        {
+          "id": "luxair_int_breaker_protection",
+          "label": "Explains protection goal",
+          "description": "States that the breaker reduces repeated load and waiting on an unhealthy dependency and gives it time to recover.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "protect dependency",
+            "stop repeated calls",
+            "reduce waiting",
+            "recovery time",
+            "prevent exhaustion"
+          ]
+        },
+        {
+          "id": "luxair_int_breaker_limits",
+          "label": "Explains limitations",
+          "description": "Notes that it still needs timeouts, correct failure classification, fallback or error semantics, concurrency limits, and observability.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "still need timeout",
+            "failure classification",
+            "fallback policy",
+            "concurrency limit",
+            "breaker metrics"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_breaker_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which failures should count toward opening the circuit, and which should not?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Circuit breaker működése",
+          "prompt": "Magyarázd el, hogyan működik a circuit breaker, mit véd, és mit nem old meg önmagában.",
+          "answerStructureHint": "Térj ki a state-ekre, thresholdra, probingra, resource protectionre és limitationre.",
+          "expectedPoints": {
+            "luxair_int_breaker_states": {
+              "label": "Elmagyarázza a breaker state-eket",
+              "description": "Leírja a closed hívásokat, classified failure utáni openinget, open állapotú fast rejectiont és half-open limited probe-ot."
+            },
+            "luxair_int_breaker_protection": {
+              "label": "Elmagyarázza a védelem célját",
+              "description": "Kimondja, hogy a breaker csökkenti az unhealthy dependency ismételt loadját és várakozását, valamint recovery-időt biztosít."
+            },
+            "luxair_int_breaker_limits": {
+              "label": "Elmagyarázza a korlátokat",
+              "description": "Megjegyzi, hogy továbbra is kell timeout, helyes failure classification, fallback/error semantics, concurrency limit és observability."
+            }
+          },
+          "followUps": {
+            "luxair_int_breaker_followup": "Mely failure-ök számítsanak bele a circuit openingbe, és melyek ne?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_production_debugging_001",
+      "title": "Debugging a cross-service production issue",
+      "prompt": "An API intermittently fails across several services and a third-party dependency. Walk through your investigation.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "luxair_int_production_debugging"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define symptom and scope, follow evidence across boundaries, mitigate, and verify.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_debug_scope",
+          "label": "Defines scope and timeline",
+          "description": "Establishes exact symptoms, status or error types, affected users or routes, start time, frequency, and recent deployments or configuration changes.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "exact time window",
+            "affected routes",
+            "error rate",
+            "recent deployment",
+            "scope incident",
+            "reproduction pattern"
+          ]
+        },
+        {
+          "id": "luxair_int_debug_trace",
+          "label": "Correlates evidence across services",
+          "description": "Uses trace or correlation IDs, latency and error metrics, structured logs, dependency spans, and message identifiers to locate the failing boundary.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "trace id",
+            "correlation id",
+            "structured logs",
+            "dependency span",
+            "latency metrics",
+            "message id"
+          ]
+        },
+        {
+          "id": "luxair_int_debug_mitigate",
+          "label": "Mitigates and verifies safely",
+          "description": "Chooses a small reversible mitigation such as rollback, feature disablement, traffic shift, or circuit opening, then checks user and system metrics.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "rollback deployment",
+            "feature flag off",
+            "traffic shift",
+            "reversible change",
+            "verify recovery",
+            "monitor impact"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_debug_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What evidence would distinguish a slow database from an exhausted connection pool?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Cross-service production issue hibakeresése",
+          "prompt": "Egy API több service-en és egy third-party dependencyn keresztül időnként hibázik. Vezesd végig a vizsgálatodat.",
+          "answerStructureHint": "Definiáld a symptomot és scope-ot, kövesd az evidence-et boundarykon át, mitigálj és ellenőrizz.",
+          "expectedPoints": {
+            "luxair_int_debug_scope": {
+              "label": "Definiálja a scope-ot és timeline-t",
+              "description": "Rögzíti a pontos symptomot, status/error type-ot, érintett usert vagy route-ot, start time-ot, frequencyt és recent deployment/config change-et."
+            },
+            "luxair_int_debug_trace": {
+              "label": "Összekapcsolja az evidence-et service-eken át",
+              "description": "Trace vagy correlation ID-t, latency/error metricset, structured logot, dependency spant és message ID-t használ a failing boundary megtalálására."
+            },
+            "luxair_int_debug_mitigate": {
+              "label": "Biztonságosan mitigál és ellenőriz",
+              "description": "Kis, reversible mitigationt választ, például rollbacket, feature kikapcsolást, traffic shiftet vagy circuit openinget, majd user- és system-metricset ellenőriz."
+            }
+          },
+          "followUps": {
+            "luxair_int_debug_followup": "Milyen evidence különbözteti meg a lassú database-t az exhausted connection pooltól?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_production_debugging_002",
+      "title": "Improving error observability",
+      "prompt": "What information should an integration service record so production failures can be diagnosed without leaking sensitive data?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "design_review"
+      ],
+      "topicIds": [
+        "luxair_int_production_debugging"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Balance diagnostic context, correlation, metrics, traces, and privacy.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_observe_structured_context",
+          "label": "Records structured context",
+          "description": "Uses timestamp, service and version, operation, error category and code, duration, dependency, attempt, and outcome as structured fields.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "structured fields",
+            "service version",
+            "error category",
+            "operation name",
+            "duration",
+            "retry attempt"
+          ]
+        },
+        {
+          "id": "luxair_int_observe_correlation",
+          "label": "Carries correlation identifiers",
+          "description": "Propagates trace, span, correlation, message, and operation IDs across HTTP, queues, jobs, and database activity where practical.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "trace id",
+            "span id",
+            "correlation id",
+            "message id",
+            "operation id",
+            "propagate context"
+          ]
+        },
+        {
+          "id": "luxair_int_observe_privacy",
+          "label": "Protects sensitive data",
+          "description": "Avoids credentials, tokens, full personal payloads, and payment data; uses redaction, allowlists, hashing or references, access controls, and retention limits.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "redact secrets",
+            "no access token",
+            "personal data",
+            "field allowlist",
+            "access control",
+            "retention policy"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_observe_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When is sampling acceptable for traces, and which errors should never be sampled away?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Error observability javítása",
+          "prompt": "Milyen információt rögzítsen egy integration service, hogy a production failure diagnosztizálható legyen sensitive-data leak nélkül?",
+          "answerStructureHint": "Egyensúlyozd a diagnostic contextet, correlationt, metricset, trace-t és privacyt.",
+          "expectedPoints": {
+            "luxair_int_observe_structured_context": {
+              "label": "Structured contextet rögzít",
+              "description": "Timestampet, service/versiont, operationt, error category/code-ot, durationt, dependencyt, attemptet és outcome-ot structured fieldként tárol."
+            },
+            "luxair_int_observe_correlation": {
+              "label": "Correlation identifiert továbbít",
+              "description": "Trace, span, correlation, message és operation ID-t továbbít HTTP-n, queue-n, jobon és lehetőség szerint database activityn keresztül."
+            },
+            "luxair_int_observe_privacy": {
+              "label": "Védi a sensitive adatot",
+              "description": "Kerüli a credentialt, tokent, teljes personal payloadot és payment adatot; redactiont, allowlistet, hashinget/reference-et, access controlt és retention limitet használ."
+            }
+          },
+          "followUps": {
+            "luxair_int_observe_followup": "Mikor elfogadható a trace sampling, és mely errorokat nem szabad soha kiszűrni?"
+          }
+        }
+      }
+    }
+  ]
+}

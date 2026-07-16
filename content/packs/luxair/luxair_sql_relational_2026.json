@@ -1,0 +1,1852 @@
+{
+  "id": "luxair_sql_relational_2026",
+  "name": "Luxair SQL, PostgreSQL and Oracle",
+  "description": "High-priority interview preparation for joins, aggregation, indexing, transactions, execution plans, connection pools, and PostgreSQL/Oracle differences.",
+  "sources": [
+    "luxair/software_developer_integration_job_description_and_interview_notes"
+  ],
+  "topics": [
+    {
+      "id": "luxair_int_sql_joins_aggregation",
+      "name": "SQL Joins and Aggregation",
+      "description": "SQL joins combine related rows, while grouping and aggregate functions summarize them. Correct queries begin by stating the desired row grain before choosing joins and aggregates.",
+      "category": "database",
+      "relatedTopicIds": [
+        "sql",
+        "relational_database"
+      ],
+      "studyContent": {
+        "mentalModel": "A SQL query has a grain: what one output row represents. Joins add columns or rows from related tables, and aggregation reduces several input rows into one result per group.",
+        "problem": "If the intended grain is unclear, a one-to-many join can multiply rows and inflate counts or sums. An outer join can also become an inner join accidentally when a filter on the optional table is placed in the WHERE clause.",
+        "example": "To report one row per flight with booking count and total baggage weight, the query groups by flight. Bookings and baggage are pre-aggregated separately before joining if both are one-to-many, preventing each booking from being multiplied by every baggage row.",
+        "howItWorks": [
+          "Write down what one result row should represent.",
+          "Identify relationship cardinality before joining tables.",
+          "Use inner or outer joins according to whether missing relationships must remain visible.",
+          "Aggregate at the correct level, and pre-aggregate independent one-to-many branches when necessary."
+        ],
+        "commonMistakes": [
+          "Using DISTINCT to hide duplicate rows without understanding their cause.",
+          "Counting rows after multiple one-to-many joins and assuming the total is still correct.",
+          "Filtering the right side of a LEFT JOIN in WHERE and unintentionally removing unmatched rows."
+        ],
+        "keyTerms": [
+          {
+            "term": "grain",
+            "definition": "the real-world entity or group represented by one query result row"
+          },
+          {
+            "term": "cardinality",
+            "definition": "how many rows on one side can relate to rows on the other side"
+          },
+          {
+            "term": "aggregation",
+            "definition": "combining multiple rows into values such as count, sum, minimum, or maximum"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "SQL joinok és aggregation",
+          "description": "Az SQL joinok összekapcsolják a kapcsolódó sorokat, a grouping és aggregate functionök pedig összefoglalják őket. A helyes query az elvárt output-grain meghatározásával kezdődik.",
+          "studyContent": {
+            "mentalModel": "Egy SQL querynek van grainje: megmondja, mit jelent egy output row. A join kapcsolódó table-ből ad hozzá oszlopokat vagy sorokat, az aggregation pedig több input row-t egy group eredményévé csökkent.",
+            "problem": "Ha az elvárt grain nem világos, egy one-to-many join megsokszorozhatja a sorokat, így a count vagy sum hibásan megnő. Egy outer join is véletlenül inner joinná válhat, ha az optional table filtere a WHERE részbe kerül.",
+            "example": "Ha flightonként egy sort, booking countot és total baggage weightet akarunk, flight szerint groupolunk. Ha a bookings és baggage is one-to-many, előbb külön aggregáljuk őket, majd joinolunk, így nem szorzódik minden booking minden baggage row-val.",
+            "howItWorks": [
+              "Írd le, mit reprezentáljon egy result row.",
+              "Join előtt azonosítsd a relationship cardinalityt.",
+              "Inner vagy outer joint aszerint válassz, hogy a hiányzó kapcsolatnak láthatónak kell-e maradnia.",
+              "A megfelelő szinten aggregálj, és szükség esetén előre aggregáld a független one-to-many ágakat."
+            ],
+            "commonMistakes": [
+              "DISTINCT-tel elfedni a duplicate row-kat az ok megértése nélkül.",
+              "Több one-to-many join után row-t számolni, és automatikusan helyesnek tekinteni az eredményt.",
+              "LEFT JOIN jobb oldalát WHERE-ben filterezni, így az unmatched row-k eltűnnek."
+            ],
+            "keyTerms": [
+              {
+                "term": "grain",
+                "definition": "az a valós entity vagy group, amelyet egy query result row reprezentál"
+              },
+              {
+                "term": "cardinality",
+                "definition": "hány row kapcsolódhat az egyik oldalról a másik oldal soraihoz"
+              },
+              {
+                "term": "aggregation",
+                "definition": "több row összefoglalása például count, sum, minimum vagy maximum értékké"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_sql_indexing",
+      "name": "Relational Database Indexing",
+      "description": "A database index is an additional ordered data structure that helps the engine find rows without scanning the whole table. It improves selected reads at the cost of storage and write work.",
+      "category": "database",
+      "relatedTopicIds": [
+        "sql",
+        "query_optimization"
+      ],
+      "studyContent": {
+        "mentalModel": "An index organizes selected column values with references to table rows. The optimizer may use it when the indexed order and selectivity make the lookup cheaper than reading most of the table.",
+        "problem": "Without a useful index, frequent lookups and joins may scan large tables. Too many or poorly ordered indexes also hurt: every insert, update, and delete must maintain them, and an index that returns most rows may not be worth using.",
+        "example": "A booking table is often queried by airline_code and departure_date, then ordered by created_at. A composite index beginning with airline_code and departure_date can narrow the range quickly; whether created_at belongs in the key depends on filters, ordering, database capabilities, and query plans.",
+        "howItWorks": [
+          "Start from real, frequent, expensive query patterns.",
+          "Identify filter, join, and ordering columns plus expected selectivity.",
+          "Choose single or composite indexes with column order matching the access pattern.",
+          "Verify with execution plans and production-like data, then remove redundant indexes."
+        ],
+        "commonMistakes": [
+          "Indexing every column used in any WHERE clause.",
+          "Assuming a composite index is equally useful for every subset of its columns.",
+          "Judging an index only on a tiny development table where full scans are cheap."
+        ],
+        "keyTerms": [
+          {
+            "term": "selectivity",
+            "definition": "how strongly a condition reduces the number of matching rows"
+          },
+          {
+            "term": "composite index",
+            "definition": "one index whose key contains multiple columns in a defined order"
+          },
+          {
+            "term": "full table scan",
+            "definition": "reading the table broadly because no cheaper access path is selected"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Relációs adatbázis-indexelés",
+          "description": "A database index egy további rendezett adatstruktúra, amely segít teljes table scan nélkül megtalálni a sorokat. Bizonyos readeket gyorsít, storage- és write-költségért cserébe.",
+          "studyContent": {
+            "mentalModel": "Egy index kiválasztott column value-kat szervez table row referenciákkal. Az optimizer akkor használhatja, ha az index order és selectivity alapján olcsóbb a lookup, mint a table nagy részének beolvasása.",
+            "problem": "Hasznos index nélkül a gyakori lookupok és joinok nagy table-öket scan-elhetnek. A túl sok vagy rosszul rendezett index is káros: minden insert, update és delete fenntartja őket, és a legtöbb sort visszaadó index használata nem feltétlenül éri meg.",
+            "example": "Egy booking table-t gyakran airline_code és departure_date szerint filtereznek, majd created_at szerint rendeznek. Egy airline_code, departure_date kezdetű composite index gyorsan szűkítheti a range-et; a created_at helye a filtertől, orderingtől, database képességektől és query plantől függ.",
+            "howItWorks": [
+              "Valódi, gyakori és drága query patternökből indulj ki.",
+              "Azonosítsd a filter-, join- és ordering-columnokat, valamint a várható selectivityt.",
+              "Az access patternhez illeszkedő column orderrel válassz single vagy composite indexet.",
+              "Execution plannel és production-like adattal ellenőrizz, majd távolítsd el a redundant indexeket."
+            ],
+            "commonMistakes": [
+              "Minden WHERE-ben megjelenő columnra indexet tenni.",
+              "Azt feltételezni, hogy egy composite index minden column-subsethez egyformán jó.",
+              "Kis development table alapján megítélni az indexet, ahol a full scan olcsó."
+            ],
+            "keyTerms": [
+              {
+                "term": "selectivity",
+                "definition": "az, hogy egy condition mennyire csökkenti a matching row-k számát"
+              },
+              {
+                "term": "composite index",
+                "definition": "egy index, amelynek key-je több columnt tartalmaz meghatározott sorrendben"
+              },
+              {
+                "term": "full table scan",
+                "definition": "a table széles beolvasása, mert nincs olcsóbbnak ítélt access path"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_sql_transactions_isolation",
+      "name": "Transactions and Isolation Levels",
+      "description": "A transaction groups database changes into one commit or rollback boundary. Isolation controls which effects of concurrent transactions can become visible before or during that work.",
+      "category": "database",
+      "relatedTopicIds": [
+        "sql",
+        "acid"
+      ],
+      "studyContent": {
+        "mentalModel": "A transaction protects a business invariant across several database operations. Atomicity decides whether the group commits together, while isolation decides how concurrent transactions interact with the data being read or changed.",
+        "problem": "Without a correct transaction boundary, a booking may be inserted while its seat allocation is not. With weak or misunderstood isolation, two concurrent requests may both observe availability and make decisions that violate the intended rule.",
+        "example": "Two requests try to reserve the last seat. The application starts a transaction, locks or conditionally updates the seat row, verifies that one seat remains, creates the reservation, and commits. The second transaction waits or updates zero rows and returns a conflict.",
+        "howItWorks": [
+          "State the invariant that must remain true after concurrent operations.",
+          "Place all database changes needed for that invariant in one transaction where possible.",
+          "Choose locking, conditional updates, or an isolation level that prevents the relevant anomaly.",
+          "Keep the transaction short and handle deadlocks or serialization failures with safe retries."
+        ],
+        "commonMistakes": [
+          "Assuming a transaction automatically includes third-party API calls.",
+          "Keeping a transaction open while waiting for slow network operations.",
+          "Choosing the strongest isolation level without considering contention and retry behavior."
+        ],
+        "keyTerms": [
+          {
+            "term": "atomicity",
+            "definition": "all database changes in a transaction commit together or none do"
+          },
+          {
+            "term": "isolation level",
+            "definition": "the rules governing visibility and conflicts between concurrent transactions"
+          },
+          {
+            "term": "deadlock",
+            "definition": "a cycle in which transactions wait on each other’s locks"
+          }
+        ]
+      },
+      "importance": 5,
+      "i18n": {
+        "hu": {
+          "name": "Tranzakciók és isolation levelek",
+          "description": "A transaction adatbázis-módosításokat egy commit vagy rollback boundarybe fog. Az isolation szabályozza, hogy a concurrent tranzakciók hatásai mikor válhatnak láthatóvá.",
+          "studyContent": {
+            "mentalModel": "A transaction több database operationön át véd egy üzleti invariánst. Az atomicity dönti el, hogy a csoport együtt commitol-e, az isolation pedig azt, hogyan lépnek kölcsönhatásba a concurrent tranzakciók az olvasott vagy módosított adattal.",
+            "problem": "Helyes transaction boundary nélkül a booking létrejöhet seat allocation nélkül. Gyenge vagy félreértett isolation mellett két concurrent request egyaránt szabadnak láthatja az utolsó helyet, és megsértheti az elvárt szabályt.",
+            "example": "Két request az utolsó seatet akarja lefoglalni. Az alkalmazás tranzakciót indít, lockolja vagy conditionally update-eli a seat row-t, ellenőrzi az availabilityt, létrehozza a reservationt és commitol. A második transaction vár vagy nulla row-t update-el, majd conflictot ad.",
+            "howItWorks": [
+              "Mondd ki azt az invariánst, amelynek concurrent operationök után is igaznak kell maradnia.",
+              "Az invariánshoz szükséges database change-eket lehetőség szerint egy transactionbe tedd.",
+              "Lockingot, conditional update-et vagy megfelelő isolation levelt válassz a releváns anomaly ellen.",
+              "Tartsd röviden a transactiont, és safe retryjal kezeld a deadlockot vagy serialization failure-t."
+            ],
+            "commonMistakes": [
+              "Azt feltételezni, hogy a transaction automatikusan third-party API-hívást is magába foglal.",
+              "Lassú network operationre várva nyitva tartani a transactiont.",
+              "A legerősebb isolation levelt választani contention és retry behavior mérlegelése nélkül."
+            ],
+            "keyTerms": [
+              {
+                "term": "atomicity",
+                "definition": "a transaction minden database change-e együtt commitol, vagy egyik sem"
+              },
+              {
+                "term": "isolation level",
+                "definition": "a concurrent tranzakciók visibility- és conflict-szabályai"
+              },
+              {
+                "term": "deadlock",
+                "definition": "olyan ciklus, amelyben tranzakciók egymás lockjára várnak"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_sql_execution_plans",
+      "name": "SQL Execution Plans and Query Optimization",
+      "description": "An execution plan shows how the database intends to access tables, join rows, sort data, and estimate cost. Optimization is an evidence-driven loop of measuring, explaining, changing, and measuring again.",
+      "category": "database",
+      "relatedTopicIds": [
+        "sql",
+        "indexing"
+      ],
+      "studyContent": {
+        "mentalModel": "The SQL text describes the result, while the execution plan describes the physical strategy chosen by the optimizer. It may include scans, index lookups, join algorithms, sorts, and estimated row counts.",
+        "problem": "A query can be logically correct but slow because estimates are wrong, a predicate prevents index use, a join produces too many intermediate rows, or sorting and spilling exceed memory. Guessing from the SQL alone often fixes the wrong part.",
+        "example": "A flight-search query is slow only for broad date ranges. EXPLAIN with runtime statistics shows the optimizer expected 100 rows but processed two million, then used a nested-loop join repeatedly. Updated statistics and a query or index suited to the broad range produce a different plan.",
+        "howItWorks": [
+          "Capture the slow query, parameters, timing, frequency, and environment.",
+          "Read the actual plan from the largest or most expensive operations upward.",
+          "Compare estimated and actual rows, I/O, loops, sorts, and spill behavior.",
+          "Change one relevant factor, retest with realistic parameters, and verify overall workload impact."
+        ],
+        "commonMistakes": [
+          "Focusing only on the plan’s cost number without actual runtime evidence.",
+          "Adding indexes before checking which operation consumes time or reads data.",
+          "Optimizing one parameter value while making common parameter values slower."
+        ],
+        "keyTerms": [
+          {
+            "term": "execution plan",
+            "definition": "the database’s chosen physical strategy for a SQL statement"
+          },
+          {
+            "term": "cardinality estimate",
+            "definition": "the optimizer’s prediction of how many rows an operation will produce"
+          },
+          {
+            "term": "nested-loop join",
+            "definition": "a join that repeatedly searches one input for rows from the other input"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "SQL execution plan és query optimization",
+          "description": "Az execution plan megmutatja, hogyan tervezi a database a table access-t, joinokat, sortot és costot. Az optimization evidence-driven ciklus: mérés, magyarázat, módosítás, majd újramérés.",
+          "studyContent": {
+            "mentalModel": "Az SQL text az eredményt írja le, az execution plan pedig az optimizer által választott fizikai stratégiát. Tartalmazhat scant, index lookupot, join algoritmust, sortot és estimated row countot.",
+            "problem": "Egy query lehet logikailag helyes, mégis lassú, ha az estimate hibás, egy predicate megakadályozza az index használatát, a join túl sok intermediate row-t hoz létre, vagy a sort és spill meghaladja a memóriát. Csak az SQL alapján találgatva könnyű rossz részt javítani.",
+            "example": "Egy flight-search query csak széles date range-nél lassú. Runtime statisztikás EXPLAIN szerint az optimizer 100 row-t várt, de kétmilliót dolgozott fel, majd nested-loop joinnal ismételten keresett. Friss statistics és a széles range-hez illő query vagy index más plant eredményez.",
+            "howItWorks": [
+              "Rögzítsd a lassú queryt, paramétereket, timingot, frequencyt és environmentet.",
+              "Az actual plan legnagyobb vagy legdrágább operationjeitől indulva olvass.",
+              "Hasonlítsd össze az estimated és actual row-kat, I/O-t, loopokat, sortot és spillt.",
+              "Egy releváns tényezőt módosíts, realisztikus paraméterekkel tesztelj újra, és ellenőrizd a teljes workload hatását."
+            ],
+            "commonMistakes": [
+              "Csak a plan cost számára koncentrálni actual runtime evidence nélkül.",
+              "Indexet hozzáadni, mielőtt kiderül, mely operation fogyaszt időt vagy olvas adatot.",
+              "Egy paraméterértéket optimalizálni úgy, hogy a gyakori értékek lassabbak legyenek."
+            ],
+            "keyTerms": [
+              {
+                "term": "execution plan",
+                "definition": "a database által egy SQL statementhez választott fizikai stratégia"
+              },
+              {
+                "term": "cardinality estimate",
+                "definition": "az optimizer becslése egy operation output row-jainak számára"
+              },
+              {
+                "term": "nested-loop join",
+                "definition": "join, amely az egyik input minden sora alapján ismételten keres a másik inputban"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_database_connection_pooling",
+      "name": "Database Connection Pooling",
+      "description": "A connection pool reuses a bounded set of database connections instead of opening a new one for every operation. It protects both latency and the database from uncontrolled concurrency.",
+      "category": "database",
+      "relatedTopicIds": [
+        "scalability",
+        "resilience"
+      ],
+      "studyContent": {
+        "mentalModel": "A database connection pool keeps a limited number of established connections ready for reuse. Requests borrow a connection briefly, execute their database work, and return it to the pool.",
+        "problem": "Opening a connection per request adds handshake and authentication cost, while allowing too many persistent connections can exhaust database memory and increase contention. A pool that is too small causes queueing; a pool that is too large moves overload into the database.",
+        "example": "Twenty Node.js instances each use a pool of ten connections, so the database may receive up to two hundred application connections. The team sets the pool from the database limit and workload, adds acquisition timeouts, keeps transactions short, and monitors wait time and saturation.",
+        "howItWorks": [
+          "Determine the database connection budget after reserving capacity for administration and other workloads.",
+          "Divide the budget across service instances and expected autoscaling limits.",
+          "Set acquisition timeout, idle lifetime, and maximum connection age deliberately.",
+          "Release connections in every path and monitor active, idle, waiting, timed-out, and long-held connections."
+        ],
+        "commonMistakes": [
+          "Multiplying a reasonable per-instance pool size by many autoscaled instances without checking the total.",
+          "Holding a connection while calling an external API.",
+          "Increasing the pool whenever requests wait, even when the database is already saturated."
+        ],
+        "keyTerms": [
+          {
+            "term": "pool size",
+            "definition": "the maximum number of database connections one pool can keep active"
+          },
+          {
+            "term": "acquisition timeout",
+            "definition": "how long a request waits for a free pooled connection"
+          },
+          {
+            "term": "pool saturation",
+            "definition": "a state in which all connections are busy and new work must wait"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "Database connection pooling",
+          "description": "A connection pool korlátozott számú database connectiont használ újra, ahelyett hogy minden operationhöz újat nyitna. Védi a latencyt és a database-t a kontrollálatlan concurrencytől.",
+          "studyContent": {
+            "mentalModel": "A database connection pool korlátozott számú, már létrehozott connectiont tart készen újrahasználatra. A request rövid időre kölcsönöz egy connectiont, végrehajtja a database munkát, majd visszaadja a poolnak.",
+            "problem": "Requestenként connectiont nyitni handshake- és authentication-költséget okoz, túl sok persistent connection pedig kimerítheti a database memóriáját és növelheti a contentiont. Túl kis pool queueingot okoz; túl nagy pool a túlterhelést a database-be tolja.",
+            "example": "Húsz Node.js instance egyenként tízes poolt használ, így a database akár kétszáz application connectiont kaphat. A csapat a database limitből és workloadból számol, acquisition timeoutot állít, rövid transactionöket használ, és pool wait time-ot és saturationt monitoroz.",
+            "howItWorks": [
+              "Határozd meg a database connection budgetet adminisztráció és más workloadok számára fenntartott kapacitással.",
+              "Oszd el a budgetet a service instance-ok és a várható autoscaling maximum között.",
+              "Tudatosan állíts acquisition timeoutot, idle lifetime-ot és maximum connection age-et.",
+              "Minden code pathon add vissza a connectiont, és monitorozd az active, idle, waiting, timed-out és sokáig foglalt kapcsolatokat."
+            ],
+            "commonMistakes": [
+              "Ésszerű per-instance pool size-t sok autoscaled instance-szal megszorozni total limit ellenőrzése nélkül.",
+              "External API-hívás közben connectiont tartani.",
+              "Minden várakozásnál növelni a poolt akkor is, ha a database már saturated."
+            ],
+            "keyTerms": [
+              {
+                "term": "pool size",
+                "definition": "egy pool által aktívan tartható database connectionök maximális száma"
+              },
+              {
+                "term": "acquisition timeout",
+                "definition": "mennyi ideig vár egy request szabad pooled connectionre"
+              },
+              {
+                "term": "pool saturation",
+                "definition": "állapot, amikor minden connection foglalt, és az új munka várakozik"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_postgresql_oracle_portability",
+      "name": "PostgreSQL and Oracle Portability",
+      "description": "PostgreSQL and Oracle both support relational SQL, but applications can depend on different syntax, data types, transaction behavior, generated keys, and operational features. Portability requires an explicit compatibility boundary.",
+      "category": "database",
+      "relatedTopicIds": [
+        "sql",
+        "relational_database"
+      ],
+      "studyContent": {
+        "mentalModel": "Database portability means controlling which parts of the application rely on vendor-neutral behavior and which deliberately use PostgreSQL- or Oracle-specific features. It is a design and testing decision, not a promise that all SQL is interchangeable.",
+        "problem": "Queries that work in one engine can differ in pagination, date arithmetic, sequences, identity columns, empty-string and null behavior, locking syntax, functions, procedural code, and optimizer behavior. Hiding every difference behind an ORM can still produce incorrect semantics or poor plans.",
+        "example": "An integration service supports PostgreSQL and Oracle deployments. Repository interfaces express business operations, while each dialect supplies pagination and key-generation SQL. Shared contract tests run against both real engines, and vendor-specific optimizations remain isolated and documented.",
+        "howItWorks": [
+          "List the database operations and semantic guarantees the application truly needs.",
+          "Choose a portable subset or isolate dialect-specific SQL behind repositories or adapters.",
+          "Use explicit types, parameters, transaction rules, and migration scripts for each supported engine.",
+          "Run the same behavioral and performance-relevant tests against actual PostgreSQL and Oracle environments."
+        ],
+        "commonMistakes": [
+          "Assuming ANSI SQL means queries behave identically in both databases.",
+          "Believing an ORM removes the need to understand database-specific locking and plans.",
+          "Using one engine in tests and discovering compatibility only during deployment."
+        ],
+        "keyTerms": [
+          {
+            "term": "SQL dialect",
+            "definition": "vendor-specific syntax and behavior added around common SQL"
+          },
+          {
+            "term": "repository boundary",
+            "definition": "an application interface that hides persistence implementation details"
+          },
+          {
+            "term": "behavioral compatibility",
+            "definition": "producing the same intended business result despite implementation differences"
+          }
+        ]
+      },
+      "importance": 4,
+      "i18n": {
+        "hu": {
+          "name": "PostgreSQL és Oracle portability",
+          "description": "A PostgreSQL és Oracle egyaránt relational SQL database, de az alkalmazás eltérő syntaxra, data type-ra, transaction behaviorre, generated key-re és operational feature-re támaszkodhat. A portability explicit compatibility boundaryt igényel.",
+          "studyContent": {
+            "mentalModel": "A database portability azt jelenti, hogy kontrolláljuk, mely részek támaszkodnak vendor-neutral viselkedésre, és melyek használnak tudatosan PostgreSQL- vagy Oracle-specifikus feature-t. Ez design- és tesztdöntés, nem annak ígérete, hogy minden SQL felcserélhető.",
+            "problem": "A queryk eltérhetnek paginationben, date arithmeticben, sequence-ben, identity columnban, empty-string és null behaviorben, locking syntaxban, functionben, procedural code-ban és optimizer-viselkedésben. Minden eltérés ORM mögé rejtése is adhat hibás semanticsot vagy rossz plant.",
+            "example": "Egy integration service PostgreSQL és Oracle deploymentet támogat. Repository interface-ek üzleti operationöket fejeznek ki, minden dialect saját pagination- és key-generation SQL-t ad. Közös contract test fut mindkét valódi engine-en, a vendor optimization pedig izolált és dokumentált.",
+            "howItWorks": [
+              "Sorold fel a szükséges database operationöket és semantic guarantee-ket.",
+              "Válassz portable subsetet, vagy repository/adapter mögé izoláld a dialect-specifikus SQL-t.",
+              "Használj explicit type-okat, paramétereket, transaction rule-okat és engine-enkénti migration scriptet.",
+              "Ugyanazokat a behavioral és performance-releváns teszteket futtasd valódi PostgreSQL és Oracle environmenten."
+            ],
+            "commonMistakes": [
+              "Azt feltételezni, hogy az ANSI SQL azonos viselkedést jelent mindkét database-ben.",
+              "Azt hinni, hogy az ORM miatt nem kell érteni a database-specifikus lockingot és plant.",
+              "Csak egy engine-en tesztelni, és deploymentkor felfedezni a kompatibilitási hibát."
+            ],
+            "keyTerms": [
+              {
+                "term": "SQL dialect",
+                "definition": "a közös SQL köré épülő vendor-specifikus syntax és behavior"
+              },
+              {
+                "term": "repository boundary",
+                "definition": "application interface, amely elrejti a persistence implementáció részleteit"
+              },
+              {
+                "term": "behavioral compatibility",
+                "definition": "azonos szándékolt üzleti eredmény eltérő implementáció ellenére"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "luxair_int_sql_joins_aggregation_001",
+      "title": "Reasoning about SQL joins",
+      "prompt": "Explain INNER JOIN and LEFT JOIN, including a common way a LEFT JOIN is accidentally turned into an INNER JOIN.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_sql_joins_aggregation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Define row preservation, join condition, and filter placement.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_sql_join_semantics",
+          "label": "Explains join semantics",
+          "description": "States that INNER JOIN keeps matched pairs while LEFT JOIN preserves every left row and uses nulls for missing right rows.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "matched rows",
+            "preserve left rows",
+            "null right side",
+            "inner join",
+            "left join"
+          ]
+        },
+        {
+          "id": "luxair_int_sql_join_condition",
+          "label": "Separates ON and WHERE roles",
+          "description": "Recognizes that a right-table predicate in WHERE rejects null-extended rows, while placing the condition in ON preserves unmatched left rows.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "filter in where",
+            "condition in on",
+            "null rejected",
+            "outer join filter",
+            "preserve unmatched"
+          ]
+        },
+        {
+          "id": "luxair_int_sql_join_cardinality",
+          "label": "Checks cardinality",
+          "description": "Mentions one-to-one, one-to-many, or many-to-many relationships and their effect on result row counts.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "one to many",
+            "many to many",
+            "row multiplication",
+            "join cardinality",
+            "duplicate rows"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_sql_join_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you return all flights and count only confirmed bookings without losing flights that have zero confirmed bookings?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "SQL joinok értelmezése",
+          "prompt": "Magyarázd el az INNER JOIN és LEFT JOIN működését, beleértve azt a gyakori hibát, amikor a LEFT JOIN véletlenül INNER JOINná válik.",
+          "answerStructureHint": "Definiáld a row preservationt, join conditiont és filter placementet.",
+          "expectedPoints": {
+            "luxair_int_sql_join_semantics": {
+              "label": "Elmagyarázza a join semanticsot",
+              "description": "Kimondja, hogy az INNER JOIN csak matched párokat tart meg, a LEFT JOIN minden bal oldali sort megőriz, és hiányzó jobb oldalon nullt ad."
+            },
+            "luxair_int_sql_join_condition": {
+              "label": "Elkülöníti az ON és WHERE szerepét",
+              "description": "Felismeri, hogy a jobb table-re vonatkozó WHERE predicate elutasítja a nullal kiegészített sorokat, míg az ON feltétel megőrzi az unmatched bal sorokat."
+            },
+            "luxair_int_sql_join_cardinality": {
+              "label": "Ellenőrzi a cardinalityt",
+              "description": "Megemlíti a one-to-one, one-to-many vagy many-to-many kapcsolatokat és ezek hatását a result row-k számára."
+            }
+          },
+          "followUps": {
+            "luxair_int_sql_join_followup": "Hogyan adnád vissza az összes flightot, és számolnád csak a confirmed bookingokat úgy, hogy a nulla confirmed bookinggal rendelkező flightok se tűnjenek el?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_sql_joins_aggregation_002",
+      "title": "Fixing an inflated aggregate",
+      "prompt": "A report joins flights to bookings and baggage items. Counts and total weight are too high. How would you diagnose and correct the query?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "luxair_int_sql_joins_aggregation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Establish grain, inspect cardinality, and choose safe aggregation.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_sql_aggregate_grain",
+          "label": "Defines output grain",
+          "description": "States what one result row should mean and checks row counts after each join.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "result grain",
+            "one row per",
+            "row count",
+            "intermediate result",
+            "join multiplication"
+          ]
+        },
+        {
+          "id": "luxair_int_sql_aggregate_multiplication",
+          "label": "Finds fan-out",
+          "description": "Recognizes that two independent one-to-many joins create a cross multiplication within each parent.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "fan out",
+            "row multiplication",
+            "two one to many",
+            "cartesian effect",
+            "duplicate aggregate"
+          ]
+        },
+        {
+          "id": "luxair_int_sql_aggregate_fix",
+          "label": "Uses correct aggregation strategy",
+          "description": "Pre-aggregates each child table, uses correlated aggregates, or otherwise aggregates before combining branches rather than hiding the issue with DISTINCT.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "pre aggregate",
+            "subquery aggregate",
+            "common table expression",
+            "aggregate before join",
+            "not distinct"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_sql_aggregate_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "When can COUNT(DISTINCT ...) be correct, and when does it merely hide a modeling problem?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hibásan megnőtt aggregate javítása",
+          "prompt": "Egy report flightokat, bookingokat és baggage itemeket joinol. A countok és total weight túl magasak. Hogyan diagnosztizálnád és javítanád a queryt?",
+          "answerStructureHint": "Határozd meg a graint, vizsgáld meg a cardinalityt, és válassz biztonságos aggregationt.",
+          "expectedPoints": {
+            "luxair_int_sql_aggregate_grain": {
+              "label": "Definiálja az output graint",
+              "description": "Kimondja, mit jelentsen egy result row, és minden join után ellenőrzi a row countot."
+            },
+            "luxair_int_sql_aggregate_multiplication": {
+              "label": "Megtalálja a fan-outot",
+              "description": "Felismeri, hogy két független one-to-many join parentenként keresztszorzást okoz."
+            },
+            "luxair_int_sql_aggregate_fix": {
+              "label": "Helyes aggregation stratégiát használ",
+              "description": "Előre aggregálja a child table-öket, correlated aggregate-et vagy más join előtti összesítést használ, és nem DISTINCT-tel rejti el a problémát."
+            }
+          },
+          "followUps": {
+            "luxair_int_sql_aggregate_followup": "Mikor helyes a COUNT(DISTINCT ...), és mikor csak egy modeling problémát rejt el?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_sql_indexing_001",
+      "title": "How indexes improve queries",
+      "prompt": "Explain how a relational database index helps a query and why the database may still choose not to use it.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_sql_indexing"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover lookup structure, selectivity, cost comparison, and write trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_index_lookup",
+          "label": "Explains index lookup",
+          "description": "Describes an ordered or specialized structure that narrows candidate rows and may support joins or ordering.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "ordered structure",
+            "find rows",
+            "avoid full scan",
+            "index lookup",
+            "join lookup",
+            "ordered access"
+          ]
+        },
+        {
+          "id": "luxair_int_index_optimizer_choice",
+          "label": "Explains optimizer choice",
+          "description": "States that low selectivity, small tables, stale statistics, functions, casts, or cost estimates can make a scan cheaper.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "low selectivity",
+            "cost estimate",
+            "table scan cheaper",
+            "stale statistics",
+            "function on column",
+            "implicit cast"
+          ]
+        },
+        {
+          "id": "luxair_int_index_cost",
+          "label": "Explains index cost",
+          "description": "Mentions additional storage, cache pressure, and maintenance on inserts, updates, and deletes.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "write overhead",
+            "index maintenance",
+            "extra storage",
+            "cache pressure",
+            "slower inserts"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_index_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why does column order matter in a composite index?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Hogyan gyorsít az index?",
+          "prompt": "Magyarázd el, hogyan segít egy relational database index a querynek, és miért dönthet mégis úgy a database, hogy nem használja.",
+          "answerStructureHint": "Térj ki a lookup struktúrára, selectivityre, cost összehasonlításra és write trade-offokra.",
+          "expectedPoints": {
+            "luxair_int_index_lookup": {
+              "label": "Elmagyarázza az index lookupot",
+              "description": "Rendezett vagy specializált struktúrát ír le, amely szűkíti a candidate row-kat, és joinhoz vagy orderinghez is használható."
+            },
+            "luxair_int_index_optimizer_choice": {
+              "label": "Elmagyarázza az optimizer döntését",
+              "description": "Kimondja, hogy low selectivity, kis table, stale statistics, function, cast vagy cost estimate miatt olcsóbb lehet a scan."
+            },
+            "luxair_int_index_cost": {
+              "label": "Elmagyarázza az index költségét",
+              "description": "Megemlíti a plusz storage-et, cache pressure-t és insert/update/delete során szükséges maintenance-et."
+            }
+          },
+          "followUps": {
+            "luxair_int_index_followup": "Miért számít a column order egy composite indexben?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_sql_indexing_002",
+      "title": "Designing an index from a query",
+      "prompt": "A slow query filters by status and departure date, joins by customer ID, and orders by creation time. How would you decide which index to create?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_int_sql_indexing"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use workload evidence, selectivity, predicates, order, plan, and write cost.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_index_workload",
+          "label": "Starts from the actual workload",
+          "description": "Uses query frequency, parameter distribution, result size, latency goal, and existing indexes rather than designing from SQL text alone.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "query frequency",
+            "parameter distribution",
+            "result size",
+            "latency target",
+            "existing indexes",
+            "production workload"
+          ]
+        },
+        {
+          "id": "luxair_int_index_key_order",
+          "label": "Reasons about key order",
+          "description": "Considers equality predicates, ranges, join columns, ordering, selectivity, and the database’s left-prefix or access rules.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "equality first",
+            "range predicate",
+            "column order",
+            "join column",
+            "order by",
+            "left prefix"
+          ]
+        },
+        {
+          "id": "luxair_int_index_verify",
+          "label": "Verifies the index empirically",
+          "description": "Compares execution plans and timings with realistic data and checks write overhead, lock duration, and rollout method.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "explain analyze",
+            "execution plan",
+            "realistic data",
+            "write overhead",
+            "online index",
+            "measure before after"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_index_design_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What would you do if the best read index is too expensive for the table’s write rate?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Index tervezése query alapján",
+          "prompt": "Egy lassú query status és departure date szerint filterez, customer ID-val joinol, és creation time szerint rendez. Hogyan döntenéd el, milyen indexet készíts?",
+          "answerStructureHint": "Használj workload evidence-et, selectivityt, predicate-eket, orderinget, plant és write costot.",
+          "expectedPoints": {
+            "luxair_int_index_workload": {
+              "label": "A tényleges workloadból indul ki",
+              "description": "Query frequencyt, parameter distributiont, result size-t, latency célt és existing indexeket használ, nem csak az SQL textet."
+            },
+            "luxair_int_index_key_order": {
+              "label": "Érvel a key order mellett",
+              "description": "Figyelembe veszi az equality predicate-et, range-et, join columnt, orderinget, selectivityt és a database access szabályait."
+            },
+            "luxair_int_index_verify": {
+              "label": "Empirikusan ellenőrzi az indexet",
+              "description": "Execution plant és timingot hasonlít össze realisztikus adattal, és ellenőrzi a write overheadet, lock durationt és rollout módot."
+            }
+          },
+          "followUps": {
+            "luxair_int_index_design_followup": "Mit tennél, ha a readhez legjobb index túl drága lenne a table write rate-je mellett?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_sql_transactions_isolation_001",
+      "title": "Transactions and isolation",
+      "prompt": "What does a database transaction guarantee, and what does the isolation level add to those guarantees?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_sql_transactions_isolation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate atomicity from concurrency behavior and mention trade-offs.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_tx_atomicity",
+          "label": "Explains transaction atomicity",
+          "description": "States that the database changes inside a successful transaction commit together and a rollback removes the uncommitted group.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "commit together",
+            "rollback",
+            "all or nothing",
+            "atomic transaction",
+            "transaction boundary"
+          ]
+        },
+        {
+          "id": "luxair_int_tx_isolation",
+          "label": "Explains isolation",
+          "description": "Describes visibility and conflicts between concurrent transactions, including anomalies such as non-repeatable reads, phantoms, or write conflicts.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "concurrent transactions",
+            "visibility rules",
+            "non repeatable read",
+            "phantom read",
+            "write conflict",
+            "serialization"
+          ]
+        },
+        {
+          "id": "luxair_int_tx_tradeoff",
+          "label": "Explains trade-offs",
+          "description": "Recognizes that stronger isolation can increase blocking, aborts, contention, and the need for retries.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "blocking",
+            "contention",
+            "serialization failure",
+            "deadlock retry",
+            "performance trade off"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_tx_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Can a transaction roll back an HTTP request already completed by a third-party system? How would you handle that?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Tranzakciók és isolation",
+          "prompt": "Mit garantál egy database transaction, és mit ad ezekhez a garanciákhoz az isolation level?",
+          "answerStructureHint": "Válaszd szét az atomicityt a concurrency viselkedéstől, és említs trade-offokat.",
+          "expectedPoints": {
+            "luxair_int_tx_atomicity": {
+              "label": "Elmagyarázza a transaction atomicityt",
+              "description": "Kimondja, hogy a sikeres transaction database change-ei együtt commitolnak, rollback pedig eltávolítja a nem commitolt csoportot."
+            },
+            "luxair_int_tx_isolation": {
+              "label": "Elmagyarázza az isolationt",
+              "description": "Leírja a concurrent tranzakciók visibility- és conflict-szabályait, például non-repeatable readet, phantomot vagy write conflictot."
+            },
+            "luxair_int_tx_tradeoff": {
+              "label": "Elmagyarázza a trade-offokat",
+              "description": "Felismeri, hogy az erősebb isolation növelheti a blockingot, abortot, contentiont és a retry szükségességét."
+            }
+          },
+          "followUps": {
+            "luxair_int_tx_followup": "Vissza tud-e rollbackelni egy transaction egy third-party rendszerben már végrehajtott HTTP requestet? Hogyan kezelnéd ezt?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_sql_transactions_isolation_002",
+      "title": "Preventing double booking",
+      "prompt": "Two requests attempt to reserve the last available seat at the same time. Design the database operation that prevents double booking.",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_int_sql_transactions_isolation"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "State the invariant and compare locking, conditional update, constraint, and retry options.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_seat_invariant",
+          "label": "States the invariant",
+          "description": "Defines a database-enforceable rule such as capacity not becoming negative or one active reservation per seat.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "business invariant",
+            "capacity not negative",
+            "unique constraint",
+            "one reservation",
+            "database constraint"
+          ]
+        },
+        {
+          "id": "luxair_int_seat_atomic_operation",
+          "label": "Uses an atomic concurrency control",
+          "description": "Uses row locking, a conditional UPDATE, optimistic version check, or a unique constraint inside a transaction.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "select for update",
+            "conditional update",
+            "optimistic locking",
+            "version column",
+            "unique constraint",
+            "rows affected"
+          ]
+        },
+        {
+          "id": "luxair_int_seat_conflict_handling",
+          "label": "Handles the losing request",
+          "description": "Checks affected rows or constraint errors, returns a clear conflict, and safely retries only appropriate transient database failures.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "zero rows updated",
+            "constraint violation",
+            "conflict response",
+            "deadlock retry",
+            "serialization retry"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_seat_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would optimistic and pessimistic locking behave differently under very high contention?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Double booking megakadályozása",
+          "prompt": "Két request egyszerre próbálja lefoglalni az utolsó elérhető seatet. Tervezz database operationt, amely megakadályozza a double bookingot.",
+          "answerStructureHint": "Mondd ki az invariánst, és hasonlítsd össze a locking, conditional update, constraint és retry lehetőségeket.",
+          "expectedPoints": {
+            "luxair_int_seat_invariant": {
+              "label": "Kimondja az invariánst",
+              "description": "Database által enforce-olható szabályt definiál, például a capacity nem lehet negatív vagy seatként csak egy active reservation lehet."
+            },
+            "luxair_int_seat_atomic_operation": {
+              "label": "Atomi concurrency controlt használ",
+              "description": "Row lockingot, conditional UPDATE-et, optimistic version checket vagy unique constraintet használ transactionben."
+            },
+            "luxair_int_seat_conflict_handling": {
+              "label": "Kezeli a vesztes requestet",
+              "description": "Ellenőrzi az affected row-kat vagy constraint errort, világos conflictot ad, és csak megfelelő transient database failure-t retryol biztonságosan."
+            }
+          },
+          "followUps": {
+            "luxair_int_seat_followup": "Hogyan viselkedne másként az optimistic és pessimistic locking nagyon magas contention mellett?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_sql_execution_plans_001",
+      "title": "Reading an execution plan",
+      "prompt": "What do you look for first when analyzing a slow query with an execution plan?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "concept_check"
+      ],
+      "topicIds": [
+        "luxair_int_sql_execution_plans"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Use actual evidence: time, rows, loops, scans, joins, sorts, and estimate errors.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_plan_actual_metrics",
+          "label": "Uses actual runtime metrics",
+          "description": "Looks at actual time, rows, loops, buffers or I/O, and the operations responsible for most work.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "actual time",
+            "actual rows",
+            "loops",
+            "buffer reads",
+            "io cost",
+            "expensive node"
+          ]
+        },
+        {
+          "id": "luxair_int_plan_estimates",
+          "label": "Compares estimates with reality",
+          "description": "Finds large differences between estimated and actual rows that can cause a poor join or access strategy.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "estimated rows",
+            "actual rows",
+            "cardinality mismatch",
+            "bad estimate",
+            "statistics"
+          ]
+        },
+        {
+          "id": "luxair_int_plan_operations",
+          "label": "Interprets physical operations",
+          "description": "Examines scans, index access, join algorithms, sorts, spills, and repeated inner operations in context.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "sequential scan",
+            "index scan",
+            "join algorithm",
+            "sort spill",
+            "nested loop",
+            "hash join"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_plan_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "What can cause a large difference between estimated and actual row counts?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Execution plan olvasása",
+          "prompt": "Mit nézel meg először, amikor egy lassú query execution planjét elemzed?",
+          "answerStructureHint": "Actual evidence-et használj: time, row, loop, scan, join, sort és estimate error.",
+          "expectedPoints": {
+            "luxair_int_plan_actual_metrics": {
+              "label": "Actual runtime metricset használ",
+              "description": "Actual time-ot, row countot, loopot, buffer- vagy I/O-adatot és a legtöbb munkát végző operationöket nézi."
+            },
+            "luxair_int_plan_estimates": {
+              "label": "Összehasonlítja az estimate-et a valósággal",
+              "description": "Nagy eltérést keres estimated és actual row-k között, amely rossz join- vagy access-stratégiát okozhat."
+            },
+            "luxair_int_plan_operations": {
+              "label": "Értelmezi a fizikai operationöket",
+              "description": "A scant, index access-t, join algoritmust, sortot, spillt és ismételt inner operationt contextben vizsgálja."
+            }
+          },
+          "followUps": {
+            "luxair_int_plan_followup": "Mi okozhat nagy eltérést az estimated és actual row count között?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_sql_execution_plans_002",
+      "title": "Troubleshooting a query that is sometimes slow",
+      "prompt": "A parameterized query is fast for most customers but extremely slow for a few large customers. How would you investigate?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "luxair_int_sql_execution_plans"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Compare parameter distributions, plans, statistics, and robust remedies.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_plan_parameter_evidence",
+          "label": "Compares parameter cases",
+          "description": "Captures slow and fast parameter values, row distributions, result sizes, and their actual execution plans.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "slow parameter",
+            "fast parameter",
+            "data skew",
+            "parameter distribution",
+            "compare plans",
+            "result size"
+          ]
+        },
+        {
+          "id": "luxair_int_plan_plan_instability",
+          "label": "Recognizes plan sensitivity",
+          "description": "Considers data skew, cached or generic plans, bind peeking, stale statistics, and selectivity differences.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "data skew",
+            "cached plan",
+            "generic plan",
+            "bind peeking",
+            "stale statistics",
+            "selectivity difference"
+          ]
+        },
+        {
+          "id": "luxair_int_plan_robust_fix",
+          "label": "Chooses a robust fix",
+          "description": "Evaluates statistics, query rewrite, indexes, plan controls, partitioning, or separate paths and tests all major parameter groups.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "update statistics",
+            "query rewrite",
+            "different index",
+            "separate query path",
+            "partitioning",
+            "test distributions"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_plan_skew_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can forcing one plan solve today’s incident but create a future problem?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Időnként lassú query hibakeresése",
+          "prompt": "Egy parameterized query a legtöbb customernél gyors, néhány nagy customernél viszont rendkívül lassú. Hogyan vizsgálnád ki?",
+          "answerStructureHint": "Hasonlítsd össze a parameter distributiont, planeket, statisticsot és robusztus megoldásokat.",
+          "expectedPoints": {
+            "luxair_int_plan_parameter_evidence": {
+              "label": "Összehasonlítja a paraméteres eseteket",
+              "description": "Rögzíti a lassú és gyors paraméterértékeket, row distributiont, result size-t és actual execution plant."
+            },
+            "luxair_int_plan_plan_instability": {
+              "label": "Felismeri a plan sensitivityt",
+              "description": "Figyelembe veszi a data skew-t, cached vagy generic plant, bind peekinget, stale statisticsot és selectivity-különbséget."
+            },
+            "luxair_int_plan_robust_fix": {
+              "label": "Robusztus javítást választ",
+              "description": "Statisticsot, query rewrite-ot, indexet, plan controlt, partitioningot vagy külön pathot értékel, és minden fontos parameter groupot tesztel."
+            }
+          },
+          "followUps": {
+            "luxair_int_plan_skew_followup": "Miért oldhatja meg egy plan kényszerítése a mai incidenst, miközben jövőbeli problémát okoz?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_database_connection_pooling_001",
+      "title": "Sizing a database connection pool",
+      "prompt": "How would you choose a connection-pool size for a horizontally scaled Node.js service?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_int_database_connection_pooling"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Reason from the total database budget, instance count, workload, and measurement.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_pool_total_budget",
+          "label": "Starts from total database capacity",
+          "description": "Accounts for the database connection limit, reserved operational capacity, other applications, and maximum instance count.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "database limit",
+            "connection budget",
+            "maximum instances",
+            "reserved connections",
+            "other workloads"
+          ]
+        },
+        {
+          "id": "luxair_int_pool_workload",
+          "label": "Considers workload behavior",
+          "description": "Uses query duration, transaction duration, request concurrency, database CPU or I/O capacity, and acceptable queueing.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "query duration",
+            "transaction time",
+            "request concurrency",
+            "database capacity",
+            "queueing time",
+            "workload test"
+          ]
+        },
+        {
+          "id": "luxair_int_pool_measure",
+          "label": "Tunes with pool metrics",
+          "description": "Monitors active, idle, waiting, acquisition timeout, utilization, and database saturation under load.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "active connections",
+            "idle connections",
+            "waiting requests",
+            "acquisition timeout",
+            "pool utilization",
+            "database saturation"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_pool_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Why can increasing the pool size make latency worse?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Database connection pool méretezése",
+          "prompt": "Hogyan választanál connection-pool size-t egy horizontally scaled Node.js service-hez?",
+          "answerStructureHint": "A total database budgetből, instance countból, workloadból és mérésből érvelj.",
+          "expectedPoints": {
+            "luxair_int_pool_total_budget": {
+              "label": "A total database kapacitásból indul ki",
+              "description": "Figyelembe veszi a database connection limitet, reserved operational kapacitást, más alkalmazásokat és maximum instance countot."
+            },
+            "luxair_int_pool_workload": {
+              "label": "Figyelembe veszi a workload viselkedését",
+              "description": "Query durationt, transaction durationt, request concurrencyt, database CPU/I/O kapacitást és elfogadható queueingot használ."
+            },
+            "luxair_int_pool_measure": {
+              "label": "Pool metricsekkel finomhangol",
+              "description": "Active, idle, waiting, acquisition timeout, utilization és database saturation metricset monitoroz load alatt."
+            }
+          },
+          "followUps": {
+            "luxair_int_pool_followup": "Miért ronthatja a latencyt a pool size növelése?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_database_connection_pooling_002",
+      "title": "Diagnosing pool exhaustion",
+      "prompt": "API latency rises and logs show connection acquisition timeouts, but individual queries are normally fast. What would you investigate?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "troubleshooting"
+      ],
+      "topicIds": [
+        "luxair_int_database_connection_pooling"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Trace where connections are held, leaked, multiplied, or blocked.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_pool_hold_time",
+          "label": "Investigates connection hold time",
+          "description": "Checks long transactions, calls to external services while holding a connection, unconsumed result streams, and slow commit or rollback.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "long transaction",
+            "connection hold time",
+            "external call in transaction",
+            "unconsumed result",
+            "slow commit"
+          ]
+        },
+        {
+          "id": "luxair_int_pool_leak_scale",
+          "label": "Checks leaks and total multiplication",
+          "description": "Looks for missing release paths, failed cleanup, unexpected worker or instance count, and per-process pools.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "connection leak",
+            "missing release",
+            "finally block",
+            "instance count",
+            "multiple workers",
+            "pool per process"
+          ]
+        },
+        {
+          "id": "luxair_int_pool_database_blocking",
+          "label": "Checks database-side blocking",
+          "description": "Examines locks, waiting transactions, connection states, resource saturation, and whether fast averages hide a few blocked operations.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "lock wait",
+            "blocked transaction",
+            "connection state",
+            "database cpu",
+            "io saturation",
+            "tail latency"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_pool_exhaustion_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Which timeout should fire first: HTTP request, connection acquisition, statement, or transaction timeout, and why?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Pool exhaustion diagnosztizálása",
+          "prompt": "Az API latency nő, a logok connection acquisition timeoutot mutatnak, miközben az egyedi queryk általában gyorsak. Mit vizsgálnál?",
+          "answerStructureHint": "Kövesd végig, hol maradnak foglaltak, szivárognak, szorzódnak vagy blokkolódnak a connectionök.",
+          "expectedPoints": {
+            "luxair_int_pool_hold_time": {
+              "label": "Vizsgálja a connection hold time-ot",
+              "description": "Ellenőrzi a hosszú transactiont, connection közbeni external hívást, el nem fogyasztott result streamet és lassú commitot vagy rollbacket."
+            },
+            "luxair_int_pool_leak_scale": {
+              "label": "Leak-et és total multiplicationt ellenőriz",
+              "description": "Hiányzó release pathot, failed cleanupot, váratlan worker- vagy instance countot és processzenkénti poolt keres."
+            },
+            "luxair_int_pool_database_blocking": {
+              "label": "Database-side blockingot ellenőriz",
+              "description": "Lock waitet, blocked transactiont, connection state-et, resource saturationt és azt vizsgálja, hogy a gyors átlag elrejt-e néhány blokkolt operationt."
+            }
+          },
+          "followUps": {
+            "luxair_int_pool_exhaustion_followup": "Melyik timeoutnak kellene először lejárnia: HTTP request, connection acquisition, statement vagy transaction timeout, és miért?"
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_postgresql_oracle_portability_001",
+      "title": "Supporting PostgreSQL and Oracle",
+      "prompt": "What differences would you consider when the same Node.js integration service must support PostgreSQL and Oracle?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "tradeoff_decision"
+      ],
+      "topicIds": [
+        "luxair_int_postgresql_oracle_portability"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Cover SQL dialect, types, keys, transactions, drivers, migrations, plans, and tests.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_db_dialect_differences",
+          "label": "Identifies semantic and syntax differences",
+          "description": "Mentions pagination, date or string behavior, nulls, functions, sequences or identities, locking, and data types.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "sql dialect",
+            "pagination syntax",
+            "date functions",
+            "sequence identity",
+            "null behavior",
+            "locking syntax"
+          ]
+        },
+        {
+          "id": "luxair_int_db_driver_migration",
+          "label": "Considers drivers and migrations",
+          "description": "Accounts for parameter binding, result representations, connection behavior, transaction APIs, and separate migration paths.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "database driver",
+            "parameter binding",
+            "result type",
+            "connection behavior",
+            "migration scripts",
+            "transaction api"
+          ]
+        },
+        {
+          "id": "luxair_int_db_real_testing",
+          "label": "Tests both real engines",
+          "description": "Uses shared behavioral tests plus engine-specific performance and execution-plan checks instead of relying on mocks or one database.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "test both databases",
+            "real engine",
+            "behavioral tests",
+            "execution plan",
+            "database container",
+            "integration test"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_db_portability_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "Would you avoid every vendor-specific feature? Explain the trade-off.",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "PostgreSQL és Oracle támogatása",
+          "prompt": "Milyen különbségeket vennél figyelembe, ha ugyanannak a Node.js integration service-nek PostgreSQL-t és Oracle-t is támogatnia kell?",
+          "answerStructureHint": "Térj ki az SQL dialectre, type-okra, key-kre, tranzakciókra, driverre, migrationre, planre és tesztekre.",
+          "expectedPoints": {
+            "luxair_int_db_dialect_differences": {
+              "label": "Azonosítja a semantic és syntax különbségeket",
+              "description": "Megemlíti a paginationt, date- vagy string-behaviort, nullokat, functionöket, sequence/identityt, lockingot és data type-okat."
+            },
+            "luxair_int_db_driver_migration": {
+              "label": "Figyelembe veszi a drivert és migrationt",
+              "description": "Számol a parameter bindinggal, result representationnel, connection behaviorrel, transaction API-val és külön migration pathokkal."
+            },
+            "luxair_int_db_real_testing": {
+              "label": "Mindkét valódi engine-t teszteli",
+              "description": "Közös behavioral tesztet és engine-specifikus performance- és execution-plan checket használ mock vagy egyetlen database helyett."
+            }
+          },
+          "followUps": {
+            "luxair_int_db_portability_followup": "Elkerülnél minden vendor-specifikus feature-t? Magyarázd el a trade-offot."
+          }
+        }
+      }
+    },
+    {
+      "id": "luxair_int_postgresql_oracle_portability_002",
+      "title": "Migrating database-dependent integration logic",
+      "prompt": "A Mule flow contains Oracle-specific SQL and stored procedures, but the new Node.js service may use PostgreSQL. How would you approach the migration?",
+      "roles": [
+        "backend_developer",
+        "fullstack_developer",
+        "backend_architect",
+        "solution_architect"
+      ],
+      "modes": [
+        "scenario_discussion"
+      ],
+      "topicIds": [
+        "luxair_int_postgresql_oracle_portability"
+      ],
+      "expectedDurationSeconds": 180,
+      "thinkingTimeSeconds": 45,
+      "answerStructureHint": "Separate business behavior from implementation and validate data and performance.",
+      "expectedPoints": [
+        {
+          "id": "luxair_int_db_migration_inventory",
+          "label": "Inventories database behavior",
+          "description": "Finds queries, stored-procedure logic, side effects, transaction boundaries, schedules, data types, and performance expectations.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "stored procedure logic",
+            "transaction boundary",
+            "query inventory",
+            "data types",
+            "side effects",
+            "performance baseline"
+          ]
+        },
+        {
+          "id": "luxair_int_db_migration_separation",
+          "label": "Separates business and database concerns",
+          "description": "Moves portable business rules into tested application code while deliberately retaining set-based or database-specific logic where it is the better boundary.",
+          "importance": "important",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "business logic",
+            "repository layer",
+            "set based sql",
+            "application service",
+            "database boundary",
+            "do not translate blindly"
+          ]
+        },
+        {
+          "id": "luxair_int_db_migration_validation",
+          "label": "Validates migration outcomes",
+          "description": "Uses reconciliation, dual or shadow runs, representative volumes, execution plans, and rollback or replay procedures.",
+          "importance": "critical",
+          "roleWeight": {
+            "backend_developer": 4,
+            "fullstack_developer": 4,
+            "backend_architect": 5,
+            "solution_architect": 5
+          },
+          "acceptedSignals": [
+            "data reconciliation",
+            "parallel run",
+            "shadow query",
+            "representative volume",
+            "execution plan",
+            "rollback procedure"
+          ]
+        }
+      ],
+      "followUps": [
+        {
+          "id": "luxair_int_db_migration_followup",
+          "trigger": {
+            "type": "always"
+          },
+          "prompt": "How would you migrate a stored procedure that performs several set-based operations efficiently?",
+          "expectedPoints": []
+        }
+      ],
+      "i18n": {
+        "hu": {
+          "title": "Database-függő integration logic migrálása",
+          "prompt": "Egy Mule flow Oracle-specifikus SQL-t és stored procedure-öket tartalmaz, az új Node.js service viszont PostgreSQL-t használhat. Hogyan közelítenéd meg a migrációt?",
+          "answerStructureHint": "Válaszd szét a business behaviort és implementációt, majd validáld az adatot és performance-t.",
+          "expectedPoints": {
+            "luxair_int_db_migration_inventory": {
+              "label": "Felméri a database viselkedést",
+              "description": "Azonosítja a queryket, stored-procedure logicot, side effecteket, transaction boundaryket, schedule-öket, data type-okat és performance expectationt."
+            },
+            "luxair_int_db_migration_separation": {
+              "label": "Elválasztja a business és database concernöket",
+              "description": "Portable business rule-t tesztelt application code-ba visz, de a set-based vagy database-specifikus logicot tudatosan megtartja, ahol az a jobb boundary."
+            },
+            "luxair_int_db_migration_validation": {
+              "label": "Validálja a migráció eredményét",
+              "description": "Reconciliationt, dual vagy shadow runt, reprezentatív volument, execution plant és rollback/replay eljárást használ."
+            }
+          },
+          "followUps": {
+            "luxair_int_db_migration_followup": "Hogyan migrálnál egy stored procedure-t, amely több set-based operationt hatékonyan végez?"
+          }
+        }
+      }
+    }
+  ]
+}
