@@ -574,8 +574,9 @@ const BAND_HEIGHT = 130;
 const CARD_USABLE = CARD_PAGE.height - CARD_MARGINS[1] - CARD_MARGINS[3] - 40;
 
 // Rough height estimates (pt) for the card blocks, so a card never spills
-// onto a second page: when it would, "Why it matters" is dropped first
-// (definition + key terms are the flashcard core), then the terms tighten.
+// onto a second page. WHY IT MATTERS is part of the card's learning value,
+// so when space runs out the key terms tighten and cap FIRST; the problem
+// section is only dropped as a last resort.
 function estLines(text: string, charsPerLine: number): number {
   return Math.max(1, Math.ceil(text.length / charsPerLine));
 }
@@ -586,18 +587,21 @@ function estimateFlashcard(
   problem: string | null,
   terms: TermEntry[],
   hasBand: boolean,
-): { total: number; whyHeight: number } {
+  tight: boolean,
+  moreTermsLine: boolean,
+): number {
   let h = 22; // category label
   h += estLines(name, 26) * 26 + (hasBand ? 65 : 12); // title + gap
   h += estLines(definition, 44) * 19; // 13.5pt body
-  const whyHeight = problem ? 28 + estLines(problem, 48) * 18 : 0;
+  if (problem) h += 28 + estLines(problem, 48) * 18;
   if (terms.length > 0) {
     h += 34; // KEY TERMS label
     for (const t of terms) {
-      h += estLines(`${t.term}  ${t.def ?? ""}`, 46) * 19 + 6;
+      h += estLines(`${t.term}  ${t.def ?? ""}`, tight ? 50 : 46) * (tight ? 17 : 19) + (tight ? 3 : 6);
     }
+    if (moreTermsLine) h += 20;
   }
-  return { total: h + whyHeight, whyHeight };
+  return h;
 }
 
 export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
@@ -674,10 +678,28 @@ export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
       sectionLead(loc.studyNotes, isDefinitionHeading) ??
       loc.description;
     let problem = sc?.problem ?? sectionLead(loc.studyNotes, isProblemHeading);
-    const est = estimateFlashcard(loc.name, definition, problem, terms, hasBand);
-    if (est.total > CARD_USABLE) problem = null;
-    // Densest cards (long term lists) tighten instead of spilling.
-    const tight = est.total - est.whyHeight > CARD_USABLE;
+    // Fit order: tighten term typography, then cap the term list (with an
+    // explicit "+N more" line — nothing disappears silently), and only when
+    // even that is not enough, drop WHY IT MATTERS.
+    const fits = (t: TermEntry[], tightMode: boolean, withProblem: boolean, more: boolean) =>
+      estimateFlashcard(
+        loc.name,
+        definition,
+        withProblem ? problem : null,
+        t,
+        hasBand,
+        tightMode,
+        more,
+      ) <= CARD_USABLE;
+    let tight = false;
+    let shownTerms = terms;
+    let moreTerms = 0;
+    if (!fits(terms, false, true, false)) tight = true;
+    if (tight && !fits(terms, true, true, false) && terms.length > 3) {
+      shownTerms = terms.slice(0, 3);
+      moreTerms = terms.length - 3;
+    }
+    if (!fits(shownTerms, tight, true, moreTerms > 0)) problem = null;
     const termSize = tight ? 11.5 : 12.5;
     const termGap = tight ? 3 : 6;
     const stack: any[] = [
@@ -718,7 +740,7 @@ export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
         { text: problem, fontSize: 12.5, color: s.soft, lineHeight: 1.4 },
       );
     }
-    if (terms.length > 0) {
+    if (shownTerms.length > 0) {
       stack.push({
         text: "KEY TERMS",
         fontSize: 9,
@@ -727,7 +749,7 @@ export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
         color: s.bodyLabel,
         margin: [0, 18, 0, 7],
       });
-      for (const [j, t] of terms.entries()) {
+      for (const [j, t] of shownTerms.entries()) {
         stack.push({
           text: [
             s.chips.length > 0
@@ -738,6 +760,15 @@ export function buildFlashcardsDefinition(scope: StudyPdfScope = {}): any {
           fontSize: termSize,
           lineHeight: tight ? 1.3 : 1.45,
           margin: [0, 0, 0, termGap],
+        });
+      }
+      if (moreTerms > 0) {
+        stack.push({
+          text: `+ ${moreTerms} more key term${moreTerms === 1 ? "" : "s"} — see the topic in Study`,
+          fontSize: 9.5,
+          italics: true,
+          color: s.bodyLabel,
+          margin: [0, 2, 0, 0],
         });
       }
     }
@@ -1089,13 +1120,17 @@ export function buildTrueFlashcardsDefinition(scope: StudyPdfScope = {}): any {
     },
   ];
 
-  for (const { card, topic, loc, topicName, category } of deckCards) {
+  for (const { card, topic, topicName, category } of deckCards) {
     const eyebrow = category
       ? `${CATEGORY_LABELS[category].toUpperCase()}  ·  ${topicName.toUpperCase()}`
       : topicName.toUpperCase();
     const metaBits = [
       MODE_LABELS[card.modes[0]]?.toUpperCase(),
-      topic?.importance !== undefined ? `★${topic.importance}` : null,
+      // Font-safe: the bundled Roboto has no BLACK STAR glyph, so importance
+      // is plain text. Questions have no own importance — it is the topic's.
+      topic?.importance !== undefined
+        ? `IMPORTANCE ${topic.importance} / 5`
+        : null,
     ].filter(Boolean);
 
     // ---- Front: the question only (no answer material of any kind).
@@ -1143,15 +1178,23 @@ export function buildTrueFlashcardsDefinition(scope: StudyPdfScope = {}): any {
     });
 
     // ---- Back: answer material, trimmed in priority order to fit one page.
+    // SHORT ANSWER precedence: authored flashcard.shortAnswer → a short
+    // sampleStrongAnswer → omitted entirely. Deliberately NO synthetic
+    // fallback from point labels (it reads as repetitive noise) and no AI.
     const answer =
       card.flashcard?.shortAnswer ??
       (card.sampleStrongAnswer && card.sampleStrongAnswer.length <= 450
         ? card.sampleStrongAnswer
         : null);
+    // COMMON MISTAKE must be about THIS question: authored
+    // flashcard.commonMistake → a short sampleWeakAnswer → omitted. Topic
+    // level mistakes are never inherited (they describe the concept, not the
+    // question, and pair wrongly with most questions of the topic).
     const mistake =
       card.flashcard?.commonMistake ??
-      loc?.studyContent?.commonMistakes[0] ??
-      null;
+      (card.sampleWeakAnswer && card.sampleWeakAnswer.length <= 300
+        ? card.sampleWeakAnswer
+        : null);
     const points = card.expectedPoints.slice(0, 5);
     let followUp: string | null = card.followUps[0]?.prompt ?? null;
     let showDesc = true;
@@ -1187,7 +1230,7 @@ export function buildTrueFlashcardsDefinition(scope: StudyPdfScope = {}): any {
     if (answer) {
       backStack.push(
         {
-          text: "MODEL ANSWER",
+          text: "SHORT ANSWER",
           fontSize: 9,
           bold: true,
           characterSpacing: 1.1,

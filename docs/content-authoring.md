@@ -300,12 +300,42 @@ answer on the back page):
 
 - `shortAnswer`: a concise 1–3 sentence model answer that sounds natural
   when SPOKEN in an interview — a coherent reply, never a concatenation of
-  the expectedPoints (max 450 chars). Without it, the back side falls back
-  to a short `sampleStrongAnswer` or shows only the key points.
+  the expectedPoints (max 450 chars).
 - `commonMistake`: the most common incomplete or incorrect answer to THIS
-  question, one sentence (max 300 chars). Without it, the primary topic's
-  first `commonMistakes` entry is used.
+  question, one sentence (max 300 chars).
 - Both are translatable via the card's `i18n[lang].flashcard`.
+
+How the exporter resolves the back side (deterministic, no AI, old packs
+without these fields keep working):
+
+- SHORT ANSWER: `flashcard.shortAnswer` → a `sampleStrongAnswer` of ≤450
+  chars → the section is omitted (no empty heading, no synthetic text glued
+  together from the points).
+- COMMON MISTAKE: `flashcard.commonMistake` → a `sampleWeakAnswer` of ≤300
+  chars → omitted. Topic-level `commonMistakes` are NEVER inherited by
+  question cards — they describe the concept, not the question, and pair
+  wrongly with most questions of a topic.
+- Importance on the card front is the primary TOPIC's rating shown as plain
+  text ("IMPORTANCE 4 / 5"); questions have no importance of their own.
+- The single-page topic deck shows WHY IT MATTERS from the topic's
+  `studyContent.problem`; when space runs short the key terms tighten and
+  cap first (with an explicit "+N more" line), and the section is only
+  dropped as a last resort.
+
+```jsonc
+"flashcard": {
+  "shortAnswer": "Backpressure means the receiver tells the sender to slow down; I would bound the queue and reject overflow instead of letting work pile up.",
+  "commonMistake": "Describing client-side retry with backoff, which increases pressure instead of relieving it."
+},
+"i18n": {
+  "hu": {
+    "flashcard": {
+      "shortAnswer": "A backpressure azt jelenti, hogy a fogadó lassítást kér a küldőtől; korlátos queue-t használnék, és túlterhelésnél elutasítanám a munkát.",
+      "commonMistake": "Kliensoldali retry-t ír le backoffal, ami növeli a terhelést ahelyett, hogy csökkentené."
+    }
+  }
+}
+```
 
 ### Rubric item (`expectedPoints[]`)
 
